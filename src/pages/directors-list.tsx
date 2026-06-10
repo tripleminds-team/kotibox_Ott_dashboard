@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useGetDirectors, useUpdateDirector, useDeleteDirector, useBulkDeleteDirectors, useCreateDirector } from "../lib/api-client";
 
 type Director = {
   id: string;
@@ -43,24 +44,22 @@ type Director = {
   status: boolean;
 };
 
-const DUMMY_DIRECTORS: Director[] = [
-  { id: "1", name: "Thomas Smith", designation: "Director", image: "", dateOfBirth: "1985-04-13", birthPlace: "New York, USA", status: true },
-  { id: "2", name: "William Johnson", designation: "Director", image: "", dateOfBirth: "1980-04-14", birthPlace: "Los Angeles, USA", status: true },
-  { id: "3", name: "Henry Taylor", designation: "Director", image: "", dateOfBirth: "1990-02-07", birthPlace: "Chicago, USA", status: true },
-  { id: "4", name: "Charles Wilson", designation: "Director", image: "", dateOfBirth: "1985-08-04", birthPlace: "London, UK", status: false },
-  { id: "5", name: "George Anderson", designation: "Executive Director", image: "", dateOfBirth: "1978-03-22", birthPlace: "Toronto, Canada", status: true },
-  { id: "6", name: "Richard Martinez", designation: "Co-Director", image: "", dateOfBirth: "1983-09-11", birthPlace: "Madrid, Spain", status: true },
-];
-
 export default function DirectorsListPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const importRef = useRef<HTMLInputElement>(null);
-  const [directors, setDirectors] = useState<Director[]>(DUMMY_DIRECTORS);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<Director | null>(null);
+
+  const { data: directorsData, isLoading } = useGetDirectors({ page: 1, limit: 100, admin: true });
+  const updateMutation = useUpdateDirector();
+  const deleteMutation = useDeleteDirector();
+  const bulkDeleteMutation = useBulkDeleteDirectors();
+  const createDirector = useCreateDirector();
+
+  const directors: Director[] = directorsData?.data || [];
 
   const filtered = directors.filter((d) =>
     d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,18 +75,36 @@ export default function DirectorsListPage() {
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  const toggleStatus = (id: string) =>
-    setDirectors((prev) => prev.map((d) => d.id === id ? { ...d, status: !d.status } : d));
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    const director = directors.find((d) => d.id === id);
+    if (!director) return;
+    try {
+      const formData = new FormData();
+      formData.append('name', director.name);
+      formData.append('designation', director.designation);
+      formData.append('dateOfBirth', director.dateOfBirth);
+      formData.append('birthPlace', director.birthPlace);
+      formData.append('status', (!currentStatus).toString());
+      await updateMutation.mutateAsync({ id, formData });
+      toast({ title: `Director ${!currentStatus ? 'activated' : 'deactivated'} successfully!` });
+    } catch {
+      toast({ title: "Failed to update director status", variant: "destructive" });
+    }
+  };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!bulkAction || selectedIds.length === 0) {
       toast({ title: "Select items and an action first", variant: "destructive" });
       return;
     }
     if (bulkAction === "delete") {
-      setDirectors((prev) => prev.filter((d) => !selectedIds.includes(d.id)));
-      setSelectedIds([]);
-      toast({ title: `${selectedIds.length} director(s) deleted` });
+      try {
+        await bulkDeleteMutation.mutateAsync(selectedIds);
+        setSelectedIds([]);
+        toast({ title: `${selectedIds.length} director(s) deleted` });
+      } catch {
+        toast({ title: "Bulk delete failed", variant: "destructive" });
+      }
     }
     setBulkAction("");
   };
@@ -102,67 +119,105 @@ export default function DirectorsListPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirmDelete) return;
-    setDirectors((prev) => prev.filter((d) => d.id !== confirmDelete.id));
-    setSelectedIds((prev) => prev.filter((id) => id !== confirmDelete.id));
-    toast({ title: `"${confirmDelete.name}" deleted successfully` });
-    setConfirmDelete(null);
+    try {
+      await deleteMutation.mutateAsync(confirmDelete.id);
+      setSelectedIds((prev) => prev.filter((id) => id !== confirmDelete.id));
+      toast({ title: `"${confirmDelete.name}" deleted successfully` });
+      setConfirmDelete(null);
+    } catch {
+      toast({ title: "Failed to delete director", variant: "destructive" });
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      
+      // Skip header row
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        if (values.length < 4) continue;
+        
+        const formData = new FormData();
+        formData.append('name', values[0]?.trim() || '');
+        formData.append('designation', values[1]?.trim() || '');
+        formData.append('dateOfBirth', values[2]?.trim() || '');
+        formData.append('birthPlace', values[3]?.trim() || '');
+        formData.append('status', (values[4]?.trim() === 'Active').toString());
+        
+        // Create director
+        try {
+          await createDirector.mutateAsync(formData);
+        } catch (error) {
+          console.error('Error importing director:', error);
+        }
+      }
+      
+      toast({ title: "Directors imported successfully" });
+    };
+    reader.readAsText(file);
   };
 
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Directors</span>
+        <span className="text-foreground font-medium">Directors</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleApply} className="bg-red-700 hover:bg-red-600 text-white h-10 px-5 rounded-lg font-semibold">
+        <Button onClick={handleApply} className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold">
           Apply
         </Button>
-        <Button variant="outline" onClick={handleExport} className="border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white h-10 gap-2 rounded-lg">
-          <Upload className="h-4 w-4" />Export
+        <Button variant="outline" onClick={handleExport} className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg">
+          <Download className="h-4 w-4" />Export
         </Button>
-        <Button variant="outline" onClick={() => importRef.current?.click()} className="border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white h-10 gap-2 rounded-lg">
-          <Download className="h-4 w-4" />Import
+        <Button variant="outline" onClick={() => importRef.current?.click()} className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg">
+          <Upload className="h-4 w-4" />Import
         </Button>
-        <input ref={importRef} type="file" accept=".csv" className="hidden" />
+        <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
 
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
           />
         </div>
-        <Button onClick={() => setLocation("/directors/new")} className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold">
+        <Button onClick={() => setLocation("/directors/new")} className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold">
           <Plus className="h-4 w-4" />New
         </Button>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="w-10">
-                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
+                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Directors</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Date Of Birth</TableHead>
@@ -178,21 +233,21 @@ export default function DirectorsListPage() {
               </TableRow>
             ) : (
               filtered.map((director) => (
-                <TableRow key={director.id} className="border-zinc-800 hover:bg-zinc-800/40">
+                <TableRow key={director.id} className="border-border hover:bg-muted/40">
                   <TableCell>
-                    <Checkbox checked={selectedIds.includes(director.id)} onCheckedChange={() => toggleSelect(director.id)} className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
+                    <Checkbox checked={selectedIds.includes(director.id)} onCheckedChange={() => toggleSelect(director.id)} className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {director.image ? (
-                        <img src={director.image} alt={director.name} className="h-12 w-12 rounded-lg object-cover shrink-0" />
+                        <img src={`http://localhost:3000${director.image}`} alt={director.name} className="h-12 w-12 rounded-lg object-cover shrink-0" />
                       ) : (
-                        <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                        <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
                           <User className="h-5 w-5 text-zinc-500" />
                         </div>
                       )}
                       <div>
-                        <p className="text-white font-semibold text-sm">{director.name}</p>
+                        <p className="text-foreground font-semibold text-sm">{director.name}</p>
                         <p className="text-zinc-500 text-xs mt-0.5">{director.designation}</p>
                       </div>
                     </div>
@@ -200,7 +255,7 @@ export default function DirectorsListPage() {
                   <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{director.dateOfBirth}</TableCell>
                   <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{director.birthPlace}</TableCell>
                   <TableCell>
-                    <Switch checked={director.status} onCheckedChange={() => toggleStatus(director.id)} className="data-[state=checked]:bg-red-600" />
+                    <Switch checked={director.status} onCheckedChange={() => toggleStatus(director.id, director.status)} className="data-[state=checked]:bg-red-600" />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -220,7 +275,7 @@ export default function DirectorsListPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border-zinc-700 text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Director</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
@@ -228,8 +283,8 @@ export default function DirectorsListPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -46,7 +46,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-card flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[30%] -right-[10%] w-[70%] h-[70%] rounded-full bg-gradient-to-br from-red-600/30 via-red-500/20 to-transparent blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
@@ -55,7 +55,7 @@ export default function Login() {
 
       <div className="z-10 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-20 w-20 bg-zinc-800 border border-zinc-700 rounded-3xl flex items-center justify-center mb-6 shadow-2xl">
+          <div className="h-20 w-20 bg-muted border border-border rounded-3xl flex items-center justify-center mb-6 shadow-2xl">
             {getLogoUrl() ? (
               <img src={getLogoUrl()} alt="Logo" className="h-12 w-auto object-contain" />
             ) : (
@@ -65,7 +65,7 @@ export default function Login() {
           <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent">
             {settings.platformName}
           </h1>
-          <p className="text-gray-400 mt-2 text-lg">{settings.loginSubtitle}</p>
+          <p className="text-muted-foreground mt-2 text-lg">{settings.loginSubtitle}</p>
         </div>
 
         {/* Demo Credentials Box */}
@@ -73,29 +73,29 @@ export default function Login() {
           <KeyRound className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
           <div className="text-sm">
             <p className="font-semibold text-red-300 mb-1.5">Demo Credentials</p>
-            <div className="space-y-1 text-gray-300">
+            <div className="space-y-1 text-foreground">
               <p><span className="text-gray-500">Email:</span> <button type="button" onClick={() => setEmail("admin@streamvault.com")} className="font-mono text-red-300 hover:text-red-200 underline underline-offset-2 cursor-pointer">admin@streamvault.com</button></p>
               <p><span className="text-gray-500">Password:</span> <button type="button" onClick={() => setPassword("admin123")} className="font-mono text-red-300 hover:text-red-200 underline underline-offset-2 cursor-pointer">admin123</button></p>
             </div>
           </div>
         </div>
 
-        <Card className="border-zinc-700 shadow-2xl bg-zinc-800/80 rounded-3xl transition-all duration-500 hover:shadow-3xl hover:shadow-red-500/10">
+        <Card className="border-border shadow-2xl bg-muted/80 rounded-3xl transition-all duration-500 hover:shadow-3xl hover:shadow-red-500/10">
           <CardHeader className="space-y-2 text-center pb-8 pt-8">
-            <CardTitle className="text-3xl font-bold text-white">{settings.loginTitle}</CardTitle>
-            <CardDescription className="text-base text-gray-400">Sign in to access your {settings.platformName} admin panel</CardDescription>
+            <CardTitle className="text-3xl font-bold text-foreground">{settings.loginTitle}</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">Sign in to access your {settings.platformName} admin panel</CardDescription>
           </CardHeader>
           <CardContent className="px-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-3">
-                <Label htmlFor="email" className="text-sm font-medium ml-1 text-gray-300">Email Address</Label>
+                <Label htmlFor="email" className="text-sm font-medium ml-1 text-foreground">Email Address</Label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors duration-300" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="admin@streamvault.com"
-                    className="pl-12 h-14 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
+                    className="pl-12 h-14 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -104,14 +104,14 @@ export default function Login() {
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium ml-1 text-gray-300">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium ml-1 text-foreground">Password</Label>
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-red-500 transition-colors duration-300" />
                   <Input
                     id="password"
                     type="password"
-                    className="pl-12 h-14 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
+                    className="pl-12 h-14 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required

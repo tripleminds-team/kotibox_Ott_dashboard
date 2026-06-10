@@ -64,20 +64,20 @@ export default function AdsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Ads</span>
+        <span className="text-foreground font-medium">Ads</span>
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-zinc-400 text-sm">{ads.length} total · {activeCount} active</p>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="text-zinc-400 font-semibold text-sm">Ad</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Type</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Views / Clicks</TableHead>
@@ -101,15 +101,15 @@ export default function AdsPage() {
               </TableRow>
             ) : (
               ads.map((ad) => (
-                <TableRow key={ad._id} className="border-zinc-800 hover:bg-zinc-800/40">
+                <TableRow key={ad._id} className="border-border hover:bg-muted/40">
                   <TableCell>
-                    <p className="text-white font-medium text-sm">{ad.title}</p>
+                    <p className="text-foreground font-medium text-sm">{ad.title}</p>
                     {ad.description && (
                       <p className="text-zinc-500 text-xs mt-0.5 line-clamp-1">{ad.description}</p>
                     )}
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-700 text-zinc-300">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-zinc-300">
                       {ad.type}
                     </span>
                   </TableCell>
@@ -120,7 +120,7 @@ export default function AdsPage() {
                   <TableCell>
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        ad.isActive ? "bg-green-500/15 text-green-400" : "bg-zinc-700 text-zinc-400"
+                        ad.isActive ? "bg-green-500/15 text-green-400" : "bg-muted text-zinc-400"
                       }`}
                     >
                       {ad.isActive ? "Active" : "Inactive"}
@@ -159,7 +159,7 @@ export default function AdsPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border-zinc-700 text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Ad</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
@@ -167,10 +167,10 @@ export default function AdsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

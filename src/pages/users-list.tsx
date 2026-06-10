@@ -55,19 +55,19 @@ export default function UsersList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Users</span>
+        <span className="text-foreground font-medium">Users</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1" />
         <Select value={plan} onValueChange={setPlan}>
-          <SelectTrigger className="w-40 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-40 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="All Plans" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All Plans</SelectItem>
             <SelectItem value="premium">Premium</SelectItem>
             <SelectItem value="standard">Standard</SelectItem>
@@ -76,20 +76,20 @@ export default function UsersList() {
           </SelectContent>
         </Select>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            className="pl-9 w-52 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="text-zinc-400 font-semibold text-sm">Name</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Status</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Plan</TableHead>
@@ -113,17 +113,17 @@ export default function UsersList() {
               </TableRow>
             ) : (
               data?.data?.map((user) => (
-                <TableRow key={user.id} className="border-zinc-800 hover:bg-zinc-800/40">
+                <TableRow key={user.id} className="border-border hover:bg-muted/40">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 rounded-full border border-zinc-700">
+                      <Avatar className="h-9 w-9 rounded-full border border-border">
                         {user.avatar && <AvatarImage src={user.avatar} />}
-                        <AvatarFallback className="bg-zinc-700 text-white text-sm">
+                        <AvatarFallback className="bg-muted text-foreground text-sm">
                           {user.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-white font-medium text-sm">{user.name}</p>
+                        <p className="text-foreground font-medium text-sm">{user.name}</p>
                         <p className="text-zinc-500 text-xs">{user.email}</p>
                       </div>
                     </div>
@@ -148,8 +148,8 @@ export default function UsersList() {
                           : user.subscriptionPlan === "standard"
                           ? "bg-blue-500/15 text-blue-400"
                           : user.subscriptionPlan === "basic"
-                          ? "bg-zinc-600/50 text-zinc-300"
-                          : "bg-zinc-700 text-zinc-400"
+                          ? "bg-muted/50 text-zinc-300"
+                          : "bg-muted text-zinc-400"
                       }`}
                     >
                       {user.subscriptionPlan || "Free"}
@@ -207,7 +207,7 @@ export default function UsersList() {
             <button
               onClick={() => setPage(Math.max(1, data.pagination.page - 1))}
               disabled={data.pagination.page <= 1}
-              className="h-8 w-8 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-zinc-300 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -217,7 +217,7 @@ export default function UsersList() {
             <button
               onClick={() => setPage(Math.min(data.pagination.pages, data.pagination.page + 1))}
               disabled={data.pagination.page >= data.pagination.pages}
-              className="h-8 w-8 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-zinc-300 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

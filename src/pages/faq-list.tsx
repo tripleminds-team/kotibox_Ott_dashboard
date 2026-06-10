@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useGetFAQs, useUpdateFAQ, useDeleteFAQ, useBulkDeleteFAQs } from "../lib/api-client";
 
 type FAQ = {
   id: string;
@@ -40,25 +41,21 @@ type FAQ = {
   status: boolean;
 };
 
-const DUMMY_FAQS: FAQ[] = [
-  { id: "1", question: "What is this platform?", answer: "This is a cutting-edge streaming platform that allows users to watch movies, TV shows, and live content seamlessly. It provides a feature-rich experience with personalized...", status: true },
-  { id: "2", question: "How can I create an account?", answer: "To create an account, simply click on the \"Sign Up\" button on the homepage, enter your details, and follow the on-screen instructions. Once registered, you can start exploring our extensive content library.", status: true },
-  { id: "3", question: "What subscription plans are available?", answer: "We offer multiple subscription plans tailored to your needs: - Basic Plan: Weekly subscription. - Premium Plan: Monthly subscription. - Ultimate Plan: Quarterly subscription. Each plan offers...", status: true },
-  { id: "4", question: "What payment methods do you accept?", answer: "We accept a variety of payment gateways for your convenience: Stripe, RazorPay, Paystack, PayPal, FlutterWave. You can choose your preferred method at checkout.", status: true },
-  { id: "5", question: "How can I manage my subscription?", answer: "To manage your subscription, log into your account, go to the \"Account Settings\" section, and select \"Subscription.\" From there, you can upgrade, downgrade, or cancel your plan at any time.", status: true },
-  { id: "6", question: "How can I add content to my watchlist?", answer: "While browsing movies or TV shows, simply click on the \"Add to Watchlist\" button. You can view your watchlist anytime under the \"My Watchlist\" section of your account dashboard.", status: true },
-  { id: "7", question: "Can I download content for offline viewing?", answer: "Yes, you can download selected content for offline viewing, depending on your subscription plan. Look for the download icon next to eligible content.", status: false },
-];
-
 export default function FaqListPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [faqs, setFaqs] = useState<FAQ[]>(DUMMY_FAQS);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<FAQ | null>(null);
+
+  const { data: faqsData, isLoading } = useGetFAQs({ page: 1, limit: 100, admin: true });
+  const updateMutation = useUpdateFAQ();
+  const deleteMutation = useDeleteFAQ();
+  const bulkDeleteMutation = useBulkDeleteFAQs();
+
+  const faqs: FAQ[] = faqsData?.data || [];
 
   const filtered = faqs.filter((f) => {
     const matchStatus = statusFilter === "all" || (statusFilter === "active" ? f.status : !f.status);
@@ -76,62 +73,78 @@ export default function FaqListPage() {
   const toggleSelect = (id: string) =>
     setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
-  const toggleStatus = (id: string) =>
-    setFaqs((prev) => prev.map((f) => f.id === id ? { ...f, status: !f.status } : f));
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    const faq = faqs.find((f) => f.id === id);
+    if (!faq) return;
+    try {
+      await updateMutation.mutateAsync({ id, data: { status: !currentStatus } });
+      toast({ title: `FAQ ${!currentStatus ? 'activated' : 'deactivated'} successfully!` });
+    } catch {
+      toast({ title: "Failed to update FAQ status", variant: "destructive" });
+    }
+  };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!bulkAction || selectedIds.length === 0) {
       toast({ title: "Select items and an action first", variant: "destructive" });
       return;
     }
     if (bulkAction === "delete") {
-      setFaqs((prev) => prev.filter((f) => !selectedIds.includes(f.id)));
-      setSelectedIds([]);
-      toast({ title: `${selectedIds.length} FAQ(s) deleted` });
+      try {
+        await bulkDeleteMutation.mutateAsync(selectedIds);
+        setSelectedIds([]);
+        toast({ title: `${selectedIds.length} FAQ(s) deleted` });
+      } catch {
+        toast({ title: "Bulk delete failed", variant: "destructive" });
+      }
     }
     setBulkAction("");
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirmDelete) return;
-    setFaqs((prev) => prev.filter((f) => f.id !== confirmDelete.id));
-    setSelectedIds((prev) => prev.filter((id) => id !== confirmDelete.id));
-    toast({ title: "FAQ deleted successfully" });
-    setConfirmDelete(null);
+    try {
+      await deleteMutation.mutateAsync(confirmDelete.id);
+      setSelectedIds((prev) => prev.filter((id) => id !== confirmDelete.id));
+      toast({ title: "FAQ deleted successfully" });
+      setConfirmDelete(null);
+    } catch {
+      toast({ title: "Failed to delete FAQ", variant: "destructive" });
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">FAQ</span>
+        <span className="text-foreground font-medium">FAQ</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-red-600 text-white h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
 
         {/* Status Filter */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-28 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
@@ -141,18 +154,18 @@ export default function FaqListPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
           />
         </div>
 
         <Button
           onClick={() => setLocation("/faq/new")}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -160,15 +173,15 @@ export default function FaqListPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="w-10">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Question</TableHead>
@@ -186,15 +199,15 @@ export default function FaqListPage() {
               </TableRow>
             ) : (
               filtered.map((faq) => (
-                <TableRow key={faq.id} className="border-zinc-800 hover:bg-zinc-800/40">
+                <TableRow key={faq.id} className="border-border hover:bg-muted/40">
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(faq.id)}
                       onCheckedChange={() => toggleSelect(faq.id)}
-                      className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                     />
                   </TableCell>
-                  <TableCell className="text-white font-medium max-w-[280px]">
+                  <TableCell className="text-foreground font-medium max-w-[280px]">
                     {faq.question}
                   </TableCell>
                   <TableCell className="text-zinc-400 text-sm max-w-[500px]">
@@ -203,7 +216,7 @@ export default function FaqListPage() {
                   <TableCell>
                     <Switch
                       checked={faq.status}
-                      onCheckedChange={() => toggleStatus(faq.id)}
+                      onCheckedChange={() => toggleStatus(faq.id, faq.status)}
                       className="data-[state=checked]:bg-red-600"
                     />
                   </TableCell>
@@ -231,7 +244,7 @@ export default function FaqListPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border-zinc-700 text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete FAQ</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
@@ -239,10 +252,10 @@ export default function FaqListPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

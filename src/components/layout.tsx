@@ -55,6 +55,7 @@ const navSections = [
     items: [
       { href: "/", label: "Dashboard", icon: Home },
       { href: "/media-library", label: "Media Library", icon: Image },
+      { href: "/app-management", label: "App Management", icon: UserCog },
     ],
   },
   {
@@ -124,7 +125,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
-      await logoutMutation.mutateAsync();
+      await logoutMutation.mutateAsync(undefined);
       setLocation("/login");
     } catch (error) {
       console.error("Logout error:", error);
@@ -146,7 +147,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col gap-5">
       {navSections.map((section) => (
         <div key={section.label}>
-          <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-600 mb-1.5 px-3">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-1.5 px-3">
             {section.label}
           </p>
           <div className="flex flex-col gap-0.5">
@@ -160,8 +161,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   onClick={() => onClose?.()}
                   className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "bg-zinc-800 text-white"
-                      : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {isActive && (
@@ -171,7 +172,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
                       isActive
                         ? "bg-red-600/20 text-red-400"
-                        : "text-zinc-500 group-hover:text-zinc-300"
+                        : "text-muted-foreground group-hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-[17px] w-[17px]" />
@@ -200,8 +201,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={`relative flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? "bg-zinc-800 text-red-400"
-                      : "text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-100"
+                      ? "bg-muted text-red-400"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {isActive && (
@@ -210,7 +211,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Icon className="h-[18px] w-[18px]" />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={10} className="bg-zinc-800 text-white border-zinc-700 text-xs">
+              <TooltipContent side="right" sideOffset={10} className="bg-popover text-foreground border-border text-xs">
                 {item.label}
               </TooltipContent>
             </Tooltip>
@@ -240,39 +241,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Mobile Header */}
-      <header className="md:hidden flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/90 backdrop-blur-xl sticky top-0 z-50">
+      <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-sidebar/90 backdrop-blur-xl sticky top-0 z-50">
         <LogoComponent />
         <div className="flex items-center gap-2">
           <Select value={language} onValueChange={(value: string) => setLanguage(value as any)}>
-            <SelectTrigger className="w-28 bg-zinc-800 border-zinc-700 text-white h-9 rounded-lg">
+            <SelectTrigger className="w-28 bg-muted border-border text-foreground h-9 rounded-lg">
               <Globe className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               {Object.entries(languages).map(([code, name]) => (
-                <SelectItem key={code} value={code} className="text-white">{name}</SelectItem>
+                <SelectItem key={code} value={code} className="text-foreground">{name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800">
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
             <Bell className="h-4 w-4" />
           </Button>
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-zinc-400">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 bg-zinc-900 border-r border-zinc-800">
-              <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+            <SheetContent side="left" className="w-72 p-0 bg-sidebar border-r border-border">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <LogoComponent />
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-zinc-400 rounded-lg h-8 w-8"
+                  className="text-muted-foreground rounded-lg h-8 w-8"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -280,10 +281,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <nav className="px-3 py-4 overflow-y-auto custom-scrollbar h-[calc(100%-140px)]">
                 <NavExpanded onClose={() => setMobileMenuOpen(false)} />
               </nav>
-              <div className="absolute bottom-0 left-0 right-0 px-4 py-4 border-t border-zinc-800 bg-zinc-900">
+              <div className="absolute bottom-0 left-0 right-0 px-4 py-4 border-t border-border bg-sidebar">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-3 h-10 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 px-3"
+                  className="w-full justify-start gap-3 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted px-3"
                   onClick={handleLogout}
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-400 shrink-0">
@@ -299,20 +300,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col fixed left-0 top-0 bottom-0 bg-zinc-900 border-r border-zinc-800 z-40 transition-all duration-300 ${
+        className={`hidden md:flex flex-col fixed left-0 top-0 bottom-0 bg-sidebar border-r border-border z-40 transition-all duration-300 ${
           sidebarCollapsed ? "w-[68px]" : "w-[260px]"
         }`}
       >
         {/* Logo */}
         <div
-          className={`flex items-center border-b border-zinc-800 ${
+          className={`flex items-center border-b border-border ${
             sidebarCollapsed ? "justify-center px-3 py-4" : "justify-between px-5 py-4"
           }`}
         >
           <LogoComponent collapsed={sidebarCollapsed} />
           {!sidebarCollapsed && (
             <button
-              className="h-7 w-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               onClick={() => setSidebarCollapsed(true)}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -326,19 +327,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-zinc-800 px-2 py-3">
+        <div className="border-t border-border px-2 py-3">
           {sidebarCollapsed ? (
             <TooltipProvider disableHoverableContent>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-zinc-500 hover:bg-zinc-800/60 hover:text-red-400 transition-colors"
+                    className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-muted-foreground hover:bg-muted hover:text-red-400 transition-colors"
                   >
                     <LogOut className="h-[18px] w-[18px]" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="bg-zinc-800 text-white border-zinc-700 text-xs">
+                <TooltipContent side="right" sideOffset={10} className="bg-popover text-foreground border-border text-xs">
                   Sign Out
                 </TooltipContent>
               </Tooltip>
@@ -347,15 +348,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <>
               <button
                 onClick={handleLogout}
-                className="group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100 transition-all duration-200"
+                className="group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/15 text-red-400 shrink-0">
                   <LogOut className="h-[17px] w-[17px]" />
                 </span>
                 Sign Out
               </button>
-              <div className="mt-3 pt-3 border-t border-zinc-800">
-                <p className="text-[10px] text-zinc-600 text-center">
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-[10px] text-muted-foreground text-center">
                   © {new Date().getFullYear()} {settings.platformName}
                 </p>
               </div>
@@ -371,34 +372,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }`}
       >
         {/* Top Navbar */}
-        <header className="hidden md:flex items-center justify-between px-6 py-3.5 border-b border-zinc-800 bg-zinc-900/90 backdrop-blur-xl sticky top-0 z-30">
+        <header className="hidden md:flex items-center justify-between px-6 py-3.5 border-b border-border bg-sidebar/90 backdrop-blur-xl sticky top-0 z-30">
           <div className="flex items-center gap-3">
             {sidebarCollapsed && (
               <button
-                className="h-9 w-9 flex items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 onClick={() => setSidebarCollapsed(false)}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
             )}
-            <h1 className="text-lg font-bold text-white">Dashboard</h1>
+            <h1 className="text-lg font-bold text-foreground">Dashboard</h1>
           </div>
           <div className="flex items-center gap-2">
             <Select value={language} onValueChange={(value: string) => setLanguage(value as any)}>
-              <SelectTrigger className="w-32 bg-zinc-800 border-zinc-700 text-white h-9 rounded-lg text-sm">
+              <SelectTrigger className="w-32 bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                 <Globe className="h-4 w-4 mr-1.5" />
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectContent className="bg-popover border-border text-foreground">
                 {Object.entries(languages).map(([code, name]) => (
-                  <SelectItem key={code} value={code} className="text-white">{name}</SelectItem>
+                  <SelectItem key={code} value={code} className="text-foreground">{name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button
               variant="ghost"
               size="icon"
-              className="relative h-9 w-9 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800"
+              className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <Bell className="h-4 w-4" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
@@ -415,11 +416,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-56 bg-zinc-900 border-zinc-700 text-white p-0 overflow-hidden"
+                className="w-56 bg-popover border-border text-foreground p-0 overflow-hidden"
               >
                 {/* User info header */}
                 <div className="bg-red-700 px-4 py-3 flex items-center gap-3">
-                  <Avatar className="h-9 w-9 rounded-full bg-zinc-800 shrink-0">
+                  <Avatar className="h-9 w-9 rounded-full bg-muted shrink-0">
                     <AvatarFallback className="text-white font-bold text-sm bg-zinc-700">
                       {user?.name?.charAt(0) || "A"}
                     </AvatarFallback>
@@ -436,24 +437,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="py-1">
                   <DropdownMenuItem
                     onClick={() => setLocation("/profile")}
-                    className="flex items-center gap-3 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-zinc-800 cursor-pointer focus:bg-zinc-800 focus:text-white"
+                    className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
-                    <UserCog className="h-4 w-4 text-zinc-400" />
+                    <UserCog className="h-4 w-4 text-muted-foreground" />
                     My Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setLocation("/settings")}
-                    className="flex items-center gap-3 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-zinc-800 cursor-pointer focus:bg-zinc-800 focus:text-white"
+                    className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
-                    <Settings className="h-4 w-4 text-zinc-400" />
+                    <Settings className="h-4 w-4 text-muted-foreground" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-zinc-700 my-1" />
+                  <DropdownMenuSeparator className="bg-border my-1" />
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-2.5 text-zinc-300 hover:text-white hover:bg-zinc-800 cursor-pointer focus:bg-zinc-800 focus:text-white"
+                    className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
-                    <LogOut className="h-4 w-4 text-zinc-400" />
+                    <LogOut className="h-4 w-4 text-muted-foreground" />
                     Logout
                   </DropdownMenuItem>
                 </div>

@@ -8,91 +8,90 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useGetNotificationTemplates, useToggleNotificationTemplateStatus } from "../lib/api-client";
 
 type NotifTemplate = {
   id: string;
-  name: string;
+  type: string;
   status: boolean;
 };
-
-const DUMMY_TEMPLATES: NotifTemplate[] = [
-  { id: "1", name: "Change Password", status: true },
-  { id: "2", name: "Continue Watch", status: true },
-  { id: "3", name: "Episode Add", status: true },
-  { id: "4", name: "Expiry Plan", status: true },
-  { id: "5", name: "Forget Email/Password", status: true },
-  { id: "6", name: "Movie Add", status: true },
-  { id: "7", name: "New Subscription", status: true },
-  { id: "8", name: "Registration", status: true },
-  { id: "9", name: "TV Show Add", status: false },
-  { id: "10", name: "Video Add", status: true },
-  { id: "11", name: "Welcome", status: true },
-];
 
 export default function NotificationTemplatesPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [templates, setTemplates] = useState<NotifTemplate[]>(DUMMY_TEMPLATES);
+  const { data: templatesData, isLoading } = useGetNotificationTemplates();
+  const toggleMutation = useToggleNotificationTemplateStatus();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filtered = templates.filter((t) =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const templates = templatesData?.data || [];
+
+  const filtered = templates.filter((t: NotifTemplate) =>
+    t.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const toggleStatus = (id: string) => {
-    setTemplates((prev) =>
-      prev.map((t) => t.id === id ? { ...t, status: !t.status } : t)
-    );
-    const tpl = templates.find((t) => t.id === id);
-    if (tpl) toast({ title: `"${tpl.name}" ${tpl.status ? "deactivated" : "activated"}` });
+  const toggleStatus = async (id: string) => {
+    try {
+      await toggleMutation.mutateAsync(id);
+      const tpl = templates.find((t: NotifTemplate) => t.id === id);
+      if (tpl) toast({ title: `"${tpl.type}" ${tpl.status ? "deactivated" : "activated"}` });
+    } catch {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Notification Templates</span>
+        <span className="text-foreground font-medium">Notification Templates</span>
       </div>
 
       <div className="flex items-center justify-end gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-56 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
           />
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="text-zinc-400 font-semibold text-sm">Template Name</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Status</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-zinc-500 py-10">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center text-zinc-500 py-10">
                   No templates found
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((template) => (
-                <TableRow key={template.id} className="border-zinc-800 hover:bg-zinc-800/40">
+              filtered.map((template: NotifTemplate) => (
+                <TableRow key={template.id} className="border-border hover:bg-muted/40">
                   <TableCell>
-                    <span className="text-red-400 font-medium text-sm">{template.name}</span>
+                    <span className="text-red-400 font-medium text-sm">{template.type}</span>
                   </TableCell>
                   <TableCell>
                     <Switch
                       checked={template.status}
                       onCheckedChange={() => toggleStatus(template.id)}
+                      disabled={toggleMutation.isPending}
                       className="data-[state=checked]:bg-red-600"
                     />
                   </TableCell>

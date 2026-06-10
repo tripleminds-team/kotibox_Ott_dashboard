@@ -70,23 +70,23 @@ export default function PageForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
         <button
           onClick={() => setLocation("/pages")}
-          className="text-gray-500 hover:text-white transition-colors"
+          className="text-gray-500 hover:text-foreground transition-colors"
         >
           Pages
         </button>
         <span>/</span>
-        <span className="text-white font-medium">{isEditMode ? "Edit Page" : "Create New Page"}</span>
+        <span className="text-foreground font-medium">{isEditMode ? "Edit Page" : "Create New Page"}</span>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-5">
+        <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div>
-            <h3 className="text-white font-semibold text-base">Page Info</h3>
+            <h3 className="text-foreground font-semibold text-base">Page Info</h3>
             <p className="text-zinc-500 text-sm mt-0.5">Enter page details</p>
           </div>
 
@@ -98,7 +98,7 @@ export default function PageForm() {
                 value={formData.title}
                 onChange={(e) => set("title", e.target.value)}
                 required
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -108,15 +108,15 @@ export default function PageForm() {
                 value={formData.slug}
                 onChange={(e) => set("slug", e.target.value)}
                 required
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-800/50 p-3.5 h-[52px]">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3.5 h-[52px]">
               <div>
-                <Label htmlFor="status" className="text-white text-sm font-medium cursor-pointer">
+                <Label htmlFor="status" className="text-foreground text-sm font-medium cursor-pointer">
                   Published
                 </Label>
                 <p className="text-zinc-500 text-xs">Show this page in the app</p>
@@ -137,7 +137,7 @@ export default function PageForm() {
                 type="number"
                 value={formData.order}
                 onChange={(e) => set("order", Number(e.target.value) || 0)}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
               />
             </div>
           </div>
@@ -145,17 +145,17 @@ export default function PageForm() {
           <div className="space-y-2">
             <Label className="text-zinc-400 text-sm">Content</Label>
             <Tabs defaultValue="editor" className="w-full">
-              <TabsList className="bg-zinc-800 border border-zinc-700 p-1 rounded-lg gap-1">
+              <TabsList className="bg-muted border border-border p-1 rounded-lg gap-1">
                 <TabsTrigger
                   value="editor"
-                  className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 rounded-md px-4 py-1.5 text-sm"
+                  className="flex items-center gap-2 data-[state=active]:bg-muted data-[state=active]:text-foreground text-zinc-400 rounded-md px-4 py-1.5 text-sm"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   Editor
                 </TabsTrigger>
                 <TabsTrigger
                   value="preview"
-                  className="flex items-center gap-2 data-[state=active]:bg-zinc-700 data-[state=active]:text-white text-zinc-400 rounded-md px-4 py-1.5 text-sm"
+                  className="flex items-center gap-2 data-[state=active]:bg-muted data-[state=active]:text-foreground text-zinc-400 rounded-md px-4 py-1.5 text-sm"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   Preview
@@ -169,12 +169,12 @@ export default function PageForm() {
                   onChange={(e) => set("content", e.target.value)}
                   required
                   placeholder="Enter HTML content here..."
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 resize-none font-mono text-sm"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 resize-none font-mono text-sm"
                 />
               </TabsContent>
               <TabsContent value="preview" className="mt-3">
                 <div
-                  className="border border-zinc-700 rounded-lg p-6 min-h-[300px] bg-zinc-800 text-white prose prose-invert max-w-none"
+                  className="border border-border rounded-lg p-6 min-h-[300px] bg-muted text-foreground prose prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: formData.content || "<p class='text-zinc-500'>No content yet</p>" }}
                 />
               </TabsContent>
@@ -188,7 +188,7 @@ export default function PageForm() {
                 id="metaTitle"
                 value={formData.metaTitle}
                 onChange={(e) => set("metaTitle", e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -198,7 +198,7 @@ export default function PageForm() {
                 rows={3}
                 value={formData.metaDescription}
                 onChange={(e) => set("metaDescription", e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 resize-none"
               />
             </div>
           </div>
@@ -209,14 +209,14 @@ export default function PageForm() {
             type="button"
             variant="outline"
             onClick={() => setLocation("/pages")}
-            className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 px-6 h-11"
+            className="bg-muted border-border text-foreground hover:bg-muted px-6 h-11"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={updateMutation.isPending || createMutation.isPending}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 h-11 font-semibold"
+            className="bg-red-600 hover:bg-red-700 text-foreground px-6 h-11 font-semibold"
           >
             {isEditMode ? "Save Changes" : "Create Page"}
           </Button>

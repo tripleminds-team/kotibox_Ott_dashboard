@@ -57,10 +57,10 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Profile</span>
+        <span className="text-foreground font-medium">Profile</span>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -70,8 +70,8 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("personal")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "personal"
-                ? "bg-red-600 text-white"
-                : "bg-zinc-900 border border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                ? "bg-red-600 text-foreground"
+                : "bg-card border border-border text-zinc-300 hover:bg-muted"
             }`}
           >
             <User className="h-4 w-4 shrink-0" />
@@ -81,8 +81,8 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("password")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "password"
-                ? "bg-red-600 text-white"
-                : "bg-zinc-900 border border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                ? "bg-red-600 text-foreground"
+                : "bg-card border border-border text-zinc-300 hover:bg-muted"
             }`}
           >
             <KeyRound className="h-4 w-4 shrink-0" />
@@ -91,10 +91,10 @@ export default function ProfilePage() {
         </div>
 
         {/* Right content panel */}
-        <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full">
+        <div className="flex-1 bg-card border border-border rounded-xl p-6 w-full">
           {activeTab === "personal" ? (
             <>
-              <h2 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+              <h2 className="text-foreground font-semibold text-lg mb-6 flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Personal Information
               </h2>
@@ -110,7 +110,7 @@ export default function ProfilePage() {
                       <Input
                         value={form.firstName}
                         onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                        className="bg-zinc-800 border-zinc-700 text-white focus:border-red-500 h-11"
+                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -120,7 +120,7 @@ export default function ProfilePage() {
                       <Input
                         value={form.lastName}
                         onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                        className="bg-zinc-800 border-zinc-700 text-white focus:border-red-500 h-11"
+                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
                       />
                     </div>
                   </div>
@@ -132,7 +132,7 @@ export default function ProfilePage() {
                       <Input
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="bg-zinc-800 border-zinc-700 text-white focus:border-red-500 h-11"
+                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -142,7 +142,7 @@ export default function ProfilePage() {
                       <Input
                         value={form.contactNumber}
                         onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-                        className="bg-zinc-800 border-zinc-700 text-white focus:border-red-500 h-11"
+                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
                       />
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export default function ProfilePage() {
                       {["male", "female", "other"].map((g) => (
                         <div
                           key={g}
-                          className="flex items-center gap-2.5 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 cursor-pointer hover:border-zinc-600 transition-colors"
+                          className="flex items-center gap-2.5 bg-muted border border-border rounded-lg px-4 py-2.5 cursor-pointer hover:border-border transition-colors"
                         >
                           <RadioGroupItem
                             value={g}
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                 <div className="shrink-0 flex flex-col items-center gap-2">
                   <div
                     onClick={() => !photoPreview && fileInputRef.current?.click()}
-                    className="w-40 h-40 border-2 border-dashed border-zinc-600 rounded-xl flex items-center justify-center relative cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden bg-zinc-800"
+                    className="w-40 h-40 border-2 border-dashed border-border rounded-xl flex items-center justify-center relative cursor-pointer hover:border-zinc-500 transition-colors overflow-hidden bg-muted"
                   >
                     {photoPreview ? (
                       <>
@@ -196,12 +196,12 @@ export default function ProfilePage() {
                           }}
                           className="absolute top-1.5 right-1.5 h-5 w-5 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
                         >
-                          <X className="h-3 w-3 text-white" />
+                          <X className="h-3 w-3 text-foreground" />
                         </button>
                       </>
                     ) : (
                       <div className="text-center px-3">
-                        <User className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
+                        <User className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                         <span className="text-zinc-500 text-xs">Click to upload photo</span>
                       </div>
                     )}
@@ -209,7 +209,7 @@ export default function ProfilePage() {
                   {photoPreview && (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-xs text-zinc-400 hover:text-white transition-colors"
+                      className="text-xs text-zinc-400 hover:text-foreground transition-colors"
                     >
                       Change photo
                     </button>
@@ -224,10 +224,10 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6 pt-4 border-t border-zinc-800">
+              <div className="flex justify-end mt-6 pt-4 border-t border-border">
                 <Button
                   onClick={handleSave}
-                  className="bg-red-600 hover:bg-red-700 text-white px-8 h-11 font-semibold"
+                  className="bg-red-600 hover:bg-red-700 text-foreground px-8 h-11 font-semibold"
                 >
                   Save
                 </Button>
@@ -235,7 +235,7 @@ export default function ProfilePage() {
             </>
           ) : (
             <>
-              <h2 className="text-white font-semibold text-lg mb-6 flex items-center gap-2">
+              <h2 className="text-foreground font-semibold text-lg mb-6 flex items-center gap-2">
                 <KeyRound className="h-5 w-5" />
                 Change Password
               </h2>
@@ -248,7 +248,7 @@ export default function ProfilePage() {
                     placeholder="Enter Old Password"
                     value={passwords.oldPassword}
                     onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -258,7 +258,7 @@ export default function ProfilePage() {
                     placeholder="Enter New Password"
                     value={passwords.newPassword}
                     onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -270,15 +270,15 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setPasswords({ ...passwords, confirmPassword: e.target.value })
                     }
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6 pt-4 border-t border-zinc-800">
+              <div className="flex justify-end mt-6 pt-4 border-t border-border">
                 <Button
                   onClick={handleChangePassword}
-                  className="bg-red-600 hover:bg-red-700 text-white px-8 h-11 font-semibold"
+                  className="bg-red-600 hover:bg-red-700 text-foreground px-8 h-11 font-semibold"
                 >
                   Submit
                 </Button>

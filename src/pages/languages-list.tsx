@@ -106,36 +106,36 @@ export default function LanguagesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Languages</span>
+        <span className="text-foreground font-medium">Languages</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1" />
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search languages..."
-            className="pl-9 w-52 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Button
           onClick={openCreate}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
         </Button>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="text-zinc-400 font-semibold text-sm">Language</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Code</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Status</TableHead>
@@ -157,23 +157,23 @@ export default function LanguagesList() {
               </TableRow>
             ) : (
               filteredLanguages.map((lang: any) => (
-                <TableRow key={lang.id} className="border-zinc-800 hover:bg-zinc-800/40">
+                <TableRow key={lang.id} className="border-border hover:bg-muted/40">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 rounded-lg border border-zinc-700">
+                      <Avatar className="h-9 w-9 rounded-lg border border-border">
                         {lang.image ? (
                           <AvatarImage src={getImageUrl(lang.image)} alt={lang.name} />
                         ) : (
-                          <AvatarFallback className="bg-zinc-700 text-zinc-400 rounded-lg">
+                          <AvatarFallback className="bg-muted text-zinc-400 rounded-lg">
                             <Globe className="h-4 w-4" />
                           </AvatarFallback>
                         )}
                       </Avatar>
-                      <span className="text-white font-medium text-sm">{lang.name}</span>
+                      <span className="text-foreground font-medium text-sm">{lang.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-700 text-zinc-300 uppercase">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-zinc-300 uppercase">
                       {lang.code}
                     </span>
                   </TableCell>
@@ -182,7 +182,7 @@ export default function LanguagesList() {
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         lang.isActive
                           ? "bg-green-500/15 text-green-400"
-                          : "bg-zinc-700 text-zinc-400"
+                          : "bg-muted text-zinc-400"
                       }`}
                     >
                       {lang.isActive ? "Active" : "Inactive"}
@@ -214,9 +214,9 @@ export default function LanguagesList() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="bg-zinc-900 border-zinc-700 text-white sm:max-w-md">
+        <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle className="text-foreground">
               {editingLanguage ? "Edit Language" : "Add Language"}
             </DialogTitle>
           </DialogHeader>
@@ -227,7 +227,7 @@ export default function LanguagesList() {
                 placeholder="e.g. English"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -236,7 +236,7 @@ export default function LanguagesList() {
                 placeholder="e.g. en"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -246,7 +246,7 @@ export default function LanguagesList() {
                 accept="image/*"
                 ref={fileInputRef}
                 onChange={(e) => e.target.files?.[0] && setSelectedFile(e.target.files[0])}
-                className="bg-zinc-800 border-zinc-700 text-white file:text-zinc-400 file:bg-transparent file:border-0 h-11 cursor-pointer"
+                className="bg-muted border-border text-foreground file:text-zinc-400 file:bg-transparent file:border-0 h-11 cursor-pointer"
               />
               {selectedFile && (
                 <p className="text-zinc-500 text-xs">Selected: {selectedFile.name}</p>
@@ -255,7 +255,7 @@ export default function LanguagesList() {
                 <img
                   src={getImageUrl(formData.image)}
                   alt="Current"
-                  className="h-16 w-16 object-cover rounded-lg border border-zinc-700"
+                  className="h-16 w-16 object-cover rounded-lg border border-border"
                 />
               )}
             </div>
@@ -264,14 +264,14 @@ export default function LanguagesList() {
             <Button
               variant="outline"
               onClick={closeDialog}
-              className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
+              className="bg-muted border-border text-foreground hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+              className="bg-red-600 hover:bg-red-700 text-foreground font-semibold"
             >
               {editingLanguage ? "Update" : "Create"}
             </Button>
@@ -281,7 +281,7 @@ export default function LanguagesList() {
 
       {/* Delete Confirm */}
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border-zinc-700 text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Language</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
@@ -289,10 +289,10 @@ export default function LanguagesList() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -13,9 +13,12 @@ type ApiOptions = RequestInit & {
 };
 
 export const getImageUrl = (filePath) => {
+  console.log("getImageUrl called with filePath:", filePath, "baseUrl:", baseUrl);
   if (!filePath) return "";
   if (filePath.startsWith("http")) return filePath;
-  return `${baseUrl}${filePath}`;
+  const fullUrl = `${baseUrl}${filePath}`;
+  console.log("getImageUrl returning:", fullUrl);
+  return fullUrl;
 };
 
 export const setBaseUrl = (url) => {
@@ -30,21 +33,25 @@ const api = async (
   endpoint,
   options: ApiOptions = {}
 ) => {
+  console.log("Calling api endpoint: ", endpoint, "with options: ", options);
   const headers: Record<string, string> = {
     ...options.headers,
   } as Record<string, string>;
-
-  // Only set Content-Type to application/json if we're not sending FormData
-  if (!(options.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
-  }
 
   const token = getAuthToken();
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  // Only set Content-Type to application/json if we're not sending FormData
+  if (
+  options.body &&
+  !(options.body instanceof FormData)
+) {
+  headers["Content-Type"] = "application/json";
+}
   const requestBody = options.body;
+  
   // If we have FormData and onUploadProgress, use XMLHttpRequest for progress tracking
   if (options.body instanceof FormData && options.onUploadProgress) {
     return new Promise((resolve, reject) => {
@@ -86,13 +93,22 @@ const api = async (
     });
   }
 
+  // For FormData requests, remove Content-Type header to let browser set it with boundary
+  const fetchHeaders = { ...headers };
+  if (options.body instanceof FormData) {
+    delete fetchHeaders["Content-Type"];
+  }
+
+  console.log("Calling fetch to: ", `${baseUrl}/api${endpoint}`, "with headers: ", fetchHeaders);
   const res = await fetch(`${baseUrl}/api${endpoint}`, {
     ...options,
-    headers,
+    headers: fetchHeaders,
   });
+  console.log("Got response from fetch: ", res);
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
+    console.error("Error in fetch response: ", res, errorData);
     throw new Error(errorData.error || "API request failed");
   }
 
@@ -396,6 +412,13 @@ export const deletePromotion = async (id) => {
   return api(`/promotions/${id}`, { method: "DELETE" });
 };
 
+export const bulkDeletePromotions = async (ids) => {
+  return api('/promotions/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
 // Hooks
 export const useGetPromotionsList = (options) => {
   return useQuery({
@@ -450,6 +473,17 @@ export const useDeletePromotion = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
     mutationFn: deletePromotion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promotions-list"] });
+      queryClient.invalidateQueries({ queryKey: ["promotion-active"] });
+    },
+  });
+};
+
+export const useBulkDeletePromotions = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeletePromotions,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["promotions-list"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-active"] });
@@ -553,7 +587,7 @@ export const useGetBannerById = (bannerId) => {
 
 export const useGetBannerShowByContentId = (
   contentId,
-  options
+  options = {}
 ) => {
   return useQuery({
     queryKey: ["banner-show", contentId, options],
@@ -666,7 +700,7 @@ export const getCategoryContents = async (categoryId, options) => {
   return api(`/categories/${categoryId}/contents?${params.toString()}`);
 };
 
-export const createCategory = async (data, options) => {
+export const createCategory = async (data, options = {}) => {
   return api("/categories", {
     method: "POST",
     body: data,
@@ -674,7 +708,7 @@ export const createCategory = async (data, options) => {
   });
 };
 
-export const updateCategory = async (categoryId, data, options) => {
+export const updateCategory = async (categoryId, data, options = {}) => {
   return api(`/categories/item/${categoryId}`, {
     method: "PUT",
     body: data,
@@ -703,7 +737,7 @@ export const removeContentFromCategory = async (categoryId, contentId) => {
 };
 
 // Hooks
-export const useGetCategoriesList = (options) => {
+export const useGetCategoriesList = (options = {}) => {
   return useQuery({
     queryKey: ["categories-list", options],
     queryFn: () => getCategoriesList(options),
@@ -728,7 +762,7 @@ export const useGetCategoryById = (categoryId) => {
   });
 };
 
-export const useGetCategoryContents = (categoryId, options) => {
+export const useGetCategoryContents = (categoryId, options = {}) => {
   return useQuery({
     queryKey: ["category-contents", categoryId, options],
     queryFn: () => getCategoryContents(categoryId, options),
@@ -739,8 +773,8 @@ export const useGetCategoryContents = (categoryId, options) => {
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
-    mutationFn: ({ data, onUploadProgress }) =>
-      createCategory(data, { onUploadProgress }),
+    mutationFn: ({ data }) =>
+      createCategory(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories-list"] });
     },
@@ -750,8 +784,8 @@ export const useCreateCategory = () => {
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
-    mutationFn: ({ categoryId, data, onUploadProgress }) =>
-      updateCategory(categoryId, data, { onUploadProgress }),
+    mutationFn: ({ categoryId, data }) =>
+      updateCategory(categoryId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["categories-list"] });
       queryClient.invalidateQueries({ queryKey: ["category", variables.categoryId] });
@@ -799,6 +833,99 @@ export const useRemoveContentFromCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories-list"] });
       queryClient.invalidateQueries({ queryKey: ["categories-with-content"] });
+    },
+  });
+};
+
+// Notification Templates
+export const getNotificationTemplates = async () => {
+  return api("/notification-templates");
+};
+
+export const getNotificationTemplateById = async (templateId: string) => {
+  return api(`/notification-templates/item/${templateId}`);
+};
+
+export const createNotificationTemplate = async (data: any, options?: ApiOptions) => {
+  return api("/notification-templates", {
+    method: "POST",
+    body: JSON.stringify(data),
+    ...options,
+  });
+};
+
+export const updateNotificationTemplate = async (templateId: string, data: any, options?: ApiOptions) => {
+  return api(`/notification-templates/item/${templateId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    ...options,
+  });
+};
+
+export const toggleNotificationTemplateStatus = async (templateId: string) => {
+  return api(`/notification-templates/item/${templateId}/toggle-status`, {
+    method: "PATCH",
+  });
+};
+
+export const deleteNotificationTemplate = async (templateId: string) => {
+  return api(`/notification-templates/item/${templateId}`, {
+    method: "DELETE",
+  });
+};
+
+export const useGetNotificationTemplates = () => {
+  return useQuery({
+    queryKey: ["notification-templates"],
+    queryFn: getNotificationTemplates,
+  });
+};
+
+export const useGetNotificationTemplateById = (templateId?: string) => {
+  return useQuery({
+    queryKey: ["notification-template", templateId],
+    queryFn: () => getNotificationTemplateById(templateId!),
+    enabled: !!templateId,
+  });
+};
+
+export const useCreateNotificationTemplate = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { data: any }>({
+    mutationFn: ({ data }) => createNotificationTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
+    },
+  });
+};
+
+export const useUpdateNotificationTemplate = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { templateId: string; data: any }>({
+    mutationFn: ({ templateId, data }) => updateNotificationTemplate(templateId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["notification-template", variables.templateId] });
+    },
+  });
+};
+
+export const useToggleNotificationTemplateStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: (templateId) => toggleNotificationTemplateStatus(templateId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
+    },
+  });
+};
+
+export const useDeleteNotificationTemplate = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: (templateId) => deleteNotificationTemplate(templateId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
     },
   });
 };
@@ -874,7 +1001,7 @@ export const useAppendCategoryShowVideo = () => {
 
 export const useGetCategoryShowByContentId = (
   contentId,
-  options
+  options = {}
 ) => {
   return useQuery({
     queryKey: ["category-show", contentId, options],
@@ -1030,10 +1157,11 @@ export const useDeleteContent = () => {
 };
 
 // Pages API
-export const getPages = async (options?: { page?: number; limit?: number }) => {
+export const getPages = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
   const params = new URLSearchParams();
   if (options?.page) params.set('page', options.page.toString());
   if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.admin) params.set('admin', 'true');
   return api(`/pages?${params.toString()}`);
 };
 
@@ -1073,7 +1201,7 @@ export const bulkDeletePages = async (ids: string[]) => {
   });
 };
 
-export const useGetPages = (options?: { page?: number; limit?: number }) => {
+export const useGetPages = (options?: { page?: number; limit?: number; admin?: boolean }) => {
   return useQuery({
     queryKey: ['pages', options],
     queryFn: () => getPages(options)
@@ -1194,21 +1322,24 @@ export const useDeleteAd = () => {
 
 // Settings
 export const getSettings = async () => {
-  return api("/settings");
+  const response = await api("/settings");
+  return response.data;
 };
 
 export const updateSettingsData = async (data: Record<string, any>) => {
-  return api("/settings", {
+  const response = await api("/settings", {
     method: "PUT",
     body: JSON.stringify(data),
   });
+  return response.data;
 };
 
 export const uploadSettingsLogos = async (formData: FormData) => {
-  return api("/settings/upload-logos", {
+  const response = await api("/settings/upload-logos", {
     method: "POST",
     body: formData,
   });
+  return response.data;
 };
 
 export const useGetSettings = () => {
@@ -1237,5 +1368,914 @@ export const useUploadSettingsLogos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
     },
+  });
+};
+
+// Genres
+export const getGenres = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.admin) params.append('admin', 'true');
+  return api(`/genres?${params.toString()}`);
+};
+
+export const getGenreById = async (id: string) => {
+  return api(`/genres/item/${id}`);
+};
+
+export const createGenre = async (formData: FormData) => {
+  return api('/genres', {
+    method: 'POST',
+    body: formData,
+  });
+};
+
+export const updateGenre = async (id: string, formData: FormData) => {
+  return api(`/genres/item/${id}`, {
+    method: 'PUT',
+    body: formData,
+  });
+};
+
+export const deleteGenre = async (id: string) => {
+  return api(`/genres/item/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteGenres = async (ids: string[]) => {
+  return api('/genres/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetGenres = (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  return useQuery({
+    queryKey: ['genres', options],
+    queryFn: () => getGenres(options)
+  });
+};
+
+export const useGetGenreById = (id: string) => {
+  return useQuery({
+    queryKey: ['genre', id],
+    queryFn: () => getGenreById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateGenre = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createGenre,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] });
+    }
+  });
+};
+
+export const useUpdateGenre = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updateGenre(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] });
+    }
+  });
+};
+
+export const useDeleteGenre = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteGenre,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] });
+    }
+  });
+};
+
+export const useBulkDeleteGenres = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteGenres,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['genres'] });
+    }
+  });
+};
+
+// Subscription Plans API
+export const getSubscriptionPlans = async (options?: { page?: number; limit?: number }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  return api(`/subscription-plans?${params.toString()}`);
+};
+
+export const getSubscriptionPlanById = async (id: string) => {
+  return api(`/subscription-plans/${id}`);
+};
+
+export const createSubscriptionPlan = async (data: any) => {
+  return api('/subscription-plans', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateSubscriptionPlan = async (id: string, data: any) => {
+  return api(`/subscription-plans/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+// Media Library API
+export const getMediaFolders = async () => {
+  return api('/media/folders');
+};
+
+export const createMediaFolder = async (name: string) => {
+  return api('/media/folders', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const deleteMediaFolder = async (folderId: string) => {
+  return api(`/media/folders/${folderId}`, { method: 'DELETE' });
+};
+
+export const getMediaFilesByFolder = async (folderId: string) => {
+  return api(`/media/folders/${folderId}/files`);
+};
+
+export const uploadMediaFiles = async (folderId: string, files: File[]) => {
+  const formData = new FormData();
+  files.forEach(file => formData.append('file', file));
+  return api(`/media/folders/${folderId}/files`, {
+    method: 'POST',
+    body: formData,
+  });
+};
+
+export const deleteMediaFile = async (fileId: string) => {
+  return api(`/media/files/${fileId}`, { method: 'DELETE' });
+};
+
+// App Settings API
+export const getAppSettings = async () => {
+  return api('/app-settings');
+};
+
+export const updateAppSettings = async (settings: any[]) => {
+  return api('/app-settings', {
+    method: 'PUT',
+    body: JSON.stringify({ settings }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const addAppSetting = async (name: string, type: 'simple' | 'select') => {
+  return api('/app-settings', {
+    method: 'POST',
+    body: JSON.stringify({ name, type }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const deleteAppSetting = async (id: string) => {
+  return api(`/app-settings/${id}`, { method: 'DELETE' });
+};
+
+export const editAppSetting = async (id: string, updates: { name?: string; type?: 'simple' | 'select' }) => {
+  return api(`/app-settings/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+// App Settings Hooks
+export const useGetAppSettings = () => {
+  return useQuery({
+    queryKey: ['app-settings'],
+    queryFn: () => getAppSettings(),
+  });
+};
+
+export const useUpdateAppSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (settings: any[]) => updateAppSettings(settings),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+    },
+  });
+};
+
+export const useAddAppSetting = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, type }: { name: string; type: 'simple' | 'select' }) =>
+      addAppSetting(name, type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+    },
+  });
+};
+
+export const useDeleteAppSetting = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteAppSetting(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+    },
+  });
+};
+
+export const useEditAppSetting = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: { name?: string; type?: 'simple' | 'select' } }) =>
+      editAppSetting(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+    },
+  });
+};
+
+// Media Library Hooks
+export const useGetMediaFolders = () => {
+  return useQuery({
+    queryKey: ['media-folders'],
+    queryFn: () => getMediaFolders(),
+  });
+};
+
+export const useCreateMediaFolder = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: (name) => createMediaFolder(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['media-folders'] });
+    },
+  });
+};
+
+export const useDeleteMediaFolder = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: (folderId) => deleteMediaFolder(folderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['media-folders'] });
+    },
+  });
+};
+
+export const useGetMediaFilesByFolder = (folderId?: string) => {
+  return useQuery({
+    queryKey: ['media-files', folderId],
+    queryFn: () => folderId ? getMediaFilesByFolder(folderId) : Promise.resolve(),
+    enabled: !!folderId,
+  });
+};
+
+export const useUploadMediaFiles = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { folderId: string; files: File[] }>({
+    mutationFn: ({ folderId, files }) => uploadMediaFiles(folderId, files),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['media-files', variables.folderId] });
+    },
+  });
+};
+
+export const useDeleteMediaFile = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: (fileId) => deleteMediaFile(fileId),
+    onSuccess: (_, __, context) => {
+      queryClient.invalidateQueries({ queryKey: ['media-files'] });
+    },
+  });
+};
+
+export const deleteSubscriptionPlan = async (id: string) => {
+  return api(`/subscription-plans/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteSubscriptionPlans = async (ids: string[]) => {
+  return api('/subscription-plans/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetSubscriptionPlans = (options?: { page?: number; limit?: number }) => {
+  return useQuery({
+    queryKey: ['subscriptionPlans', options],
+    queryFn: () => getSubscriptionPlans(options)
+  });
+};
+
+export const useGetSubscriptionPlanById = (id: string) => {
+  return useQuery({
+    queryKey: ['subscriptionPlan', id],
+    queryFn: () => getSubscriptionPlanById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createSubscriptionPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    }
+  });
+};
+
+export const useUpdateSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updateSubscriptionPlan(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    }
+  });
+};
+
+export const useDeleteSubscriptionPlan = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteSubscriptionPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    }
+  });
+};
+
+export const useBulkDeleteSubscriptionPlans = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteSubscriptionPlans,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
+    }
+  });
+};
+
+// Plan Limits API
+export const getPlanLimits = async (options?: { page?: number; limit?: number; planId?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.planId) params.append('planId', options.planId);
+  return api(`/plan-limits?${params.toString()}`);
+};
+
+export const getPlanLimitById = async (id: string) => {
+  return api(`/plan-limits/${id}`);
+};
+
+export const createPlanLimit = async (data: any) => {
+  return api('/plan-limits', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updatePlanLimit = async (id: string, data: any) => {
+  return api(`/plan-limits/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deletePlanLimit = async (id: string) => {
+  return api(`/plan-limits/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeletePlanLimits = async (ids: string[]) => {
+  return api('/plan-limits/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetPlanLimits = (options?: { page?: number; limit?: number; planId?: string }) => {
+  return useQuery({
+    queryKey: ['planLimits', options],
+    queryFn: () => getPlanLimits(options)
+  });
+};
+
+export const useGetPlanLimitById = (id: string) => {
+  return useQuery({
+    queryKey: ['planLimit', id],
+    queryFn: () => getPlanLimitById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreatePlanLimit = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createPlanLimit,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planLimits'] });
+    }
+  });
+};
+
+export const useUpdatePlanLimit = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updatePlanLimit(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planLimits'] });
+    }
+  });
+};
+
+export const useDeletePlanLimit = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deletePlanLimit,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planLimits'] });
+    }
+  });
+};
+
+export const useBulkDeletePlanLimits = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeletePlanLimits,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planLimits'] });
+    }
+  });
+};
+
+// FAQ API
+export const getFAQs = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.admin) params.set('admin', 'true');
+  return api(`/faqs?${params.toString()}`);
+};
+
+export const getFAQById = async (id: string) => {
+  return api(`/faqs/item/${id}`);
+};
+
+export const createFAQ = async (data: { question: string; answer: string; status?: boolean }) => {
+  return api('/faqs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateFAQ = async (id: string, data: { question?: string; answer?: string; status?: boolean }) => {
+  return api(`/faqs/item/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteFAQ = async (id: string) => {
+  return api(`/faqs/item/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteFAQs = async (ids: string[]) => {
+  return api('/faqs/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetFAQs = (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  return useQuery({
+    queryKey: ['faqs', options],
+    queryFn: () => getFAQs(options)
+  });
+};
+
+export const useGetFAQById = (id: string) => {
+  return useQuery({
+    queryKey: ['faq', id],
+    queryFn: () => getFAQById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateFAQ = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createFAQ,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
+    }
+  });
+};
+
+export const useUpdateFAQ = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updateFAQ(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
+    }
+  });
+};
+
+export const useDeleteFAQ = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteFAQ,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
+    }
+  });
+};
+
+export const useBulkDeleteFAQs = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteFAQs,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
+    }
+  });
+};
+
+// Actors API
+export const getActors = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.admin) params.set('admin', 'true');
+  return api(`/actors?${params.toString()}`);
+};
+
+export const getActorById = async (id: string) => {
+  return api(`/actors/item/${id}`);
+};
+
+export const createActor = async (formData: FormData) => {
+  return api('/actors', {
+    method: 'POST',
+    body: formData,
+  });
+};
+
+export const updateActor = async (id: string, formData: FormData) => {
+  return api(`/actors/item/${id}`, {
+    method: 'PUT',
+    body: formData,
+  });
+};
+
+export const deleteActor = async (id: string) => {
+  return api(`/actors/item/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteActors = async (ids: string[]) => {
+  return api('/actors/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetActors = (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  return useQuery({
+    queryKey: ['actors', options],
+    queryFn: () => getActors(options)
+  });
+};
+
+export const useGetActorById = (id: string) => {
+  return useQuery({
+    queryKey: ['actor', id],
+    queryFn: () => getActorById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateActor = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createActor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+    }
+  });
+};
+
+export const useUpdateActor = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, formData }: any) => updateActor(id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+    }
+  });
+};
+
+export const useDeleteActor = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteActor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+    }
+  });
+};
+
+export const useBulkDeleteActors = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteActors,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actors'] });
+    }
+  });
+};
+
+// Directors API
+export const getDirectors = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.admin) params.set('admin', 'true');
+  return api(`/directors?${params.toString()}`);
+};
+
+export const getDirectorById = async (id: string) => {
+  return api(`/directors/item/${id}`);
+};
+
+export const createDirector = async (formData: FormData) => {
+  return api('/directors', {
+    method: 'POST',
+    body: formData,
+  });
+};
+
+export const updateDirector = async (id: string, formData: FormData) => {
+  return api(`/directors/item/${id}`, {
+    method: 'PUT',
+    body: formData,
+  });
+};
+
+export const deleteDirector = async (id: string) => {
+  return api(`/directors/item/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteDirectors = async (ids: string[]) => {
+  return api('/directors/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetDirectors = (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  return useQuery({
+    queryKey: ['directors', options],
+    queryFn: () => getDirectors(options)
+  });
+};
+
+export const useGetDirectorById = (id: string) => {
+  return useQuery({
+    queryKey: ['director', id],
+    queryFn: () => getDirectorById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateDirector = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createDirector,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['directors'] });
+    }
+  });
+};
+
+export const useUpdateDirector = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, formData }: any) => updateDirector(id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['directors'] });
+    }
+  });
+};
+
+export const useDeleteDirector = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteDirector,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['directors'] });
+    }
+  });
+};
+
+export const useBulkDeleteDirectors = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteDirectors,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['directors'] });
+    }
+  });
+};
+
+// Notification Logs API
+export const getNotificationLogs = async (options?: { page?: number; limit?: number; type?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.type && options.type !== 'all') params.set('type', options.type);
+  return api(`/notification-logs?${params.toString()}`);
+};
+
+export const getNotificationLogById = async (id: string) => {
+  return api(`/notification-logs/item/${id}`);
+};
+
+export const createNotificationLog = async (data: any) => {
+  return api('/notification-logs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteNotificationLog = async (id: string) => {
+  return api(`/notification-logs/item/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteNotificationLogs = async (ids: string[]) => {
+  return api('/notification-logs/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetNotificationLogs = (options?: { page?: number; limit?: number; type?: string }) => {
+  return useQuery({
+    queryKey: ['notification-logs', options],
+    queryFn: () => getNotificationLogs(options)
+  });
+};
+
+export const useGetNotificationLogById = (id: string) => {
+  return useQuery({
+    queryKey: ['notification-log', id],
+    queryFn: () => getNotificationLogById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateNotificationLog = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createNotificationLog,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-logs'] });
+    }
+  });
+};
+
+export const useDeleteNotificationLog = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteNotificationLog,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-logs'] });
+    }
+  });
+};
+
+export const useBulkDeleteNotificationLogs = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteNotificationLogs,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-logs'] });
+    }
+  });
+};
+
+// Subscriptions API
+export const getSubscriptions = async (options?: { 
+  page?: number; 
+  limit?: number;
+  plan?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.plan && options.plan !== 'All Plans') params.set('plan', options.plan);
+  if (options?.dateFrom) params.set('dateFrom', options.dateFrom);
+  if (options?.dateTo) params.set('dateTo', options.dateTo);
+  if (options?.search) params.set('search', options.search);
+  return api(`/subscriptions?${params.toString()}`);
+};
+
+export const getSubscriptionById = async (id: string) => {
+  return api(`/subscriptions/${id}`);
+};
+
+export const createSubscription = async (data: any) => {
+  return api('/subscriptions', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateSubscription = async (id: string, data: any) => {
+  return api(`/subscriptions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteSubscription = async (id: string) => {
+  return api(`/subscriptions/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteSubscriptions = async (ids: string[]) => {
+  return api('/subscriptions/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
+};
+
+export const useGetSubscriptions = (options?: any) => {
+  return useQuery({
+    queryKey: ['subscriptions', options],
+    queryFn: () => getSubscriptions(options)
+  });
+};
+
+export const useGetSubscriptionById = (id: string) => {
+  return useQuery({
+    queryKey: ['subscription', id],
+    queryFn: () => getSubscriptionById(id),
+    enabled: !!id
+  });
+};
+
+export const useCreateSubscription = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createSubscription,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    }
+  });
+};
+
+export const useUpdateSubscription = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updateSubscription(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    }
+  });
+};
+
+export const useDeleteSubscription = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: deleteSubscription,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    }
+  });
+};
+
+export const useBulkDeleteSubscriptions = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteSubscriptions,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    }
   });
 };

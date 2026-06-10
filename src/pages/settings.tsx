@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   Building2,
@@ -76,12 +76,12 @@ const COLOR_THEMES = [
 ];
 
 const inputCls =
-  "bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-600 focus:border-red-500 h-11 rounded-lg";
-const labelCls = "text-gray-300 text-sm font-medium";
+  "bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11 rounded-lg";
+const labelCls = "text-foreground text-sm font-medium";
 
 function SectionTitle({ icon: Icon, label }: { icon: any; label: string }) {
   return (
-    <h2 className="text-xl font-semibold text-white flex items-center gap-2 mb-6">
+    <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-6">
       <Icon className="h-5 w-5 text-red-400" />
       {label}
     </h2>
@@ -90,11 +90,11 @@ function SectionTitle({ icon: Icon, label }: { icon: any; label: string }) {
 
 function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) {
   return (
-    <div className="flex justify-end mt-8 pt-6 border-t border-zinc-800">
+    <div className="flex justify-end mt-8 pt-6 border-t border-border">
       <Button
         onClick={onClick}
         disabled={saving}
-        className="bg-red-600 hover:bg-red-700 text-white h-11 px-10 rounded-lg font-semibold"
+        className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold"
       >
         {saving ? "Saving..." : "Save"}
       </Button>
@@ -138,6 +138,30 @@ export default function Settings() {
     youtubeUrl: ctxSettings.youtubeUrl,
   });
 
+  useEffect(() => {
+    setBusiness({
+      platformName: ctxSettings.platformName,
+      contactNo: ctxSettings.contactNo,
+      inquiryEmail: ctxSettings.inquiryEmail,
+      siteDescription: ctxSettings.siteDescription,
+      copyrightText: ctxSettings.copyrightText,
+      facebookUrl: ctxSettings.facebookUrl,
+      twitterUrl: ctxSettings.twitterUrl,
+      instagramUrl: ctxSettings.instagramUrl,
+      youtubeUrl: ctxSettings.youtubeUrl,
+    });
+  }, [
+    ctxSettings.platformName,
+    ctxSettings.contactNo,
+    ctxSettings.inquiryEmail,
+    ctxSettings.siteDescription,
+    ctxSettings.copyrightText,
+    ctxSettings.facebookUrl,
+    ctxSettings.twitterUrl,
+    ctxSettings.instagramUrl,
+    ctxSettings.youtubeUrl,
+  ]);
+
   // logo preview states
   const [lightLogoPreview, setLightLogoPreview] = useState<string>(ctxSettings.lightLogoUrl || "");
   const [darkLogoPreview, setDarkLogoPreview] = useState<string>(ctxSettings.darkLogoUrl || "");
@@ -145,6 +169,18 @@ export default function Settings() {
   const [lightLogoFile, setLightLogoFile] = useState<File | null>(null);
   const [darkLogoFile, setDarkLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (!lightLogoFile) setLightLogoPreview(ctxSettings.lightLogoUrl || "");
+  }, [ctxSettings.lightLogoUrl, lightLogoFile]);
+
+  useEffect(() => {
+    if (!darkLogoFile) setDarkLogoPreview(ctxSettings.darkLogoUrl || "");
+  }, [ctxSettings.darkLogoUrl, darkLogoFile]);
+
+  useEffect(() => {
+    if (!faviconFile) setFaviconPreview(ctxSettings.faviconUrl || "");
+  }, [ctxSettings.faviconUrl, faviconFile]);
 
   const handleLogoSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -200,103 +236,588 @@ export default function Settings() {
   };
 
   // ── Custom Code ────────────────────────────────────────────────────────
-  const [customCode, setCustomCode] = useState({ headCode: "", bodyCode: "" });
+  const [customCode, setCustomCode] = useState({ headCode: ctxSettings.headerCode || "", bodyCode: ctxSettings.footerCode || "" });
+
+  useEffect(() => {
+    setCustomCode({ headCode: ctxSettings.headerCode || "", bodyCode: ctxSettings.footerCode || "" });
+  }, [ctxSettings.headerCode, ctxSettings.footerCode]);
+
+  const handleSaveCustomCode = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        headerCode: customCode.headCode,
+        footerCode: customCode.bodyCode,
+      });
+      updateCtx({ headerCode: customCode.headCode, footerCode: customCode.bodyCode });
+      await refreshSettings();
+      toast({ title: "Custom code saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Module Settings ────────────────────────────────────────────────────
   const [modules, setModules] = useState({
-    movies: true,
-    tvShows: true,
-    liveTV: true,
-    videos: true,
-    castCrew: true,
-    adsManager: true,
-    subscriptions: true,
-    plans: true,
+    movies: ctxSettings.moduleMovies ?? true,
+    tvShows: ctxSettings.moduleTvShows ?? true,
+    liveTV: ctxSettings.moduleLiveTV ?? true,
+    videos: ctxSettings.moduleVideos ?? true,
+    castCrew: ctxSettings.moduleCastCrew ?? true,
+    adsManager: ctxSettings.moduleAdsManager ?? true,
+    subscriptions: ctxSettings.moduleSubscriptions ?? true,
+    plans: ctxSettings.modulePlans ?? true,
   });
+
+  useEffect(() => {
+    setModules({
+      movies: ctxSettings.moduleMovies ?? true,
+      tvShows: ctxSettings.moduleTvShows ?? true,
+      liveTV: ctxSettings.moduleLiveTV ?? true,
+      videos: ctxSettings.moduleVideos ?? true,
+      castCrew: ctxSettings.moduleCastCrew ?? true,
+      adsManager: ctxSettings.moduleAdsManager ?? true,
+      subscriptions: ctxSettings.moduleSubscriptions ?? true,
+      plans: ctxSettings.modulePlans ?? true,
+    });
+  }, [
+    ctxSettings.moduleMovies,
+    ctxSettings.moduleTvShows,
+    ctxSettings.moduleLiveTV,
+    ctxSettings.moduleVideos,
+    ctxSettings.moduleCastCrew,
+    ctxSettings.moduleAdsManager,
+    ctxSettings.moduleSubscriptions,
+    ctxSettings.modulePlans,
+  ]);
+
+  const handleSaveModules = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        moduleMovies: modules.movies,
+        moduleTvShows: modules.tvShows,
+        moduleLiveTV: modules.liveTV,
+        moduleVideos: modules.videos,
+        moduleCastCrew: modules.castCrew,
+        moduleAdsManager: modules.adsManager,
+        moduleSubscriptions: modules.subscriptions,
+        modulePlans: modules.plans,
+      });
+      updateCtx({
+        moduleMovies: modules.movies,
+        moduleTvShows: modules.tvShows,
+        moduleLiveTV: modules.liveTV,
+        moduleVideos: modules.videos,
+        moduleCastCrew: modules.castCrew,
+        moduleAdsManager: modules.adsManager,
+        moduleSubscriptions: modules.subscriptions,
+        modulePlans: modules.plans,
+      });
+      await refreshSettings();
+      toast({ title: "Module settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Misc Settings ──────────────────────────────────────────────────────
   const [misc, setMisc] = useState({
-    maintenanceMode: false,
-    userRegistration: true,
-    socialLogin: true,
-    twoFactorAuth: false,
-    emailVerification: true,
+    maintenanceMode: ctxSettings.maintenanceMode ?? false,
+    userRegistration: ctxSettings.userRegistration ?? true,
+    socialLogin: ctxSettings.socialLogin ?? true,
+    twoFactorAuth: ctxSettings.twoFactorAuth ?? false,
+    emailVerification: ctxSettings.emailVerification ?? true,
   });
+
+  useEffect(() => {
+    setMisc({
+      maintenanceMode: ctxSettings.maintenanceMode ?? false,
+      userRegistration: ctxSettings.userRegistration ?? true,
+      socialLogin: ctxSettings.socialLogin ?? true,
+      twoFactorAuth: ctxSettings.twoFactorAuth ?? false,
+      emailVerification: ctxSettings.emailVerification ?? true,
+    });
+  }, [
+    ctxSettings.maintenanceMode,
+    ctxSettings.userRegistration,
+    ctxSettings.socialLogin,
+    ctxSettings.twoFactorAuth,
+    ctxSettings.emailVerification,
+  ]);
+
+  const handleSaveMisc = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        maintenanceMode: misc.maintenanceMode,
+        userRegistration: misc.userRegistration,
+        socialLogin: misc.socialLogin,
+        twoFactorAuth: misc.twoFactorAuth,
+        emailVerification: misc.emailVerification,
+      });
+      updateCtx({
+        maintenanceMode: misc.maintenanceMode,
+        userRegistration: misc.userRegistration,
+        socialLogin: misc.socialLogin,
+        twoFactorAuth: misc.twoFactorAuth,
+        emailVerification: misc.emailVerification,
+      });
+      await refreshSettings();
+      toast({ title: "Misc settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Customization ──────────────────────────────────────────────────────
   const [custom, setCustom] = useState({
-    colorTheme: "blue-green",
-    navbarStyle: "Default",
-    navbarHide: false,
-    cardStyle: "Default",
-    menuStyle: "Mini",
-    activeMenuStyle: "Left Bordered",
+    colorTheme: ctxSettings.colorTheme || "blue-green",
+    navbarStyle: ctxSettings.navbarStyle || "Default",
+    navbarHide: ctxSettings.navbarHide ?? false,
+    cardStyle: ctxSettings.cardStyle || "Default",
+    menuStyle: ctxSettings.menuStyle || "Mini",
+    activeMenuStyle: ctxSettings.activeMenuStyle || "Left Bordered",
   });
+
+  useEffect(() => {
+    setCustom({
+      colorTheme: ctxSettings.colorTheme || "blue-green",
+      navbarStyle: ctxSettings.navbarStyle || "Default",
+      navbarHide: ctxSettings.navbarHide ?? false,
+      cardStyle: ctxSettings.cardStyle || "Default",
+      menuStyle: ctxSettings.menuStyle || "Mini",
+      activeMenuStyle: ctxSettings.activeMenuStyle || "Left Bordered",
+    });
+  }, [
+    ctxSettings.colorTheme,
+    ctxSettings.navbarStyle,
+    ctxSettings.navbarHide,
+    ctxSettings.cardStyle,
+    ctxSettings.menuStyle,
+    ctxSettings.activeMenuStyle,
+  ]);
+
+  const handleSaveCustomization = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        colorTheme: custom.colorTheme,
+        navbarStyle: custom.navbarStyle.toLowerCase(),
+        navbarHide: custom.navbarHide,
+        cardStyle: custom.cardStyle.toLowerCase(),
+        menuStyle: custom.menuStyle.toLowerCase(),
+        activeMenuStyle: custom.activeMenuStyle.toLowerCase(),
+      });
+      updateCtx({
+        colorTheme: custom.colorTheme,
+        navbarStyle: custom.navbarStyle.toLowerCase() as any,
+        navbarHide: custom.navbarHide,
+        cardStyle: custom.cardStyle.toLowerCase() as any,
+        menuStyle: custom.menuStyle.toLowerCase() as any,
+        activeMenuStyle: custom.activeMenuStyle.toLowerCase(),
+      });
+      await refreshSettings();
+      toast({ title: "Customization settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Mail Settings ──────────────────────────────────────────────────────
   const [mail, setMail] = useState({
-    email: "info@example.com",
-    mailDriver: "smtp",
-    mailHost: "smtp.gmail.com",
-    mailPort: "587",
-    mailEncryption: "tls",
-    mailUsername: "youremail@gmail.com",
+    email: ctxSettings.mailEmail || "info@example.com",
+    mailDriver: ctxSettings.mailDriver || "smtp",
+    mailHost: ctxSettings.mailHost || "smtp.gmail.com",
+    mailPort: ctxSettings.mailPort || "587",
+    mailEncryption: ctxSettings.mailEncryption || "tls",
+    mailUsername: ctxSettings.mailUsername || "youremail@gmail.com",
     password: "",
-    mailFrom: "youremail@gmail.com",
-    fromName: "NETFLIX",
+    mailFrom: ctxSettings.mailFrom || "youremail@gmail.com",
+    fromName: ctxSettings.mailFromName || "NETFLIX",
   });
+
+  useEffect(() => {
+    setMail({
+      email: ctxSettings.mailEmail || "info@example.com",
+      mailDriver: ctxSettings.mailDriver || "smtp",
+      mailHost: ctxSettings.mailHost || "smtp.gmail.com",
+      mailPort: ctxSettings.mailPort || "587",
+      mailEncryption: ctxSettings.mailEncryption || "tls",
+      mailUsername: ctxSettings.mailUsername || "youremail@gmail.com",
+      password: "", // keep password empty unless user edits
+      mailFrom: ctxSettings.mailFrom || "youremail@gmail.com",
+      fromName: ctxSettings.mailFromName || "NETFLIX",
+    });
+  }, [
+    ctxSettings.mailEmail,
+    ctxSettings.mailDriver,
+    ctxSettings.mailHost,
+    ctxSettings.mailPort,
+    ctxSettings.mailEncryption,
+    ctxSettings.mailUsername,
+    ctxSettings.mailFrom,
+    ctxSettings.mailFromName,
+  ]);
+
+  const handleSaveMail = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        mailEmail: mail.email,
+        mailDriver: mail.mailDriver,
+        mailHost: mail.mailHost,
+        mailPort: mail.mailPort,
+        mailEncryption: mail.mailEncryption,
+        mailUsername: mail.mailUsername,
+        mailPassword: mail.password,
+        mailFrom: mail.mailFrom,
+        mailFromName: mail.fromName,
+      });
+      updateCtx({
+        mailEmail: mail.email,
+        mailDriver: mail.mailDriver,
+        mailHost: mail.mailHost,
+        mailPort: mail.mailPort,
+        mailEncryption: mail.mailEncryption,
+        mailUsername: mail.mailUsername,
+        mailPassword: mail.password,
+        mailFrom: mail.mailFrom,
+        mailFromName: mail.fromName,
+      });
+      await refreshSettings();
+      toast({ title: "Mail settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Notification Settings ──────────────────────────────────────────────
   const [notif, setNotif] = useState({
-    firebaseServerKey: "",
-    firebaseSenderId: "",
-    firebaseApiKey: "",
-    firebaseProjectId: "",
-    firebaseAppId: "",
+    firebaseServerKey: ctxSettings.fcmServerKey || "",
+    firebaseSenderId: ctxSettings.fcmSenderId || "",
+    firebaseApiKey: ctxSettings.firebaseApiKey || "",
+    firebaseProjectId: ctxSettings.firebaseProjectId || "",
+    firebaseAppId: ctxSettings.firebaseAppId || "",
   });
 
+  useEffect(() => {
+    setNotif({
+      firebaseServerKey: ctxSettings.fcmServerKey || "",
+      firebaseSenderId: ctxSettings.fcmSenderId || "",
+      firebaseApiKey: ctxSettings.firebaseApiKey || "",
+      firebaseProjectId: ctxSettings.firebaseProjectId || "",
+      firebaseAppId: ctxSettings.firebaseAppId || "",
+    });
+  }, [
+    ctxSettings.fcmServerKey,
+    ctxSettings.fcmSenderId,
+    ctxSettings.firebaseApiKey,
+    ctxSettings.firebaseProjectId,
+    ctxSettings.firebaseAppId,
+  ]);
+
+  const handleSaveNotification = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        fcmServerKey: notif.firebaseServerKey,
+        fcmSenderId: notif.firebaseSenderId,
+        firebaseApiKey: notif.firebaseApiKey,
+        firebaseProjectId: notif.firebaseProjectId,
+        firebaseAppId: notif.firebaseAppId,
+      });
+      updateCtx({
+        fcmServerKey: notif.firebaseServerKey,
+        fcmSenderId: notif.firebaseSenderId,
+        firebaseApiKey: notif.firebaseApiKey,
+        firebaseProjectId: notif.firebaseProjectId,
+        firebaseAppId: notif.firebaseAppId,
+      });
+      await refreshSettings();
+      toast({ title: "Notification settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── Language Settings ──────────────────────────────────────────────────
-  const [lang, setLang] = useState({ defaultLanguage: "en", rtlSupport: false });
+  const [lang, setLang] = useState({ defaultLanguage: ctxSettings.defaultLanguage || "en", rtlSupport: ctxSettings.rtlSupport ?? false });
+
+  useEffect(() => {
+    setLang({ defaultLanguage: ctxSettings.defaultLanguage || "en", rtlSupport: ctxSettings.rtlSupport ?? false });
+  }, [ctxSettings.defaultLanguage, ctxSettings.rtlSupport]);
+
+  const handleSaveLanguage = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        defaultLanguage: lang.defaultLanguage,
+        rtlSupport: lang.rtlSupport,
+      });
+      updateCtx({
+        defaultLanguage: lang.defaultLanguage,
+        rtlSupport: lang.rtlSupport,
+      });
+      await refreshSettings();
+      toast({ title: "Language settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Notification Configuration ─────────────────────────────────────────
   const [notifCfg, setNotifCfg] = useState({
-    newUser: true,
-    newSubscription: true,
-    newContent: false,
-    paymentSuccess: true,
-    paymentFailed: true,
-    contentExpiry: false,
+    newUser: ctxSettings.notifNewUser ?? true,
+    newSubscription: ctxSettings.notifNewSubscription ?? true,
+    newContent: ctxSettings.notifNewContent ?? false,
+    paymentSuccess: ctxSettings.notifPaymentSuccess ?? true,
+    paymentFailed: ctxSettings.notifPaymentFailed ?? true,
+    contentExpiry: ctxSettings.notifContentExpiry ?? false,
   });
+
+  useEffect(() => {
+    setNotifCfg({
+      newUser: ctxSettings.notifNewUser ?? true,
+      newSubscription: ctxSettings.notifNewSubscription ?? true,
+      newContent: ctxSettings.notifNewContent ?? false,
+      paymentSuccess: ctxSettings.notifPaymentSuccess ?? true,
+      paymentFailed: ctxSettings.notifPaymentFailed ?? true,
+      contentExpiry: ctxSettings.notifContentExpiry ?? false,
+    });
+  }, [
+    ctxSettings.notifNewUser,
+    ctxSettings.notifNewSubscription,
+    ctxSettings.notifNewContent,
+    ctxSettings.notifPaymentSuccess,
+    ctxSettings.notifPaymentFailed,
+    ctxSettings.notifContentExpiry,
+  ]);
+
+  const handleSaveNotifConfig = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        notifNewUser: notifCfg.newUser,
+        notifNewSubscription: notifCfg.newSubscription,
+        notifNewContent: notifCfg.newContent,
+        notifPaymentSuccess: notifCfg.paymentSuccess,
+        notifPaymentFailed: notifCfg.paymentFailed,
+        notifContentExpiry: notifCfg.contentExpiry,
+      });
+      updateCtx({
+        notifNewUser: notifCfg.newUser,
+        notifNewSubscription: notifCfg.newSubscription,
+        notifNewContent: notifCfg.newContent,
+        notifPaymentSuccess: notifCfg.paymentSuccess,
+        notifPaymentFailed: notifCfg.paymentFailed,
+        notifContentExpiry: notifCfg.contentExpiry,
+      });
+      await refreshSettings();
+      toast({ title: "Notification configuration saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Currency Settings ──────────────────────────────────────────────────
   const [currency, setCurrency] = useState({
-    currency: "USD",
-    currencySymbol: "$",
-    currencyPosition: "left",
-    decimalPlaces: "2",
+    currency: ctxSettings.currencyCode || "USD",
+    currencySymbol: ctxSettings.currencySymbol || "$",
+    currencyPosition: ctxSettings.currencyPosition === "after" ? "right" : "left",
+    decimalPlaces: ctxSettings.decimalPlaces?.toString() || "2",
   });
+
+  useEffect(() => {
+    setCurrency({
+      currency: ctxSettings.currencyCode || "USD",
+      currencySymbol: ctxSettings.currencySymbol || "$",
+      currencyPosition: ctxSettings.currencyPosition === "after" ? "right" : "left",
+      decimalPlaces: ctxSettings.decimalPlaces?.toString() || "2",
+    });
+  }, [
+    ctxSettings.currencyCode,
+    ctxSettings.currencySymbol,
+    ctxSettings.currencyPosition,
+    ctxSettings.decimalPlaces,
+  ]);
+
+  const handleSaveCurrency = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        currencyCode: currency.currency,
+        currencySymbol: currency.currencySymbol,
+        currencyPosition: currency.currencyPosition === "right" ? "after" : "before",
+        decimalPlaces: parseInt(currency.decimalPlaces, 10),
+      });
+      updateCtx({
+        currencyCode: currency.currency,
+        currencySymbol: currency.currencySymbol,
+        currencyPosition: currency.currencyPosition === "right" ? "after" : "before" as any,
+        decimalPlaces: parseInt(currency.decimalPlaces, 10),
+      });
+      await refreshSettings();
+      toast({ title: "Currency settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Storage Settings ───────────────────────────────────────────────────
   const [storage, setStorage] = useState({
-    localStorage: true,
-    s3Storage: true,
-    bunnyCDN: false,
-    awsAccessKeyId: "",
-    awsSecretAccessKey: "",
-    awsDefaultRegion: "",
-    awsBucket: "",
-    awsPathStyle: false,
+    localStorage: ctxSettings.storageDriver === 'local',
+    s3Storage: ctxSettings.storageDriver === 's3',
+    bunnyCDN: ctxSettings.storageDriver === 'bunny',
+    awsAccessKeyId: ctxSettings.awsAccessKeyId || "",
+    awsSecretAccessKey: ctxSettings.awsSecretAccessKey || "",
+    awsDefaultRegion: ctxSettings.awsRegion || "",
+    awsBucket: ctxSettings.awsBucket || "",
+    awsPathStyle: ctxSettings.awsPathStyleEndpoint ?? false,
+    bunnyStorageZone: ctxSettings.bunnyStorageZone || "",
+    bunnyAccessKey: ctxSettings.bunnyAccessKey || "",
+    bunnyCdnUrl: ctxSettings.bunnyCdnUrl || "",
   });
+
+  useEffect(() => {
+    setStorage({
+      localStorage: ctxSettings.storageDriver === 'local',
+      s3Storage: ctxSettings.storageDriver === 's3',
+      bunnyCDN: ctxSettings.storageDriver === 'bunny',
+      awsAccessKeyId: ctxSettings.awsAccessKeyId || "",
+      awsSecretAccessKey: ctxSettings.awsSecretAccessKey || "",
+      awsDefaultRegion: ctxSettings.awsRegion || "",
+      awsBucket: ctxSettings.awsBucket || "",
+      awsPathStyle: ctxSettings.awsPathStyleEndpoint ?? false,
+      bunnyStorageZone: ctxSettings.bunnyStorageZone || "",
+      bunnyAccessKey: ctxSettings.bunnyAccessKey || "",
+      bunnyCdnUrl: ctxSettings.bunnyCdnUrl || "",
+    });
+  }, [
+    ctxSettings.storageDriver,
+    ctxSettings.awsAccessKeyId,
+    ctxSettings.awsSecretAccessKey,
+    ctxSettings.awsRegion,
+    ctxSettings.awsBucket,
+    ctxSettings.awsPathStyleEndpoint,
+    ctxSettings.bunnyStorageZone,
+    ctxSettings.bunnyAccessKey,
+    ctxSettings.bunnyCdnUrl,
+  ]);
+
+  const handleSaveStorage = async () => {
+    setSaving(true);
+    try {
+      let driver: 'local' | 's3' | 'bunny' = 'local';
+      if (storage.s3Storage) driver = 's3';
+      else if (storage.bunnyCDN) driver = 'bunny';
+
+      await updateSettingsMutation.mutateAsync({
+        storageDriver: driver,
+        awsAccessKeyId: storage.awsAccessKeyId,
+        awsSecretAccessKey: storage.awsSecretAccessKey,
+        awsRegion: storage.awsDefaultRegion,
+        awsBucket: storage.awsBucket,
+        awsPathStyleEndpoint: storage.awsPathStyle,
+        bunnyStorageZone: storage.bunnyStorageZone,
+        bunnyAccessKey: storage.bunnyAccessKey,
+        bunnyCdnUrl: storage.bunnyCdnUrl,
+      });
+      updateCtx({
+        storageDriver: driver,
+        awsAccessKeyId: storage.awsAccessKeyId,
+        awsSecretAccessKey: storage.awsSecretAccessKey,
+        awsRegion: storage.awsDefaultRegion,
+        awsBucket: storage.awsBucket,
+        awsPathStyleEndpoint: storage.awsPathStyle,
+        bunnyStorageZone: storage.bunnyStorageZone,
+        bunnyAccessKey: storage.bunnyAccessKey,
+        bunnyCdnUrl: storage.bunnyCdnUrl,
+      });
+      await refreshSettings();
+      toast({ title: "Storage settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── SEO Settings ───────────────────────────────────────────────────────
   const [seo, setSeo] = useState({
-    seoImage: null as string | null,
-    metaTitle: "",
-    metaKeywords: "",
-    googleVerification: "",
-    canonicalUrl: "",
-    metaDescription: "",
+    seoImage: ctxSettings.seoImage || null,
+    metaTitle: ctxSettings.metaTitle || "",
+    metaKeywords: ctxSettings.metaKeywords || "",
+    googleVerification: ctxSettings.googleVerification || "",
+    canonicalUrl: ctxSettings.canonicalUrl || "",
+    metaDescription: ctxSettings.metaDescription || "",
   });
+
+  useEffect(() => {
+    setSeo({
+      seoImage: ctxSettings.seoImage || null,
+      metaTitle: ctxSettings.metaTitle || "",
+      metaKeywords: ctxSettings.metaKeywords || "",
+      googleVerification: ctxSettings.googleVerification || "",
+      canonicalUrl: ctxSettings.canonicalUrl || "",
+      metaDescription: ctxSettings.metaDescription || "",
+    });
+  }, [
+    ctxSettings.seoImage,
+    ctxSettings.metaTitle,
+    ctxSettings.metaKeywords,
+    ctxSettings.googleVerification,
+    ctxSettings.canonicalUrl,
+    ctxSettings.metaDescription,
+  ]);
+
+  const handleSaveSeo = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        metaTitle: seo.metaTitle,
+        metaDescription: seo.metaDescription,
+        metaKeywords: seo.metaKeywords,
+        googleAnalyticsId: ctxSettings.googleAnalyticsId || "",
+        seoImage: seo.seoImage || "",
+        googleVerification: seo.googleVerification,
+        canonicalUrl: seo.canonicalUrl,
+      });
+      updateCtx({
+        metaTitle: seo.metaTitle,
+        metaDescription: seo.metaDescription,
+        metaKeywords: seo.metaKeywords,
+        googleAnalyticsId: ctxSettings.googleAnalyticsId || "",
+        seoImage: seo.seoImage || "",
+        googleVerification: seo.googleVerification,
+        canonicalUrl: seo.canonicalUrl,
+      });
+      await refreshSettings();
+      toast({ title: "SEO settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Section renderers ──────────────────────────────────────────────────
 
@@ -316,20 +837,20 @@ export default function Settings() {
     <div className="space-y-2">
       <Label className={labelCls}>{label}</Label>
       <div
-        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-zinc-700 bg-zinc-900 cursor-pointer hover:border-red-500/60 transition-colors overflow-hidden"
+        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-card cursor-pointer hover:border-red-500/60 transition-colors overflow-hidden"
         onClick={() => inputRef.current?.click()}
       >
         {preview ? (
           <>
             <img src={preview} alt={label} className="h-full w-full object-contain p-2" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <Upload className="h-5 w-5 text-white" />
+              <Upload className="h-5 w-5 text-foreground" />
             </div>
           </>
         ) : (
           <>
-            <Upload className="h-5 w-5 text-gray-500 mb-1" />
-            <p className="text-xs text-gray-500">Click to upload</p>
+            <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+            <p className="text-xs text-muted-foreground">Click to upload</p>
           </>
         )}
         <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={onSelect} />
@@ -343,7 +864,7 @@ export default function Settings() {
 
       {/* Logo uploads */}
       <div className="mb-6">
-        <p className="text-sm font-semibold text-gray-300 mb-4">Logos & Favicon</p>
+        <p className="text-sm font-semibold text-foreground mb-4">Logos & Favicon</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <LogoUploadBox
             label="Light Theme Logo"
@@ -368,16 +889,16 @@ export default function Settings() {
       </div>
 
       {/* Theme toggle */}
-      <div className="mb-6 flex items-center justify-between p-4 rounded-lg border border-zinc-700 bg-zinc-900">
+      <div className="mb-6 flex items-center justify-between p-4 rounded-lg border border-border bg-card">
         <div className="flex items-center gap-3">
           {resolvedTheme === "dark" ? (
-            <Moon className="h-4 w-4 text-gray-400" />
+            <Moon className="h-4 w-4 text-muted-foreground" />
           ) : (
             <Sun className="h-4 w-4 text-yellow-400" />
           )}
           <div>
-            <p className="text-sm text-gray-200 font-medium">Dark Mode</p>
-            <p className="text-xs text-gray-500 mt-0.5">Toggle between dark and light theme</p>
+            <p className="text-sm text-foreground font-medium">Dark Mode</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Toggle between dark and light theme</p>
           </div>
         </div>
         <Switch
@@ -413,7 +934,7 @@ export default function Settings() {
             value={business.siteDescription}
             onChange={(e) => setBusiness({ ...business, siteDescription: e.target.value })}
             placeholder="StreamVault: Your Ultimate Destination for Unlimited Movies and Shows!"
-            className="bg-zinc-900 border-zinc-700 text-white focus:border-red-500 rounded-lg resize-none"
+            className="bg-input border-border text-foreground focus:border-red-500 rounded-lg resize-none"
             rows={3}
           />
         </div>
@@ -421,7 +942,7 @@ export default function Settings() {
 
       {/* Social URLs */}
       <div className="mb-5">
-        <p className="text-sm font-semibold text-gray-300 mb-4">Social Media Links</p>
+        <p className="text-sm font-semibold text-foreground mb-4">Social Media Links</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {[
             { key: "facebookUrl", label: "Facebook URL", placeholder: "https://facebook.com/yourpage" },
@@ -443,12 +964,12 @@ export default function Settings() {
       </div>
 
       {/* Quick Links */}
-      <div className="pt-4 border-t border-zinc-800 space-y-3">
-        <p className="text-sm text-gray-400 font-medium">Quick Links</p>
+      <div className="pt-4 border-t border-border space-y-3">
+        <p className="text-sm text-muted-foreground font-medium">Quick Links</p>
         <div className="flex gap-3 flex-wrap">
           <Button
             variant="outline"
-            className="border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white gap-2 rounded-lg h-10"
+            className="border-border text-foreground hover:bg-muted hover:text-foreground gap-2 rounded-lg h-10"
             onClick={() => setLocation("/settings/branding")}
           >
             <Palette className="h-4 w-4" />
@@ -456,7 +977,7 @@ export default function Settings() {
           </Button>
           <Button
             variant="outline"
-            className="border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white gap-2 rounded-lg h-10"
+            className="border-border text-foreground hover:bg-muted hover:text-foreground gap-2 rounded-lg h-10"
             onClick={() => setLocation("/settings/icons")}
           >
             <Copy className="h-4 w-4" />
@@ -475,28 +996,28 @@ export default function Settings() {
       <div className="space-y-5">
         <div className="space-y-2">
           <Label className={labelCls}>Head Code</Label>
-          <p className="text-xs text-gray-500">Code will be added before &lt;/head&gt; tag</p>
+          <p className="text-xs text-muted-foreground">Code will be added before &lt;/head&gt; tag</p>
           <Textarea
             value={customCode.headCode}
             onChange={(e) => setCustomCode({ ...customCode, headCode: e.target.value })}
             placeholder="<!-- Your head code here -->"
-            className="bg-zinc-900 border-zinc-700 text-white focus:border-red-500 rounded-lg font-mono text-sm resize-none"
+            className="bg-input border-border text-foreground focus:border-red-500 rounded-lg font-mono text-sm resize-none"
             rows={6}
           />
         </div>
         <div className="space-y-2">
           <Label className={labelCls}>Body Code</Label>
-          <p className="text-xs text-gray-500">Code will be added before &lt;/body&gt; tag</p>
+          <p className="text-xs text-muted-foreground">Code will be added before &lt;/body&gt; tag</p>
           <Textarea
             value={customCode.bodyCode}
             onChange={(e) => setCustomCode({ ...customCode, bodyCode: e.target.value })}
             placeholder="<!-- Your body code here -->"
-            className="bg-zinc-900 border-zinc-700 text-white focus:border-red-500 rounded-lg font-mono text-sm resize-none"
+            className="bg-input border-border text-foreground focus:border-red-500 rounded-lg font-mono text-sm resize-none"
             rows={6}
           />
         </div>
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveCustomCode} />
     </div>
   );
 
@@ -518,9 +1039,9 @@ export default function Settings() {
         ).map(({ key, label }) => (
           <div
             key={key}
-            className="flex items-center justify-between h-12 px-4 rounded-lg border border-zinc-700 bg-zinc-900"
+            className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card"
           >
-            <span className="text-sm text-gray-300 font-medium">{label}</span>
+            <span className="text-sm text-foreground font-medium">{label}</span>
             <Switch
               checked={modules[key]}
               onCheckedChange={(v) => setModules({ ...modules, [key]: v })}
@@ -529,7 +1050,7 @@ export default function Settings() {
           </div>
         ))}
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveModules} />
     </div>
   );
 
@@ -548,11 +1069,11 @@ export default function Settings() {
         ).map(({ key, label, desc }) => (
           <div
             key={key}
-            className="flex items-center justify-between p-4 rounded-lg border border-zinc-700 bg-zinc-900"
+            className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
           >
             <div>
-              <p className="text-sm text-gray-200 font-medium">{label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+              <p className="text-sm text-foreground font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
             </div>
             <Switch
               checked={misc[key]}
@@ -562,7 +1083,7 @@ export default function Settings() {
           </div>
         ))}
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveMisc} />
     </div>
   );
 
@@ -573,7 +1094,7 @@ export default function Settings() {
       {/* Color Customizer */}
       <div className="space-y-3 mb-7">
         <div className="flex items-center justify-between">
-          <Label className="text-gray-200 font-medium">Color Customizer</Label>
+          <Label className="text-foreground font-medium">Color Customizer</Label>
           <button className="text-sm text-red-400 hover:text-red-300 font-medium">Custom ↺</button>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -582,7 +1103,7 @@ export default function Settings() {
               key={t.id}
               onClick={() => setCustom({ ...custom, colorTheme: t.id })}
               className={`h-14 w-24 rounded-lg border-2 overflow-hidden relative transition-all ${
-                custom.colorTheme === t.id ? "border-red-500 shadow-lg shadow-red-500/20" : "border-zinc-700 hover:border-zinc-500"
+                custom.colorTheme === t.id ? "border-red-500 shadow-lg shadow-red-500/20" : "border-border hover:border-red-500"
               }`}
             >
               <div className="absolute inset-0 flex">
@@ -600,7 +1121,7 @@ export default function Settings() {
 
       {/* Navbar Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-gray-200 font-medium">Navbar Style</Label>
+        <Label className="text-foreground font-medium">Navbar Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Glass", "Sticky", "Transparent", "Default"].map((s) => (
             <button
@@ -608,8 +1129,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, navbarStyle: s })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.navbarStyle === s
-                  ? "bg-red-600 border-red-600 text-white"
-                  : "border-zinc-700 text-gray-300 hover:border-zinc-500 hover:text-white bg-zinc-900"
+                  ? "bg-red-600 border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -619,8 +1140,8 @@ export default function Settings() {
       </div>
 
       {/* Navbar Hide */}
-      <div className="flex items-center justify-between py-4 border-t border-b border-zinc-800 mb-7">
-        <Label className="text-gray-200 font-medium">Navbar Hide</Label>
+      <div className="flex items-center justify-between py-4 border-t border-b border-border mb-7">
+        <Label className="text-foreground font-medium">Navbar Hide</Label>
         <Switch
           checked={custom.navbarHide}
           onCheckedChange={(v) => setCustom({ ...custom, navbarHide: v })}
@@ -630,7 +1151,7 @@ export default function Settings() {
 
       {/* Card Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-gray-200 font-medium">Card Style</Label>
+        <Label className="text-foreground font-medium">Card Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Default", "Glass", "Transparent"].map((s) => (
             <button
@@ -638,8 +1159,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, cardStyle: s })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.cardStyle === s
-                  ? "bg-red-600 border-red-600 text-white"
-                  : "border-zinc-700 text-gray-300 hover:border-zinc-500 hover:text-white bg-zinc-900"
+                  ? "bg-red-600 border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -650,7 +1171,7 @@ export default function Settings() {
 
       {/* Menu Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-gray-200 font-medium">Menu Style</Label>
+        <Label className="text-foreground font-medium">Menu Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Mini", "Hover", "Boxed", "Soft"].map((s) => (
             <button
@@ -658,8 +1179,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, menuStyle: s })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.menuStyle === s
-                  ? "bg-red-600 border-red-600 text-white"
-                  : "border-zinc-700 text-gray-300 hover:border-zinc-500 hover:text-white bg-zinc-900"
+                  ? "bg-red-600 border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -670,7 +1191,7 @@ export default function Settings() {
 
       {/* Active Menu Style */}
       <div className="space-y-3">
-        <Label className="text-gray-200 font-medium">Active Menu Style</Label>
+        <Label className="text-foreground font-medium">Active Menu Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Rounded One Side", "Rounded All", "Pill One Side", "Pill All", "Left Bordered", "Full Width"].map((s) => (
             <button
@@ -678,8 +1199,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, activeMenuStyle: s })}
               className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.activeMenuStyle === s
-                  ? "bg-red-600 border-red-600 text-white"
-                  : "border-zinc-700 text-gray-300 hover:border-zinc-500 hover:text-white bg-zinc-900"
+                  ? "bg-red-600 border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -688,7 +1209,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveCustomization} />
     </div>
   );
 
@@ -733,7 +1254,7 @@ export default function Settings() {
           />
         </div>
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveMail} />
     </div>
   );
 
@@ -761,7 +1282,7 @@ export default function Settings() {
           </div>
         ))}
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveNotification} />
     </div>
   );
 
@@ -775,10 +1296,10 @@ export default function Settings() {
             value={lang.defaultLanguage}
             onValueChange={(v) => setLang({ ...lang, defaultLanguage: v })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white h-11 rounded-lg">
+            <SelectTrigger className="bg-input border-border text-foreground h-11 rounded-lg">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="en">English</SelectItem>
               <SelectItem value="ar">Arabic</SelectItem>
               <SelectItem value="fr">French</SelectItem>
@@ -789,8 +1310,8 @@ export default function Settings() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-zinc-700 bg-zinc-900 self-end">
-          <span className="text-sm text-gray-300 font-medium">RTL Support</span>
+        <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card self-end">
+          <span className="text-sm text-foreground font-medium">RTL Support</span>
           <Switch
             checked={lang.rtlSupport}
             onCheckedChange={(v) => setLang({ ...lang, rtlSupport: v })}
@@ -798,7 +1319,7 @@ export default function Settings() {
           />
         </div>
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveLanguage} />
     </div>
   );
 
@@ -818,11 +1339,11 @@ export default function Settings() {
         ).map(({ key, label, desc }) => (
           <div
             key={key}
-            className="flex items-center justify-between p-4 rounded-lg border border-zinc-700 bg-zinc-900"
+            className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
           >
             <div>
-              <p className="text-sm text-gray-200 font-medium">{label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+              <p className="text-sm text-foreground font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
             </div>
             <Switch
               checked={notifCfg[key]}
@@ -832,7 +1353,7 @@ export default function Settings() {
           </div>
         ))}
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveNotifConfig} />
     </div>
   );
 
@@ -868,10 +1389,10 @@ export default function Settings() {
             value={currency.currencyPosition}
             onValueChange={(v) => setCurrency({ ...currency, currencyPosition: v })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white h-11 rounded-lg">
+            <SelectTrigger className="bg-input border-border text-foreground h-11 rounded-lg">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="left">Left ($10)</SelectItem>
               <SelectItem value="right">Right (10$)</SelectItem>
             </SelectContent>
@@ -888,14 +1409,14 @@ export default function Settings() {
           />
         </div>
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveCurrency} />
     </div>
   );
 
   const renderStorage = () => (
     <div>
       <SectionTitle icon={HardDrive} label="Storage Settings" />
-      <div className="space-y-0 mb-6 rounded-lg border border-zinc-700 overflow-hidden">
+      <div className="space-y-0 mb-6 rounded-lg border border-border overflow-hidden">
         {(
           [
             { key: "localStorage", label: "Local Storage" },
@@ -905,11 +1426,11 @@ export default function Settings() {
         ).map(({ key, label }, i, arr) => (
           <div
             key={key}
-            className={`flex items-center justify-between px-5 py-4 bg-zinc-900 ${
-              i < arr.length - 1 ? "border-b border-zinc-700" : ""
+            className={`flex items-center justify-between px-5 py-4 bg-card ${
+              i < arr.length - 1 ? "border-b border-border" : ""
             }`}
           >
-            <span className="text-gray-200 font-medium">{label}</span>
+            <span className="text-foreground font-medium">{label}</span>
             <Switch
               checked={storage[key]}
               onCheckedChange={(v) => setStorage({ ...storage, [key]: v })}
@@ -945,11 +1466,11 @@ export default function Settings() {
           <Input
             value={storage.awsPathStyle ? "True" : "False"}
             readOnly
-            className="bg-zinc-900 border-zinc-700 text-gray-400 h-11 rounded-lg cursor-not-allowed"
+            className="bg-card border-border text-muted-foreground h-11 rounded-lg cursor-not-allowed"
           />
         </div>
       </div>
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveStorage} />
     </div>
   );
 
@@ -964,7 +1485,7 @@ export default function Settings() {
           </Label>
           <div
             onClick={() => seoImageRef.current?.click()}
-            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-700 bg-zinc-900 hover:border-red-500/60 cursor-pointer transition-all overflow-hidden"
+            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-card hover:border-red-500/60 cursor-pointer transition-all overflow-hidden"
             style={{ minHeight: "168px" }}
           >
             {seo.seoImage ? (
@@ -978,13 +1499,13 @@ export default function Settings() {
                   }}
                   className="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center z-10"
                 >
-                  <X className="h-3.5 w-3.5 text-white" />
+                  <X className="h-3.5 w-3.5 text-foreground" />
                 </button>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 py-8">
-                <ImageIcon className="h-8 w-8 text-zinc-600" />
-                <p className="text-sm text-gray-500 text-center px-4">Choose Media to Upload</p>
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground text-center px-4">Choose Media to Upload</p>
               </div>
             )}
           </div>
@@ -1010,7 +1531,7 @@ export default function Settings() {
               <Label className={labelCls}>
                 Meta Title <span className="text-red-500">*</span>
               </Label>
-              <span className="text-xs text-gray-500">{seo.metaTitle.length}/100</span>
+              <span className="text-xs text-muted-foreground">{seo.metaTitle.length}/100</span>
             </div>
             <Input
               value={seo.metaTitle}
@@ -1061,18 +1582,18 @@ export default function Settings() {
           <Label className={labelCls}>
             Site Meta Description <span className="text-red-500">*</span>
           </Label>
-          <span className="text-xs text-gray-500">{seo.metaDescription.length}/200</span>
+          <span className="text-xs text-muted-foreground">{seo.metaDescription.length}/200</span>
         </div>
         <Textarea
           value={seo.metaDescription}
           onChange={(e) => setSeo({ ...seo, metaDescription: e.target.value.slice(0, 200) })}
           placeholder="Enter Meta Description"
-          className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-600 focus:border-red-500 rounded-lg resize-none"
+          className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 rounded-lg resize-none"
           rows={4}
         />
       </div>
 
-      <SaveBtn saving={saving} onClick={handleSave} />
+      <SaveBtn saving={saving} onClick={handleSaveSeo} />
     </div>
   );
 
@@ -1098,14 +1619,14 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-400">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-muted-foreground">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Settings</span>
+        <span className="text-foreground font-medium">Settings</span>
         {activeSection !== "business" && (
           <>
             <span>/</span>
-            <span className="text-gray-400">{activeLabel}</span>
+            <span className="text-muted-foreground">{activeLabel}</span>
           </>
         )}
       </div>
@@ -1114,7 +1635,7 @@ export default function Settings() {
       <div className="flex flex-col md:flex-row gap-6 items-start">
         {/* Left: Sub-navigation */}
         <div className="w-full md:w-64 flex-shrink-0">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             {SECTIONS.map((section) => {
               const Icon = section.icon;
               const isActive = activeSection === section.id;
@@ -1122,10 +1643,10 @@ export default function Settings() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all border-b border-zinc-800 last:border-b-0 text-left ${
+                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all border-b border-border last:border-b-0 text-left ${
                     isActive
-                      ? "bg-red-600 text-white"
-                      : "text-gray-400 hover:bg-zinc-800 hover:text-white"
+                      ? "bg-red-600 text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
@@ -1135,7 +1656,7 @@ export default function Settings() {
             })}
 
             {/* Danger Zone in sidebar */}
-            <div className="border-t border-zinc-700 mt-1 pt-1">
+            <div className="border-t border-border mt-1 pt-1">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <button className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-red-400 hover:bg-red-600/10 hover:text-red-300 transition-all text-left">
@@ -1143,21 +1664,21 @@ export default function Settings() {
                     Deactivate Account
                   </button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-zinc-900 border border-zinc-700 text-white">
+                <AlertDialogContent className="bg-card border border-border text-foreground">
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Deactivate Account?</AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-400">
+                    <AlertDialogTitle className="text-foreground">Deactivate Account?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-muted-foreground">
                       This action cannot be undone. You will lose access to this admin panel.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-zinc-800 border-zinc-600 text-gray-300 hover:bg-zinc-700 hover:text-white">
+                    <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted hover:text-foreground">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={async () => {
                         try {
-                          await deleteAccountMutation.mutateAsync();
+                          await deleteAccountMutation.mutateAsync(undefined);
                           toast({ title: "Account deactivated successfully" });
                           setLocation("/login");
                         } catch {
@@ -1165,7 +1686,7 @@ export default function Settings() {
                         }
                       }}
                       disabled={deleteAccountMutation.isPending}
-                      className="bg-red-600 hover:bg-red-700 text-white border-0"
+                      className="bg-red-600 hover:bg-red-700 text-foreground border-0"
                     >
                       {deleteAccountMutation.isPending ? "Deactivating..." : "Yes, Deactivate"}
                     </AlertDialogAction>
@@ -1178,7 +1699,7 @@ export default function Settings() {
 
         {/* Right: Form content */}
         <div className="flex-1 min-w-0">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+          <div className="rounded-xl border border-border bg-card/50 p-6">
             {renderSection()}
           </div>
         </div>

@@ -31,31 +31,35 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useGetSubscriptionPlans,
+  useDeleteSubscriptionPlan,
+  useUpdateSubscriptionPlan,
+  useBulkDeleteSubscriptionPlans,
+} from "@/lib/api-client";
 
 type Plan = {
   id: string;
   name: string;
   duration: string;
+  durationValue: number;
   level: number;
   price: number;
   discount: number;
   totalPrice: number;
   status: boolean;
+  description: string;
 };
-
-const DUMMY_PLANS: Plan[] = [
-  { id: "1", name: "Ultimate Plan", duration: "Year", level: 5, price: 199.99, discount: 20, totalPrice: 159.99, status: true },
-  { id: "2", name: "Premium Plan", duration: "6 Months", level: 4, price: 99.99, discount: 10, totalPrice: 89.99, status: true },
-  { id: "3", name: "Standard Plan", duration: "3 Months", level: 3, price: 59.99, discount: 5, totalPrice: 56.99, status: true },
-  { id: "4", name: "Basic Plan", duration: "Month", level: 2, price: 19.99, discount: 0, totalPrice: 19.99, status: true },
-  { id: "5", name: "Starter Plan", duration: "Week", level: 1, price: 6.99, discount: 0, totalPrice: 6.99, status: false },
-  { id: "6", name: "Trial Plan", duration: "Day", level: 1, price: 1.99, discount: 0, totalPrice: 1.99, status: true },
-];
 
 export default function PlansPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [plans, setPlans] = useState<Plan[]>(DUMMY_PLANS);
+  const { data: plansData, isLoading } = useGetSubscriptionPlans();
+  const deletePlan = useDeleteSubscriptionPlan();
+  const updatePlan = useUpdateSubscriptionPlan();
+  const bulkDeletePlans = useBulkDeleteSubscriptionPlans();
+  
+  const plans = plansData?.data || [];
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -63,7 +67,7 @@ export default function PlansPage() {
   const [confirmDelete, setConfirmDelete] = useState<Plan | null>(null);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
 
-  const filtered = plans.filter((p) => {
+  const filtered = plans.filter((p: Plan) => {
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchStatus =
       statusFilter === "all" ||
@@ -75,78 +79,96 @@ export default function PlansPage() {
   const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.includes(p.id));
 
   const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? [] : filtered.map((p) => p.id));
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((p) => p.id));
+    }
   };
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const toggleStatus = (id: string) => {
-    setPlans((prev) => prev.map((p) => (p.id === id ? { ...p, status: !p.status } : p)));
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    const plan = plans.find((p: Plan) => p.id === id);
+    if (!plan) return;
+    
+    await updatePlan.mutateAsync({
+      id,
+      data: { status: !currentStatus },
+    });
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!bulkAction || selectedIds.length === 0) {
       toast({ title: "Select items and an action first", variant: "destructive" });
       return;
     }
     if (bulkAction === "delete") {
-      setPlans((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
+      await bulkDeletePlans.mutateAsync(selectedIds);
       setSelectedIds([]);
       toast({ title: `${selectedIds.length} plan(s) deleted` });
     }
     setBulkAction("");
   };
 
-  const confirmDeleteAction = () => {
+  const confirmDeleteAction = async () => {
     if (!confirmDelete) return;
-    setPlans((prev) => prev.filter((p) => p.id !== confirmDelete.id));
+    await deletePlan.mutateAsync(confirmDelete.id);
     setSelectedIds((prev) => prev.filter((id) => id !== confirmDelete.id));
     toast({ title: `"${confirmDelete.name}" deleted successfully` });
     setConfirmDelete(null);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading plans...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Plans</span>
+        <span className="text-foreground font-medium">Plans</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Show entries */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Show</span>
+          <span className="text-sm text-muted-foreground">Show</span>
           <Select value={entriesPerPage} onValueChange={setEntriesPerPage}>
-            <SelectTrigger className="w-20 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+            <SelectTrigger className="w-20 bg-card border-border text-foreground h-10 rounded-lg">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+            <SelectContent className="bg-muted border-border text-foreground">
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="25">25</SelectItem>
               <SelectItem value="50">50</SelectItem>
               <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-gray-400">entries</span>
+          <span className="text-sm text-muted-foreground">entries</span>
         </div>
 
         {/* Bulk action */}
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-red-600 text-white h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -156,14 +178,14 @@ export default function PlansPage() {
         {/* Export / Import */}
         <Button
           variant="outline"
-          className="border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white h-10 gap-2 rounded-lg"
+          className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg"
         >
           <Upload className="h-4 w-4" />
           Export
         </Button>
         <Button
           variant="outline"
-          className="border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:text-white h-10 gap-2 rounded-lg"
+          className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg"
         >
           <Download className="h-4 w-4" />
           Import
@@ -171,10 +193,10 @@ export default function PlansPage() {
 
         {/* Status filter */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-28 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
@@ -183,19 +205,19 @@ export default function PlansPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
           />
         </div>
 
         {/* New button */}
         <Button
           onClick={() => setLocation("/plans/new")}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -203,44 +225,44 @@ export default function PlansPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="w-12 pl-4">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Name <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Duration <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Level <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Price <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Discount <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Total Price <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">Status <ChevronDown className="h-3.5 w-3.5 text-gray-500" /></div>
               </TableHead>
-              <TableHead className="text-gray-300 font-semibold text-sm text-right pr-6">Action</TableHead>
+              <TableHead className="text-foreground font-semibold text-sm text-right pr-6">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow className="border-zinc-800">
+              <TableRow className="border-border">
                 <TableCell colSpan={9} className="text-center text-gray-500 py-16">
                   No plans found
                 </TableCell>
@@ -249,25 +271,25 @@ export default function PlansPage() {
               filtered.map((plan) => (
                 <TableRow
                   key={plan.id}
-                  className="border-zinc-800 hover:bg-zinc-900/60 transition-colors"
+                  className="border-border hover:bg-card/60 transition-colors"
                 >
                   <TableCell className="pl-4">
                     <Checkbox
                       checked={selectedIds.includes(plan.id)}
                       onCheckedChange={() => toggleSelect(plan.id)}
-                      className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-white">{plan.name}</TableCell>
+                  <TableCell className="font-medium text-foreground">{plan.name}</TableCell>
                   <TableCell>
-                    <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-gray-300 text-xs font-medium border border-zinc-700">
+                    <span className="px-2.5 py-1 rounded-full bg-muted text-foreground text-xs font-medium border border-border">
                       {plan.duration}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-gray-300 font-medium">{plan.level}</span>
+                    <span className="text-foreground font-medium">{plan.level}</span>
                   </TableCell>
-                  <TableCell className="text-gray-300">${plan.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-foreground">${Number(plan.price).toFixed(2)}</TableCell>
                   <TableCell>
                     {plan.discount > 0 ? (
                       <span className="px-2 py-0.5 rounded-md bg-green-600/20 text-green-400 text-xs font-semibold border border-green-600/30">
@@ -277,11 +299,11 @@ export default function PlansPage() {
                       <span className="text-gray-500">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-white font-semibold">${plan.totalPrice.toFixed(2)}</TableCell>
+                  <TableCell className="text-foreground font-semibold">${Number(plan.totalPrice).toFixed(2)}</TableCell>
                   <TableCell>
                     <Switch
                       checked={plan.status}
-                      onCheckedChange={() => toggleStatus(plan.id)}
+                      onCheckedChange={() => toggleStatus(plan.id, plan.status)}
                       className="data-[state=checked]:bg-red-600"
                     />
                   </TableCell>
@@ -319,10 +341,10 @@ export default function PlansPage() {
 
       {/* Delete Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
-        <AlertDialogContent className="bg-zinc-900 border border-zinc-700 text-white">
+        <AlertDialogContent className="bg-card border border-border text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Plan</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
+            <AlertDialogTitle className="text-foreground">Delete Plan</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete{" "}
               <span className="font-semibold text-gray-200">"{confirmDelete?.name}"</span>?
               <br />
@@ -330,12 +352,12 @@ export default function PlansPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-600 text-gray-300 hover:bg-zinc-700 hover:text-white">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted hover:text-foreground">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteAction}
-              className="bg-red-600 hover:bg-red-700 text-white border-0"
+              className="bg-red-600 hover:bg-red-700 text-foreground border-0"
             >
               Delete
             </AlertDialogAction>

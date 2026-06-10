@@ -3,6 +3,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "next-themes";
 import { useEffect } from "react";
 
 import { Layout } from "@/components/layout";
@@ -53,6 +54,7 @@ import NotificationListPage from "@/pages/notification-list";
 import NotificationTemplatesPage from "@/pages/notification-templates";
 import NotificationTemplateFormPage from "@/pages/notification-template-form";
 import ProfilePage from "@/pages/profile";
+import AppManagement from "@/pages/app-management";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -128,6 +130,7 @@ function Router() {
           <Route path="/plans/:id/edit" component={() => <ProtectedRoute component={PlanFormPage} />} />
           <Route path="/plans" component={() => <ProtectedRoute component={PlansPage} />} />
           <Route path="/subscriptions/new" component={() => <ProtectedRoute component={SubscriptionFormPage} />} />
+          <Route path="/subscriptions/:id/edit" component={() => <ProtectedRoute component={SubscriptionFormPage} />} />
           <Route path="/subscriptions" component={() => <ProtectedRoute component={SubscriptionsListPage} />} />
           <Route path="/plan-limits/new" component={() => <ProtectedRoute component={PlanLimitFormPage} />} />
           <Route path="/plan-limits/:id/edit" component={() => <ProtectedRoute component={PlanLimitFormPage} />} />
@@ -148,32 +151,28 @@ function Router() {
           <Route path="/settings/icons" component={() => <ProtectedRoute component={IconsPage} />} />
           <Route path="/settings/branding" component={() => <ProtectedRoute component={Branding} />} />
           <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
+          <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
           <Route component={NotFound} />
     </Switch>
   );
 }
 
 function App() {
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    const theme = storedTheme === "light" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, []);
-
   return (
-    <LanguageProvider>
-      <SettingsProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
-            <Toaster />
-          </TooltipProvider>
-        </QueryClientProvider>
-      </SettingsProvider>
-    </LanguageProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <LanguageProvider>
+        <SettingsProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+              <Toaster />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </SettingsProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Edit2, Plus, Trash2, Search } from "lucide-react";
+import { Edit2, Plus, Trash2, Search, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,8 +36,9 @@ export default function PagesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
-  const { data: pagesData, isLoading } = useGetPages({ page: currentPage, limit: itemsPerPage });
+  const { data: pagesData, isLoading } = useGetPages({ page: currentPage, limit: itemsPerPage, admin: true });
   const deleteMutation = useDeletePage();
   const updateMutation = useUpdatePage();
   const bulkDeleteMutation = useBulkDeletePages();
@@ -97,27 +98,35 @@ export default function PagesPage() {
     }
   };
 
+  const handleCopySlug = (slug: string) => {
+    const url = `${window.location.origin}/page/${slug}`;
+    navigator.clipboard.writeText(url);
+    setCopiedSlug(slug);
+    toast({ title: "URL copied to clipboard" });
+    setTimeout(() => setCopiedSlug(null), 2000);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Pages</span>
+        <span className="text-foreground font-medium">Pages</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-zinc-900 border-zinc-700 text-gray-300 h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
         <Button
           onClick={handleApply}
           disabled={bulkDeleteMutation.isPending}
-          className="bg-red-700 hover:bg-red-600 text-white h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -125,32 +134,32 @@ export default function PagesPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
           />
         </div>
         <Button
           onClick={() => setLocation("/pages/new")}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
         </Button>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-zinc-800 bg-zinc-900 hover:bg-zinc-900">
+            <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="w-12">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Name</TableHead>
@@ -175,15 +184,15 @@ export default function PagesPage() {
               </TableRow>
             ) : (
               filtered.map((page) => (
-                <TableRow key={page._id} className="border-zinc-800 hover:bg-zinc-800/40">
+                <TableRow key={page._id} className="border-border hover:bg-muted/40">
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(page._id)}
                       onCheckedChange={() => toggleSelect(page._id)}
-                      className="border-zinc-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                     />
                   </TableCell>
-                  <TableCell className="text-white font-medium text-sm">{page.title}</TableCell>
+                  <TableCell className="text-foreground font-medium text-sm">{page.title}</TableCell>
                   <TableCell className="text-zinc-400 text-sm">{page.slug}</TableCell>
                   <TableCell>
                     <Switch
@@ -195,6 +204,13 @@ export default function PagesPage() {
                   <TableCell className="text-zinc-300 text-sm">{page.order}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleCopySlug(page.slug)}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted/15 text-zinc-400 hover:bg-muted/30 transition-colors"
+                        title="Copy URL"
+                      >
+                        {copiedSlug === page.slug ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
                       <button
                         onClick={() => setLocation(`/pages/${page._id}`)}
                         className="h-8 w-8 flex items-center justify-center rounded-lg bg-amber-600/15 text-amber-400 hover:bg-amber-600/30 transition-colors"
@@ -227,7 +243,7 @@ export default function PagesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={pagination.page === 1}
-              className="h-8 px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-zinc-300 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Previous
             </button>
@@ -237,8 +253,8 @@ export default function PagesPage() {
                 onClick={() => setCurrentPage(i + 1)}
                 className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                   pagination.page === i + 1
-                    ? "bg-red-600 text-white"
-                    : "bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+                    ? "bg-red-600 text-foreground"
+                    : "bg-muted border border-border text-zinc-300 hover:bg-muted"
                 }`}
               >
                 {i + 1}
@@ -247,7 +263,7 @@ export default function PagesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
               disabled={pagination.page === pagination.pages}
-              className="h-8 px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-zinc-300 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Next
             </button>
@@ -256,7 +272,7 @@ export default function PagesPage() {
       )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-zinc-900 border-zinc-700 text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Page</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
@@ -264,10 +280,10 @@ export default function PagesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

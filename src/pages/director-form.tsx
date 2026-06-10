@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,24 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useGetDirectorById, useCreateDirector, useUpdateDirector } from "../lib/api-client";
 
 type DirectorData = {
   name: string;
   designation: string;
   dateOfBirth: string;
   birthPlace: string;
-  bio: string;
   status: boolean;
   image: string;
 };
 
-const DUMMY_DIRECTORS: Record<string, DirectorData> = {
-  "1": { name: "Thomas Smith", designation: "Director", dateOfBirth: "1985-04-13", birthPlace: "New York, USA", bio: "Thomas Smith is an award-winning director known for his visual storytelling and compelling narratives in major Hollywood productions.", status: true, image: "" },
-  "2": { name: "William Johnson", designation: "Director", dateOfBirth: "1980-04-14", birthPlace: "Los Angeles, USA", bio: "William Johnson has directed numerous critically acclaimed films across multiple genres over a 25-year career.", status: true, image: "" },
-};
-
-const inputCls = "bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-600 focus:border-red-500 h-11 rounded-lg";
-const labelCls = "text-gray-300 text-sm font-medium";
+const inputCls = "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 h-11 rounded-lg";
+const labelCls = "text-foreground text-sm font-medium";
 
 export default function DirectorFormPage() {
   const [, setLocation] = useLocation();
@@ -34,19 +29,36 @@ export default function DirectorFormPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isEdit = !!params.id && params.id !== "new";
-  const existing = isEdit ? DUMMY_DIRECTORS[params.id!] : null;
+  const { data: directorData, isLoading } = useGetDirectorById(params.id || "");
+  const createDirector = useCreateDirector();
+  const updateDirector = useUpdateDirector();
 
   const [form, setForm] = useState<DirectorData>({
-    name: existing?.name ?? "",
-    designation: existing?.designation ?? "",
-    dateOfBirth: existing?.dateOfBirth ?? "",
-    birthPlace: existing?.birthPlace ?? "",
-    bio: existing?.bio ?? "",
-    status: existing?.status ?? true,
-    image: existing?.image ?? "",
+    name: directorData?.data?.name ?? "",
+    designation: directorData?.data?.designation ?? "",
+    dateOfBirth: directorData?.data?.dateOfBirth?.split('T')[0] ?? "",
+    birthPlace: directorData?.data?.birthPlace ?? "",
+    status: directorData?.data?.status ?? true,
+    image: directorData?.data?.image ?? "",
   });
-  const [imagePreview, setImagePreview] = useState<string>(existing?.image ?? "");
+  const [imagePreview, setImagePreview] = useState<string>(directorData?.data?.image ? `http://localhost:3000${directorData.data.image}` : "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Update form when director data loads
+  useEffect(() => {
+    if (directorData?.data) {
+      setForm({
+        name: directorData.data.name,
+        designation: directorData.data.designation,
+        dateOfBirth: directorData.data.dateOfBirth?.split('T')[0] ?? "",
+        birthPlace: directorData.data.birthPlace,
+        status: directorData.data.status,
+        image: directorData.data.image,
+      });
+      setImagePreview(directorData.data.image ? `http://localhost:3000${directorData.data.image}` : "");
+    }
+  }, [directorData]);
 
   const set = <K extends keyof DirectorData>(key: K, value: DirectorData[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -56,29 +68,48 @@ export default function DirectorFormPage() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setImagePreview(url);
+    setImageFile(file);
     set("image", url);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Name is required", variant: "destructive" }); return; }
     if (!form.dateOfBirth) { toast({ title: "Date of birth is required", variant: "destructive" }); return; }
     if (!form.birthPlace.trim()) { toast({ title: "Birth place is required", variant: "destructive" }); return; }
-    if (!form.bio.trim()) { toast({ title: "Bio is required", variant: "destructive" }); return; }
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      toast({ title: isEdit ? "Director updated successfully!" : "Director created successfully!" });
+    try {
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('designation', form.designation);
+      formData.append('dateOfBirth', form.dateOfBirth);
+      formData.append('birthPlace', form.birthPlace);
+      formData.append('status', form.status.toString());
+      if (imageFile) {
+        formData.append('imageFile', imageFile);
+      }
+
+      if (isEdit) {
+        await updateDirector.mutateAsync({ id: params.id!, formData });
+        toast({ title: "Director updated successfully!" });
+      } else {
+        await createDirector.mutateAsync(formData);
+        toast({ title: "Director created successfully!" });
+      }
       setLocation("/directors");
-    }, 600);
+    } catch {
+      toast({ title: isEdit ? "Failed to update director" : "Failed to create director", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Director" : "New Director"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Director" : "New Director"}</span>
       </div>
 
       {/* Back */}
@@ -91,32 +122,32 @@ export default function DirectorFormPage() {
       </button>
 
       {/* Form Card */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+      <div className="rounded-xl border border-border bg-card/50 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
           {/* Image Upload */}
           <div className="space-y-2">
             <Label className={labelCls}>Photo</Label>
             <div
               onClick={() => fileRef.current?.click()}
-              className="relative w-full aspect-[4/3] rounded-xl border-2 border-dashed border-zinc-700 hover:border-red-500 bg-zinc-900 flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden"
+              className="relative w-full aspect-[4/3] rounded-xl border-2 border-dashed border-border hover:border-red-500 bg-card flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden"
             >
               {imagePreview ? (
                 <>
                   <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
-                    <p className="text-white text-sm font-medium">Change Photo</p>
+                    <p className="text-foreground text-sm font-medium">Change Photo</p>
                   </div>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setImagePreview(""); set("image", ""); }}
                     className="absolute top-2 right-2 h-6 w-6 bg-red-600 rounded-full flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <X className="h-3 w-3 text-white" />
+                    <X className="h-3 w-3 text-foreground" />
                   </button>
                 </>
               ) : (
                 <>
-                  <ImageIcon className="h-8 w-8 text-zinc-600 mb-2" />
+                  <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
                   <p className="text-sm text-zinc-500">Choose Media to Upload</p>
                 </>
               )}
@@ -147,8 +178,8 @@ export default function DirectorFormPage() {
             {/* Status */}
             <div className="space-y-2">
               <Label className={labelCls}>Status</Label>
-              <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-zinc-700 bg-zinc-900">
-                <span className="text-sm text-gray-300 font-medium">Active</span>
+              <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card">
+                <span className="text-sm text-foreground font-medium">Active</span>
                 <Switch checked={form.status} onCheckedChange={(v) => set("status", v)} className="data-[state=checked]:bg-red-600" />
               </div>
             </div>
@@ -160,32 +191,11 @@ export default function DirectorFormPage() {
             </div>
           </div>
         </div>
-
-        {/* Bio */}
-        <div className="mt-6 space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className={labelCls}>Bio <span className="text-red-500">*</span></Label>
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
-            >
-              <span className="h-3 w-3 rounded-full border border-red-400 flex items-center justify-center text-[8px]">✦</span>
-              Generate Description with AI
-            </button>
-          </div>
-          <Textarea
-            value={form.bio}
-            onChange={(e) => set("bio", e.target.value)}
-            placeholder="e.g. Henry Williams is an American character actor and director. Born and raised in Portland, Oregon..."
-            rows={5}
-            className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-600 focus:border-red-500 rounded-lg resize-none"
-          />
-        </div>
       </div>
 
       {/* Save */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="bg-red-600 hover:bg-red-700 text-white h-11 px-10 rounded-lg font-semibold min-w-[100px]">
+        <Button onClick={handleSave} disabled={saving} className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]">
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>

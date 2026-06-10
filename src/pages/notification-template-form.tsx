@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   X, Plus, Bold, Italic, Strikethrough, Link2,
@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useGetNotificationTemplateById, useCreateNotificationTemplate, useUpdateNotificationTemplate } from "../lib/api-client";
 
 const NOTIFICATION_PARAMS = [
   "ID", "User Name", "Description / Note", "Your Name", "Your Position",
@@ -37,63 +38,53 @@ type TemplateFormData = {
   emailTemplate: string;
 };
 
-const DUMMY_TEMPLATE_DATA: Record<string, TemplateFormData> = {
-  "1": { type: "Change Password", userType: "user", recipients: ["User", "Admin", "Demo Admin"], status: true, notifSubject: "Your Password Has Been Changed", notifTemplate: "Hello [[ user_name ]], your password has been changed successfully for your account.", emailSubject: "Password Change Successful", emailTemplate: "Hello [[ user_name ]],\n\nYour password has been changed successfully." },
-  "2": { type: "Continue Watch", userType: "user", recipients: ["User"], status: true, notifSubject: "Continue Watching", notifTemplate: "Hello [[ user_name ]], continue watching \"[[ movie_name ]]\".", emailSubject: "Continue Watching Reminder", emailTemplate: "Hello [[ user_name ]],\n\nYou haven't finished watching \"[[ movie_name ]]\"." },
-  "3": { type: "Episode Add", userType: "user", recipients: ["User", "Admin"], status: true, notifSubject: "New Episode Added", notifTemplate: "Hello [[ user_name ]], a new episode [[ episode_name ]] has been added.", emailSubject: "New Episode Available", emailTemplate: "Hello [[ user_name ]],\n\nA new episode is now available: [[ episode_name ]]." },
-  "4": { type: "Expiry Plan", userType: "user", recipients: ["User"], status: true, notifSubject: "Subscription Plan Expiry Reminder", notifTemplate: "Your subscription plan \"[[ plan_name ]]\" will expire soon. Expiry date: [[ end_date ]].", emailSubject: "Your Subscription is Expiring Soon", emailTemplate: "Hello [[ user_name ]],\n\nYour subscription plan \"[[ plan_name ]]\" will expire on [[ end_date ]]." },
-  "5": { type: "Forget Email/Password", userType: "user", recipients: ["User"], status: true, notifSubject: "Password Reset Request", notifTemplate: "Hello [[ user_name ]], your OTP code is [[ otp_code ]].", emailSubject: "Reset Your Password", emailTemplate: "Hello [[ user_name ]],\n\nYour password reset OTP is: [[ otp_code ]].\n\nThis OTP will expire in 10 minutes." },
-  "6": { type: "Movie Add", userType: "user", recipients: ["User", "Admin"], status: true, notifSubject: "New Movie Added", notifTemplate: "Hello [[ user_name ]], a new movie \"[[ movie_name ]]\" has been added.", emailSubject: "New Movie Available", emailTemplate: "Hello [[ user_name ]],\n\nA new movie \"[[ movie_name ]]\" is now available to watch." },
-  "7": { type: "New Subscription", userType: "user", recipients: ["User", "Admin"], status: true, notifSubject: "Subscription Activated", notifTemplate: "Hello [[ user_name ]], your subscription to \"[[ plan_name ]]\" has been activated.", emailSubject: "Subscription Activated Successfully", emailTemplate: "Hello [[ user_name ]],\n\nYour [[ plan_name ]] subscription has been activated successfully.\n\nStart Date: [[ start_date ]]\nEnd Date: [[ end_date ]]" },
-};
-
-const labelCls = "text-gray-300 text-sm font-medium";
-const inputCls = "bg-zinc-800 border-zinc-700 text-white placeholder:text-gray-600 focus:border-red-500 h-10 rounded-lg";
+const labelCls = "text-foreground text-sm font-medium";
+const inputCls = "bg-muted border-border text-foreground placeholder:text-gray-600 focus:border-red-500 h-10 rounded-lg";
 
 function RichEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="rounded-lg border border-zinc-700 overflow-hidden">
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-zinc-700 bg-zinc-800/80 flex-wrap">
+    <div className="rounded-lg border border-border overflow-hidden">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/80 flex-wrap">
         {["File", "Edit", "View", "Insert", "Format"].map((m) => (
           <button
             key={m}
             type="button"
-            className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-700 rounded transition-colors"
+            className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-300 hover:bg-muted rounded transition-colors"
           >
             {m} <span className="text-[9px] opacity-70">▾</span>
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-zinc-700 bg-zinc-800/80 flex-wrap">
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Undo className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Redo className="h-3.5 w-3.5" /></button>
-        <div className="w-px h-4 bg-zinc-700 mx-1" />
-        <button type="button" className="flex items-center gap-0.5 px-2 py-0.5 text-xs text-zinc-300 hover:bg-zinc-700 rounded transition-colors">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/80 flex-wrap">
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Undo className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Redo className="h-3.5 w-3.5" /></button>
+        <div className="w-px h-4 bg-muted mx-1" />
+        <button type="button" className="flex items-center gap-0.5 px-2 py-0.5 text-xs text-zinc-300 hover:bg-muted rounded transition-colors">
           Formats <span className="text-[9px] opacity-70">▾</span>
         </button>
-        <div className="w-px h-4 bg-zinc-700 mx-1" />
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Bold className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Italic className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Strikethrough className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Link2 className="h-3.5 w-3.5" /></button>
-        <div className="w-px h-4 bg-zinc-700 mx-1" />
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><AlignLeft className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><AlignCenter className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><AlignRight className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><AlignJustify className="h-3.5 w-3.5" /></button>
-        <div className="w-px h-4 bg-zinc-700 mx-1" />
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><Code className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-zinc-700 text-zinc-400 transition-colors"><ImageIcon className="h-3.5 w-3.5" /></button>
+        <div className="w-px h-4 bg-muted mx-1" />
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Bold className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Italic className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Strikethrough className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Link2 className="h-3.5 w-3.5" /></button>
+        <div className="w-px h-4 bg-muted mx-1" />
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><AlignLeft className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><AlignCenter className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><AlignRight className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><AlignJustify className="h-3.5 w-3.5" /></button>
+        <div className="w-px h-4 bg-muted mx-1" />
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><Code className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400 transition-colors"><ImageIcon className="h-3.5 w-3.5" /></button>
       </div>
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={6}
-        className="rounded-none border-0 bg-zinc-900 text-white placeholder:text-gray-600 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-relaxed"
+        className="rounded-none border-0 bg-card text-foreground placeholder:text-gray-600 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none text-sm leading-relaxed"
         placeholder="Enter template content..."
       />
-      <div className="px-3 py-1 bg-zinc-800/80 border-t border-zinc-700 text-right">
-        <span className="text-[10px] text-zinc-600 tracking-wide">POWERED BY TINYMCE</span>
+      <div className="px-3 py-1 bg-muted/80 border-t border-border text-right">
+        <span className="text-[10px] text-muted-foreground tracking-wide">POWERED BY TINYMCE</span>
       </div>
     </div>
   );
@@ -103,24 +94,40 @@ export default function NotificationTemplateFormPage() {
   const [, setLocation] = useLocation();
   const params = useParams<{ id?: string }>();
   const { toast } = useToast();
+  const { data: existingData, isLoading: isLoadingExisting } = useGetNotificationTemplateById(params.id);
+  const createMutation = useCreateNotificationTemplate();
+  const updateMutation = useUpdateNotificationTemplate();
 
-  const existing = params.id ? DUMMY_TEMPLATE_DATA[params.id] : null;
-  const isEdit = !!existing;
+  const existing = existingData?.data;
+  const isEdit = !!params.id;
 
-  const [form, setForm] = useState<TemplateFormData>(
-    existing ?? {
-      type: "",
-      userType: "user",
-      recipients: ["User"],
-      status: true,
-      notifSubject: "",
-      notifTemplate: "",
-      emailSubject: "",
-      emailTemplate: "",
-    }
-  );
+  const [form, setForm] = useState<TemplateFormData>({
+    type: "",
+    userType: "user",
+    recipients: ["User"],
+    status: true,
+    notifSubject: "",
+    notifTemplate: "",
+    emailSubject: "",
+    emailTemplate: "",
+  });
   const [saving, setSaving] = useState(false);
   const [recipientSelectKey, setRecipientSelectKey] = useState(0);
+
+  useEffect(() => {
+    if (existing) {
+      setForm({
+        type: existing.type,
+        userType: existing.userType,
+        recipients: existing.recipients,
+        status: existing.status,
+        notifSubject: existing.notifSubject,
+        notifTemplate: existing.notifTemplate,
+        emailSubject: existing.emailSubject,
+        emailTemplate: existing.emailTemplate,
+      });
+    }
+  }, [existing]);
 
   const set = <K extends keyof TemplateFormData>(key: K, value: TemplateFormData[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -143,32 +150,49 @@ export default function NotificationTemplateFormPage() {
     toast({ title: `Copied: ${key}`, description: "Paste in the template where needed." });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.type.trim()) {
       toast({ title: "Type is required", variant: "destructive" });
       return;
     }
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      toast({ title: "Template saved successfully!" });
+    try {
+      if (isEdit) {
+        await updateMutation.mutateAsync({ templateId: params.id, data: form });
+        toast({ title: "Template updated successfully!" });
+      } else {
+        await createMutation.mutateAsync({ data: form });
+        toast({ title: "Template created successfully!" });
+      }
       setLocation("/notification-templates");
-    }, 600);
+    } catch {
+      toast({ title: "Failed to save template", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (isEdit && isLoadingExisting) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-zinc-500">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
         <span
-          className="cursor-pointer hover:text-white transition-colors"
+          className="cursor-pointer hover:text-foreground transition-colors"
           onClick={() => setLocation("/notification-templates")}
         >
           Notification Templates
         </span>
         <span>/</span>
-        <span className="text-white font-medium">
+        <span className="text-foreground font-medium">
           {isEdit ? "Edit Notification Template" : "New Template"}
         </span>
       </div>
@@ -183,7 +207,7 @@ export default function NotificationTemplateFormPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 items-start">
         {/* Left Panel */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-5">
+        <div className="rounded-xl border border-border bg-card/50 p-5 space-y-5">
           {/* Type */}
           <div className="space-y-2">
             <Label className={labelCls}>
@@ -208,7 +232,7 @@ export default function NotificationTemplateFormPage() {
                   type="button"
                   onClick={() => handleParamClick(param)}
                   title={`Click to copy [[ ${param.toLowerCase().replace(/[\s'/]+/g, "_")} ]]`}
-                  className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition-colors"
+                  className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-foreground text-xs font-medium transition-colors"
                 >
                   {param}
                 </button>
@@ -222,10 +246,10 @@ export default function NotificationTemplateFormPage() {
               User Type <span className="text-red-500">*</span>
             </Label>
             <Select value={form.userType} onValueChange={(v) => set("userType", v)}>
-              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white h-10 rounded-lg">
+              <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectContent className="bg-muted border-border text-foreground">
                 <SelectItem value="user">User</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="all">All</SelectItem>
@@ -236,11 +260,11 @@ export default function NotificationTemplateFormPage() {
           {/* To (recipients) */}
           <div className="space-y-2">
             <Label className={labelCls}>To</Label>
-            <div className="min-h-[42px] px-2 py-2 rounded-lg border border-zinc-700 bg-zinc-800 flex flex-wrap gap-2 items-center">
+            <div className="min-h-[42px] px-2 py-2 rounded-lg border border-border bg-muted flex flex-wrap gap-2 items-center">
               {form.recipients.map((r) => (
                 <span
                   key={r}
-                  className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-red-600 text-white text-xs rounded font-medium"
+                  className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-red-600 text-foreground text-xs rounded font-medium"
                 >
                   {r}
                   <button
@@ -254,11 +278,11 @@ export default function NotificationTemplateFormPage() {
               ))}
               {availableRecipients.length > 0 && (
                 <Select key={recipientSelectKey} onValueChange={addRecipient}>
-                  <SelectTrigger className="h-7 w-auto min-w-[60px] border border-dashed border-zinc-600 bg-transparent text-zinc-400 hover:text-white text-xs rounded px-2 gap-1 shadow-none focus:ring-0">
+                  <SelectTrigger className="h-7 w-auto min-w-[60px] border border-dashed border-border bg-transparent text-zinc-400 hover:text-foreground text-xs rounded px-2 gap-1 shadow-none focus:ring-0">
                     <Plus className="h-3 w-3" />
                     <span>Add</span>
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                  <SelectContent className="bg-muted border-border text-foreground">
                     {availableRecipients.map((r) => (
                       <SelectItem key={r} value={r}>{r}</SelectItem>
                     ))}
@@ -271,8 +295,8 @@ export default function NotificationTemplateFormPage() {
           {/* Status */}
           <div className="space-y-2">
             <Label className={labelCls}>Status</Label>
-            <div className="flex items-center justify-between h-10 px-4 rounded-lg border border-zinc-700 bg-zinc-800">
-              <span className="text-sm text-gray-300 font-medium">Active</span>
+            <div className="flex items-center justify-between h-10 px-4 rounded-lg border border-border bg-muted">
+              <span className="text-sm text-foreground font-medium">Active</span>
               <Switch
                 checked={form.status}
                 onCheckedChange={(v) => set("status", v)}
@@ -285,8 +309,8 @@ export default function NotificationTemplateFormPage() {
         {/* Right Panel */}
         <div className="space-y-6">
           {/* Notification Template */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
-            <h3 className="text-white font-semibold text-base">Notification Template</h3>
+          <div className="rounded-xl border border-border bg-card/50 p-5 space-y-4">
+            <h3 className="text-foreground font-semibold text-base">Notification Template</h3>
             <div className="space-y-2">
               <Label className={labelCls}>Subject</Label>
               <Input
@@ -306,8 +330,8 @@ export default function NotificationTemplateFormPage() {
           </div>
 
           {/* Email Template */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
-            <h3 className="text-white font-semibold text-base">E-Mail Template</h3>
+          <div className="rounded-xl border border-border bg-card/50 p-5 space-y-4">
+            <h3 className="text-foreground font-semibold text-base">E-Mail Template</h3>
             <div className="space-y-2">
               <Label className={labelCls}>Subject</Label>
               <Input
@@ -332,7 +356,7 @@ export default function NotificationTemplateFormPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="bg-red-600 hover:bg-red-700 text-white h-11 px-10 rounded-lg font-semibold min-w-[100px]"
+          className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]"
         >
           {saving ? "Saving..." : "Save"}
         </Button>

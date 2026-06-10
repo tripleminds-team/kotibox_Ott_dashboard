@@ -185,7 +185,16 @@ const transactionsData = [
 export default function Dashboard() {
   const { data: user } = useGetMe();
   const { t } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const chartColors = {
+    grid: isDark ? "#27272a" : "#e4e4e7",
+    axis: isDark ? "#71717a" : "#71717a",
+    tooltipBg: isDark ? "#27272a" : "#ffffff",
+    tooltipBorder: isDark ? "#3f3f46" : "#e4e4e7",
+    tooltipLabel: isDark ? "#e4e4e7" : "#18181b",
+  };
 
   const stats = [
     {
@@ -267,14 +276,14 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-400">2026-01-01 to 2026-06-</div>
-          <Button className="bg-red-600 hover:bg-red-700 text-white rounded-lg">
+          <div className="text-sm text-muted-foreground">2026-01-01 to 2026-06-</div>
+          <Button className="bg-red-600 hover:bg-red-700 text-foreground rounded-lg">
             Submit
           </Button>
-          <Button className="bg-red-500 hover:bg-red-600 text-white rounded-lg">
+          <Button className="bg-red-500 hover:bg-red-600 text-foreground rounded-lg">
             Reset
           </Button>
         </div>
@@ -287,11 +296,11 @@ export default function Dashboard() {
           return (
             <Card
               key={idx}
-              className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden"
+              className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden"
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.iconBg} text-white`}>
+                  <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.iconBg} text-foreground`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <span className={`flex items-center gap-1 text-xs font-semibold ${stat.trendUp ? "text-green-500" : "text-red-500"}`}>
@@ -302,7 +311,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-400">{stat.title}</div>
+                <div className="text-sm text-muted-foreground">{stat.title}</div>
               </CardContent>
             </Card>
           );
@@ -312,14 +321,14 @@ export default function Dashboard() {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Total Revenue Chart */}
-        <Card className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden">
+        <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-white">Total Revenue</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Total Revenue</CardTitle>
             <Select defaultValue="year">
-              <SelectTrigger className="w-24 bg-zinc-800 border-zinc-700 text-white h-9 rounded-lg">
+              <SelectTrigger className="w-24 bg-input border-border text-foreground h-9 rounded-lg">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectContent className="bg-input border-border text-foreground">
                 <SelectItem value="year">Year</SelectItem>
                 <SelectItem value="month">Month</SelectItem>
                 <SelectItem value="week">Week</SelectItem>
@@ -336,12 +345,12 @@ export default function Dashboard() {
                       <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#71717a' }} />
-                  <YAxis stroke="#71717a" tick={{ fill: '#71717a' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                  <XAxis dataKey="name" stroke={chartColors.axis} tick={{ fill: chartColors.axis }} />
+                  <YAxis stroke={chartColors.axis} tick={{ fill: chartColors.axis }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46', borderRadius: '12px' }}
-                    labelStyle={{ color: '#e4e4e7' }}
+                    contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '12px' }}
+                    labelStyle={{ color: chartColors.tooltipLabel }}
                     itemStyle={{ color: '#ef4444' }}
                   />
                   <Area
@@ -359,14 +368,14 @@ export default function Dashboard() {
         </Card>
 
         {/* New Subscribers Chart */}
-        <Card className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden">
+        <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-white">New Subscribers</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">New Subscribers</CardTitle>
             <Select defaultValue="year">
-              <SelectTrigger className="w-24 bg-zinc-800 border-zinc-700 text-white h-9 rounded-lg">
+              <SelectTrigger className="w-24 bg-input border-border text-foreground h-9 rounded-lg">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectContent className="bg-input border-border text-foreground">
                 <SelectItem value="year">Year</SelectItem>
                 <SelectItem value="month">Month</SelectItem>
                 <SelectItem value="week">Week</SelectItem>
@@ -377,14 +386,14 @@ export default function Dashboard() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={newSubscribersData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#71717a' }} />
-                  <YAxis stroke="#71717a" tick={{ fill: '#71717a' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                  <XAxis dataKey="name" stroke={chartColors.axis} tick={{ fill: chartColors.axis }} />
+                  <YAxis stroke={chartColors.axis} tick={{ fill: chartColors.axis }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46', borderRadius: '12px' }}
-                    labelStyle={{ color: '#e4e4e7' }}
+                    contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '12px' }}
+                    labelStyle={{ color: chartColors.tooltipLabel }}
                   />
-                  <Legend wrapperStyle={{ color: '#e4e4e7' }} />
+                  <Legend wrapperStyle={{ color: chartColors.tooltipLabel }} />
                   <Bar dataKey="basic" fill="#dc2626" radius={[6, 6, 0, 0]} name="Basic" />
                   <Bar dataKey="premium" fill="#7f1d1d" radius={[6, 6, 0, 0]} name="Premium Plan" />
                 </BarChart>
@@ -397,14 +406,14 @@ export default function Dashboard() {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Most Watched Chart */}
-        <Card className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden lg:col-span-2">
+        <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-white">Most Watched</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Most Watched</CardTitle>
             <Select defaultValue="year">
-              <SelectTrigger className="w-24 bg-zinc-800 border-zinc-700 text-white h-9 rounded-lg">
+              <SelectTrigger className="w-24 bg-input border-border text-foreground h-9 rounded-lg">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectContent className="bg-input border-border text-foreground">
                 <SelectItem value="year">Year</SelectItem>
                 <SelectItem value="month">Month</SelectItem>
                 <SelectItem value="week">Week</SelectItem>
@@ -415,14 +424,14 @@ export default function Dashboard() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mostWatchedData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="name" stroke="#71717a" tick={{ fill: '#71717a' }} />
-                  <YAxis stroke="#71717a" tick={{ fill: '#71717a' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                  <XAxis dataKey="name" stroke={chartColors.axis} tick={{ fill: chartColors.axis }} />
+                  <YAxis stroke={chartColors.axis} tick={{ fill: chartColors.axis }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46', borderRadius: '12px' }}
-                    labelStyle={{ color: '#e4e4e7' }}
+                    contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '12px' }}
+                    labelStyle={{ color: chartColors.tooltipLabel }}
                   />
-                  <Legend wrapperStyle={{ color: '#e4e4e7' }} />
+                  <Legend wrapperStyle={{ color: chartColors.tooltipLabel }} />
                   <Bar dataKey="movies" fill="#dc2626" radius={[6, 6, 0, 0]} name="Movies" />
                   <Bar dataKey="tvShows" fill="#7f1d1d" radius={[6, 6, 0, 0]} name="TV Shows" />
                 </BarChart>
@@ -432,9 +441,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Top Rated Chart */}
-        <Card className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden">
+        <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-white">Top Rated</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Top Rated</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64 flex items-center justify-center">
@@ -454,14 +463,14 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46', borderRadius: '12px' }}
+                    contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '12px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap gap-2 mt-2 justify-center">
               {topGenresData.map((genre, index) => (
-                <div key={index} className="flex items-center gap-1 text-xs text-gray-300">
+                <div key={index} className="flex items-center gap-1 text-xs text-foreground">
                   <div className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
                   <span>{genre.name}</span>
                 </div>
@@ -471,9 +480,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Reviews */}
-        <Card className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden lg:col-span-2">
+        <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-white">Reviews</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Reviews</CardTitle>
             <Button variant="ghost" className="text-red-500 hover:text-red-400 p-0 h-auto text-sm">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
@@ -481,7 +490,7 @@ export default function Dashboard() {
           <CardContent className="overflow-x-auto max-h-80 custom-scrollbar">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-gray-400">
+                <tr className="border-b border-border text-muted-foreground">
                   <th className="text-left py-3 px-4">Name</th>
                   <th className="text-left py-3 px-4">Date</th>
                   <th className="text-left py-3 px-4">Category</th>
@@ -490,23 +499,23 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {reviewsData.map((review, index) => (
-                  <tr key={index} className="border-b border-zinc-800/50">
+                  <tr key={index} className="border-b border-border/50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8 bg-zinc-800 rounded-lg">
+                        <Avatar className="h-8 w-8 bg-muted rounded-lg">
                           <AvatarFallback className="text-sm text-red-400">{review.avatar}</AvatarFallback>
                         </Avatar>
-                        <span className="text-gray-300">{review.name}</span>
+                        <span className="text-foreground">{review.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-400">{review.date}</td>
-                    <td className="py-3 px-4 text-gray-400">{review.category}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{review.date}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{review.category}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-1">
                         {Array.from({ length: 5 }, (_, i) => (
                           <Star
                             key={i}
-                            className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-zinc-700'}`}
+                            className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`}
                           />
                         ))}
                       </div>
@@ -519,9 +528,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Transactions */}
-        <Card className="bg-zinc-900 border-zinc-800 text-white shadow-lg border-0 overflow-hidden lg:col-span-1">
+        <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold text-white">Transactions</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Transactions</CardTitle>
             <Button variant="ghost" className="text-red-500 hover:text-red-400 p-0 h-auto text-sm">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
@@ -529,7 +538,7 @@ export default function Dashboard() {
           <CardContent className="overflow-x-auto max-h-80 custom-scrollbar">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-zinc-800 text-gray-400">
+                <tr className="border-b border-border text-muted-foreground">
                   <th className="text-left py-3 px-2">Name</th>
                   <th className="text-left py-3 px-2">Date</th>
                   <th className="text-left py-3 px-2">Plan</th>
@@ -538,18 +547,18 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {transactionsData.map((transaction, index) => (
-                  <tr key={index} className="border-b border-zinc-800/50">
+                  <tr key={index} className="border-b border-border/50">
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6 bg-zinc-800 rounded-lg">
+                        <Avatar className="h-6 w-6 bg-muted rounded-lg">
                           <AvatarFallback className="text-xs text-red-400">{transaction.avatar}</AvatarFallback>
                         </Avatar>
-                        <span className="text-gray-300">{transaction.name}</span>
+                        <span className="text-foreground">{transaction.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-gray-400">{transaction.date}</td>
-                    <td className="py-3 px-2 text-gray-400">{transaction.plan}</td>
-                    <td className="py-3 px-2 text-white font-medium">{transaction.amount}</td>
+                    <td className="py-3 px-2 text-muted-foreground">{transaction.date}</td>
+                    <td className="py-3 px-2 text-muted-foreground">{transaction.plan}</td>
+                    <td className="py-3 px-2 text-foreground font-medium">{transaction.amount}</td>
                   </tr>
                 ))}
               </tbody>

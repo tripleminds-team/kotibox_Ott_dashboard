@@ -306,17 +306,17 @@ export default function PromotionForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
         <button
           onClick={() => setLocation("/promotions")}
-          className="text-gray-500 hover:text-white transition-colors"
+          className="text-gray-500 hover:text-foreground transition-colors"
         >
           Promotions
         </button>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Promotion" : "New Promotion"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Promotion" : "New Promotion"}</span>
       </div>
       <div className="max-w-3xl">
 
@@ -517,7 +517,7 @@ export default function PromotionForm() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="space-y-3 p-4 border border-zinc-700 rounded-xl bg-zinc-800/50"
+              className="space-y-3 p-4 border border-border rounded-xl bg-muted/50"
             >
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium text-sm">Feature {index + 1}</span>
@@ -640,14 +640,14 @@ export default function PromotionForm() {
             type="button"
             variant="outline"
             onClick={() => setLocation("/promotions")}
-            className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 px-6 h-11"
+            className="bg-muted border-border text-foreground hover:bg-muted px-6 h-11"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={createMutation.isPending || updateMutation.isPending || isUploading}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 h-11 font-semibold"
+            className="bg-red-600 hover:bg-red-700 text-foreground px-6 h-11 font-semibold"
           >
             {isEdit ? "Update Promotion" : "Create Promotion"}
           </Button>

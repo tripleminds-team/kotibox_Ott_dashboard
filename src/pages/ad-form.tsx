@@ -68,23 +68,23 @@ export default function AdForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="text-gray-500">Dashboard</span>
         <span>/</span>
         <button
           onClick={() => setLocation("/ads")}
-          className="text-gray-500 hover:text-white transition-colors"
+          className="text-gray-500 hover:text-foreground transition-colors"
         >
           Ads
         </button>
         <span>/</span>
-        <span className="text-white font-medium">Edit Ad</span>
+        <span className="text-foreground font-medium">Edit Ad</span>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-5">
+        <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div>
-            <h3 className="text-white font-semibold text-base">Ad Info</h3>
+            <h3 className="text-foreground font-semibold text-base">Ad Info</h3>
             <p className="text-zinc-500 text-sm mt-0.5">Edit ad details</p>
           </div>
 
@@ -95,7 +95,7 @@ export default function AdForm() {
               value={formData.title}
               onChange={(e) => set("title", e.target.value)}
               required
-              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
             />
           </div>
 
@@ -106,17 +106,17 @@ export default function AdForm() {
               rows={3}
               value={formData.description}
               onChange={(e) => set("description", e.target.value)}
-              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 resize-none"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 resize-none"
             />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="type" className="text-zinc-400 text-sm">Type</Label>
             <Select value={formData.type} onValueChange={(v) => set("type", v)}>
-              <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white h-11 focus:border-red-500">
+              <SelectTrigger className="bg-muted border-border text-foreground h-11 focus:border-red-500">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+              <SelectContent className="bg-muted border-border text-foreground">
                 <SelectItem value="banner">Banner</SelectItem>
                 <SelectItem value="interstitial">Interstitial</SelectItem>
                 <SelectItem value="rewarded">Rewarded</SelectItem>
@@ -131,7 +131,7 @@ export default function AdForm() {
               id="imageUrl"
               value={formData.imageUrl}
               onChange={(e) => set("imageUrl", e.target.value)}
-              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
             />
           </div>
 
@@ -141,7 +141,7 @@ export default function AdForm() {
               id="videoUrl"
               value={formData.videoUrl}
               onChange={(e) => set("videoUrl", e.target.value)}
-              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function AdForm() {
               id="linkUrl"
               value={formData.linkUrl}
               onChange={(e) => set("linkUrl", e.target.value)}
-              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
             />
           </div>
 
@@ -162,13 +162,13 @@ export default function AdForm() {
               type="number"
               value={formData.priority}
               onChange={(e) => set("priority", Number(e.target.value) || 0)}
-              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-600 focus:border-red-500 h-11"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-800/50 p-3.5">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3.5">
             <div>
-              <Label htmlFor="isActive" className="text-white text-sm font-medium cursor-pointer">
+              <Label htmlFor="isActive" className="text-foreground text-sm font-medium cursor-pointer">
                 Active
               </Label>
               <p className="text-zinc-500 text-xs mt-0.5">Show this ad in the app</p>
@@ -187,14 +187,14 @@ export default function AdForm() {
             type="button"
             variant="outline"
             onClick={() => setLocation("/ads")}
-            className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 px-6 h-11"
+            className="bg-muted border-border text-foreground hover:bg-muted px-6 h-11"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={updateMutation.isPending}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 h-11 font-semibold"
+            className="bg-red-600 hover:bg-red-700 text-foreground px-6 h-11 font-semibold"
           >
             Save Changes
           </Button>
