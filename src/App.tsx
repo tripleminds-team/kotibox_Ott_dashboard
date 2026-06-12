@@ -8,7 +8,70 @@ import { useEffect } from "react";
 
 import { Layout } from "@/components/layout";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { SettingsProvider } from "@/contexts/SettingsContext";
+import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
+
+// Helper to convert hex to HSL
+function hexToHSL(hex: string): { h: number; s: number; l: number } {
+  let r = parseInt(hex.slice(1, 3), 16) / 255;
+  let g = parseInt(hex.slice(3, 5), 16) / 255;
+  let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+  let max = Math.max(r, g, b);
+  let min = Math.min(r, g, b);
+  let h = 0, s, l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0; // achromatic
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h = Math.round(h * 60);
+  }
+  s = Math.round(s * 100);
+  l = Math.round(l * 100);
+  return { h, s, l };
+}
+
+// Color themes data
+const COLOR_THEMES = [
+  { id: "blue-green", a: "#3b82f6", b: "#10b981" },
+  { id: "orange-yellow", a: "#f97316", b: "#eab308" },
+  { id: "pink-purple", a: "#ec4899", b: "#a855f7" },
+  { id: "purple-orange", a: "#8b5cf6", b: "#f97316" },
+  { id: "green-pink", a: "#22c55e", b: "#ec4899" },
+];
+
+// Component to apply custom theme
+function ThemeApplier() {
+  const { settings } = useSettings();
+  
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    // Find selected color theme
+    const theme = COLOR_THEMES.find(t => t.id === settings.colorTheme);
+    let primaryColor = settings.primaryColor;
+    
+    if (theme && !settings.primaryColor) {
+      primaryColor = theme.a;
+    }
+    
+    // Convert primary color to HSL
+    const hsl = hexToHSL(primaryColor || "#e50914");
+    root.style.setProperty("--primary", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+    root.style.setProperty("--sidebar-primary", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+    root.style.setProperty("--destructive", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+    root.style.setProperty("--ring", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+    root.style.setProperty("--chart-1", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+  }, [settings.colorTheme, settings.primaryColor]);
+
+  return null;
+}
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -171,6 +234,7 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <LanguageProvider>
         <SettingsProvider>
+          <ThemeApplier />
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>

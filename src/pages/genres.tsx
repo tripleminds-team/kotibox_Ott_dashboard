@@ -336,7 +336,7 @@ export default function GenresPage() {
                       <img
                         src={getImageUrl(genre.image)}
                         alt={genre.name}
-                        className="h-10 w-10 rounded-lg object-cover border border-border"
+                        className="h-10 w-10 rounded-lg object-contain border border-border bg-gray-800"
                       />
                       <span className="font-medium text-foreground">{genre.name}</span>
                     </div>

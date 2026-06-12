@@ -21,13 +21,15 @@ export default function Login() {
   const loginMutation = useLogin();
 
   const getLogoUrl = () => {
-    if (resolvedTheme === 'dark' && settings.darkLogoUrl) {
+    if (resolvedTheme === "dark" && settings.darkLogoUrl) {
       return settings.darkLogoUrl;
-    } else if (resolvedTheme === 'light' && settings.lightLogoUrl) {
+    } else if (resolvedTheme === "light" && settings.lightLogoUrl) {
       return settings.lightLogoUrl;
     }
     return settings.logoUrl;
   };
+  
+  const hasAppName = !!settings.platformName;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,16 +57,23 @@ export default function Login() {
 
       <div className="z-10 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-20 w-20 bg-muted border border-border rounded-3xl flex items-center justify-center mb-6 shadow-2xl">
+          <div className="h-20 bg-muted border border-border rounded-3xl flex items-center justify-center mb-6 shadow-2xl"
+               style={{ width: hasAppName ? 'auto' : '5rem' }}>
             {getLogoUrl() ? (
-              <img src={getLogoUrl()} alt="Logo" className="h-12 w-auto object-contain" />
+              <img 
+                src={getLogoUrl()} 
+                alt="Logo" 
+                className={hasAppName ? "h-12 w-auto object-contain" : "h-12 w-12 object-cover"} 
+              />
             ) : (
               <Film className="h-10 w-10 text-red-500" />
             )}
           </div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent">
-            {settings.platformName}
-          </h1>
+          {settings.platformName && (
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent">
+              {settings.platformName}
+            </h1>
+          )}
           <p className="text-muted-foreground mt-2 text-lg">{settings.loginSubtitle}</p>
         </div>
 
@@ -83,7 +92,9 @@ export default function Login() {
         <Card className="border-border shadow-2xl bg-muted/80 rounded-3xl transition-all duration-500 hover:shadow-3xl hover:shadow-red-500/10">
           <CardHeader className="space-y-2 text-center pb-8 pt-8">
             <CardTitle className="text-3xl font-bold text-foreground">{settings.loginTitle}</CardTitle>
-            <CardDescription className="text-base text-muted-foreground">Sign in to access your {settings.platformName} admin panel</CardDescription>
+            <CardDescription className="text-base text-muted-foreground">
+              Sign in to access your {settings.platformName || "admin"} panel
+            </CardDescription>
           </CardHeader>
           <CardContent className="px-8">
             <form onSubmit={handleSubmit} className="space-y-5">

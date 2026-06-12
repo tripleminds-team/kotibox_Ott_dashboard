@@ -220,24 +220,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 
-  const LogoComponent = ({ collapsed = false }: { collapsed?: boolean }) => (
-    <div className="flex items-center gap-3">
-      {getLogoUrl() ? (
-        <img
-          src={getLogoUrl()}
-          alt="Logo"
-          className={collapsed ? "h-9 w-9 object-contain" : "h-9 w-auto object-contain"}
-        />
-      ) : (
-        <Film className={`text-red-500 ${collapsed ? "h-7 w-7" : "h-9 w-9"}`} />
-      )}
-      {!collapsed && (
-        <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent">
-          {settings.platformName}
-        </span>
-      )}
-    </div>
-  );
+  const LogoComponent = ({ collapsed = false }: { collapsed?: boolean }) => {
+    return (
+      <div className="flex items-center justify-center gap-3">
+        {getLogoUrl() ? (
+          <img
+            src={getLogoUrl()}
+            alt="Logo"
+            className="h-9 w-auto object-contain"
+          />
+        ) : (
+          <Film className={`text-red-500 ${collapsed ? "h-7 w-7" : "h-9 w-9"}`} />
+        )}
+        {!collapsed && settings.platformName && (
+          <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent">
+            {settings.platformName}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -354,11 +356,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </span>
                 Sign Out
               </button>
-              <div className="mt-3 pt-3 border-t border-border">
-                <p className="text-[10px] text-muted-foreground text-center">
-                  © {new Date().getFullYear()} {settings.platformName}
-                </p>
-              </div>
+              {settings.platformName && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    © {new Date().getFullYear()} {settings.platformName}
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>

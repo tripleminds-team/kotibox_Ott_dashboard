@@ -202,7 +202,7 @@ export default function CategoriesPage() {
                         <img
                           src={getImageUrl(category.thumbnail)}
                           alt={category.name}
-                          className="w-12 h-12 rounded-lg object-cover"
+                          className="w-12 h-12 rounded-lg object-contain bg-gray-800"
                           onError={(e) => console.error("Image failed to load:", e, "src:", getImageUrl(category.thumbnail))}
                         />
                       )}

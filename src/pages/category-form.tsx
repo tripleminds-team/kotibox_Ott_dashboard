@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useGetCategoryById, useCreateCategory, useUpdateCategory, getImageUrl } from "../lib/api-client";
+import MediaPicker from "@/components/MediaPicker";
 import {
   Command,
   CommandEmpty,
@@ -22,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronDown, ArrowLeft, Play, Music, Video, Book, Gamepad2, Smile, Star, Heart, Zap, Flame, TrendingUp, TrendingDown, Newspaper, ShoppingBag, Users, User, Shield, Bell, AlertCircle, CheckCircle2, XCircle, Info, HelpCircle, Clock, Calendar, Home, Settings, Sliders, Edit3, Trash2, MoreHorizontal } from "lucide-react";
+import { Check, ChevronDown, ArrowLeft, Play, Music, Video, Book, Gamepad2, Smile, Star, Heart, Zap, Flame, TrendingUp, TrendingDown, Newspaper, ShoppingBag, Users, User, Shield, Bell, AlertCircle, CheckCircle2, XCircle, Info, HelpCircle, Clock, Calendar, Home, Settings, Sliders, Edit3, Trash2, MoreHorizontal, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const icons = [
@@ -93,6 +94,9 @@ export default function CategoryForm() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
+  const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
+  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
+
   const [formData, setFormData] = useState<FormDataState>({
     name: "",
     slug: "",
@@ -139,16 +143,13 @@ export default function CategoryForm() {
       formDataToSend.append('isFeatured', formData.isFeatured.toString());
       formDataToSend.append('order', formData.order.toString());
       
-      // Only send thumbnail URL if it's not a blob URL (existing image)
-      if (formData.thumbnail && !formData.thumbnail.startsWith('http')) {
+      // Send thumbnail and banner URLs (from MediaPicker or existing)
+      if (formData.thumbnail) {
         formDataToSend.append('thumbnail', formData.thumbnail);
       }
-      if (formData.bannerImage && !formData.bannerImage.startsWith('http')) {
+      if (formData.bannerImage) {
         formDataToSend.append('bannerImage', formData.bannerImage);
       }
-      
-      if (thumbnailFile) formDataToSend.append('thumbnailFile', thumbnailFile);
-      if (bannerFile) formDataToSend.append('bannerFile', bannerFile);
 
       console.log("About to send formDataToSend, entries: ", Array.from(formDataToSend.entries()));
       if (isEdit) {
@@ -258,60 +259,40 @@ export default function CategoryForm() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="thumbnail" className="text-foreground text-sm">Thumbnail</Label>
-              <input
-                ref={thumbnailRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setThumbnailFile(file);
-                    const preview = URL.createObjectURL(file);
-                    setThumbnailPreview(preview);
-                    setFormData({ ...formData, thumbnail: preview });
-                  }
-                }}
-                className="hidden"
-              />
-              <div
-                onClick={() => thumbnailRef.current?.click()}
-                className="h-32 rounded-lg border-2 border-dashed border-border bg-muted/50 hover:border-red-500/60 cursor-pointer transition-all flex flex-col items-center justify-center overflow-hidden"
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setThumbnailPickerOpen(true)}
+                className="w-full h-32 border-2 border-dashed"
               >
                 {thumbnailPreview ? (
                   <img src={thumbnailPreview} alt="Thumbnail" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-muted-foreground text-sm">Click to upload</span>
+                  <div className="flex flex-col items-center gap-2">
+                    <ImageIcon className="w-5 h-5" />
+                    <span className="text-sm">Select from Library or Upload</span>
+                  </div>
                 )}
-              </div>
+              </Button>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="bannerImage" className="text-foreground text-sm">Banner Image</Label>
-              <input
-                ref={bannerRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setBannerFile(file);
-                    const preview = URL.createObjectURL(file);
-                    setBannerPreview(preview);
-                    setFormData({ ...formData, bannerImage: preview });
-                  }
-                }}
-                className="hidden"
-              />
-              <div
-                onClick={() => bannerRef.current?.click()}
-                className="h-32 rounded-lg border-2 border-dashed border-border bg-muted/50 hover:border-red-500/60 cursor-pointer transition-all flex flex-col items-center justify-center overflow-hidden"
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBannerPickerOpen(true)}
+                className="w-full h-32 border-2 border-dashed"
               >
                 {bannerPreview ? (
                   <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-muted-foreground text-sm">Click to upload</span>
+                  <div className="flex flex-col items-center gap-2">
+                    <ImageIcon className="w-5 h-5" />
+                    <span className="text-sm">Select from Library or Upload</span>
+                  </div>
                 )}
-              </div>
+              </Button>
             </div>
 
             <div className="space-y-1.5">
@@ -456,6 +437,28 @@ export default function CategoryForm() {
           </Button>
         </div>
       </form>
+
+      {/* Media Pickers */}
+      <MediaPicker
+        open={thumbnailPickerOpen}
+        onClose={() => setThumbnailPickerOpen(false)}
+        onSelect={(media) => {
+          setFormData({ ...formData, thumbnail: media.url });
+          setThumbnailPreview(getImageUrl(media.url));
+        }}
+        source="category"
+        accept="image/*"
+      />
+      <MediaPicker
+        open={bannerPickerOpen}
+        onClose={() => setBannerPickerOpen(false)}
+        onSelect={(media) => {
+          setFormData({ ...formData, bannerImage: media.url });
+          setBannerPreview(getImageUrl(media.url));
+        }}
+        source="category"
+        accept="image/*"
+      />
     </div>
   );
 }

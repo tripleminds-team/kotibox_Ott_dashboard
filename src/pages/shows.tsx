@@ -134,7 +134,7 @@ export default function ShowsPage() {
                           <img
                             src={getImageUrl(item.thumbnail)}
                             alt={item.title}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-contain"
                           />
                         )}
                       </div>

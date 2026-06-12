@@ -1,5 +1,14 @@
 
-import { useGetMe } from "../lib/api-client";
+import { 
+  useGetMe, 
+  useGetDashboardStats, 
+  useGetRevenueData, 
+  useGetNewSubscribersData, 
+  useGetMostWatchedData, 
+  useGetTopGenresData, 
+  useGetReviews, 
+  useGetTransactions 
+} from "../lib/api-client";
 import {
   User,
   Users,
@@ -40,150 +49,17 @@ import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Mock data for charts
-const revenueData = [
-  { name: 'Jan', value: 15000 },
-  { name: 'Feb', value: 12000 },
-  { name: 'Mar', value: 18000 },
-  { name: 'Apr', value: 25000 },
-  { name: 'May', value: 22000 },
-  { name: 'Jun', value: 28000 },
-  { name: 'Jul', value: 26000 },
-];
-
-const newSubscribersData = [
-  { name: 'Jan', basic: 120, premium: 80 },
-  { name: 'Feb', basic: 132, premium: 95 },
-  { name: 'Mar', basic: 101, premium: 88 },
-  { name: 'Apr', basic: 134, premium: 110 },
-  { name: 'May', basic: 90, premium: 78 },
-  { name: 'Jun', basic: 230, premium: 150 },
-];
-
-const mostWatchedData = [
-  { name: 'Jan', movies: 15, tvShows: 12 },
-  { name: 'Feb', movies: 18, tvShows: 15 },
-  { name: 'Mar', movies: 22, tvShows: 18 },
-  { name: 'Apr', movies: 20, tvShows: 20 },
-  { name: 'May', movies: 25, tvShows: 22 },
-  { name: 'Jun', movies: 30, tvShows: 28 },
-  { name: 'Jul', movies: 28, tvShows: 25 },
-];
-
-const topGenresData = [
-  { name: 'Horror', value: 25 },
-  { name: 'Historical', value: 20 },
-  { name: 'Inspirational', value: 18 },
-  { name: 'Romantic', value: 22 },
-  { name: 'Comedy', value: 15 },
-];
-
 const COLORS = ['#7f1d1d', '#991b1b', '#b91c1c', '#dc2626', '#ef4444'];
-
-const reviewsData = [
-  {
-    name: 'Dorothy Erickson',
-    date: '3rd June 2026',
-    category: 'TV Shows',
-    rating: 5,
-    avatar: 'D',
-  },
-  {
-    name: 'Lila Lucas',
-    date: '1st June 2026',
-    category: 'TV Shows',
-    rating: 4,
-    avatar: 'L',
-  },
-  {
-    name: 'Tracy Jones',
-    date: '31st May 2026',
-    category: 'TV Shows',
-    rating: 5,
-    avatar: 'T',
-  },
-  {
-    name: 'Dorothy Erickson',
-    date: '30th May 2026',
-    category: 'TV Shows',
-    rating: 5,
-    avatar: 'D',
-  },
-  {
-    name: 'Tracy Jones',
-    date: '29th May 2026',
-    category: 'TV Shows',
-    rating: 4,
-    avatar: 'T',
-  },
-  {
-    name: 'Jay Henry',
-    date: '28th May 2026',
-    category: 'TV Shows',
-    rating: 5,
-    avatar: 'J',
-  },
-];
-
-const transactionsData = [
-  {
-    name: 'Tristan Erikson',
-    date: '2026-05-15',
-    plan: 'Basic',
-    amount: '₱5.00',
-    duration: '1 month',
-    method: 'Stripe',
-    avatar: 'T',
-  },
-  {
-    name: 'John Doe',
-    date: '2026-05-11',
-    plan: 'Ultimate Plan',
-    amount: '₱50.00',
-    duration: '3 months',
-    method: 'Stripe',
-    avatar: 'J',
-  },
-  {
-    name: 'Lila Lucas',
-    date: '2026-05-10',
-    plan: 'Premium Plan',
-    amount: '₱20.00',
-    duration: '1 month',
-    method: '-',
-    avatar: 'L',
-  },
-  {
-    name: 'Dorothy Erickson',
-    date: '-',
-    plan: 'Basic',
-    amount: '₱5.00',
-    duration: '1 month',
-    method: '-',
-    avatar: 'D',
-  },
-  {
-    name: 'Sinika Green',
-    date: '2026-05-06',
-    plan: 'Premium Plan',
-    amount: '₱20.00',
-    duration: '1 month',
-    method: 'Stripe',
-    avatar: 'S',
-  },
-  {
-    name: 'Fefe Harris',
-    date: '2026-05-08',
-    plan: 'Premium Plan',
-    amount: '₱20.00',
-    duration: '1 month',
-    method: '-',
-    avatar: 'F',
-  },
-];
 
 export default function Dashboard() {
   const { data: user } = useGetMe();
+  const { data: dashboardStats, isLoading: statsLoading } = useGetDashboardStats();
+  const { data: revenueData = [], isLoading: revenueLoading } = useGetRevenueData();
+  const { data: newSubscribersData = [], isLoading: subscribersLoading } = useGetNewSubscribersData();
+  const { data: mostWatchedData = [], isLoading: mostWatchedLoading } = useGetMostWatchedData();
+  const { data: topGenresData = [], isLoading: topGenresLoading } = useGetTopGenresData();
+  const { data: reviewsData = [], isLoading: reviewsLoading } = useGetReviews();
+  const { data: transactionsData = [], isLoading: transactionsLoading } = useGetTransactions();
   const { t } = useLanguage();
   const { theme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -199,7 +75,7 @@ export default function Dashboard() {
   const stats = [
     {
       title: "Total Users",
-      value: "13",
+      value: dashboardStats?.totalUsers?.toString() || "0",
       icon: Users,
       iconBg: "from-red-600 to-red-700",
       trend: "+15%",
@@ -207,7 +83,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Subscribers",
-      value: "8",
+      value: dashboardStats?.totalSubscribers?.toString() || "0",
       icon: Users,
       iconBg: "from-red-600 to-red-700",
       trend: "+18%",
@@ -215,7 +91,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Soon to Expire",
-      value: "5",
+      value: dashboardStats?.soonToExpire?.toString() || "0",
       icon: Clock,
       iconBg: "from-red-600 to-red-700",
       trend: "+10%",
@@ -223,7 +99,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Reviews",
-      value: "71",
+      value: dashboardStats?.totalReviews?.toString() || "0",
       icon: Star,
       iconBg: "from-red-600 to-red-700",
       trend: "+9.23%",
@@ -231,7 +107,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Storage Usage",
-      value: "292.55 MB",
+      value: dashboardStats?.totalStorageUsage || "0 MB",
       icon: TrendingUp,
       iconBg: "from-red-600 to-red-700",
       trend: "+18%",
@@ -239,7 +115,7 @@ export default function Dashboard() {
     },
     {
       title: "Rest Content",
-      value: "25",
+      value: dashboardStats?.restContent?.toString() || "0",
       icon: Film,
       iconBg: "from-red-600 to-red-700",
       trend: "+15%",
@@ -247,7 +123,7 @@ export default function Dashboard() {
     },
     {
       title: "Subscription Revenue",
-      value: "₱205.00",
+      value: dashboardStats?.subscriptionRevenue || "₱0.00",
       icon: DollarSign,
       iconBg: "from-red-600 to-red-700",
       trend: "+15%",
@@ -255,7 +131,7 @@ export default function Dashboard() {
     },
     {
       title: "Rent Revenue",
-      value: "₱56.95",
+      value: dashboardStats?.rentRevenue || "₱0.00",
       icon: DollarSign,
       iconBg: "from-red-600 to-red-700",
       trend: "+10%",
@@ -263,7 +139,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Revenue",
-      value: "₱261.95",
+      value: dashboardStats?.totalRevenue || "₱0.00",
       icon: DollarSign,
       iconBg: "from-red-600 to-red-700",
       trend: "+12%",

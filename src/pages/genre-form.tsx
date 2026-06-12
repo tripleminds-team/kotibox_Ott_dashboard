@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useGetGenreById, useCreateGenre, useUpdateGenre, getImageUrl } from "@/lib/api-client";
+import MediaPicker from "@/components/MediaPicker";
 
 export default function GenreFormPage() {
   const [, setLocation] = useLocation();
@@ -24,6 +25,7 @@ export default function GenreFormPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   useEffect(() => {
     if (genreData?.data && isEdit) {
@@ -55,8 +57,8 @@ export default function GenreFormPage() {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('active', active.toString());
-      if (imageFile) {
-        formData.append('imageFile', imageFile);
+      if (imagePreview && !imagePreview.startsWith('blob:')) {
+        formData.append('image', imagePreview);
       }
 
       if (isEdit) {
@@ -101,45 +103,36 @@ export default function GenreFormPage() {
           {/* Left — Image upload */}
           <div className="space-y-2">
             <Label className="text-foreground font-medium">Image</Label>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-card hover:border-red-500/60 hover:bg-muted/60 transition-all duration-200 cursor-pointer overflow-hidden"
-              style={{ minHeight: "200px" }}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setMediaPickerOpen(true)}
+              className="w-full h-48 border-2 border-dashed"
             >
               {imagePreview ? (
-                <>
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                    style={{ maxHeight: "220px" }}
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setImagePreview(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                    className="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center shadow-lg z-10"
-                  >
-                    <X className="h-3.5 w-3.5 text-foreground" />
-                  </button>
-                </>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-contain"
+                />
               ) : (
                 <div className="flex flex-col items-center gap-3 py-10 px-6 text-center select-none">
                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                  <p className="text-sm text-gray-500">Choose Media to Upload</p>
+                  <p className="text-sm text-gray-500">Select from Library or Upload</p>
                 </div>
               )}
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
+            </Button>
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview(null);
+                }}
+                className="text-sm text-red-400 hover:text-red-300"
+              >
+                Remove image
+              </button>
+            )}
           </div>
 
           {/* Right — Name + Status */}
@@ -184,6 +177,17 @@ export default function GenreFormPage() {
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>
+
+      {/* Media Picker */}
+      <MediaPicker
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(media) => {
+          setImagePreview(getImageUrl(media.url));
+        }}
+        source="genre"
+        accept="image/*"
+      />
     </div>
   );
 }

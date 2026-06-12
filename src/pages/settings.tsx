@@ -2,25 +2,18 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   Building2,
-  Code2,
-  LayoutGrid,
   SlidersHorizontal,
   Paintbrush,
   Mail,
-  Bell,
-  Globe,
-  BellRing,
   DollarSign,
   HardDrive,
   Search,
-  ImageIcon,
-  X,
-  Palette,
-  Copy,
-  UserX,
   Upload,
   Moon,
   Sun,
+  ImageIcon,
+  X,
+  UserX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,14 +45,9 @@ import { useTheme } from "next-themes";
 
 const SECTIONS = [
   { id: "business", label: "Business Settings", icon: Building2 },
-  { id: "custom-code", label: "Custom Code", icon: Code2 },
-  { id: "module", label: "Module Settings", icon: LayoutGrid },
   { id: "misc", label: "Misc Settings", icon: SlidersHorizontal },
   { id: "customization", label: "Customization", icon: Paintbrush },
   { id: "mail", label: "Mail Settings", icon: Mail },
-  { id: "notification", label: "Notification Settings", icon: Bell },
-  { id: "language", label: "Language Settings", icon: Globe },
-  { id: "notification-config", label: "Notification Configuration", icon: BellRing },
   { id: "currency", label: "Currency Settings", icon: DollarSign },
   { id: "storage", label: "Storage Settings", icon: HardDrive },
   { id: "seo", label: "SEO Settings", icon: Search },
@@ -136,6 +124,7 @@ export default function Settings() {
     twitterUrl: ctxSettings.twitterUrl,
     instagramUrl: ctxSettings.instagramUrl,
     youtubeUrl: ctxSettings.youtubeUrl,
+    logoStyle: ctxSettings.logoStyle,
   });
 
   useEffect(() => {
@@ -149,6 +138,7 @@ export default function Settings() {
       twitterUrl: ctxSettings.twitterUrl,
       instagramUrl: ctxSettings.instagramUrl,
       youtubeUrl: ctxSettings.youtubeUrl,
+      logoStyle: ctxSettings.logoStyle,
     });
   }, [
     ctxSettings.platformName,
@@ -160,6 +150,7 @@ export default function Settings() {
     ctxSettings.twitterUrl,
     ctxSettings.instagramUrl,
     ctxSettings.youtubeUrl,
+    ctxSettings.logoStyle,
   ]);
 
   // logo preview states
@@ -224,6 +215,7 @@ export default function Settings() {
         twitterUrl: business.twitterUrl,
         instagramUrl: business.instagramUrl,
         youtubeUrl: business.youtubeUrl,
+        logoStyle: business.logoStyle,
       });
       updateCtx({ ...business });
       await refreshSettings();
@@ -235,95 +227,9 @@ export default function Settings() {
     }
   };
 
-  // ── Custom Code ────────────────────────────────────────────────────────
-  const [customCode, setCustomCode] = useState({ headCode: ctxSettings.headerCode || "", bodyCode: ctxSettings.footerCode || "" });
 
-  useEffect(() => {
-    setCustomCode({ headCode: ctxSettings.headerCode || "", bodyCode: ctxSettings.footerCode || "" });
-  }, [ctxSettings.headerCode, ctxSettings.footerCode]);
 
-  const handleSaveCustomCode = async () => {
-    setSaving(true);
-    try {
-      await updateSettingsMutation.mutateAsync({
-        headerCode: customCode.headCode,
-        footerCode: customCode.bodyCode,
-      });
-      updateCtx({ headerCode: customCode.headCode, footerCode: customCode.bodyCode });
-      await refreshSettings();
-      toast({ title: "Custom code saved!" });
-    } catch (err: any) {
-      toast({ title: err?.message || "Save failed", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  // ── Module Settings ────────────────────────────────────────────────────
-  const [modules, setModules] = useState({
-    movies: ctxSettings.moduleMovies ?? true,
-    tvShows: ctxSettings.moduleTvShows ?? true,
-    liveTV: ctxSettings.moduleLiveTV ?? true,
-    videos: ctxSettings.moduleVideos ?? true,
-    castCrew: ctxSettings.moduleCastCrew ?? true,
-    adsManager: ctxSettings.moduleAdsManager ?? true,
-    subscriptions: ctxSettings.moduleSubscriptions ?? true,
-    plans: ctxSettings.modulePlans ?? true,
-  });
-
-  useEffect(() => {
-    setModules({
-      movies: ctxSettings.moduleMovies ?? true,
-      tvShows: ctxSettings.moduleTvShows ?? true,
-      liveTV: ctxSettings.moduleLiveTV ?? true,
-      videos: ctxSettings.moduleVideos ?? true,
-      castCrew: ctxSettings.moduleCastCrew ?? true,
-      adsManager: ctxSettings.moduleAdsManager ?? true,
-      subscriptions: ctxSettings.moduleSubscriptions ?? true,
-      plans: ctxSettings.modulePlans ?? true,
-    });
-  }, [
-    ctxSettings.moduleMovies,
-    ctxSettings.moduleTvShows,
-    ctxSettings.moduleLiveTV,
-    ctxSettings.moduleVideos,
-    ctxSettings.moduleCastCrew,
-    ctxSettings.moduleAdsManager,
-    ctxSettings.moduleSubscriptions,
-    ctxSettings.modulePlans,
-  ]);
-
-  const handleSaveModules = async () => {
-    setSaving(true);
-    try {
-      await updateSettingsMutation.mutateAsync({
-        moduleMovies: modules.movies,
-        moduleTvShows: modules.tvShows,
-        moduleLiveTV: modules.liveTV,
-        moduleVideos: modules.videos,
-        moduleCastCrew: modules.castCrew,
-        moduleAdsManager: modules.adsManager,
-        moduleSubscriptions: modules.subscriptions,
-        modulePlans: modules.plans,
-      });
-      updateCtx({
-        moduleMovies: modules.movies,
-        moduleTvShows: modules.tvShows,
-        moduleLiveTV: modules.liveTV,
-        moduleVideos: modules.videos,
-        moduleCastCrew: modules.castCrew,
-        moduleAdsManager: modules.adsManager,
-        moduleSubscriptions: modules.subscriptions,
-        modulePlans: modules.plans,
-      });
-      await refreshSettings();
-      toast({ title: "Module settings saved!" });
-    } catch (err: any) {
-      toast({ title: err?.message || "Save failed", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // ── Misc Settings ──────────────────────────────────────────────────────
   const [misc, setMisc] = useState({
@@ -384,6 +290,7 @@ export default function Settings() {
     cardStyle: ctxSettings.cardStyle || "Default",
     menuStyle: ctxSettings.menuStyle || "Mini",
     activeMenuStyle: ctxSettings.activeMenuStyle || "Left Bordered",
+    footerStyle: ctxSettings.footerStyle || "default",
   });
 
   useEffect(() => {
@@ -394,6 +301,7 @@ export default function Settings() {
       cardStyle: ctxSettings.cardStyle || "Default",
       menuStyle: ctxSettings.menuStyle || "Mini",
       activeMenuStyle: ctxSettings.activeMenuStyle || "Left Bordered",
+      footerStyle: ctxSettings.footerStyle || "default",
     });
   }, [
     ctxSettings.colorTheme,
@@ -402,28 +310,33 @@ export default function Settings() {
     ctxSettings.cardStyle,
     ctxSettings.menuStyle,
     ctxSettings.activeMenuStyle,
+    ctxSettings.footerStyle,
   ]);
 
   const handleSaveCustomization = async () => {
     setSaving(true);
     try {
-      await updateSettingsMutation.mutateAsync({
-        colorTheme: custom.colorTheme,
-        navbarStyle: custom.navbarStyle.toLowerCase(),
-        navbarHide: custom.navbarHide,
-        cardStyle: custom.cardStyle.toLowerCase(),
-        menuStyle: custom.menuStyle.toLowerCase(),
-        activeMenuStyle: custom.activeMenuStyle.toLowerCase(),
-      });
-      updateCtx({
+      // Temporarily not hitting API - save to context and local storage only
+      const customSettings = {
         colorTheme: custom.colorTheme,
         navbarStyle: custom.navbarStyle.toLowerCase() as any,
         navbarHide: custom.navbarHide,
         cardStyle: custom.cardStyle.toLowerCase() as any,
         menuStyle: custom.menuStyle.toLowerCase() as any,
         activeMenuStyle: custom.activeMenuStyle.toLowerCase(),
-      });
-      await refreshSettings();
+        footerStyle: custom.footerStyle,
+      };
+      updateCtx(customSettings);
+      
+      // Also save to local storage for persistence
+      const currentStorage = localStorage.getItem("tripleMindesSettings");
+      if (currentStorage) {
+        const existing = JSON.parse(currentStorage);
+        localStorage.setItem("tripleMindesSettings", JSON.stringify({ ...existing, ...customSettings }));
+      } else {
+        localStorage.setItem("tripleMindesSettings", JSON.stringify(customSettings));
+      }
+      
       toast({ title: "Customization settings saved!" });
     } catch (err: any) {
       toast({ title: err?.message || "Save failed", variant: "destructive" });
@@ -502,139 +415,7 @@ export default function Settings() {
     }
   };
 
-  // ── Notification Settings ──────────────────────────────────────────────
-  const [notif, setNotif] = useState({
-    firebaseServerKey: ctxSettings.fcmServerKey || "",
-    firebaseSenderId: ctxSettings.fcmSenderId || "",
-    firebaseApiKey: ctxSettings.firebaseApiKey || "",
-    firebaseProjectId: ctxSettings.firebaseProjectId || "",
-    firebaseAppId: ctxSettings.firebaseAppId || "",
-  });
 
-  useEffect(() => {
-    setNotif({
-      firebaseServerKey: ctxSettings.fcmServerKey || "",
-      firebaseSenderId: ctxSettings.fcmSenderId || "",
-      firebaseApiKey: ctxSettings.firebaseApiKey || "",
-      firebaseProjectId: ctxSettings.firebaseProjectId || "",
-      firebaseAppId: ctxSettings.firebaseAppId || "",
-    });
-  }, [
-    ctxSettings.fcmServerKey,
-    ctxSettings.fcmSenderId,
-    ctxSettings.firebaseApiKey,
-    ctxSettings.firebaseProjectId,
-    ctxSettings.firebaseAppId,
-  ]);
-
-  const handleSaveNotification = async () => {
-    setSaving(true);
-    try {
-      await updateSettingsMutation.mutateAsync({
-        fcmServerKey: notif.firebaseServerKey,
-        fcmSenderId: notif.firebaseSenderId,
-        firebaseApiKey: notif.firebaseApiKey,
-        firebaseProjectId: notif.firebaseProjectId,
-        firebaseAppId: notif.firebaseAppId,
-      });
-      updateCtx({
-        fcmServerKey: notif.firebaseServerKey,
-        fcmSenderId: notif.firebaseSenderId,
-        firebaseApiKey: notif.firebaseApiKey,
-        firebaseProjectId: notif.firebaseProjectId,
-        firebaseAppId: notif.firebaseAppId,
-      });
-      await refreshSettings();
-      toast({ title: "Notification settings saved!" });
-    } catch (err: any) {
-      toast({ title: err?.message || "Save failed", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ── Language Settings ──────────────────────────────────────────────────
-  const [lang, setLang] = useState({ defaultLanguage: ctxSettings.defaultLanguage || "en", rtlSupport: ctxSettings.rtlSupport ?? false });
-
-  useEffect(() => {
-    setLang({ defaultLanguage: ctxSettings.defaultLanguage || "en", rtlSupport: ctxSettings.rtlSupport ?? false });
-  }, [ctxSettings.defaultLanguage, ctxSettings.rtlSupport]);
-
-  const handleSaveLanguage = async () => {
-    setSaving(true);
-    try {
-      await updateSettingsMutation.mutateAsync({
-        defaultLanguage: lang.defaultLanguage,
-        rtlSupport: lang.rtlSupport,
-      });
-      updateCtx({
-        defaultLanguage: lang.defaultLanguage,
-        rtlSupport: lang.rtlSupport,
-      });
-      await refreshSettings();
-      toast({ title: "Language settings saved!" });
-    } catch (err: any) {
-      toast({ title: err?.message || "Save failed", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ── Notification Configuration ─────────────────────────────────────────
-  const [notifCfg, setNotifCfg] = useState({
-    newUser: ctxSettings.notifNewUser ?? true,
-    newSubscription: ctxSettings.notifNewSubscription ?? true,
-    newContent: ctxSettings.notifNewContent ?? false,
-    paymentSuccess: ctxSettings.notifPaymentSuccess ?? true,
-    paymentFailed: ctxSettings.notifPaymentFailed ?? true,
-    contentExpiry: ctxSettings.notifContentExpiry ?? false,
-  });
-
-  useEffect(() => {
-    setNotifCfg({
-      newUser: ctxSettings.notifNewUser ?? true,
-      newSubscription: ctxSettings.notifNewSubscription ?? true,
-      newContent: ctxSettings.notifNewContent ?? false,
-      paymentSuccess: ctxSettings.notifPaymentSuccess ?? true,
-      paymentFailed: ctxSettings.notifPaymentFailed ?? true,
-      contentExpiry: ctxSettings.notifContentExpiry ?? false,
-    });
-  }, [
-    ctxSettings.notifNewUser,
-    ctxSettings.notifNewSubscription,
-    ctxSettings.notifNewContent,
-    ctxSettings.notifPaymentSuccess,
-    ctxSettings.notifPaymentFailed,
-    ctxSettings.notifContentExpiry,
-  ]);
-
-  const handleSaveNotifConfig = async () => {
-    setSaving(true);
-    try {
-      await updateSettingsMutation.mutateAsync({
-        notifNewUser: notifCfg.newUser,
-        notifNewSubscription: notifCfg.newSubscription,
-        notifNewContent: notifCfg.newContent,
-        notifPaymentSuccess: notifCfg.paymentSuccess,
-        notifPaymentFailed: notifCfg.paymentFailed,
-        notifContentExpiry: notifCfg.contentExpiry,
-      });
-      updateCtx({
-        notifNewUser: notifCfg.newUser,
-        notifNewSubscription: notifCfg.newSubscription,
-        notifNewContent: notifCfg.newContent,
-        notifPaymentSuccess: notifCfg.paymentSuccess,
-        notifPaymentFailed: notifCfg.paymentFailed,
-        notifContentExpiry: notifCfg.contentExpiry,
-      });
-      await refreshSettings();
-      toast({ title: "Notification configuration saved!" });
-    } catch (err: any) {
-      toast({ title: err?.message || "Save failed", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   // ── Currency Settings ──────────────────────────────────────────────────
   const [currency, setCurrency] = useState({
@@ -686,30 +467,22 @@ export default function Settings() {
   const [storage, setStorage] = useState({
     localStorage: ctxSettings.storageDriver === 'local',
     s3Storage: ctxSettings.storageDriver === 's3',
-    bunnyCDN: ctxSettings.storageDriver === 'bunny',
     awsAccessKeyId: ctxSettings.awsAccessKeyId || "",
     awsSecretAccessKey: ctxSettings.awsSecretAccessKey || "",
     awsDefaultRegion: ctxSettings.awsRegion || "",
     awsBucket: ctxSettings.awsBucket || "",
     awsPathStyle: ctxSettings.awsPathStyleEndpoint ?? false,
-    bunnyStorageZone: ctxSettings.bunnyStorageZone || "",
-    bunnyAccessKey: ctxSettings.bunnyAccessKey || "",
-    bunnyCdnUrl: ctxSettings.bunnyCdnUrl || "",
   });
 
   useEffect(() => {
     setStorage({
       localStorage: ctxSettings.storageDriver === 'local',
       s3Storage: ctxSettings.storageDriver === 's3',
-      bunnyCDN: ctxSettings.storageDriver === 'bunny',
       awsAccessKeyId: ctxSettings.awsAccessKeyId || "",
       awsSecretAccessKey: ctxSettings.awsSecretAccessKey || "",
       awsDefaultRegion: ctxSettings.awsRegion || "",
       awsBucket: ctxSettings.awsBucket || "",
       awsPathStyle: ctxSettings.awsPathStyleEndpoint ?? false,
-      bunnyStorageZone: ctxSettings.bunnyStorageZone || "",
-      bunnyAccessKey: ctxSettings.bunnyAccessKey || "",
-      bunnyCdnUrl: ctxSettings.bunnyCdnUrl || "",
     });
   }, [
     ctxSettings.storageDriver,
@@ -718,17 +491,13 @@ export default function Settings() {
     ctxSettings.awsRegion,
     ctxSettings.awsBucket,
     ctxSettings.awsPathStyleEndpoint,
-    ctxSettings.bunnyStorageZone,
-    ctxSettings.bunnyAccessKey,
-    ctxSettings.bunnyCdnUrl,
   ]);
 
   const handleSaveStorage = async () => {
     setSaving(true);
     try {
-      let driver: 'local' | 's3' | 'bunny' = 'local';
+      let driver: 'local' | 's3' = 'local';
       if (storage.s3Storage) driver = 's3';
-      else if (storage.bunnyCDN) driver = 'bunny';
 
       await updateSettingsMutation.mutateAsync({
         storageDriver: driver,
@@ -737,9 +506,6 @@ export default function Settings() {
         awsRegion: storage.awsDefaultRegion,
         awsBucket: storage.awsBucket,
         awsPathStyleEndpoint: storage.awsPathStyle,
-        bunnyStorageZone: storage.bunnyStorageZone,
-        bunnyAccessKey: storage.bunnyAccessKey,
-        bunnyCdnUrl: storage.bunnyCdnUrl,
       });
       updateCtx({
         storageDriver: driver,
@@ -748,9 +514,6 @@ export default function Settings() {
         awsRegion: storage.awsDefaultRegion,
         awsBucket: storage.awsBucket,
         awsPathStyleEndpoint: storage.awsPathStyle,
-        bunnyStorageZone: storage.bunnyStorageZone,
-        bunnyAccessKey: storage.bunnyAccessKey,
-        bunnyCdnUrl: storage.bunnyCdnUrl,
       });
       await refreshSettings();
       toast({ title: "Storage settings saved!" });
@@ -837,12 +600,12 @@ export default function Settings() {
     <div className="space-y-2">
       <Label className={labelCls}>{label}</Label>
       <div
-        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-card cursor-pointer hover:border-red-500/60 transition-colors overflow-hidden"
+        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-gray-800 cursor-pointer hover:border-red-500/60 transition-colors overflow-hidden"
         onClick={() => inputRef.current?.click()}
       >
         {preview ? (
           <>
-            <img src={preview} alt={label} className="h-full w-full object-contain p-2" />
+            <img src={preview.startsWith('blob:') ? preview : getImageUrl(preview)} alt={label} className="h-full w-full object-contain p-2" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
               <Upload className="h-5 w-5 text-foreground" />
             </div>
@@ -911,7 +674,7 @@ export default function Settings() {
       {/* Basic fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         {[
-          { key: "platformName", label: "App Name", placeholder: "StreamVault", req: true },
+          { key: "platformName", label: "App Name", placeholder: "StreamVault", req: false },
           { key: "contactNo", label: "Contact No", placeholder: "+1 234 567 8900", req: true },
           { key: "inquiryEmail", label: "Inquiry Email", placeholder: "hello@example.com", req: true },
           { key: "copyrightText", label: "Copyright Text", placeholder: "© 2026 StreamVault. All Rights Reserved.", req: false },
@@ -963,96 +726,13 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Quick Links */}
-      <div className="pt-4 border-t border-border space-y-3">
-        <p className="text-sm text-muted-foreground font-medium">Quick Links</p>
-        <div className="flex gap-3 flex-wrap">
-          <Button
-            variant="outline"
-            className="border-border text-foreground hover:bg-muted hover:text-foreground gap-2 rounded-lg h-10"
-            onClick={() => setLocation("/settings/branding")}
-          >
-            <Palette className="h-4 w-4" />
-            Branding
-          </Button>
-          <Button
-            variant="outline"
-            className="border-border text-foreground hover:bg-muted hover:text-foreground gap-2 rounded-lg h-10"
-            onClick={() => setLocation("/settings/icons")}
-          >
-            <Copy className="h-4 w-4" />
-            Icon Library
-          </Button>
-        </div>
-      </div>
+
 
       <SaveBtn saving={saving} onClick={handleSaveBusiness} />
     </div>
   );
 
-  const renderCustomCode = () => (
-    <div>
-      <SectionTitle icon={Code2} label="Custom Code" />
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <Label className={labelCls}>Head Code</Label>
-          <p className="text-xs text-muted-foreground">Code will be added before &lt;/head&gt; tag</p>
-          <Textarea
-            value={customCode.headCode}
-            onChange={(e) => setCustomCode({ ...customCode, headCode: e.target.value })}
-            placeholder="<!-- Your head code here -->"
-            className="bg-input border-border text-foreground focus:border-red-500 rounded-lg font-mono text-sm resize-none"
-            rows={6}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className={labelCls}>Body Code</Label>
-          <p className="text-xs text-muted-foreground">Code will be added before &lt;/body&gt; tag</p>
-          <Textarea
-            value={customCode.bodyCode}
-            onChange={(e) => setCustomCode({ ...customCode, bodyCode: e.target.value })}
-            placeholder="<!-- Your body code here -->"
-            className="bg-input border-border text-foreground focus:border-red-500 rounded-lg font-mono text-sm resize-none"
-            rows={6}
-          />
-        </div>
-      </div>
-      <SaveBtn saving={saving} onClick={handleSaveCustomCode} />
-    </div>
-  );
 
-  const renderModules = () => (
-    <div>
-      <SectionTitle icon={LayoutGrid} label="Module Settings" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {(
-          [
-            { key: "movies", label: "Movies" },
-            { key: "tvShows", label: "TV Shows" },
-            { key: "liveTV", label: "Live TV" },
-            { key: "videos", label: "Videos" },
-            { key: "castCrew", label: "Cast & Crew" },
-            { key: "adsManager", label: "Ads Manager" },
-            { key: "subscriptions", label: "Subscriptions" },
-            { key: "plans", label: "Plans" },
-          ] as const
-        ).map(({ key, label }) => (
-          <div
-            key={key}
-            className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card"
-          >
-            <span className="text-sm text-foreground font-medium">{label}</span>
-            <Switch
-              checked={modules[key]}
-              onCheckedChange={(v) => setModules({ ...modules, [key]: v })}
-              className="data-[state=checked]:bg-red-600"
-            />
-          </div>
-        ))}
-      </div>
-      <SaveBtn saving={saving} onClick={handleSaveModules} />
-    </div>
-  );
 
   const renderMisc = () => (
     <div>
@@ -1190,7 +870,7 @@ export default function Settings() {
       </div>
 
       {/* Active Menu Style */}
-      <div className="space-y-3">
+      <div className="space-y-3 mb-7">
         <Label className="text-foreground font-medium">Active Menu Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Rounded One Side", "Rounded All", "Pill One Side", "Pill All", "Left Bordered", "Full Width"].map((s) => (
@@ -1209,6 +889,26 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Footer */}
+      <div className="space-y-3">
+        <Label className="text-foreground font-medium">Footer</Label>
+        <div className="flex flex-wrap gap-3">
+          {["Default", "Sticky"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setCustom({ ...custom, footerStyle: s.toLowerCase() as any })}
+              className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                custom.footerStyle === s.toLowerCase()
+                  ? "bg-red-600 border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <SaveBtn saving={saving} onClick={handleSaveCustomization} />
     </div>
   );
@@ -1217,31 +917,107 @@ export default function Settings() {
     <div>
       <SectionTitle icon={Mail} label="Mail Settings" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {(
-          [
-            { key: "email", label: "Email", placeholder: "info@example.com" },
-            { key: "mailDriver", label: "Mail Driver", placeholder: "smtp" },
-            { key: "mailHost", label: "Mail Host", placeholder: "smtp.gmail.com" },
-            { key: "mailPort", label: "Mail Port", placeholder: "587" },
-            { key: "mailEncryption", label: "Mail Encryption", placeholder: "tls" },
-            { key: "mailUsername", label: "Mail Username", placeholder: "youremail@gmail.com" },
-            { key: "password", label: "Password", placeholder: "Password" },
-            { key: "mailFrom", label: "Mail From", placeholder: "youremail@gmail.com" },
-          ] as const
-        ).map(({ key, label, placeholder }) => (
-          <div key={key} className="space-y-2">
-            <Label className={labelCls}>
-              {label} <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type={key === "password" ? "password" : "text"}
-              value={mail[key]}
-              onChange={(e) => setMail({ ...mail, [key]: e.target.value })}
-              placeholder={placeholder}
-              className={inputCls}
-            />
-          </div>
-        ))}
+        {/* Mail Driver Selector */}
+        <div className="space-y-2 md:col-span-2">
+          <Label className={labelCls}>
+            Mail Driver <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={mail.mailDriver}
+            onValueChange={(v) => setMail({ ...mail, mailDriver: v })}
+          >
+            <SelectTrigger className={`${inputCls} h-11`}>
+              <SelectValue placeholder="Select Mail Driver" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border text-foreground">
+              <SelectItem value="smtp">SMTP</SelectItem>
+              <SelectItem value="sendmail">Sendmail</SelectItem>
+              <SelectItem value="log">Log</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* SMTP-specific fields */}
+        {mail.mailDriver === "smtp" && (
+          <>
+            <div className="space-y-2">
+              <Label className={labelCls}>
+                Mail Host <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={mail.mailHost}
+                onChange={(e) => setMail({ ...mail, mailHost: e.target.value })}
+                placeholder="smtp.gmail.com"
+                className={inputCls}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className={labelCls}>
+                Mail Port <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={mail.mailPort}
+                onChange={(e) => setMail({ ...mail, mailPort: e.target.value })}
+                placeholder="587"
+                className={inputCls}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className={labelCls}>
+                Mail Encryption <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={mail.mailEncryption}
+                onValueChange={(v) => setMail({ ...mail, mailEncryption: v })}
+              >
+                <SelectTrigger className={`${inputCls} h-11`}>
+                  <SelectValue placeholder="Select Encryption" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border text-foreground">
+                  <SelectItem value="tls">TLS</SelectItem>
+                  <SelectItem value="ssl">SSL</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className={labelCls}>
+                Mail Username <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={mail.mailUsername}
+                onChange={(e) => setMail({ ...mail, mailUsername: e.target.value })}
+                placeholder="youremail@gmail.com"
+                className={inputCls}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className={labelCls}>
+                Password <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="password"
+                value={mail.password}
+                onChange={(e) => setMail({ ...mail, password: e.target.value })}
+                placeholder="Password"
+                className={inputCls}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Common Mail fields */}
+        <div className="space-y-2">
+          <Label className={labelCls}>
+            From Email <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            value={mail.email}
+            onChange={(e) => setMail({ ...mail, email: e.target.value })}
+            placeholder="info@example.com"
+            className={inputCls}
+          />
+        </div>
         <div className="space-y-2">
           <Label className={labelCls}>
             From Name <span className="text-red-500">*</span>
@@ -1258,104 +1034,7 @@ export default function Settings() {
     </div>
   );
 
-  const renderNotification = () => (
-    <div>
-      <SectionTitle icon={Bell} label="Notification Settings" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {(
-          [
-            { key: "firebaseServerKey", label: "Firebase Server Key", placeholder: "Enter server key" },
-            { key: "firebaseSenderId", label: "Firebase Sender ID", placeholder: "Enter sender ID" },
-            { key: "firebaseApiKey", label: "Firebase API Key", placeholder: "Enter API key" },
-            { key: "firebaseProjectId", label: "Firebase Project ID", placeholder: "Enter project ID" },
-            { key: "firebaseAppId", label: "Firebase App ID", placeholder: "Enter app ID" },
-          ] as const
-        ).map(({ key, label, placeholder }) => (
-          <div key={key} className="space-y-2">
-            <Label className={labelCls}>{label}</Label>
-            <Input
-              value={notif[key]}
-              onChange={(e) => setNotif({ ...notif, [key]: e.target.value })}
-              placeholder={placeholder}
-              className={inputCls}
-            />
-          </div>
-        ))}
-      </div>
-      <SaveBtn saving={saving} onClick={handleSaveNotification} />
-    </div>
-  );
 
-  const renderLanguage = () => (
-    <div>
-      <SectionTitle icon={Globe} label="Language Settings" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="space-y-2">
-          <Label className={labelCls}>Default Language</Label>
-          <Select
-            value={lang.defaultLanguage}
-            onValueChange={(v) => setLang({ ...lang, defaultLanguage: v })}
-          >
-            <SelectTrigger className="bg-input border-border text-foreground h-11 rounded-lg">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-foreground">
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="ar">Arabic</SelectItem>
-              <SelectItem value="fr">French</SelectItem>
-              <SelectItem value="es">Spanish</SelectItem>
-              <SelectItem value="de">German</SelectItem>
-              <SelectItem value="hi">Hindi</SelectItem>
-              <SelectItem value="ur">Urdu</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card self-end">
-          <span className="text-sm text-foreground font-medium">RTL Support</span>
-          <Switch
-            checked={lang.rtlSupport}
-            onCheckedChange={(v) => setLang({ ...lang, rtlSupport: v })}
-            className="data-[state=checked]:bg-red-600"
-          />
-        </div>
-      </div>
-      <SaveBtn saving={saving} onClick={handleSaveLanguage} />
-    </div>
-  );
-
-  const renderNotifConfig = () => (
-    <div>
-      <SectionTitle icon={BellRing} label="Notification Configuration" />
-      <div className="space-y-3">
-        {(
-          [
-            { key: "newUser", label: "New User Registration", desc: "Notify when a new user registers" },
-            { key: "newSubscription", label: "New Subscription", desc: "Notify when a subscription is purchased" },
-            { key: "newContent", label: "New Content Added", desc: "Notify when new content is added" },
-            { key: "paymentSuccess", label: "Payment Success", desc: "Notify on successful payment" },
-            { key: "paymentFailed", label: "Payment Failed", desc: "Notify on failed payment" },
-            { key: "contentExpiry", label: "Content Expiry", desc: "Notify when content is about to expire" },
-          ] as const
-        ).map(({ key, label, desc }) => (
-          <div
-            key={key}
-            className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
-          >
-            <div>
-              <p className="text-sm text-foreground font-medium">{label}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-            </div>
-            <Switch
-              checked={notifCfg[key]}
-              onCheckedChange={(v) => setNotifCfg({ ...notifCfg, [key]: v })}
-              className="data-[state=checked]:bg-red-600"
-            />
-          </div>
-        ))}
-      </div>
-      <SaveBtn saving={saving} onClick={handleSaveNotifConfig} />
-    </div>
-  );
 
   const renderCurrency = () => (
     <div>
@@ -1365,12 +1044,24 @@ export default function Settings() {
           <Label className={labelCls}>
             Currency <span className="text-red-500">*</span>
           </Label>
-          <Input
+          <Select
             value={currency.currency}
-            onChange={(e) => setCurrency({ ...currency, currency: e.target.value })}
-            placeholder="USD"
-            className={inputCls}
-          />
+            onValueChange={(v) => setCurrency({ ...currency, currency: v })}
+          >
+            <SelectTrigger className={`${inputCls} h-11`}>
+              <SelectValue placeholder="Select Currency" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border text-foreground">
+              <SelectItem value="USD">USD - US Dollar</SelectItem>
+              <SelectItem value="EUR">EUR - Euro</SelectItem>
+              <SelectItem value="GBP">GBP - British Pound</SelectItem>
+              <SelectItem value="INR">INR - Indian Rupee</SelectItem>
+              <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+              <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+              <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+              <SelectItem value="CNY">CNY - Chinese Yuan</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label className={labelCls}>
@@ -1389,7 +1080,7 @@ export default function Settings() {
             value={currency.currencyPosition}
             onValueChange={(v) => setCurrency({ ...currency, currencyPosition: v })}
           >
-            <SelectTrigger className="bg-input border-border text-foreground h-11 rounded-lg">
+            <SelectTrigger className={`${inputCls} h-11`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border text-foreground">
@@ -1421,7 +1112,6 @@ export default function Settings() {
           [
             { key: "localStorage", label: "Local Storage" },
             { key: "s3Storage", label: "S3 Storage" },
-            { key: "bunnyCDN", label: "Bunny CDN Storage" },
           ] as const
         ).map(({ key, label }, i, arr) => (
           <div
@@ -1433,43 +1123,52 @@ export default function Settings() {
             <span className="text-foreground font-medium">{label}</span>
             <Switch
               checked={storage[key]}
-              onCheckedChange={(v) => setStorage({ ...storage, [key]: v })}
+              onCheckedChange={(v) => {
+                // Only one storage type can be active at a time
+                setStorage({
+                  ...storage,
+                  localStorage: key === "localStorage" ? v : false,
+                  s3Storage: key === "s3Storage" ? v : false,
+                });
+              }}
               className="data-[state=checked]:bg-red-600"
             />
           </div>
         ))}
       </div>
-      <div className="space-y-4">
-        {(
-          [
-            { key: "awsAccessKeyId", label: "AWS Access Key ID" },
-            { key: "awsSecretAccessKey", label: "AWS Secret Access Key" },
-            { key: "awsDefaultRegion", label: "AWS Default Region" },
-            { key: "awsBucket", label: "AWS Bucket" },
-          ] as const
-        ).map(({ key, label }) => (
-          <div key={key} className="space-y-2">
+      {storage.s3Storage && (
+        <div className="space-y-4">
+          {(
+            [
+              { key: "awsAccessKeyId", label: "AWS Access Key ID" },
+              { key: "awsSecretAccessKey", label: "AWS Secret Access Key" },
+              { key: "awsDefaultRegion", label: "AWS Default Region" },
+              { key: "awsBucket", label: "AWS Bucket" },
+            ] as const
+          ).map(({ key, label }) => (
+            <div key={key} className="space-y-2">
+              <Label className={labelCls}>
+                {label} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={storage[key]}
+                onChange={(e) => setStorage({ ...storage, [key]: e.target.value })}
+                className={inputCls}
+              />
+            </div>
+          ))}
+          <div className="space-y-2">
             <Label className={labelCls}>
-              {label} <span className="text-red-500">*</span>
+              AWS Use Path Style Endpoint <span className="text-red-500">*</span>
             </Label>
             <Input
-              value={storage[key]}
-              onChange={(e) => setStorage({ ...storage, [key]: e.target.value })}
-              className={inputCls}
+              value={storage.awsPathStyle ? "True" : "False"}
+              readOnly
+              className="bg-card border-border text-muted-foreground h-11 rounded-lg cursor-not-allowed"
             />
           </div>
-        ))}
-        <div className="space-y-2">
-          <Label className={labelCls}>
-            AWS Use Path Style Endpoint <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            value={storage.awsPathStyle ? "True" : "False"}
-            readOnly
-            className="bg-card border-border text-muted-foreground h-11 rounded-lg cursor-not-allowed"
-          />
         </div>
-      </div>
+      )}
       <SaveBtn saving={saving} onClick={handleSaveStorage} />
     </div>
   );
@@ -1477,107 +1176,61 @@ export default function Settings() {
   const renderSeo = () => (
     <div>
       <SectionTitle icon={Search} label="SEO Settings" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
-        {/* Image upload */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <div className="space-y-2">
           <Label className={labelCls}>
-            SEO Image <span className="text-red-500">*</span>
+            Meta Title <span className="text-red-500">*</span>
           </Label>
-          <div
-            onClick={() => seoImageRef.current?.click()}
-            className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-card hover:border-red-500/60 cursor-pointer transition-all overflow-hidden"
-            style={{ minHeight: "168px" }}
-          >
-            {seo.seoImage ? (
-              <div className="relative w-full" style={{ height: "168px" }}>
-                <img src={seo.seoImage} alt="SEO" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSeo({ ...seo, seoImage: null });
-                  }}
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center z-10"
-                >
-                  <X className="h-3.5 w-3.5 text-foreground" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2 py-8">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground text-center px-4">Choose Media to Upload</p>
-              </div>
-            )}
-          </div>
-          <input
-            ref={seoImageRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              const r = new FileReader();
-              r.onload = (ev) => setSeo({ ...seo, seoImage: ev.target?.result as string });
-              r.readAsDataURL(f);
-            }}
-          />
-        </div>
-
-        {/* 2-col fields */}
-        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className={labelCls}>
-                Meta Title <span className="text-red-500">*</span>
-              </Label>
-              <span className="text-xs text-muted-foreground">{seo.metaTitle.length}/100</span>
-            </div>
+          <div className="flex items-center justify-between">
             <Input
               value={seo.metaTitle}
               onChange={(e) => setSeo({ ...seo, metaTitle: e.target.value.slice(0, 100) })}
               placeholder="Enter Meta Title"
               className={inputCls}
             />
+            <span className="text-xs text-muted-foreground ml-2">{seo.metaTitle.length}/100</span>
           </div>
-          <div className="space-y-2">
-            <Label className={labelCls}>
-              Meta Keywords <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              value={seo.metaKeywords}
-              onChange={(e) => setSeo({ ...seo, metaKeywords: e.target.value })}
-              placeholder="Type and press enter"
-              className={inputCls}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className={labelCls}>
-              Google Site Verification <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              value={seo.googleVerification}
-              onChange={(e) => setSeo({ ...seo, googleVerification: e.target.value })}
-              placeholder="Enter Google site verification"
-              className={inputCls}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className={labelCls}>
-              Global Canonical URL <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              value={seo.canonicalUrl}
-              onChange={(e) => setSeo({ ...seo, canonicalUrl: e.target.value })}
-              placeholder="Enter Global Canonical url"
-              className={inputCls}
-            />
-          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className={labelCls}>
+            Meta Keywords <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            value={seo.metaKeywords}
+            onChange={(e) => setSeo({ ...seo, metaKeywords: e.target.value })}
+            placeholder="Type and press enter"
+            className={inputCls}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className={labelCls}>
+            Google Site Verification <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            value={seo.googleVerification}
+            onChange={(e) => setSeo({ ...seo, googleVerification: e.target.value })}
+            placeholder="Enter Google site verification"
+            className={inputCls}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className={labelCls}>
+            Global Canonical URL <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            value={seo.canonicalUrl}
+            onChange={(e) => setSeo({ ...seo, canonicalUrl: e.target.value })}
+            placeholder="Enter Global Canonical url"
+            className={inputCls}
+          />
         </div>
       </div>
 
       {/* Meta description */}
-      <div className="space-y-2">
+      <div className="space-y-2 mb-5">
         <div className="flex items-center justify-between">
           <Label className={labelCls}>
             Site Meta Description <span className="text-red-500">*</span>
@@ -1593,6 +1246,52 @@ export default function Settings() {
         />
       </div>
 
+      {/* SEO Image */}
+      <div className="space-y-2">
+        <Label className={labelCls}>
+          SEO Image <span className="text-red-500">*</span>
+        </Label>
+        <div
+          onClick={() => seoImageRef.current?.click()}
+          className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-card hover:border-red-500/60 cursor-pointer transition-all overflow-hidden"
+          style={{ minHeight: "168px" }}
+        >
+          {seo.seoImage ? (
+            <div className="relative w-full bg-gray-800 rounded-lg" style={{ height: "168px" }}>
+              <img src={getImageUrl(seo.seoImage) || seo.seoImage} alt="SEO" className="w-full h-full object-contain" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSeo({ ...seo, seoImage: null });
+                }}
+                className="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center z-10"
+              >
+                <X className="h-3.5 w-3.5 text-foreground" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-8">
+              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground text-center px-4">Choose Media to Upload</p>
+            </div>
+          )}
+        </div>
+        <input
+          ref={seoImageRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = (ev) => setSeo({ ...seo, seoImage: ev.target?.result as string });
+            r.readAsDataURL(f);
+          }}
+        />
+      </div>
+
       <SaveBtn saving={saving} onClick={handleSaveSeo} />
     </div>
   );
@@ -1600,14 +1299,9 @@ export default function Settings() {
   const renderSection = () => {
     switch (activeSection) {
       case "business": return renderBusiness();
-      case "custom-code": return renderCustomCode();
-      case "module": return renderModules();
       case "misc": return renderMisc();
       case "customization": return renderCustomization();
       case "mail": return renderMail();
-      case "notification": return renderNotification();
-      case "language": return renderLanguage();
-      case "notification-config": return renderNotifConfig();
       case "currency": return renderCurrency();
       case "storage": return renderStorage();
       case "seo": return renderSeo();

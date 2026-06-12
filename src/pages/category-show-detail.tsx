@@ -249,7 +249,7 @@ export default function CategoryShowDetail() {
                               <img
                                 src={getImageUrl(episode.thumbnail)}
                                 alt=""
-                                className="h-10 w-14 object-cover rounded"
+                                className="h-10 w-14 object-contain rounded bg-gray-800"
                               />
                             )}
                             <div>

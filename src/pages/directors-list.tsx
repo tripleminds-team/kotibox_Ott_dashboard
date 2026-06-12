@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useGetDirectors, useUpdateDirector, useDeleteDirector, useBulkDeleteDirectors, useCreateDirector } from "../lib/api-client";
+import { useGetDirectors, useUpdateDirector, useDeleteDirector, useBulkDeleteDirectors, useCreateDirector, getImageUrl } from "../lib/api-client";
 
 type Director = {
   id: string;
@@ -240,7 +240,7 @@ export default function DirectorsListPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {director.image ? (
-                        <img src={`http://localhost:3000${director.image}`} alt={director.name} className="h-12 w-12 rounded-lg object-cover shrink-0" />
+                        <img src={getImageUrl(director.image)} alt={director.name} className="h-12 w-12 rounded-lg object-contain shrink-0 bg-gray-800" />
                       ) : (
                         <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
                           <User className="h-5 w-5 text-zinc-500" />

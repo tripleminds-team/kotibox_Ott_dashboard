@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Folder, Trash2, Search, ChevronLeft, Upload, ImageIcon, Plus, Loader2 } from "lucide-react";
+import { Folder, Trash2, Search, ChevronLeft, Upload, ImageIcon, Loader2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -19,37 +19,59 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { useGetMediaFolders, useGetMediaFilesByFolder, useUploadMediaFiles, useDeleteMediaFile, useCreateMediaFolder, useDeleteMediaFolder } from "@/lib/api-client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGetMediaFolders, useGetMediaFilesByFolder, useUploadMediaFiles, useDeleteMediaFile, useDeleteMediaFolder, useGetAllMediaFiles, getImageUrl } from "@/lib/api-client";
 
 export default function MediaLibraryPage() {
   const { toast } = useToast();
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'folders' | 'all'>('folders');
   const [searchQuery, setSearchQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<string>("");
+  const [fileTypeFilter, setFileTypeFilter] = useState<string>("");
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string; type: 'file' | 'folder' } | null>(null);
-  const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
+  const [duplicateFiles, setDuplicateFiles] = useState<{ existing: any; new: File }[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
 
   // Fetch data
   const foldersQuery = useGetMediaFolders();
   const filesQuery = useGetMediaFilesByFolder(selectedFolder || "");
+  const allFilesQuery = useGetAllMediaFiles({
+    page: 1,
+    limit: 100,
+    source: sourceFilter || undefined,
+    fileType: fileTypeFilter || undefined,
+    search: searchQuery || undefined,
+  });
 
   // Mutations
   const uploadFilesMutation = useUploadMediaFiles();
   const deleteFileMutation = useDeleteMediaFile();
-  const createFolderMutation = useCreateMediaFolder();
   const deleteFolderMutation = useDeleteMediaFolder();
 
   const folders = foldersQuery.data?.data || [];
+  const allFiles = allFilesQuery.data?.data || [];
   
   const currentFiles = useMemo(() => {
+    if (viewMode === 'all') {
+      return allFiles;
+    }
     if (!selectedFolder) return [];
     const folderFiles = filesQuery.data?.data || [];
     if (!searchQuery.trim()) return folderFiles;
     return folderFiles.filter((f: any) =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [selectedFolder, filesQuery.data, searchQuery]);
+  }, [viewMode, selectedFolder, filesQuery.data, allFiles, searchQuery]);
 
   const getFolderCount = (folderId: string) => {
     const folder = folders.find((f: any) => f._id === folderId);
@@ -58,24 +80,22 @@ export default function MediaLibraryPage() {
 
   const handleFolderClick = (folderId: string) => {
     setSelectedFolder(folderId);
+    setViewMode('folders');
     setSearchQuery("");
   };
 
   const handleBack = () => {
     setSelectedFolder(null);
+    setViewMode('folders');
     setSearchQuery("");
   };
 
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-    try {
-      await createFolderMutation.mutateAsync(newFolderName);
-      setNewFolderName("");
-      setCreateFolderDialogOpen(false);
-      toast({ title: "Folder created successfully!" });
-    } catch (error: any) {
-      toast({ title: "Error creating folder", description: error.message, variant: "destructive" });
-    }
+  const handleViewModeChange = (mode: 'folders' | 'all') => {
+    setViewMode(mode);
+    setSelectedFolder(null);
+    setSearchQuery("");
+    setSourceFilter("");
+    setFileTypeFilter("");
   };
 
   const handleDeleteConfirm = async () => {
@@ -98,11 +118,41 @@ export default function MediaLibraryPage() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !selectedFolder) return;
+    
+    const selectedFiles = Array.from(files);
+    const folderFiles = filesQuery.data?.data || [];
+    const duplicates: { existing: any; new: File }[] = [];
+    const uniqueFiles: File[] = [];
 
+    // Check each file for duplicates
+    selectedFiles.forEach((newFile) => {
+      const existing = folderFiles.find(f => f.name === newFile.name);
+      if (existing) {
+        duplicates.push({ existing, new: newFile });
+      } else {
+        uniqueFiles.push(newFile);
+      }
+    });
+
+    if (duplicates.length > 0) {
+      setDuplicateFiles(duplicates);
+      setPendingFiles(uniqueFiles);
+      setDuplicateDialogOpen(true);
+    } else {
+      // No duplicates, just upload
+      await uploadSelectedFiles(selectedFiles);
+    }
+    
+    // Reset the input
+    event.target.value = '';
+  };
+
+  const uploadSelectedFiles = async (files: File[]) => {
+    if (!selectedFolder) return;
     try {
       await uploadFilesMutation.mutateAsync({
         folderId: selectedFolder,
-        files: Array.from(files)
+        files: files
       });
       toast({ title: "Files uploaded successfully!" });
     } catch (error: any) {
@@ -110,9 +160,30 @@ export default function MediaLibraryPage() {
     }
   };
 
-  const isLoading = foldersQuery.isLoading || filesQuery.isLoading ||
+  const handleDuplicateConfirm = async () => {
+    // Upload all pending files and duplicate files
+    const allFiles = [...pendingFiles, ...duplicateFiles.map(d => d.new)];
+    await uploadSelectedFiles(allFiles);
+    setDuplicateDialogOpen(false);
+    setDuplicateFiles([]);
+    setPendingFiles([]);
+  };
+
+  const handleDuplicateCancel = () => {
+    // Upload only unique files
+    if (pendingFiles.length > 0) {
+      uploadSelectedFiles(pendingFiles);
+    } else {
+      toast({ title: "No files to upload", variant: "default" });
+    }
+    setDuplicateDialogOpen(false);
+    setDuplicateFiles([]);
+    setPendingFiles([]);
+  };
+
+  const isLoading = foldersQuery.isLoading || filesQuery.isLoading || allFilesQuery.isLoading ||
                      uploadFilesMutation.isPending || deleteFileMutation.isPending ||
-                     createFolderMutation.isPending || deleteFolderMutation.isPending;
+                     deleteFolderMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -121,22 +192,16 @@ export default function MediaLibraryPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Media Library</h1>
           <p className="text-muted-foreground mt-1">
-            {selectedFolder 
+            {selectedFolder
               ? `${folders.find((f: any) => f._id === selectedFolder)?.name} — ${currentFiles.length} files`
+              : viewMode === 'all'
+              ? `All Media — ${currentFiles.length} files`
               : `${folders.length} folders`}
           </p>
         </div>
-        {!selectedFolder ? (
-          <Button 
-            className="bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600"
-            onClick={() => setCreateFolderDialogOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Folder
-          </Button>
-        ) : (
+        {selectedFolder ? (
           <div className="flex gap-2">
-            <Button 
+            <Button
               className="bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600"
             >
               <label className="flex items-center gap-2 cursor-pointer">
@@ -163,14 +228,31 @@ export default function MediaLibraryPage() {
               Delete Folder
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Tab-style heading like reference */}
-      <div className="border-b border-border">
-        <span className="inline-block pb-2 text-red-500 font-semibold border-b-2 border-red-500 text-sm">
-          View Library
-        </span>
+      <div className="border-b border-border flex gap-6">
+        <button
+          onClick={() => handleViewModeChange('folders')}
+          className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
+            viewMode === 'folders'
+              ? 'text-red-500 border-red-500'
+              : 'text-muted-foreground border-transparent hover:text-foreground'
+          }`}
+        >
+          Folders
+        </button>
+        <button
+          onClick={() => handleViewModeChange('all')}
+          className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
+            viewMode === 'all'
+              ? 'text-red-500 border-red-500'
+              : 'text-muted-foreground border-transparent hover:text-foreground'
+          }`}
+        >
+          All Media
+        </button>
       </div>
 
       {/* Loading state */}
@@ -202,32 +284,78 @@ export default function MediaLibraryPage() {
       )}
 
       {/* ── IMAGE VIEW ── */}
-      {selectedFolder && !isLoading && (
+      {(selectedFolder || viewMode === 'all') && !isLoading && (
         <div className="space-y-5">
           {/* Top bar: heading + search + back */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <h2 className="text-xl font-bold text-foreground">
-              {folders.find((f: any) => f._id === selectedFolder)?.name}
+              {selectedFolder
+                ? folders.find((f: any) => f._id === selectedFolder)?.name
+                : 'All Media'}
             </h2>
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-9 rounded-lg"
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBack}
-                className="border-border text-foreground hover:bg-muted hover:text-foreground h-9 gap-1.5"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Back
-              </Button>
+              {viewMode === 'all' && (
+                <>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-9 rounded-lg"
+                    />
+                  </div>
+                  <Select value={sourceFilter || "all"} onValueChange={(value) => setSourceFilter(value === "all" ? "" : value)}>
+                    <SelectTrigger className="w-40 bg-card border-border text-foreground h-9 rounded-lg">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Source" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border text-foreground">
+                      <SelectItem value="all">All Sources</SelectItem>
+                      <SelectItem value="banner">Banner</SelectItem>
+                      <SelectItem value="media-library">Media Library</SelectItem>
+                      <SelectItem value="category">Category</SelectItem>
+                      <SelectItem value="genre">Genre</SelectItem>
+                      <SelectItem value="actor">Actor</SelectItem>
+                      <SelectItem value="director">Director</SelectItem>
+                      <SelectItem value="language">Language</SelectItem>
+                      <SelectItem value="promotion">Promotion</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={fileTypeFilter || "all"} onValueChange={(value) => setFileTypeFilter(value === "all" ? "" : value)}>
+                    <SelectTrigger className="w-40 bg-card border-border text-foreground h-9 rounded-lg">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border text-foreground">
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+              {selectedFolder && (
+                <>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-9 rounded-lg"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBack}
+                    className="border-border text-foreground hover:bg-muted hover:text-foreground h-9 gap-1.5"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -236,7 +364,11 @@ export default function MediaLibraryPage() {
             <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
               <ImageIcon className="h-12 w-12 opacity-30" />
               <p className="text-sm">
-                {searchQuery ? `No files matching "${searchQuery}"` : "No files in this folder"}
+                {searchQuery || sourceFilter || fileTypeFilter
+                  ? "No files matching your filters"
+                  : selectedFolder
+                  ? "No files in this folder"
+                  : "No media files found"}
               </p>
             </div>
           ) : (
@@ -245,16 +377,17 @@ export default function MediaLibraryPage() {
                 <div key={file._id} className="group flex flex-col gap-2">
                   {/* Image/video card */}
                   <div className="relative rounded-lg overflow-hidden bg-muted border border-border aspect-[4/3] hover:border-red-500/50 transition-all duration-200">
-                    {file.fileType.startsWith('video') ? (
+                    {file.fileType?.startsWith('video') ? (
                       <video
-                        src={file.url}
-                        className="w-full h-full object-cover"
+                        src={getImageUrl(file.filePath || file.url)}
+                        className="w-full h-full object-contain bg-gray-800"
+                        controls
                       />
                     ) : (
                       <img
-                        src={file.url}
+                        src={getImageUrl(file.filePath || file.url)}
                         alt={file.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-gray-800"
                         loading="lazy"
                       />
                     )}
@@ -269,7 +402,7 @@ export default function MediaLibraryPage() {
                     {/* Dark overlay on hover */}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" />
                   </div>
-                  {/* Filename + size */}
+                  {/* Filename + size + source */}
                   <div className="px-0.5">
                     <p
                       className="text-xs text-foreground truncate font-medium leading-tight"
@@ -277,7 +410,14 @@ export default function MediaLibraryPage() {
                     >
                       {file.name}
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5">{file.size}</p>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p className="text-xs text-gray-600">{file.size}</p>
+                      {file.source && (
+                        <span className="text-xs text-gray-500 capitalize bg-muted px-1.5 py-0.5 rounded">
+                          {file.source}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -314,40 +454,51 @@ export default function MediaLibraryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Create Folder Dialog */}
-      <Dialog open={createFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
+      {/* Duplicate File Dialog */}
+      <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
         <DialogContent className="bg-card border border-border text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Create New Folder</DialogTitle>
+            <DialogTitle className="text-foreground">File Already Exists</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              The following file(s) already exist in this folder:
+            </DialogDescription>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            className="mt-2"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleCreateFolder();
-              }
-            }}
-          />
-          <DialogFooter className="mt-4">
+          <div className="max-h-60 overflow-y-auto space-y-2 my-4">
+            {duplicateFiles.map(({ existing, new: newFile }, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                {existing.fileType?.startsWith('video') ? (
+                  <video
+                    src={getImageUrl(existing.filePath || existing.url)}
+                    className="h-12 w-12 rounded object-contain bg-gray-800"
+                  />
+                ) : (
+                  <img
+                    src={getImageUrl(existing.filePath || existing.url)}
+                    alt={existing.name}
+                    className="h-12 w-12 rounded object-contain bg-gray-800"
+                  />
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{existing.name}</p>
+                  <p className="text-xs text-gray-500">
+                    Existing: {existing.fileType} | New: {newFile.type}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setCreateFolderDialogOpen(false);
-                setNewFolderName("");
-              }}
+              onClick={handleDuplicateCancel}
             >
-              Cancel
+              Skip Duplicates
             </Button>
             <Button
               className="bg-red-600 hover:bg-red-700"
-              onClick={handleCreateFolder}
-              disabled={!newFolderName.trim() || createFolderMutation.isPending}
+              onClick={handleDuplicateConfirm}
             >
-              {createFolderMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Folder
+              Upload Anyway
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1511,9 +1511,10 @@ export const getMediaFilesByFolder = async (folderId: string) => {
   return api(`/media/folders/${folderId}/files`);
 };
 
-export const uploadMediaFiles = async (folderId: string, files: File[]) => {
+export const uploadMediaFiles = async (folderId: string, files: File[], source?: string) => {
   const formData = new FormData();
   files.forEach(file => formData.append('file', file));
+  if (source) formData.append('source', source);
   return api(`/media/folders/${folderId}/files`, {
     method: 'POST',
     body: formData,
@@ -1522,6 +1523,22 @@ export const uploadMediaFiles = async (folderId: string, files: File[]) => {
 
 export const deleteMediaFile = async (fileId: string) => {
   return api(`/media/files/${fileId}`, { method: 'DELETE' });
+};
+
+export const getAllMediaFiles = async (options?: {
+  page?: number;
+  limit?: number;
+  source?: string;
+  fileType?: string;
+  search?: string;
+}) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.source) params.set('source', options.source);
+  if (options?.fileType) params.set('fileType', options.fileType);
+  if (options?.search) params.set('search', options.search);
+  return api(`/media/files/all?${params.toString()}`);
 };
 
 // App Settings API
@@ -1645,10 +1662,11 @@ export const useGetMediaFilesByFolder = (folderId?: string) => {
 
 export const useUploadMediaFiles = () => {
   const queryClient = useQueryClient();
-  return useMutation<any, Error, { folderId: string; files: File[] }>({
-    mutationFn: ({ folderId, files }) => uploadMediaFiles(folderId, files),
+  return useMutation<any, Error, { folderId: string; files: File[]; source?: string }>({
+    mutationFn: ({ folderId, files, source }) => uploadMediaFiles(folderId, files, source),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['media-files', variables.folderId] });
+      queryClient.invalidateQueries({ queryKey: ['all-media-files'] });
     },
   });
 };
@@ -1659,7 +1677,22 @@ export const useDeleteMediaFile = () => {
     mutationFn: (fileId) => deleteMediaFile(fileId),
     onSuccess: (_, __, context) => {
       queryClient.invalidateQueries({ queryKey: ['media-files'] });
+      queryClient.invalidateQueries({ queryKey: ['all-media-files'] });
     },
+  });
+};
+
+export const useGetAllMediaFiles = (options?: {
+  page?: number;
+  limit?: number;
+  source?: string;
+  fileType?: string;
+  search?: string;
+}) => {
+  return useQuery({
+    queryKey: ['all-media-files', options],
+    queryFn: () => getAllMediaFiles(options),
+    enabled: true,
   });
 };
 
@@ -2277,5 +2310,97 @@ export const useBulkDeleteSubscriptions = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
     }
+  });
+};
+
+// Dashboard API
+export const getDashboardStats = async () => {
+  const response = await api("/dashboard/stats");
+  return response.data;
+};
+
+export const getRevenueData = async (options?: { period?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.period) params.set("period", options.period);
+  const response = await api(`/dashboard/revenue?${params.toString()}`);
+  return response.data;
+};
+
+export const getNewSubscribersData = async (options?: { period?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.period) params.set("period", options.period);
+  const response = await api(`/dashboard/new-subscribers?${params.toString()}`);
+  return response.data;
+};
+
+export const getMostWatchedData = async (options?: { period?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.period) params.set("period", options.period);
+  const response = await api(`/dashboard/most-watched?${params.toString()}`);
+  return response.data;
+};
+
+export const getTopGenresData = async () => {
+  const response = await api("/dashboard/top-genres");
+  return response.data;
+};
+
+export const getReviews = async () => {
+  const response = await api("/dashboard/reviews");
+  return response.data;
+};
+
+export const getTransactions = async () => {
+  const response = await api("/dashboard/transactions");
+  return response.data;
+};
+
+// Dashboard Hooks
+export const useGetDashboardStats = () => {
+  return useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: getDashboardStats,
+  });
+};
+
+export const useGetRevenueData = (options?: { period?: string }) => {
+  return useQuery({
+    queryKey: ["revenue-data", options],
+    queryFn: () => getRevenueData(options),
+  });
+};
+
+export const useGetNewSubscribersData = (options?: { period?: string }) => {
+  return useQuery({
+    queryKey: ["new-subscribers-data", options],
+    queryFn: () => getNewSubscribersData(options),
+  });
+};
+
+export const useGetMostWatchedData = (options?: { period?: string }) => {
+  return useQuery({
+    queryKey: ["most-watched-data", options],
+    queryFn: () => getMostWatchedData(options),
+  });
+};
+
+export const useGetTopGenresData = () => {
+  return useQuery({
+    queryKey: ["top-genres-data"],
+    queryFn: getTopGenresData,
+  });
+};
+
+export const useGetReviews = () => {
+  return useQuery({
+    queryKey: ["reviews-data"],
+    queryFn: getReviews,
+  });
+};
+
+export const useGetTransactions = () => {
+  return useQuery({
+    queryKey: ["transactions-data"],
+    queryFn: getTransactions,
   });
 };

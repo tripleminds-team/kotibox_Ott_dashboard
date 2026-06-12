@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useGetDirectorById, useCreateDirector, useUpdateDirector } from "../lib/api-client";
+import { useGetDirectorById, useCreateDirector, useUpdateDirector, getImageUrl } from "../lib/api-client";
+import MediaPicker from "@/components/MediaPicker";
 
 type DirectorData = {
   name: string;
@@ -44,6 +45,7 @@ export default function DirectorFormPage() {
   const [imagePreview, setImagePreview] = useState<string>(directorData?.data?.image ? `http://localhost:3000${directorData.data.image}` : "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   // Update form when director data loads
   useEffect(() => {
@@ -56,21 +58,13 @@ export default function DirectorFormPage() {
         status: directorData.data.status,
         image: directorData.data.image,
       });
-      setImagePreview(directorData.data.image ? `http://localhost:3000${directorData.data.image}` : "");
+      setImagePreview(directorData.data.image ? getImageUrl(directorData.data.image) : "");
     }
   }, [directorData]);
 
   const set = <K extends keyof DirectorData>(key: K, value: DirectorData[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
-    setImageFile(file);
-    set("image", url);
-  };
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Name is required", variant: "destructive" }); return; }
@@ -84,8 +78,8 @@ export default function DirectorFormPage() {
       formData.append('dateOfBirth', form.dateOfBirth);
       formData.append('birthPlace', form.birthPlace);
       formData.append('status', form.status.toString());
-      if (imageFile) {
-        formData.append('imageFile', imageFile);
+      if (imagePreview && !imagePreview.startsWith('blob:')) {
+        formData.append('image', imagePreview);
       }
 
       if (isEdit) {
@@ -127,32 +121,30 @@ export default function DirectorFormPage() {
           {/* Image Upload */}
           <div className="space-y-2">
             <Label className={labelCls}>Photo</Label>
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="relative w-full aspect-[4/3] rounded-xl border-2 border-dashed border-border hover:border-red-500 bg-card flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden"
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setMediaPickerOpen(true)}
+              className="w-full aspect-[4/3] border-2 border-dashed"
             >
               {imagePreview ? (
-                <>
-                  <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
-                    <p className="text-foreground text-sm font-medium">Change Photo</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setImagePreview(""); set("image", ""); }}
-                    className="absolute top-2 right-2 h-6 w-6 bg-red-600 rounded-full flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3 text-foreground" />
-                  </button>
-                </>
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
-                <>
-                  <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-zinc-500">Choose Media to Upload</p>
-                </>
+                <div className="flex flex-col items-center gap-2">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm text-zinc-500">Select from Library or Upload</p>
+                </div>
               )}
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+            </Button>
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={() => { setImagePreview(""); set("image", ""); }}
+                className="text-sm text-red-400 hover:text-red-300"
+              >
+                Remove photo
+              </button>
+            )}
           </div>
 
           {/* Fields */}
@@ -199,6 +191,18 @@ export default function DirectorFormPage() {
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>
+
+      {/* Media Picker */}
+      <MediaPicker
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(media) => {
+          setImagePreview(getImageUrl(media.url));
+          set("image", media.url);
+        }}
+        source="director"
+        accept="image/*"
+      />
     </div>
   );
 }

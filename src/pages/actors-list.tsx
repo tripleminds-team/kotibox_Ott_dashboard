@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useGetActors, useUpdateActor, useDeleteActor, useBulkDeleteActors, useCreateActor } from "../lib/api-client";
+import { useGetActors, useUpdateActor, useDeleteActor, useBulkDeleteActors, useCreateActor, getImageUrl } from "../lib/api-client";
 
 type Actor = {
   id: string;
@@ -240,7 +240,7 @@ export default function ActorsListPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {actor.image ? (
-                        <img src={`http://localhost:3000${actor.image}`} alt={actor.name} className="h-12 w-12 rounded-lg object-cover shrink-0" />
+                        <img src={getImageUrl(actor.image)} alt={actor.name} className="h-12 w-12 rounded-lg object-contain shrink-0 bg-gray-800" />
                       ) : (
                         <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
                           <User className="h-5 w-5 text-zinc-500" />

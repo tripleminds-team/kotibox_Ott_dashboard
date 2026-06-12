@@ -7,6 +7,7 @@ export interface AppSettings {
   darkLogoUrl: string;
   lightLogoUrl: string;
   faviconUrl: string;
+  logoStyle: 'icon' | 'fill';
   platformName: string;
   contactNo: string;
   inquiryEmail: string;
@@ -47,6 +48,7 @@ export interface AppSettings {
   cardStyle: 'default' | 'glass' | 'transparent';
   menuStyle: 'mini' | 'hover' | 'boxed' | 'soft';
   activeMenuStyle: string;
+  footerStyle: 'default' | 'sticky';
   // Mail
   mailEmail: string;
   mailDriver: string;
@@ -103,7 +105,8 @@ const DEFAULT: AppSettings = {
   darkLogoUrl: "",
   lightLogoUrl: "",
   faviconUrl: "",
-  platformName: "StreamVault",
+  logoStyle: "icon",
+  platformName: "",
   contactNo: "",
   inquiryEmail: "",
   siteDescription: "",
@@ -143,6 +146,7 @@ const DEFAULT: AppSettings = {
   cardStyle: 'default',
   menuStyle: 'hover',
   activeMenuStyle: 'left-bordered',
+  footerStyle: 'default',
   // Mail
   mailEmail: "",
   mailDriver: "smtp",
@@ -203,7 +207,8 @@ function mapApiData(api: any): AppSettings {
     darkLogoUrl: img(api.darkLogoUrl),
     lightLogoUrl: img(api.lightLogoUrl),
     faviconUrl: img(api.faviconUrl),
-    platformName: api.platformName || DEFAULT.platformName,
+    logoStyle: api.logoStyle || DEFAULT.logoStyle,
+    platformName: api.platformName || "",
     contactNo: api.contactNo || "",
     inquiryEmail: api.inquiryEmail || "",
     siteDescription: api.siteDescription || "",
@@ -243,6 +248,7 @@ function mapApiData(api: any): AppSettings {
     cardStyle: api.cardStyle || DEFAULT.cardStyle,
     menuStyle: api.menuStyle || DEFAULT.menuStyle,
     activeMenuStyle: api.activeMenuStyle || DEFAULT.activeMenuStyle,
+    footerStyle: api.footerStyle || DEFAULT.footerStyle,
     // Mail
     mailEmail: api.mailEmail || "",
     mailDriver: api.mailDriver || DEFAULT.mailDriver,

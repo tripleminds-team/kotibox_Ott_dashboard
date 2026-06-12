@@ -255,7 +255,7 @@ export default function LanguagesList() {
                 <img
                   src={getImageUrl(formData.image)}
                   alt="Current"
-                  className="h-16 w-16 object-cover rounded-lg border border-border"
+                  className="h-16 w-16 object-contain rounded-lg border border-border bg-gray-800"
                 />
               )}
             </div>

@@ -12,6 +12,7 @@ import {
   ImageIcon,
   Lock,
   Unlock,
+  Image as ImageIcon2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ import {
   useUpdateEpisodeLock,
   getImageUrl,
 } from "../lib/api-client";
+import MediaPicker from "@/components/MediaPicker";
 
 type UploadProgress = {
   loaded: number;
@@ -117,6 +119,9 @@ export default function BannerForm() {
   const [thumbnailMode, setThumbnailMode] = useState("upload");
   const [videoMode, setVideoMode] = useState("upload");
 
+  const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
+  const [videoPickerOpen, setVideoPickerOpen] = useState(false);
+
   const episodes: Episode[] = bannerShowData?.episodes || [];
 
   useEffect(() => {
@@ -182,15 +187,17 @@ export default function BannerForm() {
         if (formData.thumbnail) {
           formDataToSend.append("thumbnail", formData.thumbnail);
         }
-      } else if (thumbnailFile) {
-        formDataToSend.append("thumbnailFile", thumbnailFile);
+      } else if (formData.thumbnail) {
+        // If thumbnail was selected from MediaPicker or uploaded, send as URL
+        formDataToSend.append("thumbnail", formData.thumbnail);
       }
 
       if (!isEdit) {
         if (videoMode === "url") {
           formDataToSend.append("videoUrl", formData.videoUrl);
-        } else if (videoFile) {
-          formDataToSend.append("videoFile", videoFile);
+        } else if (formData.videoUrl) {
+          // If video was selected from MediaPicker or uploaded, send as URL
+          formDataToSend.append("videoUrl", formData.videoUrl);
         }
       }
 
@@ -401,25 +408,28 @@ export default function BannerForm() {
                 )}
               </TabsContent>
               <TabsContent value="upload" className="mt-4 space-y-4">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-                  required={!isEdit && thumbnailMode === "upload"}
-                />
-                {thumbnailFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setThumbnailPickerOpen(true)}
+                  className="w-full"
+                >
+                  <ImageIcon2 className="w-4 h-4 mr-2" />
+                  Select from Media Library or Upload
+                </Button>
+                {formData.thumbnail && (
                   <div className="flex items-center gap-3">
                     <img
-                      src={URL.createObjectURL(thumbnailFile)}
+                      src={getImageUrl(formData.thumbnail)}
                       alt="Thumbnail preview"
                       className="h-40 w-28 rounded-md object-cover border border-border"
                     />
-                    <Button variant="ghost" size="icon" type="button" onClick={() => setThumbnailFile(null)}>
+                    <Button variant="ghost" size="icon" type="button" onClick={() => setFormData({ ...formData, thumbnail: "" })}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
-                {isEdit && (bannerData?.content?.thumbnail || bannerData?.thumbnail || bannerData?.imageUrl) && !thumbnailFile && (
+                {isEdit && (bannerData?.content?.thumbnail || bannerData?.thumbnail || bannerData?.imageUrl) && !formData.thumbnail && (
                   <img
                     src={getImageUrl(bannerData.content?.thumbnail || bannerData.thumbnail || bannerData.imageUrl)}
                     alt="Current thumbnail"
@@ -459,16 +469,19 @@ export default function BannerForm() {
                   />
                 </TabsContent>
                 <TabsContent value="upload" className="mt-4 space-y-4">
-                  <Input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                    required={!isEdit && videoMode === "upload"}
-                  />
-                  {videoFile && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setVideoPickerOpen(true)}
+                    className="w-full"
+                  >
+                    <Film className="w-4 h-4 mr-2" />
+                    Select from Media Library or Upload
+                  </Button>
+                  {formData.videoUrl && (
                     <div className="flex items-center gap-3">
-                      <video src={URL.createObjectURL(videoFile)} controls className="max-h-44 rounded-md border border-border" />
-                      <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
+                      <video src={getImageUrl(formData.videoUrl)} controls className="max-h-44 rounded-md border border-border" />
+                      <Button variant="ghost" size="icon" type="button" onClick={() => setFormData({ ...formData, videoUrl: "" })}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -657,6 +670,22 @@ export default function BannerForm() {
           )}
         </div>
       )}
+
+      {/* Media Pickers */}
+      <MediaPicker
+        open={thumbnailPickerOpen}
+        onClose={() => setThumbnailPickerOpen(false)}
+        onSelect={(media) => setFormData({ ...formData, thumbnail: media.url })}
+        source="banner"
+        accept="image/*"
+      />
+      <MediaPicker
+        open={videoPickerOpen}
+        onClose={() => setVideoPickerOpen(false)}
+        onSelect={(media) => setFormData({ ...formData, videoUrl: media.url })}
+        source="banner"
+        accept="video/*"
+      />
     </div>
   );
 }
