@@ -118,6 +118,8 @@ import NotificationTemplatesPage from "@/pages/notification-templates";
 import NotificationTemplateFormPage from "@/pages/notification-template-form";
 import ProfilePage from "@/pages/profile";
 import AppManagement from "@/pages/app-management";
+import MoviesPage from "@/pages/movies";
+import MovieForm from "@/pages/movie-form";
 import StreamingHomePage from "@/pages/streaming-home";
 import EpisodeDetailPage from "@/pages/episode-detail";
 import CategoriesBrowsePage from "@/pages/categories-browse";
@@ -190,6 +192,9 @@ function Router() {
       <Route path="/shows/:id/edit" component={() => <ProtectedRoute component={ShowForm} />} />
       <Route path="/shows/:id" component={() => <ProtectedRoute component={ShowDetail} />} />
       <Route path="/shows" component={() => <ProtectedRoute component={ShowsPage} />} />
+      <Route path="/movies/new" component={() => <ProtectedRoute component={MovieForm} />} />
+      <Route path="/movies/:id/edit" component={() => <ProtectedRoute component={MovieForm} />} />
+      <Route path="/movies" component={() => <ProtectedRoute component={MoviesPage} />} />
       <Route path="/ads/:id" component={() => <ProtectedRoute component={AdForm} />} />
       <Route path="/ads" component={() => <ProtectedRoute component={AdsPage} />} />
       <Route path="/pages/:id" component={() => <ProtectedRoute component={PageForm} />} />
