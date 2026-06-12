@@ -28,7 +28,6 @@ import {
   HelpCircle,
   UserRound,
   Clapperboard,
-  Users2,
   BellRing,
   MailCheck,
   UserCog,
@@ -53,7 +52,7 @@ const navSections = [
   {
     label: "MAIN",
     items: [
-      { href: "/", label: "Dashboard", icon: Home },
+      { href: "/dashboard", label: "Dashboard", icon: Home },
       { href: "/media-library", label: "Media Library", icon: Image },
       { href: "/app-management", label: "App Management", icon: UserCog },
     ],
@@ -140,7 +139,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const isItemActive = (href: string) =>
-    href === "/" ? location === "/" : location === href || location.startsWith(href + "/");
+    location === href || location.startsWith(href + "/");
 
   // Expanded nav: sections with group headers
   const NavExpanded = ({ onClose }: { onClose?: () => void }) => (

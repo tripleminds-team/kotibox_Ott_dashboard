@@ -55,6 +55,9 @@ import NotificationTemplatesPage from "@/pages/notification-templates";
 import NotificationTemplateFormPage from "@/pages/notification-template-form";
 import ProfilePage from "@/pages/profile";
 import AppManagement from "@/pages/app-management";
+import StreamingHomePage from "@/pages/streaming-home";
+import EpisodeDetailPage from "@/pages/episode-detail";
+import CategoriesBrowsePage from "@/pages/categories-browse";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,7 +69,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const token = localStorage.getItem("accessToken");
 
   useEffect(() => {
@@ -90,69 +93,75 @@ function Router() {
 
   useEffect(() => {
     if (token && location === "/login") {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [token, location, setLocation]);
 
   return (
     <Switch>
+      {/* Public streaming routes */}
+      <Route path="/" component={StreamingHomePage} />
+      <Route path="/show/:showTitle/episode/:epNum" component={EpisodeDetailPage} />
+      <Route path="/browse/:tab" component={CategoriesBrowsePage} />
+      <Route path="/browse" component={CategoriesBrowsePage} />
+      {/* Admin routes */}
       <Route path="/login" component={Login} />
-          <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-          <Route path="/users" component={() => <ProtectedRoute component={UsersList} />} />
-          <Route path="/users/:id" component={() => <ProtectedRoute component={UserDetail} />} />
-          <Route path="/languages" component={() => <ProtectedRoute component={LanguagesList} />} />
-          <Route path="/promotions/new" component={() => <ProtectedRoute component={PromotionForm} />} />
-          <Route path="/promotions/:id" component={() => <ProtectedRoute component={PromotionForm} />} />
-          <Route path="/promotions" component={() => <ProtectedRoute component={PromotionsList} />} />
-          <Route path="/banners/new" component={() => <ProtectedRoute component={BannerForm} />} />
-          <Route path="/banners/:id" component={() => <ProtectedRoute component={BannerForm} />} />
-          <Route path="/banners/shows/:contentId" component={() => <ProtectedRoute component={BannerShowDetail} />} />
-          <Route path="/banners" component={() => <ProtectedRoute component={BannersPage} />} />
-          <Route path="/categories/new" component={() => <ProtectedRoute component={CategoryForm} />} />
-          <Route path="/categories/:id" component={() => <ProtectedRoute component={CategoryForm} />} />
-          <Route path="/categories/:categoryId/shows/new" component={() => <ProtectedRoute component={CategoryShowForm} />} />
-          <Route path="/categories/shows/:contentId" component={() => <ProtectedRoute component={CategoryShowDetail} />} />
-          <Route path="/categories/:categoryId/shows" component={() => <ProtectedRoute component={CategoryShowsPage} />} />
-          <Route path="/categories" component={() => <ProtectedRoute component={CategoriesPage} />} />
-          <Route path="/shows/new" component={() => <ProtectedRoute component={ShowForm} />} />
-          <Route path="/shows/:id/edit" component={() => <ProtectedRoute component={ShowForm} />} />
-          <Route path="/shows/:id" component={() => <ProtectedRoute component={ShowDetail} />} />
-          <Route path="/shows" component={() => <ProtectedRoute component={ShowsPage} />} />
-          <Route path="/ads/:id" component={() => <ProtectedRoute component={AdForm} />} />
-          <Route path="/ads" component={() => <ProtectedRoute component={AdsPage} />} />
-          <Route path="/pages/:id" component={() => <ProtectedRoute component={PageForm} />} />
-          <Route path="/pages" component={() => <ProtectedRoute component={PagesPage} />} />
-          <Route path="/media-library" component={() => <ProtectedRoute component={MediaLibraryPage} />} />
-          <Route path="/genres/new" component={() => <ProtectedRoute component={GenreFormPage} />} />
-          <Route path="/genres/:id/edit" component={() => <ProtectedRoute component={GenreFormPage} />} />
-          <Route path="/genres" component={() => <ProtectedRoute component={GenresPage} />} />
-          <Route path="/plans/new" component={() => <ProtectedRoute component={PlanFormPage} />} />
-          <Route path="/plans/:id/edit" component={() => <ProtectedRoute component={PlanFormPage} />} />
-          <Route path="/plans" component={() => <ProtectedRoute component={PlansPage} />} />
-          <Route path="/subscriptions/new" component={() => <ProtectedRoute component={SubscriptionFormPage} />} />
-          <Route path="/subscriptions/:id/edit" component={() => <ProtectedRoute component={SubscriptionFormPage} />} />
-          <Route path="/subscriptions" component={() => <ProtectedRoute component={SubscriptionsListPage} />} />
-          <Route path="/plan-limits/new" component={() => <ProtectedRoute component={PlanLimitFormPage} />} />
-          <Route path="/plan-limits/:id/edit" component={() => <ProtectedRoute component={PlanLimitFormPage} />} />
-          <Route path="/plan-limits" component={() => <ProtectedRoute component={PlanLimitsPage} />} />
-          <Route path="/faq/new" component={() => <ProtectedRoute component={FaqFormPage} />} />
-          <Route path="/faq/:id/edit" component={() => <ProtectedRoute component={FaqFormPage} />} />
-          <Route path="/faq" component={() => <ProtectedRoute component={FaqListPage} />} />
-          <Route path="/actors/new" component={() => <ProtectedRoute component={ActorFormPage} />} />
-          <Route path="/actors/:id/edit" component={() => <ProtectedRoute component={ActorFormPage} />} />
-          <Route path="/actors" component={() => <ProtectedRoute component={ActorsListPage} />} />
-          <Route path="/directors/new" component={() => <ProtectedRoute component={DirectorFormPage} />} />
-          <Route path="/directors/:id/edit" component={() => <ProtectedRoute component={DirectorFormPage} />} />
-          <Route path="/directors" component={() => <ProtectedRoute component={DirectorsListPage} />} />
-          <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
-          <Route path="/notifications" component={() => <ProtectedRoute component={NotificationListPage} />} />
-          <Route path="/notification-templates/:id/edit" component={() => <ProtectedRoute component={NotificationTemplateFormPage} />} />
-          <Route path="/notification-templates" component={() => <ProtectedRoute component={NotificationTemplatesPage} />} />
-          <Route path="/settings/icons" component={() => <ProtectedRoute component={IconsPage} />} />
-          <Route path="/settings/branding" component={() => <ProtectedRoute component={Branding} />} />
-          <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
-          <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
-          <Route component={NotFound} />
+      <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/users" component={() => <ProtectedRoute component={UsersList} />} />
+      <Route path="/users/:id" component={() => <ProtectedRoute component={UserDetail} />} />
+      <Route path="/languages" component={() => <ProtectedRoute component={LanguagesList} />} />
+      <Route path="/promotions/new" component={() => <ProtectedRoute component={PromotionForm} />} />
+      <Route path="/promotions/:id" component={() => <ProtectedRoute component={PromotionForm} />} />
+      <Route path="/promotions" component={() => <ProtectedRoute component={PromotionsList} />} />
+      <Route path="/banners/new" component={() => <ProtectedRoute component={BannerForm} />} />
+      <Route path="/banners/:id" component={() => <ProtectedRoute component={BannerForm} />} />
+      <Route path="/banners/shows/:contentId" component={() => <ProtectedRoute component={BannerShowDetail} />} />
+      <Route path="/banners" component={() => <ProtectedRoute component={BannersPage} />} />
+      <Route path="/categories/new" component={() => <ProtectedRoute component={CategoryForm} />} />
+      <Route path="/categories/:id" component={() => <ProtectedRoute component={CategoryForm} />} />
+      <Route path="/categories/:categoryId/shows/new" component={() => <ProtectedRoute component={CategoryShowForm} />} />
+      <Route path="/categories/shows/:contentId" component={() => <ProtectedRoute component={CategoryShowDetail} />} />
+      <Route path="/categories/:categoryId/shows" component={() => <ProtectedRoute component={CategoryShowsPage} />} />
+      <Route path="/categories" component={() => <ProtectedRoute component={CategoriesPage} />} />
+      <Route path="/shows/new" component={() => <ProtectedRoute component={ShowForm} />} />
+      <Route path="/shows/:id/edit" component={() => <ProtectedRoute component={ShowForm} />} />
+      <Route path="/shows/:id" component={() => <ProtectedRoute component={ShowDetail} />} />
+      <Route path="/shows" component={() => <ProtectedRoute component={ShowsPage} />} />
+      <Route path="/ads/:id" component={() => <ProtectedRoute component={AdForm} />} />
+      <Route path="/ads" component={() => <ProtectedRoute component={AdsPage} />} />
+      <Route path="/pages/:id" component={() => <ProtectedRoute component={PageForm} />} />
+      <Route path="/pages" component={() => <ProtectedRoute component={PagesPage} />} />
+      <Route path="/media-library" component={() => <ProtectedRoute component={MediaLibraryPage} />} />
+      <Route path="/genres/new" component={() => <ProtectedRoute component={GenreFormPage} />} />
+      <Route path="/genres/:id/edit" component={() => <ProtectedRoute component={GenreFormPage} />} />
+      <Route path="/genres" component={() => <ProtectedRoute component={GenresPage} />} />
+      <Route path="/plans/new" component={() => <ProtectedRoute component={PlanFormPage} />} />
+      <Route path="/plans/:id/edit" component={() => <ProtectedRoute component={PlanFormPage} />} />
+      <Route path="/plans" component={() => <ProtectedRoute component={PlansPage} />} />
+      <Route path="/subscriptions/new" component={() => <ProtectedRoute component={SubscriptionFormPage} />} />
+      <Route path="/subscriptions/:id/edit" component={() => <ProtectedRoute component={SubscriptionFormPage} />} />
+      <Route path="/subscriptions" component={() => <ProtectedRoute component={SubscriptionsListPage} />} />
+      <Route path="/plan-limits/new" component={() => <ProtectedRoute component={PlanLimitFormPage} />} />
+      <Route path="/plan-limits/:id/edit" component={() => <ProtectedRoute component={PlanLimitFormPage} />} />
+      <Route path="/plan-limits" component={() => <ProtectedRoute component={PlanLimitsPage} />} />
+      <Route path="/faq/new" component={() => <ProtectedRoute component={FaqFormPage} />} />
+      <Route path="/faq/:id/edit" component={() => <ProtectedRoute component={FaqFormPage} />} />
+      <Route path="/faq" component={() => <ProtectedRoute component={FaqListPage} />} />
+      <Route path="/actors/new" component={() => <ProtectedRoute component={ActorFormPage} />} />
+      <Route path="/actors/:id/edit" component={() => <ProtectedRoute component={ActorFormPage} />} />
+      <Route path="/actors" component={() => <ProtectedRoute component={ActorsListPage} />} />
+      <Route path="/directors/new" component={() => <ProtectedRoute component={DirectorFormPage} />} />
+      <Route path="/directors/:id/edit" component={() => <ProtectedRoute component={DirectorFormPage} />} />
+      <Route path="/directors" component={() => <ProtectedRoute component={DirectorsListPage} />} />
+      <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
+      <Route path="/notifications" component={() => <ProtectedRoute component={NotificationListPage} />} />
+      <Route path="/notification-templates/:id/edit" component={() => <ProtectedRoute component={NotificationTemplateFormPage} />} />
+      <Route path="/notification-templates" component={() => <ProtectedRoute component={NotificationTemplatesPage} />} />
+      <Route path="/settings/icons" component={() => <ProtectedRoute component={IconsPage} />} />
+      <Route path="/settings/branding" component={() => <ProtectedRoute component={Branding} />} />
+      <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
+      <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
+      <Route component={NotFound} />
     </Switch>
   );
 }

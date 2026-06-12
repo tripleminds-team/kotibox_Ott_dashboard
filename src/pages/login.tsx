@@ -17,7 +17,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { settings } = useSettings();
-  const { theme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const loginMutation = useLogin();
 
   const getLogoUrl = () => {
@@ -32,8 +32,8 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate({ email, password }, {
-      onSuccess: (data) => {
-        setLocation("/");
+      onSuccess: () => {
+        setLocation("/dashboard");
       },
       onError: (err: any) => {
         toast({
