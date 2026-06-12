@@ -64,6 +64,7 @@ const navSections = [
       { href: "/languages", label: "Languages", icon: Languages },
       { href: "/genres", label: "Genres", icon: Tags },
       { href: "/categories", label: "Categories", icon: Layers },
+      { href: "/movies", label: "Movies", icon: Film },
       { href: "/shows", label: "Shows", icon: PlaySquare },
       { href: "/ads", label: "Ads", icon: PlusSquare },
       { href: "/pages", label: "Pages", icon: FileText },
