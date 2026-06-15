@@ -314,7 +314,6 @@ export default function MediaLibraryPage() {
                       <SelectItem value="all">All Sources</SelectItem>
                       <SelectItem value="banner">Banner</SelectItem>
                       <SelectItem value="media-library">Media Library</SelectItem>
-                      <SelectItem value="category">Category</SelectItem>
                       <SelectItem value="genre">Genre</SelectItem>
                       <SelectItem value="actor">Actor</SelectItem>
                       <SelectItem value="director">Director</SelectItem>
