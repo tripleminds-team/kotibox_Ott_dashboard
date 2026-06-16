@@ -42,8 +42,7 @@ export default function ActorFormPage() {
     status: actorData?.data?.status ?? true,
     image: actorData?.data?.image ?? "",
   });
-  const [imagePreview, setImagePreview] = useState<string>(actorData?.data?.image ? `http://localhost:3000${actorData.data.image}` : "");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>(actorData?.data?.image ? getImageUrl(actorData.data.image) : "");
   const [saving, setSaving] = useState(false);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
@@ -78,8 +77,8 @@ export default function ActorFormPage() {
       formData.append('dateOfBirth', form.dateOfBirth);
       formData.append('birthPlace', form.birthPlace);
       formData.append('status', form.status.toString());
-      if (imagePreview && !imagePreview.startsWith('blob:')) {
-        formData.append('image', imagePreview);
+      if (form.image) {
+        formData.append('image', form.image);
       }
 
       if (isEdit) {
@@ -197,8 +196,8 @@ export default function ActorFormPage() {
         open={mediaPickerOpen}
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(media) => {
-          setImagePreview(getImageUrl(media.url));
-          set("image", media.url);
+          set("image", media.filePath);
+          setImagePreview(getImageUrl(media.filePath));
         }}
         source="actor"
         accept="image/*"

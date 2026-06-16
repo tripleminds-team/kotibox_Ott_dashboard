@@ -336,7 +336,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshSettings = useCallback(async () => {
-    if (!localStorage.getItem("accessToken")) return;
     try {
       setIsLoading(true);
       const data = await getSettings();

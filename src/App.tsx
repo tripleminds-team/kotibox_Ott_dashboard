@@ -4,11 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Layout } from "@/components/layout";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
+import { useGetMe } from "@/lib/api-client";
 
 // Helper to convert hex to HSL
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
@@ -72,6 +73,7 @@ function ThemeApplier() {
 
   return null;
 }
+
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -123,6 +125,8 @@ import MovieForm from "@/pages/movie-form";
 import StreamingHomePage from "@/pages/streaming-home";
 import EpisodeDetailPage from "@/pages/episode-detail";
 import CategoriesBrowsePage from "@/pages/categories-browse";
+import InfluencersPage from "@/pages/influencers";
+import ApprovalsPage from "@/pages/approvals";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,17 +137,86 @@ const queryClient = new QueryClient({
   },
 });
 
+// Route to permission map
+const routePermissions: Record<string, string | null> = {
+  "/dashboard": null,
+  "/media-library": "mediaLibrary",
+  "/app-management": null,
+  "/influencers": "influencers",
+  "/approvals": null,
+  "/users": null,
+  "/languages": "languages",
+  "/genres": "genres",
+  "/movies": "movies",
+  "/shows": "shows",
+  "/ads": "ads",
+  "/pages": "pages",
+  "/promotions": "promotions",
+  "/banners": "banners",
+  "/faq": "faqs",
+  "/actors": "actors",
+  "/directors": "directors",
+  "/subscriptions": "subscriptions",
+  "/plans": "subscriptionPlans",
+  "/plan-limits": "planLimits",
+  "/notifications": "notifications",
+  "/notification-templates": "notificationTemplates",
+  "/settings": null,
+  "/settings/branding": null,
+  "/settings/icons": null,
+  "/profile": null,
+  "/login": null,
+};
+
+const hasPermissionForRoute = (path: string, user: any): boolean => {
+  if (user?.role === "superadmin") return true;
+  
+  // Find matching route (check exact first, then prefixes)
+  let permission: string | null = null;
+  for (const [route, perm] of Object.entries(routePermissions)) {
+    if (path === route || path.startsWith(route + "/")) {
+      permission = perm;
+      break;
+    }
+  }
+  
+  if (permission === null) return true;
+  
+  const modulePerms = user?.modulePermissions?.[permission as keyof typeof user.modulePermissions];
+  if (!modulePerms) return false;
+  
+  return (modulePerms as any).canView || (modulePerms as any).canUpload;
+};
+
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const token = localStorage.getItem("accessToken");
+  const { data: user, isLoading, error } = useGetMe();
 
   useEffect(() => {
     if (!token) {
       setLocation("/login");
+    } else if (!isLoading && user === null && error) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      setLocation("/login");
     }
-  }, [token, setLocation]);
+  }, [token, user, isLoading, error, setLocation]);
 
   if (!token) return null;
+  
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  
+  if (error) {
+    console.error("Error fetching user:", error);
+    return <div className="min-h-screen flex items-center justify-center">Error loading user data. Please try again.</div>;
+  }
+  
+  // Check permission
+  const currentPath = location;
+  if (!hasPermissionForRoute(currentPath, user)) {
+    return <div className="min-h-screen flex items-center justify-center">Access Denied</div>;
+  }
 
   return (
     <Layout>
@@ -164,11 +237,6 @@ function Router() {
 
   return (
     <Switch>
-      {/* Public streaming routes */}
-      <Route path="/" component={StreamingHomePage} />
-      <Route path="/show/:showTitle/episode/:epNum" component={EpisodeDetailPage} />
-      <Route path="/browse/:tab" component={CategoriesBrowsePage} />
-      <Route path="/browse" component={CategoriesBrowsePage} />
       {/* Admin routes */}
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
@@ -229,6 +297,14 @@ function Router() {
       <Route path="/settings/branding" component={() => <ProtectedRoute component={Branding} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
       <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
+      <Route path="/influencers" component={() => <ProtectedRoute component={InfluencersPage} />} />
+      <Route path="/approvals" component={() => <ProtectedRoute component={ApprovalsPage} />} />
+      
+      {/* Public streaming routes */}
+      <Route path="/" component={StreamingHomePage} />
+      <Route path="/show/:showTitle/episode/:epNum" component={EpisodeDetailPage} />
+      <Route path="/browse/:tab" component={CategoriesBrowsePage} />
+      <Route path="/browse" component={CategoriesBrowsePage} />
       <Route component={NotFound} />
     </Switch>
   );

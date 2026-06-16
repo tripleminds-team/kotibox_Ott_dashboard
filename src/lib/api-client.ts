@@ -13,12 +13,12 @@ type ApiOptions = RequestInit & {
 };
 
 export const getImageUrl = (filePath) => {
-  console.log("getImageUrl called with filePath:", filePath, "baseUrl:", baseUrl);
   if (!filePath) return "";
-  if (filePath.startsWith("http")) return filePath;
-  const fullUrl = `${baseUrl}${filePath}`;
-  console.log("getImageUrl returning:", fullUrl);
-  return fullUrl;
+
+  if (filePath.startsWith("http"))
+    return filePath;
+
+  return `https://tripleminds-ott-admin.s3.eu-north-1.amazonaws.com/${filePath}`;
 };
 
 export const setBaseUrl = (url) => {
@@ -52,12 +52,15 @@ const api = async (
 }
   const requestBody = options.body;
   
+  // Make sure endpoint starts with /api, add it if it doesn't
+  const finalEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
+  
   // If we have FormData and onUploadProgress, use XMLHttpRequest for progress tracking
   if (options.body instanceof FormData && options.onUploadProgress) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
-      xhr.open(options.method || "POST", `${baseUrl}/api${endpoint}`);
+      xhr.open(options.method || "POST", `${baseUrl}${finalEndpoint}`);
       
       // Set headers (except Content-Type for FormData)
       Object.keys(headers).forEach(key => {
@@ -99,8 +102,9 @@ const api = async (
     delete fetchHeaders["Content-Type"];
   }
 
-  console.log("Calling fetch to: ", `${baseUrl}/api${endpoint}`, "with headers: ", fetchHeaders);
-  const res = await fetch(`${baseUrl}/api${endpoint}`, {
+  const fullUrl = `${baseUrl}${finalEndpoint}`;
+  console.log("Calling fetch to: ", fullUrl, "with headers: ", fetchHeaders);
+  const res = await fetch(fullUrl, {
     ...options,
     headers: fetchHeaders,
   });
@@ -117,7 +121,7 @@ const api = async (
 
 // Auth
 export const login = async (email, password) => {
-  return api("/auth/login", {
+  return api("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
@@ -125,27 +129,28 @@ export const login = async (email, password) => {
 
 export const logout = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
-  return api("/auth/logout", {
+  return api("/api/auth/logout", {
     method: "POST",
     body: JSON.stringify({ refreshToken }),
   });
 };
 
 export const deleteAccount = async () => {
-  return api("/auth/account", {
+  return api("/api/auth/account", {
     method: "DELETE",
   });
 };
 
 export const getMe = async () => {
   try {
-    const response = await api("/auth/me", {
+    const response = await api("/api/auth/me", {
       method: "GET",
     });
     return response.user;
-  } catch (error) {
+  } catch (error: any) {
+    console.error("getMe error:", error);
     // If it's a 401 Unauthorized, return null
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
+    if (error.message?.includes("Unauthorized") || error.message?.includes("401")) {
       return null;
     }
     throw error;
@@ -159,33 +164,33 @@ export const getUsersList = async (options) => {
   if (options?.plan) params.set("plan", options.plan);
   if (options?.page) params.set("page", String(options.page));
   if (options?.limit) params.set("limit", String(options.limit));
-  return api(`/users?${params.toString()}`);
+  return api(`/api/users?${params.toString()}`);
 };
 
 export const getUserById = async (id) => {
-  return api(`/users/${id}`);
+  return api(`/api/users/${id}`);
 };
 
 export const updateUser = async (id, data) => {
-  return api(`/users/${id}`, {
+  return api(`/api/users/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 };
 
 export const banUser = async (id, reason) => {
-  return api(`/users/${id}/ban`, {
+  return api(`/api/users/${id}/ban`, {
     method: "POST",
     body: JSON.stringify({ reason }),
   });
 };
 
 export const unbanUser = async (id) => {
-  return api(`/users/${id}/unban`, { method: "POST" });
+  return api(`/api/users/${id}/unban`, { method: "POST" });
 };
 
 export const deleteUser = async (id) => {
-  return api(`/users/${id}`, { method: "DELETE" });
+  return api(`/api/users/${id}`, { method: "DELETE" });
 };
 
 // Hooks
@@ -1749,6 +1754,341 @@ export const useDeleteSubscriptionPlan = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptionPlans'] });
     }
+  });
+};
+
+// Movies API
+export const getMovies = async (options?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  genre?: string;
+  category?: string;
+  language?: string;
+  featured?: string;
+  trending?: string;
+  year?: string;
+}) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.search) params.append('search', options.search);
+  if (options?.status) params.append('status', options.status);
+  if (options?.genre) params.append('genre', options.genre);
+  if (options?.category) params.append('category', options.category);
+  if (options?.language) params.append('language', options.language);
+  if (options?.featured) params.append('featured', options.featured);
+  if (options?.trending) params.append('trending', options.trending);
+  if (options?.year) params.append('year', options.year);
+
+  return api(`/movies?${params.toString()}`);
+};
+
+export const getMovieById = async (id: string) => {
+  return api(`/movies/${id}`);
+};
+
+export const createMovie = async (data: any) => {
+  return api('/movies', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateMovie = async (id: string, data: any) => {
+  return api(`/movies/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteMovie = async (id: string) => {
+  return api(`/movies/${id}`, { method: 'DELETE' });
+};
+
+export const updateMovieStatus = async (id: string, data: { status: string; rejectionReason?: string }) => {
+  return api(`/movies/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+};
+
+export const toggleMovieFeatured = async (id: string) => {
+  return api(`/movies/${id}/featured`, { method: 'PATCH' });
+};
+
+export const toggleMovieTrending = async (id: string) => {
+  return api(`/movies/${id}/trending`, { method: 'PATCH' });
+};
+
+export const useGetMovies = (options?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  genre?: string;
+  category?: string;
+  language?: string;
+  featured?: string;
+  trending?: string;
+  year?: string;
+}) => {
+  return useQuery({
+    queryKey: ['movies', options],
+    queryFn: () => getMovies(options),
+  });
+};
+
+export const useGetMovieById = (id: string) => {
+  return useQuery({
+    queryKey: ['movie', id],
+    queryFn: () => getMovieById(id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateMovie = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createMovie,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const useUpdateMovie = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { id: string; data: any }>({
+    mutationFn: ({ id, data }) => updateMovie(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const useDeleteMovie = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: deleteMovie,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const useUpdateMovieStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { id: string; data: { status: string; rejectionReason?: string } }>({
+    mutationFn: ({ id, data }) => updateMovieStatus(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const useToggleMovieFeatured = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: toggleMovieFeatured,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const getPendingApprovals = async (options?: { page?: number; limit?: number; type?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.type) params.append('type', options.type);
+  return api(`/movies/pending-approvals?${params.toString()}`);
+};
+
+export const useGetPendingApprovals = (options?: { page?: number; limit?: number; type?: string }) => {
+  return useQuery({
+    queryKey: ['pending-approvals', options],
+    queryFn: () => getPendingApprovals(options),
+  });
+};
+
+export const approveMovie = async (id: string) => {
+  return api(`/movies/item/${id}/approve`, { method: 'POST' });
+};
+
+export const rejectMovie = async (id: string, reason: string) => {
+  return api(`/movies/item/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+};
+
+export const useApproveMovie = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: approveMovie,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const useRejectMovie = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { id: string; reason: string }>({
+    mutationFn: ({ id, reason }) => rejectMovie(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+export const useToggleMovieTrending = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: toggleMovieTrending,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+};
+
+// Profile and Password API
+export const updateProfile = async (data: { name?: string; email?: string; avatar?: string }) => {
+  return api('/auth/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updatePassword = async (data: { currentPassword: string; newPassword: string }) => {
+  return api('/auth/password', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+};
+
+// Admin Users API
+export const getAdminUsers = async (options?: { page?: number; limit?: number; search?: string; role?: string; status?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.search) params.append('search', options.search);
+  if (options?.role) params.append('role', options.role);
+  if (options?.status) params.append('status', options.status);
+  return api(`/api/admin-users?${params.toString()}`);
+};
+
+export const getAdminUserById = async (id: string) => {
+  return api(`/api/admin-users/${id}`);
+};
+
+export const createAdminUser = async (data: any) => {
+  return api('/api/admin-users', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateAdminUser = async (id: string, data: any) => {
+  return api(`/api/admin-users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAdminUser = async (id: string) => {
+  return api(`/api/admin-users/${id}`, { method: 'DELETE' });
+};
+
+export const resetAdminUserPassword = async (id: string) => {
+  return api(`/api/admin-users/${id}/reset-password`, { method: 'POST' });
+};
+
+export const toggleAdminUserStatus = async (id: string) => {
+  return api(`/api/admin-users/${id}/toggle-status`, { method: 'PATCH' });
+};
+
+export const updateAdminProfile = async (data: { email?: string; currentPassword?: string; newPassword?: string }) => {
+  return api('/api/admin-users/profile', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+export const useGetAdminUsers = (options?: { page?: number; limit?: number; search?: string; role?: string; status?: string }) => {
+  return useQuery({
+    queryKey: ['admin-users', options],
+    queryFn: () => getAdminUsers(options),
+  });
+};
+
+export const useCreateAdminUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createAdminUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+};
+
+export const useUpdateAdminUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { id: string; data: any }>({
+    mutationFn: ({ id, data }) => updateAdminUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+};
+
+export const useDeleteAdminUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: deleteAdminUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+};
+
+export const useResetAdminUserPassword = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: resetAdminUserPassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+};
+
+export const useToggleAdminUserStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: toggleAdminUserStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { name?: string; email?: string; avatar?: string }>({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth/me'] });
+    },
+  });
+};
+
+export const useUpdatePassword = () => {
+  return useMutation<any, Error, { currentPassword: string; newPassword: string }>({
+    mutationFn: updatePassword,
   });
 };
 

@@ -22,7 +22,7 @@ export default function GenreFormPage() {
 
   const [name, setName] = useState("");
   const [active, setActive] = useState(true);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [image, setImage] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
@@ -31,6 +31,7 @@ export default function GenreFormPage() {
     if (genreData?.data && isEdit) {
       setName(genreData.data.name);
       setActive(genreData.data.active);
+      setImage(genreData.data.image || "");
       if (genreData.data.image) {
         setImagePreview(getImageUrl(genreData.data.image));
       }
@@ -57,8 +58,8 @@ export default function GenreFormPage() {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('active', active.toString());
-      if (imagePreview && !imagePreview.startsWith('blob:')) {
-        formData.append('image', imagePreview);
+      if (image) {
+        formData.append('image', image);
       }
 
       if (isEdit) {
@@ -126,6 +127,7 @@ export default function GenreFormPage() {
               <button
                 type="button"
                 onClick={() => {
+                  setImage("");
                   setImagePreview(null);
                 }}
                 className="text-sm text-red-400 hover:text-red-300"
@@ -183,7 +185,8 @@ export default function GenreFormPage() {
         open={mediaPickerOpen}
         onClose={() => setMediaPickerOpen(false)}
         onSelect={(media) => {
-          setImagePreview(getImageUrl(media.url));
+          setImage(media.filePath);
+          setImagePreview(getImageUrl(media.filePath));
         }}
         source="genre"
         accept="image/*"

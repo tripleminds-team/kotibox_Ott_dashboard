@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useLogin } from "../lib/api-client";
-import { Film, Lock, Mail, Loader2, KeyRound } from "lucide-react";
+import { Film, Lock, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,18 +77,6 @@ export default function Login() {
           <p className="text-muted-foreground mt-2 text-lg">{settings.loginSubtitle}</p>
         </div>
 
-        {/* Demo Credentials Box */}
-        <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 flex items-start gap-3">
-          <KeyRound className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
-          <div className="text-sm">
-            <p className="font-semibold text-red-300 mb-1.5">Demo Credentials</p>
-            <div className="space-y-1 text-foreground">
-              <p><span className="text-gray-500">Email:</span> <button type="button" onClick={() => setEmail("admin@streamvault.com")} className="font-mono text-red-300 hover:text-red-200 underline underline-offset-2 cursor-pointer">admin@streamvault.com</button></p>
-              <p><span className="text-gray-500">Password:</span> <button type="button" onClick={() => setPassword("admin123")} className="font-mono text-red-300 hover:text-red-200 underline underline-offset-2 cursor-pointer">admin123</button></p>
-            </div>
-          </div>
-        </div>
-
         <Card className="border-border shadow-2xl bg-muted/80 rounded-3xl transition-all duration-500 hover:shadow-3xl hover:shadow-red-500/10">
           <CardHeader className="space-y-2 text-center pb-8 pt-8">
             <CardTitle className="text-3xl font-bold text-foreground">{settings.loginTitle}</CardTitle>
@@ -105,7 +93,7 @@ export default function Login() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@streamvault.com"
+                    placeholder="Enter your email"
                     className="pl-12 h-14 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

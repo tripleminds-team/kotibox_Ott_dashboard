@@ -1,11 +1,12 @@
 
-import { useState, useRef } from "react";
-import { User, KeyRound, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { User, KeyRound, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import { useUpdateProfile, useUpdatePassword, getImageUrl } from "@/lib/api-client";
 
 type Tab = "personal" | "password";
 
@@ -14,36 +15,78 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>("personal");
 
   const [form, setForm] = useState({
-    firstName: "Ivan",
-    lastName: "Norris",
-    email: "demo@streamit.com",
-    contactNumber: "+12124567899",
-    gender: "male",
+    name: "",
+    email: "",
+    avatar: "",
   });
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [passwords, setPasswords] = useState({
-    oldPassword: "",
+    currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
+  const updateProfileMutation = useUpdateProfile();
+  const updatePasswordMutation = useUpdatePassword();
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setForm({
+        name: user.name || "",
+        email: user.email || "",
+        avatar: user.avatar || "",
+      });
+      if (user.avatar) {
+        setPhotoPreview(getImageUrl(user.avatar));
+      }
+    }
+  }, []);
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onload = () => setPhotoPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSave = () => {
-    toast({ title: "Profile updated successfully" });
+  const handleSave = async () => {
+    try {
+      const updateData: { name?: string; email?: string; avatar?: string } = {
+        name: form.name,
+        email: form.email,
+      };
+      
+      if (photoFile) {
+        // For now, we'll skip the file upload and just update the name
+        // In a real implementation, you'd upload the file first then update with the URL
+      }
+
+      await updateProfileMutation.mutateAsync(updateData);
+      
+      // Update localStorage
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        localStorage.setItem("user", JSON.stringify({ ...user, ...updateData }));
+      }
+      
+      toast({ title: "Profile updated successfully" });
+    } catch (error: any) {
+      toast({ title: error?.message || "Failed to update profile", variant: "destructive" });
+    }
   };
 
-  const handleChangePassword = () => {
-    if (!passwords.oldPassword || !passwords.newPassword || !passwords.confirmPassword) {
+  const handleChangePassword = async () => {
+    if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
     }
@@ -51,8 +94,21 @@ export default function ProfilePage() {
       toast({ title: "New passwords don't match", variant: "destructive" });
       return;
     }
-    toast({ title: "Password changed successfully" });
-    setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" });
+    if (passwords.newPassword.length < 6) {
+      toast({ title: "New password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+
+    try {
+      await updatePasswordMutation.mutateAsync({
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+      });
+      toast({ title: "Password changed successfully" });
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (error: any) {
+      toast({ title: error?.message || "Failed to change password", variant: "destructive" });
+    }
   };
 
   return (
@@ -102,76 +158,25 @@ export default function ProfilePage() {
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Form fields */}
                 <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-zinc-400 text-sm">
-                        First Name <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        value={form.firstName}
-                        onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-zinc-400 text-sm">
-                        Last Name <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        value={form.lastName}
-                        onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
-                      />
-                    </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-zinc-400 text-sm">
+                      Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="bg-muted border-border text-foreground focus:border-red-500 h-11"
+                    />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-zinc-400 text-sm">
-                        Email <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-zinc-400 text-sm">
-                        Contact Number <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        value={form.contactNumber}
-                        onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-                        className="bg-muted border-border text-foreground focus:border-red-500 h-11"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-zinc-400 text-sm">Gender</Label>
-                    <RadioGroup
-                      value={form.gender}
-                      onValueChange={(v) => setForm({ ...form, gender: v })}
-                      className="flex flex-wrap gap-3"
-                    >
-                      {["male", "female", "other"].map((g) => (
-                        <div
-                          key={g}
-                          className="flex items-center gap-2.5 bg-muted border border-border rounded-lg px-4 py-2.5 cursor-pointer hover:border-border transition-colors"
-                        >
-                          <RadioGroupItem
-                            value={g}
-                            id={`gender-${g}`}
-                            className="border-zinc-500 data-[state=checked]:border-red-500 data-[state=checked]:bg-red-500"
-                          />
-                          <Label
-                            htmlFor={`gender-${g}`}
-                            className="text-zinc-300 text-sm cursor-pointer"
-                          >
-                            {g.charAt(0).toUpperCase() + g.slice(1)}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
+                  <div className="space-y-1.5">
+                    <Label className="text-zinc-400 text-sm">
+                      Email <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="bg-muted border-border text-foreground focus:border-red-500 h-11"
+                    />
                   </div>
                 </div>
 
@@ -227,9 +232,17 @@ export default function ProfilePage() {
               <div className="flex justify-end mt-6 pt-4 border-t border-border">
                 <Button
                   onClick={handleSave}
+                  disabled={updateProfileMutation.isPending}
                   className="bg-red-600 hover:bg-red-700 text-foreground px-8 h-11 font-semibold"
                 >
-                  Save
+                  {updateProfileMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save"
+                  )}
                 </Button>
               </div>
             </>
@@ -242,12 +255,12 @@ export default function ProfilePage() {
 
               <div className="space-y-4 max-w-2xl">
                 <div className="space-y-1.5">
-                  <Label className="text-zinc-400 text-sm">Old Password</Label>
+                  <Label className="text-zinc-400 text-sm">Current Password</Label>
                   <Input
                     type="password"
-                    placeholder="Enter Old Password"
-                    value={passwords.oldPassword}
-                    onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
+                    placeholder="Enter Current Password"
+                    value={passwords.currentPassword}
+                    onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
                     className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
                   />
                 </div>
@@ -255,7 +268,7 @@ export default function ProfilePage() {
                   <Label className="text-zinc-400 text-sm">New Password</Label>
                   <Input
                     type="password"
-                    placeholder="Enter New Password"
+                    placeholder="Enter New Password (min 6 characters)"
                     value={passwords.newPassword}
                     onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
                     className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
@@ -278,9 +291,17 @@ export default function ProfilePage() {
               <div className="flex justify-end mt-6 pt-4 border-t border-border">
                 <Button
                   onClick={handleChangePassword}
+                  disabled={updatePasswordMutation.isPending}
                   className="bg-red-600 hover:bg-red-700 text-foreground px-8 h-11 font-semibold"
                 >
-                  Submit
+                  {updatePasswordMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
                 </Button>
               </div>
             </>
