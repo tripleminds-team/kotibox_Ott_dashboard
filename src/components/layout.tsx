@@ -74,6 +74,7 @@ const navSections = [
     label: "MEDIA MANAGEMENT",
     items: [
       { href: "/users", label: "Users", icon: Users, permission: null },
+      { href: "/categories", label: "Categories", icon: Tags, permission: "categories" },
       { href: "/languages", label: "Languages", icon: Languages, permission: "languages" },
       { href: "/genres", label: "Genres", icon: Tags, permission: "genres" },
       { href: "/movies", label: "Movies", icon: Film, permission: "movies" },

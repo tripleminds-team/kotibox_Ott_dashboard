@@ -149,6 +149,7 @@ const routePermissions: Record<string, string | null> = {
   "/genres": "genres",
   "/movies": "movies",
   "/shows": "shows",
+  "/categories": "categories",
   "/ads": "ads",
   "/pages": "pages",
   "/promotions": "promotions",
@@ -165,7 +166,6 @@ const routePermissions: Record<string, string | null> = {
   "/settings/branding": null,
   "/settings/icons": null,
   "/profile": null,
-  "/login": null,
 };
 
 const hasPermissionForRoute = (path: string, user: any): boolean => {
