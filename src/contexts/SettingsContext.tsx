@@ -325,7 +325,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return { ...DEFAULT, ...JSON.parse(raw) };
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Clear stale imgur logo URLs
+        if (parsed.logoUrl?.includes("imgur.com")) parsed.logoUrl = "";
+        if (parsed.darkLogoUrl?.includes("imgur.com")) parsed.darkLogoUrl = "";
+        if (parsed.lightLogoUrl?.includes("imgur.com")) parsed.lightLogoUrl = "";
+        return { ...DEFAULT, ...parsed };
+      }
     } catch {}
     return DEFAULT;
   });

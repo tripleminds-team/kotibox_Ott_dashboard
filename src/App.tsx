@@ -122,6 +122,12 @@ import ProfilePage from "@/pages/profile";
 import AppManagement from "@/pages/app-management";
 import MoviesPage from "@/pages/movies";
 import MovieForm from "@/pages/movie-form";
+import TvShowsPage from "@/pages/tv-shows";
+import TvShowForm from "@/pages/tv-show-form";
+import SeasonsPage from "@/pages/seasons";
+import SeasonForm from "@/pages/season-form";
+import EpisodesPage from "@/pages/episodes";
+import EpisodeForm from "@/pages/episode-form";
 import StreamingHomePage from "@/pages/streaming-home";
 import EpisodeDetailPage from "@/pages/episode-detail";
 import CategoriesBrowsePage from "@/pages/categories-browse";
@@ -263,6 +269,15 @@ function Router() {
       <Route path="/movies/new" component={() => <ProtectedRoute component={MovieForm} />} />
       <Route path="/movies/:id/edit" component={() => <ProtectedRoute component={MovieForm} />} />
       <Route path="/movies" component={() => <ProtectedRoute component={MoviesPage} />} />
+      <Route path="/tv-shows/new" component={() => <ProtectedRoute component={TvShowForm} />} />
+      <Route path="/tv-shows/:id/edit" component={() => <ProtectedRoute component={TvShowForm} />} />
+      <Route path="/tv-shows" component={() => <ProtectedRoute component={TvShowsPage} />} />
+      <Route path="/seasons/new" component={() => <ProtectedRoute component={SeasonForm} />} />
+      <Route path="/seasons/:id/edit" component={() => <ProtectedRoute component={SeasonForm} />} />
+      <Route path="/seasons" component={() => <ProtectedRoute component={SeasonsPage} />} />
+      <Route path="/episodes/new" component={() => <ProtectedRoute component={EpisodeForm} />} />
+      <Route path="/episodes/:id/edit" component={() => <ProtectedRoute component={EpisodeForm} />} />
+      <Route path="/episodes" component={() => <ProtectedRoute component={EpisodesPage} />} />
       <Route path="/ads/:id" component={() => <ProtectedRoute component={AdForm} />} />
       <Route path="/ads" component={() => <ProtectedRoute component={AdsPage} />} />
       <Route path="/pages/:id" component={() => <ProtectedRoute component={PageForm} />} />
