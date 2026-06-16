@@ -219,7 +219,7 @@ function MovieCard({ movie }: { movie: MovieItem }) {
         <img
           src={movie.thumbnail}
           alt={movie.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           style={{ aspectRatio: "2/3", minHeight: "165px" }}
           onError={(e) => {
             (e.target as HTMLImageElement).src =

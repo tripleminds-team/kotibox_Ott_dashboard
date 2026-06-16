@@ -12,6 +12,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import MediaPicker from "@/components/MediaPicker";
+import { useGetDirectors, useGetActors, useCreateMovie, useUpdateMovie, useGetGenres, useGetLanguagesList } from "@/lib/api-client";
 
 type Tab =
   | "Movie Details"
@@ -32,45 +34,34 @@ const TABS: Tab[] = [
   "Download Info",
 ];
 
-type QualityRow = { id: string; type: string; quality: string; file: File | null };
-type SubtitleRow = { id: string; language: string; file: File | null };
-type ClipRow = { id: string; name: string; type: string; url: string; file: File | null };
-type DownloadRow = { id: string; type: string; quality: string; file: File | null };
+type QualityRow = { id: string; type: string; quality: string; filePath: string; url: string };
+type SubtitleRow = { id: string; language: string; filePath: string };
+type ClipRow = { id: string; name: string; type: string; url: string; filePath: string };
+type DownloadRow = { id: string; type: string; quality: string; filePath: string; url: string };
 
 /* ---- Reusable image upload box ---- */
 function ImageBox({
   label,
   preview,
-  onChange,
+  onOpen,
 }: {
   label: string;
   preview: string;
-  onChange: (file: File | null, url: string) => void;
+  onOpen: () => void;
 }) {
-  const ref = useRef<HTMLInputElement>(null);
   return (
     <div className="flex-1 min-w-0">
       <p className="text-sm font-medium text-foreground mb-2">{label}</p>
       <div
-        onClick={() => ref.current?.click()}
+        onClick={onOpen}
         className="border-2 border-dashed border-border rounded-xl aspect-[4/3] flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors overflow-hidden"
       >
         {preview ? (
-          <img src={preview} alt={label} className="h-full w-full object-cover" />
+          <img src={preview} alt={label} className="h-full w-full object-contain" />
         ) : (
           <ImageIcon className="h-10 w-10 text-zinc-700" />
         )}
       </div>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0] ?? null;
-          onChange(f, f ? URL.createObjectURL(f) : "");
-        }}
-      />
     </div>
   );
 }
@@ -82,16 +73,44 @@ export default function MovieForm() {
   const isEdit = !!id;
 
   const [activeTab, setActiveTab] = useState<Tab>("Movie Details");
-  const [tmdbId, setTmdbId] = useState("");
+
+  // Media picker states
+  const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
+  const [posterPickerOpen, setPosterPickerOpen] = useState(false);
+  const [posterTvPickerOpen, setPosterTvPickerOpen] = useState(false);
+  const [trailerPickerOpen, setTrailerPickerOpen] = useState(false);
+  const [videoPickerOpen, setVideoPickerOpen] = useState(false);
+  const [downloadPickerOpen, setDownloadPickerOpen] = useState(false);
+  const [currentDownloadRowId, setCurrentDownloadRowId] = useState<string | null>(null);
+  const [qualityPickerOpen, setQualityPickerOpen] = useState(false);
+  const [currentQualityRowId, setCurrentQualityRowId] = useState<string | null>(null);
+  const [clipPickerOpen, setClipPickerOpen] = useState(false);
+  const [currentClipRowId, setCurrentClipRowId] = useState<string | null>(null);
+  const [subtitlePickerOpen, setSubtitlePickerOpen] = useState(false);
+  const [currentSubtitleRowId, setCurrentSubtitleRowId] = useState<string | null>(null);
+  const [seoImagePickerOpen, setSeoImagePickerOpen] = useState(false);
+
+  // Fetch directors and actors
+  const { data: directorsData } = useGetDirectors({ page: 1, limit: 100 });
+  const directorsList = directorsData?.data || [];
+  const { data: actorsData } = useGetActors({ page: 1, limit: 100 });
+  const actorsList = actorsData?.data || [];
+  const { data: genresData } = useGetGenres({ page: 1, limit: 100 });
+  const genresList = genresData?.data || [];
+  const { data: languagesData } = useGetLanguagesList();
+  const languagesList = languagesData?.data || [];
+  const createMovieMutation = useCreateMovie();
+  const updateMovieMutation = useUpdateMovie();
+  const params = useParams<{ id: string }>();
 
   /* ---- Movie Details state ---- */
-  const [thumbnail, setThumbnail] = useState({ file: null as File | null, preview: "" });
-  const [poster, setPoster] = useState({ file: null as File | null, preview: "" });
-  const [posterTv, setPosterTv] = useState({ file: null as File | null, preview: "" });
+  const [thumbnail, setThumbnail] = useState({ filePath: "", preview: "" });
+  const [poster, setPoster] = useState({ filePath: "", preview: "" });
+  const [posterTv, setPosterTv] = useState({ filePath: "", preview: "" });
   const [name, setName] = useState("");
   const [trailerUrlType, setTrailerUrlType] = useState("local");
   const [trailerUrl, setTrailerUrl] = useState("");
-  const [trailerFile, setTrailerFile] = useState<File | null>(null);
+  const [trailerFilePath, setTrailerFilePath] = useState("");
   const [description, setDescription] = useState("");
   const [access, setAccess] = useState<"paid" | "free" | "pay_per_view">("paid");
   const [plan, setPlan] = useState("");
@@ -99,7 +118,10 @@ export default function MovieForm() {
 
   /* ---- Basic Info state ---- */
   const [language, setLanguage] = useState("");
-  const [genres, setGenres] = useState("");
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [genreSearch, setGenreSearch] = useState("");
+  const [languageSearch, setLanguageSearch] = useState("");
   const [countries, setCountries] = useState("");
   const [imdbRating, setImdbRating] = useState("");
   const [contentRating, setContentRating] = useState("");
@@ -109,16 +131,21 @@ export default function MovieForm() {
   const [releaseDate, setReleaseDate] = useState("");
   const [ageRestricted, setAgeRestricted] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(true);
-  const [actors, setActors] = useState("");
-  const [directors, setDirectors] = useState("");
+  const [selectedActors, setSelectedActors] = useState<string[]>([]);
+  const [actorSearch, setActorSearch] = useState("");
+  const [selectedDirectors, setSelectedDirectors] = useState<string[]>([]);
+  const [directorSearch, setDirectorSearch] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
 
   /* ---- Quality Info state ---- */
   const [videoUploadType, setVideoUploadType] = useState("local");
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoFilePath, setVideoFilePath] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [qualityEnabled, setQualityEnabled] = useState(true);
   const [qualityRows, setQualityRows] = useState<QualityRow[]>([
-    { id: "1", type: "local", quality: "480p", file: null },
+    { id: "1", type: "local", quality: "480p", filePath: "", url: "" },
   ]);
 
   /* ---- Subtitle Info state ---- */
@@ -126,14 +153,13 @@ export default function MovieForm() {
 
   /* ---- SEO Settings state ---- */
   const [seoEnabled, setSeoEnabled] = useState(true);
-  const [seoImagePreview, setSeoImagePreview] = useState("");
+  const [seoImage, setSeoImage] = useState({ filePath: "", preview: "" });
   const [metaTitle, setMetaTitle] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
   const [googleVerification, setGoogleVerification] = useState("");
   const [canonicalUrl, setCanonicalUrl] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
-  const seoImageRef = useRef<HTMLInputElement>(null);
 
   /* ---- Clip Details state ---- */
   const [clipRows, setClipRows] = useState<ClipRow[]>([]);
@@ -143,24 +169,24 @@ export default function MovieForm() {
 
   /* ---- Helpers ---- */
   const addQualityRow = () =>
-    setQualityRows((p) => [...p, { id: Date.now().toString(), type: "local", quality: "480p", file: null }]);
+    setQualityRows((p) => [...p, { id: Date.now().toString(), type: "local", quality: "480p", filePath: "", url: "" }]);
   const removeQualityRow = (id: string) =>
     setQualityRows((p) => p.filter((r) => r.id !== id));
   const updateQualityRow = (id: string, key: keyof QualityRow, value: any) =>
     setQualityRows((p) => p.map((r) => (r.id === id ? { ...r, [key]: value } : r)));
 
   const addSubtitleRow = () =>
-    setSubtitleRows((p) => [...p, { id: Date.now().toString(), language: "", file: null }]);
+    setSubtitleRows((p) => [...p, { id: Date.now().toString(), language: "", filePath: "" }]);
   const removeSubtitleRow = (id: string) =>
     setSubtitleRows((p) => p.filter((r) => r.id !== id));
 
   const addClipRow = () =>
-    setClipRows((p) => [...p, { id: Date.now().toString(), name: "", type: "local", url: "", file: null }]);
+    setClipRows((p) => [...p, { id: Date.now().toString(), name: "", type: "local", url: "", filePath: "" }]);
   const removeClipRow = (id: string) =>
     setClipRows((p) => p.filter((r) => r.id !== id));
 
   const addDownloadRow = () =>
-    setDownloadRows((p) => [...p, { id: Date.now().toString(), type: "local", quality: "480p", file: null }]);
+    setDownloadRows((p) => [...p, { id: Date.now().toString(), type: "local", quality: "480p", filePath: "", url: "" }]);
   const removeDownloadRow = (id: string) =>
     setDownloadRows((p) => p.filter((r) => r.id !== id));
 
@@ -173,9 +199,80 @@ export default function MovieForm() {
     }
   };
 
-  const handleSave = () => {
-    toast({ title: isEdit ? "Movie updated successfully!" : "Movie created successfully!" });
-    setLocation("/movies");
+  const handleSave = async () => {
+    if (uploadStatus === "uploading") return;
+    
+    setIsSaving(true);
+    setUploadStatus("uploading");
+    setUploadProgress(0);
+
+    try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + Math.random() * 10;
+        });
+      }, 500);
+
+      // Prepare movie data
+      const movieData = {
+        title: name,
+        description,
+        thumbnail: thumbnail.filePath,
+        posterImage: poster.filePath,
+        bannerImage: posterTv.filePath,
+        trailerUrl: trailerFilePath,
+        hlsUrl: videoUploadType === "hls" ? videoUrl : undefined,
+        videoQualities: videoUploadType === "local" ? qualityRows.map(q => ({
+          quality: q.quality as '144p' | '360p' | '480p' | '720p' | '1080p' | '4k',
+          url: q.type === "local" ? q.filePath : q.url,
+          size: 0
+        })) : undefined,
+        genres: selectedGenres,
+        languages: selectedLanguages,
+        subtitleLanguages: [],
+        audioLanguages: selectedLanguages,
+        releaseDate: releaseDate ? new Date(releaseDate) : undefined,
+        duration: duration ? parseInt(duration) : undefined,
+        ageRating: ageRestricted ? 18 : 0,
+        downloadAllowed: downloadStatus,
+        cast: selectedActors.map(actorId => ({ actor: actorId, role: "Actor" })),
+        crew: selectedDirectors.map(directorId => ({ director: directorId, role: "Director" })),
+        planRequired: access === "free" ? "free" : access === "pay_per_view" ? "premium" : "basic",
+        status: "draft" as const,
+        metaTitle,
+        metaDescription,
+        tags: keywords
+      };
+
+      // Call API to save movie data
+      if (isEdit) {
+        await updateMovieMutation.mutateAsync({ id: params.id!, data: movieData });
+      } else {
+        await createMovieMutation.mutateAsync(movieData);
+      }
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setUploadStatus("success");
+      
+      toast({ title: isEdit ? "Movie updated successfully!" : "Movie created successfully!" });
+      
+      // Redirect after success
+      setTimeout(() => {
+        setLocation("/movies");
+      }, 1500);
+    } catch (error) {
+      setUploadStatus("error");
+      setUploadProgress(0);
+      toast({ title: "Upload failed. Please try again.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   /* ---- Shared section heading ---- */
@@ -204,25 +301,6 @@ export default function MovieForm() {
         </button>
         <span>/</span>
         <span className="text-foreground font-medium">{isEdit ? "Edit Movie" : "New Movie"}</span>
-      </div>
-
-      {/* TMDB Import */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <p className="text-sm text-zinc-400 mb-3 flex items-center gap-1.5">
-          <span className="text-red-500 font-bold">ⓘ</span>
-          Import movie from TMDB (Add the Movie ID)
-        </p>
-        <div className="flex gap-3">
-          <Input
-            placeholder="e.g. #mv123456"
-            value={tmdbId}
-            onChange={(e) => setTmdbId(e.target.value)}
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm max-w-sm"
-          />
-          <Button className="bg-red-600 hover:bg-red-700 text-white h-10 px-6 rounded-lg font-semibold text-sm">
-            Import
-          </Button>
-        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -256,17 +334,17 @@ export default function MovieForm() {
                 <ImageBox
                   label="Thumbnail"
                   preview={thumbnail.preview}
-                  onChange={(f, url) => setThumbnail({ file: f, preview: url })}
+                  onOpen={() => setThumbnailPickerOpen(true)}
                 />
                 <ImageBox
                   label="Poster"
                   preview={poster.preview}
-                  onChange={(f, url) => setPoster({ file: f, preview: url })}
+                  onOpen={() => setPosterPickerOpen(true)}
                 />
                 <ImageBox
                   label="Poster Tv Image"
                   preview={posterTv.preview}
-                  onChange={(f, url) => setPosterTv({ file: f, preview: url })}
+                  onOpen={() => setPosterTvPickerOpen(true)}
                 />
               </div>
             </div>
@@ -303,18 +381,17 @@ export default function MovieForm() {
               <div className="space-y-1.5">
                 {trailerUrlType === "local" ? (
                   <>
-                    <Label className="text-foreground text-sm font-medium">Trailer Video File</Label>
-                    <div className="relative">
-                      <Input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => setTrailerFile(e.target.files?.[0] ?? null)}
-                        className="bg-muted border-border text-foreground h-10 rounded-lg text-sm file:mr-3 file:text-muted-foreground file:bg-muted file:border-0 file:text-sm cursor-pointer"
-                      />
+                    <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
+                    <div
+                      onClick={() => setTrailerPickerOpen(true)}
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                    >
+                      {trailerFilePath ? (
+                        <span className="text-sm text-foreground truncate px-3">{trailerFilePath}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                      )}
                     </div>
-                    {trailerFile && (
-                      <p className="text-xs text-zinc-500 truncate">{trailerFile.name}</p>
-                    )}
                   </>
                 ) : (
                   <>
@@ -414,34 +491,99 @@ export default function MovieForm() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">
-                    Language <span className="text-red-500">*</span>
+                    Languages <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                      <SelectValue placeholder="Select Language" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-foreground">
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="hindi">Hindi</SelectItem>
-                      <SelectItem value="tamil">Tamil</SelectItem>
-                      <SelectItem value="telugu">Telugu</SelectItem>
-                      <SelectItem value="kannada">Kannada</SelectItem>
-                      <SelectItem value="malayalam">Malayalam</SelectItem>
-                      <SelectItem value="marathi">Marathi</SelectItem>
-                      <SelectItem value="punjabi">Punjabi</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedLanguages.map((langId) => {
+                        const lang = languagesList.find((l: any) => l.id === langId || l._id === langId);
+                        return (
+                          <div
+                            key={langId}
+                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
+                          >
+                            <span className="text-foreground">{lang?.name || langId}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLanguages((prev) => prev.filter((id) => id !== langId))}
+                              className="text-muted-foreground hover:text-red-400 transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value && !selectedLanguages.includes(value)) {
+                          setSelectedLanguages((prev) => [...prev, value]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                        <SelectValue placeholder="Select languages..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                        {languagesList
+                          .filter((l: any) => !selectedLanguages.includes(l.id) && !selectedLanguages.includes(l._id))
+                          .map((lang: any) => (
+                            <SelectItem key={lang.id || lang._id} value={lang.id || lang._id}>
+                              {lang.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">
                     Genres <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    placeholder="Action, Drama, Comedy..."
-                    value={genres}
-                    onChange={(e) => setGenres(e.target.value)}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedGenres.map((genreId) => {
+                        const genre = genresList.find((g: any) => g.id === genreId || g._id === genreId);
+                        return (
+                          <div
+                            key={genreId}
+                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
+                          >
+                            <span className="text-foreground">{genre?.name || genreId}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedGenres((prev) => prev.filter((id) => id !== genreId))}
+                              className="text-muted-foreground hover:text-red-400 transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value && !selectedGenres.includes(value)) {
+                          setSelectedGenres((prev) => [...prev, value]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                        <SelectValue placeholder="Select genres..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                        {genresList
+                          .filter((g: any) => !selectedGenres.includes(g.id) && !selectedGenres.includes(g._id))
+                          .map((genre: any) => (
+                            <SelectItem key={genre.id || genre._id} value={genre.id || genre._id}>
+                              {genre.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">Countries</Label>
@@ -557,25 +699,99 @@ export default function MovieForm() {
                   <Label className="text-foreground text-sm font-medium">
                     Actors <span className="text-red-500">*</span>
                   </Label>
-                  <Textarea
-                    placeholder="Enter actor names, comma separated..."
-                    value={actors}
-                    onChange={(e) => setActors(e.target.value)}
-                    rows={3}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedActors.map((actorId) => {
+                        const actor = actorsList.find((a: any) => a.id === actorId || a._id === actorId);
+                        return (
+                          <div
+                            key={actorId}
+                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
+                          >
+                            <span className="text-foreground">{actor?.name || actorId}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedActors((prev) => prev.filter((id) => id !== actorId))}
+                              className="text-muted-foreground hover:text-red-400 transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Select
+                      value={actorSearch}
+                      onValueChange={(value) => {
+                        if (value && !selectedActors.includes(value)) {
+                          setSelectedActors((prev) => [...prev, value]);
+                        }
+                        setActorSearch("");
+                      }}
+                    >
+                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                        <SelectValue placeholder="Select actors..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                        {actorsList
+                          .filter((a: any) => !selectedActors.includes(a.id) && !selectedActors.includes(a._id))
+                          .map((actor: any) => (
+                            <SelectItem key={actor.id || actor._id} value={actor.id || actor._id}>
+                              {actor.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">
                     Directors <span className="text-red-500">*</span>
                   </Label>
-                  <Textarea
-                    placeholder="Enter director names, comma separated..."
-                    value={directors}
-                    onChange={(e) => setDirectors(e.target.value)}
-                    rows={3}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedDirectors.map((dirId) => {
+                        const director = directorsList.find((d: any) => d.id === dirId || d._id === dirId);
+                        return (
+                          <div
+                            key={dirId}
+                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
+                          >
+                            <span className="text-foreground">{director?.name || dirId}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDirectors((prev) => prev.filter((id) => id !== dirId))}
+                              className="text-muted-foreground hover:text-red-400 transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Select
+                      value={directorSearch}
+                      onValueChange={(value) => {
+                        if (value && !selectedDirectors.includes(value)) {
+                          setSelectedDirectors((prev) => [...prev, value]);
+                        }
+                        setDirectorSearch("");
+                      }}
+                    >
+                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                        <SelectValue placeholder="Select directors..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                        {directorsList
+                          .filter((d: any) => !selectedDirectors.includes(d.id) && !selectedDirectors.includes(d._id))
+                          .map((director: any) => (
+                            <SelectItem key={director.id || director._id} value={director.id || director._id}>
+                              {director.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -600,8 +816,6 @@ export default function MovieForm() {
                     <SelectContent className="bg-popover border-border text-foreground">
                       <SelectItem value="local">Local</SelectItem>
                       <SelectItem value="url">External URL</SelectItem>
-                      <SelectItem value="youtube">YouTube</SelectItem>
-                      <SelectItem value="vimeo">Vimeo</SelectItem>
                       <SelectItem value="hls">HLS URL</SelectItem>
                     </SelectContent>
                   </Select>
@@ -611,15 +825,16 @@ export default function MovieForm() {
                     Video File <span className="text-red-500">*</span>
                   </Label>
                   {videoUploadType === "local" ? (
-                    <>
-                      <Input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-                        className="bg-muted border-border text-foreground h-10 rounded-lg text-sm file:mr-3 file:text-muted-foreground file:bg-muted file:border-0 file:text-sm cursor-pointer"
-                      />
-                      {videoFile && <p className="text-xs text-zinc-500 truncate">{videoFile.name}</p>}
-                    </>
+                    <div
+                      onClick={() => setVideoPickerOpen(true)}
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                    >
+                      {videoFilePath ? (
+                        <span className="text-sm text-foreground truncate px-3">{videoFilePath}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                      )}
+                    </div>
                   ) : (
                     <Input
                       placeholder="Enter video URL..."
@@ -677,12 +892,28 @@ export default function MovieForm() {
                       <div className="flex gap-2 items-end">
                         <div className="flex-1 space-y-1.5">
                           <Label className="text-foreground text-sm font-medium">Video File</Label>
-                          <Input
-                            type="file"
-                            accept="video/*"
-                            onChange={(e) => updateQualityRow(row.id, "file", e.target.files?.[0] ?? null)}
-                            className="bg-muted border-border text-foreground h-10 rounded-lg text-sm file:mr-3 file:text-muted-foreground file:bg-muted file:border-0 file:text-sm cursor-pointer"
-                          />
+                          {row.type === "local" ? (
+                            <div
+                              onClick={() => {
+                                setCurrentQualityRowId(row.id);
+                                setQualityPickerOpen(true);
+                              }}
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                            >
+                              {row.filePath ? (
+                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                              )}
+                            </div>
+                          ) : (
+                            <Input
+                              placeholder="Enter video URL..."
+                              value={row.url || ""}
+                              onChange={(e) => updateQualityRow(row.id, "url", e.target.value)}
+                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+                            />
+                          )}
                         </div>
                         {qualityRows.length > 1 && (
                           <button
@@ -756,14 +987,19 @@ export default function MovieForm() {
                     <div className="flex gap-3 items-end">
                       <div className="flex-1 space-y-1.5">
                         <Label className="text-foreground text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
-                        <Input
-                          type="file"
-                          accept=".srt,.vtt,.ass,.ssa"
-                          onChange={(e) =>
-                            setSubtitleRows((p) => p.map((r) => r.id === row.id ? { ...r, file: e.target.files?.[0] ?? null } : r))
-                          }
-                          className="bg-muted border-border text-foreground h-10 rounded-lg text-sm file:mr-3 file:text-muted-foreground file:bg-muted file:border-0 file:text-sm cursor-pointer"
-                        />
+                        <div
+                          onClick={() => {
+                            setCurrentSubtitleRowId(row.id);
+                            setSubtitlePickerOpen(true);
+                          }}
+                          className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                        >
+                          {row.filePath ? (
+                            <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Click to select subtitle from media library</span>
+                          )}
+                        </div>
                       </div>
                       <button
                         type="button"
@@ -804,25 +1040,15 @@ export default function MovieForm() {
                         SEO Image <span className="text-red-500">*</span>
                       </Label>
                       <div
-                        onClick={() => seoImageRef.current?.click()}
+                        onClick={() => setSeoImagePickerOpen(true)}
                         className="border-2 border-dashed border-border rounded-xl h-40 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-card transition-colors overflow-hidden"
                       >
-                        {seoImagePreview ? (
-                          <img src={seoImagePreview} alt="SEO" className="h-full w-full object-cover" />
+                        {seoImage.preview ? (
+                          <img src={seoImage.preview} alt="SEO" className="h-full w-full object-contain" />
                         ) : (
                           <ImageIcon className="h-10 w-10 text-zinc-700" />
                         )}
                       </div>
-                      <input
-                        ref={seoImageRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) setSeoImagePreview(URL.createObjectURL(f));
-                        }}
-                      />
                     </div>
 
                     {/* Meta Title + Meta Keywords */}
@@ -978,14 +1204,19 @@ export default function MovieForm() {
                             {row.type === "local" ? "Clip File" : "Clip URL"}
                           </Label>
                           {row.type === "local" ? (
-                            <Input
-                              type="file"
-                              accept="video/*"
-                              onChange={(e) =>
-                                setClipRows((p) => p.map((r) => r.id === row.id ? { ...r, file: e.target.files?.[0] ?? null } : r))
-                              }
-                              className="bg-muted border-border text-foreground h-10 rounded-lg text-sm file:mr-3 file:text-muted-foreground file:bg-muted file:border-0 file:text-sm cursor-pointer"
-                            />
+                            <div
+                              onClick={() => {
+                                setCurrentClipRowId(row.id);
+                                setClipPickerOpen(true);
+                              }}
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                            >
+                              {row.filePath ? (
+                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                              )}
+                            </div>
                           ) : (
                             <Input
                               placeholder="https://..."
@@ -1077,17 +1308,26 @@ export default function MovieForm() {
                             {row.type === "local" ? "File" : "Download URL"}
                           </Label>
                           {row.type === "local" ? (
-                            <Input
-                              type="file"
-                              accept="video/*"
-                              onChange={(e) =>
-                                setDownloadRows((p) => p.map((r) => r.id === row.id ? { ...r, file: e.target.files?.[0] ?? null } : r))
-                              }
-                              className="bg-muted border-border text-foreground h-10 rounded-lg text-sm file:mr-3 file:text-muted-foreground file:bg-muted file:border-0 file:text-sm cursor-pointer"
-                            />
+                            <div
+                              onClick={() => {
+                                setCurrentDownloadRowId(row.id);
+                                setDownloadPickerOpen(true);
+                              }}
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                            >
+                              {row.filePath ? (
+                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                              )}
+                            </div>
                           ) : (
                             <Input
                               placeholder="https://..."
+                              value={row.url}
+                              onChange={(e) =>
+                                setDownloadRows((p) => p.map((r) => r.id === row.id ? { ...r, url: e.target.value } : r))
+                              }
                               className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                             />
                           )}
@@ -1110,14 +1350,134 @@ export default function MovieForm() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          className="bg-red-600 hover:bg-red-700 text-white h-11 px-10 rounded-lg font-semibold text-sm"
-        >
-          Save
-        </Button>
+      <div className="flex flex-col gap-4">
+        {/* Upload Progress Bar */}
+        {uploadStatus !== "idle" && (
+          <div className="w-full max-w-md">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-foreground font-medium">
+                {uploadStatus === "uploading" && "Uploading video..."}
+                {uploadStatus === "success" && "Upload complete!"}
+                {uploadStatus === "error" && "Upload failed"}
+              </span>
+              <span className="text-sm text-muted-foreground">{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  uploadStatus === "success" ? "bg-green-500" : uploadStatus === "error" ? "bg-red-500" : "bg-red-600"
+                }`}
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+            {uploadStatus === "error" && (
+              <button
+                type="button"
+                onClick={handleSave}
+                className="mt-2 text-sm text-red-400 hover:text-red-300 font-medium"
+              >
+                Retry upload
+              </button>
+            )}
+          </div>
+        )}
+        
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSave}
+            disabled={isSaving || uploadStatus === "uploading"}
+            className="bg-red-600 hover:bg-red-700 text-white h-11 px-10 rounded-lg font-semibold text-sm"
+          >
+            {isSaving ? "Saving..." : uploadStatus === "uploading" ? "Uploading..." : "Save"}
+          </Button>
+        </div>
       </div>
+
+      {/* Media Pickers */}
+      <MediaPicker
+        open={thumbnailPickerOpen}
+        onClose={() => setThumbnailPickerOpen(false)}
+        onSelect={(media) => setThumbnail({ filePath: media.filePath, preview: media.url })}
+        source="movie"
+        accept="image/*"
+      />
+      <MediaPicker
+        open={posterPickerOpen}
+        onClose={() => setPosterPickerOpen(false)}
+        onSelect={(media) => setPoster({ filePath: media.filePath, preview: media.url })}
+        source="movie"
+        accept="image/*"
+      />
+      <MediaPicker
+        open={posterTvPickerOpen}
+        onClose={() => setPosterTvPickerOpen(false)}
+        onSelect={(media) => setPosterTv({ filePath: media.filePath, preview: media.url })}
+        source="movie"
+        accept="image/*"
+      />
+      <MediaPicker
+        open={trailerPickerOpen}
+        onClose={() => setTrailerPickerOpen(false)}
+        onSelect={(media) => setTrailerFilePath(media.filePath)}
+        source="movie"
+        accept="video/*"
+      />
+      <MediaPicker
+        open={videoPickerOpen}
+        onClose={() => setVideoPickerOpen(false)}
+        onSelect={(media) => setVideoFilePath(media.filePath)}
+        source="movie"
+        accept="video/*"
+      />
+      <MediaPicker
+        open={downloadPickerOpen}
+        onClose={() => {
+          setDownloadPickerOpen(false);
+          setCurrentDownloadRowId(null);
+        }}
+        onSelect={(media) => {
+          if (currentDownloadRowId) {
+            setDownloadRows((p) => p.map((r) => r.id === currentDownloadRowId ? { ...r, filePath: media.filePath } : r));
+          }
+        }}
+        source="movie"
+        accept="video/*"
+      />
+      <MediaPicker
+        open={qualityPickerOpen}
+        onClose={() => {
+          setQualityPickerOpen(false);
+          setCurrentQualityRowId(null);
+        }}
+        onSelect={(media) => {
+          if (currentQualityRowId) {
+            setQualityRows((p) => p.map((r) => r.id === currentQualityRowId ? { ...r, filePath: media.filePath } : r));
+          }
+        }}
+        source="movie"
+        accept="video/*"
+      />
+      <MediaPicker
+        open={subtitlePickerOpen}
+        onClose={() => {
+          setSubtitlePickerOpen(false);
+          setCurrentSubtitleRowId(null);
+        }}
+        onSelect={(media) => {
+          if (currentSubtitleRowId) {
+            setSubtitleRows((p) => p.map((r) => r.id === currentSubtitleRowId ? { ...r, filePath: media.filePath } : r));
+          }
+        }}
+        source="movie"
+        accept=".srt,.vtt,.ass,.ssa"
+      />
+      <MediaPicker
+        open={seoImagePickerOpen}
+        onClose={() => setSeoImagePickerOpen(false)}
+        onSelect={(media) => setSeoImage({ filePath: media.filePath, preview: media.url })}
+        source="movie"
+        accept="image/*"
+      />
     </div>
   );
 }

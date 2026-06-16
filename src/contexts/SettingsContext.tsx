@@ -101,16 +101,16 @@ export interface AppSettings {
 }
 
 const DEFAULT: AppSettings = {
-  logoUrl: "",
-  darkLogoUrl: "",
-  lightLogoUrl: "",
+  logoUrl: "https://i.imgur.com/45cG5Kc.png",
+  darkLogoUrl: "https://i.imgur.com/45cG5Kc.png",
+  lightLogoUrl: "https://i.imgur.com/45cG5Kc.png",
   faviconUrl: "",
-  logoStyle: "icon",
-  platformName: "",
+  logoStyle: "fill",
+  platformName: "Kotibox",
   contactNo: "",
   inquiryEmail: "",
   siteDescription: "",
-  copyrightText: "",
+  copyrightText: "© 2026 Kotibox. All Rights Reserved.",
   facebookUrl: "",
   twitterUrl: "",
   instagramUrl: "",
@@ -148,15 +148,15 @@ const DEFAULT: AppSettings = {
   activeMenuStyle: 'left-bordered',
   footerStyle: 'default',
   // Mail
-  mailEmail: "",
+  mailEmail: "info@kotibox.com",
   mailDriver: "smtp",
   mailHost: "smtp.gmail.com",
   mailPort: "587",
   mailEncryption: "tls",
   mailUsername: "",
   mailPassword: "",
-  mailFrom: "",
-  mailFromName: "StreamVault",
+  mailFrom: "info@kotibox.com",
+  mailFromName: "Kotibox",
   // Notifications
   fcmServerKey: "",
   fcmSenderId: "",
@@ -343,7 +343,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshSettings = useCallback(async () => {
-    if (!localStorage.getItem("accessToken")) return;
     try {
       setIsLoading(true);
       const data = await getSettings();

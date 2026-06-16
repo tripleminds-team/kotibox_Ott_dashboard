@@ -202,13 +202,13 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                     {media.fileType?.startsWith('video') ? (
                       <video
                         src={getImageUrl(media.filePath || media.url)}
-                        className="w-full h-24 object-cover bg-gray-800"
+                        className="w-full h-24 object-contain bg-gray-800"
                       />
                     ) : (
                       <img
                         src={getImageUrl(media.filePath || media.url)}
                         alt={media.name}
-                        className="w-full h-24 object-cover bg-gray-800"
+                        className="w-full h-24 object-contain bg-gray-800"
                         loading="lazy"
                       />
                     )}

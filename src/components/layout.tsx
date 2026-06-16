@@ -1,7 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useGetMe, useLogout } from "../lib/api-client";
+import {
+  useGetMe,
+  useLogout,
+  getImageUrl
+} from "../lib/api-client";
 import {
   Home,
   Users,
@@ -36,6 +40,8 @@ import {
   Monitor,
   LayoutList,
   Video,
+  Shield,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -57,63 +63,71 @@ const navSections = [
   {
     label: "MAIN",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: Home },
-      { href: "/media-library", label: "Media Library", icon: Image },
-      { href: "/app-management", label: "App Management", icon: UserCog },
+      { href: "/dashboard", label: "Dashboard", icon: Home, permission: null },
+      { href: "/media-library", label: "Media Library", icon: Image, permission: "mediaLibrary" },
+      { href: "/app-management", label: "App Management", icon: UserCog, permission: null },
+    ],
+  },
+  {
+    label: "USER MANAGEMENT",
+    items: [
+      { href: "/influencers", label: "Influencers", icon: Shield, permission: "influencers" },
+      { href: "/approvals", label: "Approvals", icon: CheckCircle, permission: null },
     ],
   },
   {
     label: "MEDIA MANAGEMENT",
     items: [
-      { href: "/users", label: "Users", icon: Users },
-      { href: "/languages", label: "Languages", icon: Languages },
-      { href: "/genres", label: "Genres", icon: Tags },
-      { href: "/categories", label: "Categories", icon: Layers },
-      { href: "/movies", label: "Movies", icon: Film },
-      { href: "/shows", label: "Shows", icon: PlaySquare },
+      { href: "/users", label: "Users", icon: Users, permission: null },
+      { href: "/languages", label: "Languages", icon: Languages, permission: "languages" },
+      { href: "/genres", label: "Genres", icon: Tags, permission: "genres" },
+      { href: "/categories", label: "Categories", icon: Layers, permission: null },
+      { href: "/movies", label: "Movies", icon: Film, permission: "movies" },
+      { href: "/shows", label: "Shows", icon: PlaySquare, permission: "shows" },
       {
         href: "/tv-shows",
         label: "TV Shows",
         icon: Tv2,
+        permission: null,
         children: [
           { href: "/tv-shows", label: "TV Shows", icon: Monitor },
           { href: "/seasons", label: "Seasons", icon: LayoutList },
           { href: "/episodes", label: "Episodes", icon: Video },
         ],
       },
-      { href: "/ads", label: "Ads", icon: PlusSquare },
-      { href: "/pages", label: "Pages", icon: FileText },
-      { href: "/promotions", label: "Promotions", icon: Megaphone },
-      { href: "/banners", label: "Banners", icon: Layers },
-      { href: "/faq", label: "FAQ", icon: HelpCircle },
+      { href: "/ads", label: "Ads", icon: PlusSquare, permission: "ads" },
+      { href: "/pages", label: "Pages", icon: FileText, permission: "pages" },
+      { href: "/promotions", label: "Promotions", icon: Megaphone, permission: "promotions" },
+      { href: "/banners", label: "Banners", icon: Layers, permission: "banners" },
+      { href: "/faq", label: "FAQ", icon: HelpCircle, permission: "faqs" },
     ],
   },
   {
     label: "CAST & CREW",
     items: [
-      { href: "/actors", label: "Actors", icon: UserRound },
-      { href: "/directors", label: "Directors", icon: Clapperboard },
+      { href: "/actors", label: "Actors", icon: UserRound, permission: "actors" },
+      { href: "/directors", label: "Directors", icon: Clapperboard, permission: "directors" },
     ],
   },
   {
     label: "SUBSCRIPTION",
     items: [
-      { href: "/subscriptions", label: "Subscriptions", icon: ScrollText },
-      { href: "/plans", label: "Plans", icon: CreditCard },
-      { href: "/plan-limits", label: "Plan Limits", icon: Gauge },
+      { href: "/subscriptions", label: "Subscriptions", icon: ScrollText, permission: "subscriptions" },
+      { href: "/plans", label: "Plans", icon: CreditCard, permission: "subscriptionPlans" },
+      { href: "/plan-limits", label: "Plan Limits", icon: Gauge, permission: "planLimits" },
     ],
   },
   {
     label: "NOTIFICATIONS",
     items: [
-      { href: "/notifications", label: "Notification List", icon: BellRing },
-      { href: "/notification-templates", label: "Templates", icon: MailCheck },
+      { href: "/notifications", label: "Notification List", icon: BellRing, permission: "notifications" },
+      { href: "/notification-templates", label: "Templates", icon: MailCheck, permission: "notificationTemplates" },
     ],
   },
   {
     label: "SYSTEM",
     items: [
-      { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/settings", label: "Settings", icon: Settings, permission: null },
     ],
   },
 ];
@@ -151,19 +165,49 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasPermission = (permission: string | null): boolean => {
+    // Super admin has all permissions
+    if (user?.role === "superadmin") return true;
+    
+    // If no permission required, show it
+    if (!permission) return true;
+    
+    // Check module permissions
+    const modulePerms = user?.modulePermissions?.[permission as keyof typeof user.modulePermissions];
+    if (!modulePerms) return false;
+    
+    // Check if user has at least view permission
+    return (modulePerms as any).canView || (modulePerms as any).canUpload;
+  };
+
   const getLogoUrl = () => {
-    if (resolvedTheme === "dark" && settings.darkLogoUrl) return settings.darkLogoUrl;
-    if (resolvedTheme === "light" && settings.lightLogoUrl) return settings.lightLogoUrl;
-    return settings.logoUrl;
+    if (resolvedTheme === "dark" && settings.darkLogoUrl)
+      return getImageUrl(settings.darkLogoUrl);
+
+    if (resolvedTheme === "light" && settings.lightLogoUrl)
+      return getImageUrl(settings.lightLogoUrl);
+
+    return getImageUrl(settings.logoUrl);
   };
 
   const isItemActive = (href: string) =>
     location === href || location.startsWith(href + "/");
 
+  // Filter nav sections based on permissions
+  const filteredNavSections = navSections
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => hasPermission(item.permission))
+    }))
+    .filter(section => section.items.length > 0);
+
+  // Filter flat items too
+  const filteredNavItemsFlat = filteredNavSections.flatMap(s => s.items);
+
   // Expanded nav: sections with group headers
   const NavExpanded = ({ onClose }: { onClose?: () => void }) => (
     <div className="flex flex-col gap-5">
-      {navSections.map((section) => (
+      {filteredNavSections.map((section) => (
         <div key={section.label}>
           <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-1.5 px-3">
             {section.label}
@@ -278,7 +322,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Collapsed nav: flat icon list with tooltips
   const NavCollapsed = () => (
     <div className="flex flex-col gap-1 items-center">
-      {navItemsFlat.map((item) => {
+      {filteredNavItemsFlat.map((item) => {
         const isActive = isItemActive(item.href);
         const Icon = item.icon;
         return (
@@ -320,11 +364,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           />
         ) : (
           <Film className={`text-red-500 ${collapsed ? "h-7 w-7" : "h-9 w-9"}`} />
-        )}
-        {!collapsed && settings.platformName && (
-          <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent">
-            {settings.platformName}
-          </span>
         )}
       </div>
     );
@@ -445,13 +484,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </span>
                 Sign Out
               </button>
-              {settings.platformName && (
-                <div className="mt-3 pt-3 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    © {new Date().getFullYear()} {settings.platformName}
-                  </p>
-                </div>
-              )}
             </>
           )}
         </div>

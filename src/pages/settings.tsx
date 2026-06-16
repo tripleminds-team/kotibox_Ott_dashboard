@@ -347,28 +347,28 @@ export default function Settings() {
 
   // ── Mail Settings ──────────────────────────────────────────────────────
   const [mail, setMail] = useState({
-    email: ctxSettings.mailEmail || "info@example.com",
+    email: ctxSettings.mailEmail || "info@kotibox.com",
     mailDriver: ctxSettings.mailDriver || "smtp",
     mailHost: ctxSettings.mailHost || "smtp.gmail.com",
     mailPort: ctxSettings.mailPort || "587",
     mailEncryption: ctxSettings.mailEncryption || "tls",
     mailUsername: ctxSettings.mailUsername || "youremail@gmail.com",
     password: "",
-    mailFrom: ctxSettings.mailFrom || "youremail@gmail.com",
-    fromName: ctxSettings.mailFromName || "NETFLIX",
+    mailFrom: ctxSettings.mailFrom || "info@kotibox.com",
+    fromName: ctxSettings.mailFromName || "Kotibox",
   });
 
   useEffect(() => {
     setMail({
-      email: ctxSettings.mailEmail || "info@example.com",
+      email: ctxSettings.mailEmail || "info@kotibox.com",
       mailDriver: ctxSettings.mailDriver || "smtp",
       mailHost: ctxSettings.mailHost || "smtp.gmail.com",
       mailPort: ctxSettings.mailPort || "587",
       mailEncryption: ctxSettings.mailEncryption || "tls",
       mailUsername: ctxSettings.mailUsername || "youremail@gmail.com",
       password: "", // keep password empty unless user edits
-      mailFrom: ctxSettings.mailFrom || "youremail@gmail.com",
-      fromName: ctxSettings.mailFromName || "NETFLIX",
+      mailFrom: ctxSettings.mailFrom || "info@kotibox.com",
+      fromName: ctxSettings.mailFromName || "Kotibox",
     });
   }, [
     ctxSettings.mailEmail,
