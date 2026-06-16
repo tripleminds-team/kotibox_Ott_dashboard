@@ -31,6 +31,11 @@ import {
   BellRing,
   MailCheck,
   UserCog,
+  Tv2,
+  ChevronDown,
+  Monitor,
+  LayoutList,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -66,6 +71,16 @@ const navSections = [
       { href: "/categories", label: "Categories", icon: Layers },
       { href: "/movies", label: "Movies", icon: Film },
       { href: "/shows", label: "Shows", icon: PlaySquare },
+      {
+        href: "/tv-shows",
+        label: "TV Shows",
+        icon: Tv2,
+        children: [
+          { href: "/tv-shows", label: "TV Shows", icon: Monitor },
+          { href: "/seasons", label: "Seasons", icon: LayoutList },
+          { href: "/episodes", label: "Episodes", icon: Video },
+        ],
+      },
       { href: "/ads", label: "Ads", icon: PlusSquare },
       { href: "/pages", label: "Pages", icon: FileText },
       { href: "/promotions", label: "Promotions", icon: Megaphone },
@@ -103,12 +118,15 @@ const navSections = [
   },
 ];
 
-const navItemsFlat = navSections.flatMap((s) => s.items);
+const navItemsFlat = navSections.flatMap((s) =>
+  s.items.flatMap((item) => ("children" in item && item.children ? item.children : [item]))
+);
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["/tv-shows"]);
   const { data: user, isLoading } = useGetMe();
   const { language, setLanguage } = useLanguage();
   const { settings } = useSettings();
@@ -152,8 +170,78 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </p>
           <div className="flex flex-col gap-0.5">
             {section.items.map((item) => {
-              const isActive = isItemActive(item.href);
               const Icon = item.icon;
+              const hasChildren = "children" in item && Array.isArray(item.children);
+
+              if (hasChildren) {
+                const children = (item as any).children as { href: string; label: string; icon: any }[];
+                const isGroupActive = children.some((c) => isItemActive(c.href));
+                const isExpanded = expandedGroups.includes(item.href);
+                return (
+                  <div key={item.href}>
+                    <button
+                      onClick={() =>
+                        setExpandedGroups((prev) =>
+                          prev.includes(item.href)
+                            ? prev.filter((g) => g !== item.href)
+                            : [...prev, item.href]
+                        )
+                      }
+                      className={`group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        isGroupActive
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {isGroupActive && (
+                        <span className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-red-500" />
+                      )}
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
+                          isGroupActive ? "bg-red-600/20 text-red-400" : "text-muted-foreground group-hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="h-[17px] w-[17px]" />
+                      </span>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2">
+                        {children.map((child) => {
+                          const childActive = isItemActive(child.href);
+                          const ChildIcon = child.icon;
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              onClick={() => onClose?.()}
+                              className={`group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                childActive
+                                  ? "bg-muted text-foreground"
+                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                            >
+                              <span
+                                className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 transition-colors ${
+                                  childActive ? "bg-red-600/20 text-red-400" : "text-muted-foreground group-hover:text-foreground"
+                                }`}
+                              >
+                                <ChildIcon className="h-4 w-4" />
+                              </span>
+                              <span>{child.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              const isActive = isItemActive(item.href);
               return (
                 <Link
                   key={item.href}
