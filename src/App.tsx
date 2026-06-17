@@ -85,11 +85,6 @@ import PromotionForm from "@/pages/promotion-form";
 import BannersPage from "@/pages/banners";
 import BannerForm from "@/pages/banner-form";
 import BannerShowDetail from "@/pages/banner-show-detail";
-import CategoriesPage from "@/pages/categories";
-import CategoryForm from "@/pages/category-form";
-import CategoryShowsPage from "@/pages/category-shows";
-import CategoryShowForm from "@/pages/category-show-form";
-import CategoryShowDetail from "@/pages/category-show-detail";
 import ShowsPage from "@/pages/shows";
 import ShowForm from "@/pages/show-form";
 import ShowDetail from "@/pages/show-detail";
@@ -129,6 +124,7 @@ import SeasonForm from "@/pages/season-form";
 import EpisodesPage from "@/pages/episodes";
 import EpisodeForm from "@/pages/episode-form";
 import StreamingHomePage from "@/pages/streaming-home";
+import MovieDetailPage from "@/pages/movie-detail";
 import EpisodeDetailPage from "@/pages/episode-detail";
 import CategoriesBrowsePage from "@/pages/categories-browse";
 import InfluencersPage from "@/pages/influencers";
@@ -256,12 +252,6 @@ function Router() {
       <Route path="/banners/:id" component={() => <ProtectedRoute component={BannerForm} />} />
       <Route path="/banners/shows/:contentId" component={() => <ProtectedRoute component={BannerShowDetail} />} />
       <Route path="/banners" component={() => <ProtectedRoute component={BannersPage} />} />
-      <Route path="/categories/new" component={() => <ProtectedRoute component={CategoryForm} />} />
-      <Route path="/categories/:id" component={() => <ProtectedRoute component={CategoryForm} />} />
-      <Route path="/categories/:categoryId/shows/new" component={() => <ProtectedRoute component={CategoryShowForm} />} />
-      <Route path="/categories/shows/:contentId" component={() => <ProtectedRoute component={CategoryShowDetail} />} />
-      <Route path="/categories/:categoryId/shows" component={() => <ProtectedRoute component={CategoryShowsPage} />} />
-      <Route path="/categories" component={() => <ProtectedRoute component={CategoriesPage} />} />
       <Route path="/shows/new" component={() => <ProtectedRoute component={ShowForm} />} />
       <Route path="/shows/:id/edit" component={() => <ProtectedRoute component={ShowForm} />} />
       <Route path="/shows/:id" component={() => <ProtectedRoute component={ShowDetail} />} />
@@ -317,6 +307,7 @@ function Router() {
       
       {/* Public streaming routes */}
       <Route path="/" component={StreamingHomePage} />
+      <Route path="/movie/:id" component={MovieDetailPage} />
       <Route path="/show/:showTitle/episode/:epNum" component={EpisodeDetailPage} />
       <Route path="/browse/:tab" component={CategoriesBrowsePage} />
       <Route path="/browse" component={CategoriesBrowsePage} />

@@ -59,91 +59,90 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from "next-themes";
 
-const navSections = [
-  {
-    label: "MAIN",
-    items: [
-      { href: "/dashboard", label: "Dashboard", icon: Home, permission: null },
-      { href: "/media-library", label: "Media Library", icon: Image, permission: "mediaLibrary" },
-      { href: "/app-management", label: "App Management", icon: UserCog, permission: null },
-    ],
-  },
-  {
-    label: "USER MANAGEMENT",
-    items: [
-      { href: "/influencers", label: "Influencers", icon: Shield, permission: "influencers" },
-      { href: "/approvals", label: "Approvals", icon: CheckCircle, permission: null },
-    ],
-  },
-  {
-    label: "MEDIA MANAGEMENT",
-    items: [
-      { href: "/users", label: "Users", icon: Users, permission: null },
-      { href: "/languages", label: "Languages", icon: Languages, permission: "languages" },
-      { href: "/genres", label: "Genres", icon: Tags, permission: "genres" },
-      { href: "/categories", label: "Categories", icon: Layers, permission: null },
-      { href: "/movies", label: "Movies", icon: Film, permission: "movies" },
-      { href: "/shows", label: "Shows", icon: PlaySquare, permission: "shows" },
-      {
-        href: "/tv-shows",
-        label: "TV Shows",
-        icon: Tv2,
-        permission: null,
-        children: [
-          { href: "/tv-shows", label: "TV Shows", icon: Monitor },
-          { href: "/seasons", label: "Seasons", icon: LayoutList },
-          { href: "/episodes", label: "Episodes", icon: Video },
-        ],
-      },
-      { href: "/ads", label: "Ads", icon: PlusSquare, permission: "ads" },
-      { href: "/pages", label: "Pages", icon: FileText, permission: "pages" },
-      { href: "/promotions", label: "Promotions", icon: Megaphone, permission: "promotions" },
-      { href: "/banners", label: "Banners", icon: Layers, permission: "banners" },
-      { href: "/faq", label: "FAQ", icon: HelpCircle, permission: "faqs" },
-    ],
-  },
-  {
-    label: "CAST & CREW",
-    items: [
-      { href: "/actors", label: "Actors", icon: UserRound, permission: "actors" },
-      { href: "/directors", label: "Directors", icon: Clapperboard, permission: "directors" },
-    ],
-  },
-  {
-    label: "SUBSCRIPTION",
-    items: [
-      { href: "/subscriptions", label: "Subscriptions", icon: ScrollText, permission: "subscriptions" },
-      { href: "/plans", label: "Plans", icon: CreditCard, permission: "subscriptionPlans" },
-      { href: "/plan-limits", label: "Plan Limits", icon: Gauge, permission: "planLimits" },
-    ],
-  },
-  {
-    label: "NOTIFICATIONS",
-    items: [
-      { href: "/notifications", label: "Notification List", icon: BellRing, permission: "notifications" },
-      { href: "/notification-templates", label: "Templates", icon: MailCheck, permission: "notificationTemplates" },
-    ],
-  },
-  {
-    label: "SYSTEM",
-    items: [
-      { href: "/settings", label: "Settings", icon: Settings, permission: null },
-    ],
-  },
-];
-
-const navItemsFlat = navSections.flatMap((s) =>
-  s.items.flatMap((item) => ("children" in item && item.children ? item.children : [item]))
-);
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["/tv-shows"]);
   const { data: user, isLoading } = useGetMe();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { settings } = useSettings();
+
+  const navSections = [
+    {
+      label: t('nav.main'),
+      items: [
+        { href: "/dashboard", label: t('nav.dashboard'), icon: Home, permission: null },
+        { href: "/media-library", label: t('nav.mediaLibrary'), icon: Image, permission: "mediaLibrary" },
+        { href: "/app-management", label: t('nav.appManagement'), icon: UserCog, permission: null },
+      ],
+    },
+    {
+      label: "USER MANAGEMENT",
+      items: [
+        { href: "/influencers", label: "Influencers", icon: Shield, permission: "influencers" },
+        { href: "/approvals", label: "Approvals", icon: CheckCircle, permission: null },
+      ],
+    },
+    {
+      label: t('nav.mediaManagement'),
+      items: [
+        { href: "/users", label: t('nav.users'), icon: Users, permission: null },
+        { href: "/languages", label: t('nav.languages'), icon: Languages, permission: "languages" },
+        { href: "/genres", label: t('nav.genres'), icon: Tags, permission: "genres" },
+        { href: "/movies", label: t('nav.movies'), icon: Film, permission: "movies" },
+        { href: "/shows", label: t('nav.shows'), icon: PlaySquare, permission: "shows" },
+        {
+          href: "/tv-shows",
+          label: "TV Shows",
+          icon: Tv2,
+          permission: null,
+          children: [
+            { href: "/tv-shows", label: "TV Shows", icon: Monitor },
+            { href: "/seasons", label: "Seasons", icon: LayoutList },
+            { href: "/episodes", label: "Episodes", icon: Video },
+          ],
+        },
+        { href: "/ads", label: t('nav.ads'), icon: PlusSquare, permission: "ads" },
+        { href: "/pages", label: t('nav.pages'), icon: FileText, permission: "pages" },
+        { href: "/promotions", label: t('nav.promotions'), icon: Megaphone, permission: "promotions" },
+        { href: "/banners", label: t('nav.banners'), icon: Layers, permission: "banners" },
+        { href: "/faq", label: t('nav.faq'), icon: HelpCircle, permission: "faqs" },
+      ],
+    },
+    {
+      label: t('nav.castAndCrew'),
+      items: [
+        { href: "/actors", label: t('nav.actors'), icon: UserRound, permission: "actors" },
+        { href: "/directors", label: t('nav.directors'), icon: Clapperboard, permission: "directors" },
+      ],
+    },
+    {
+      label: t('nav.subscription'),
+      items: [
+        { href: "/subscriptions", label: t('nav.subscriptions'), icon: ScrollText, permission: "subscriptions" },
+        { href: "/plans", label: t('nav.plans'), icon: CreditCard, permission: "subscriptionPlans" },
+        { href: "/plan-limits", label: t('nav.planLimits'), icon: Gauge, permission: "planLimits" },
+      ],
+    },
+    {
+      label: t('nav.notifications'),
+      items: [
+        { href: "/notifications", label: t('nav.notificationList'), icon: BellRing, permission: "notifications" },
+        { href: "/notification-templates", label: t('nav.templates'), icon: MailCheck, permission: "notificationTemplates" },
+      ],
+    },
+    {
+      label: t('nav.system'),
+      items: [
+        { href: "/settings", label: t('nav.settings'), icon: Settings, permission: null },
+      ],
+    },
+  ];
+
+  const navItemsFlat = navSections.flatMap((s) =>
+    s.items.flatMap((item) => ("children" in item && item.children ? item.children : [item]))
+  );
   const { resolvedTheme } = useTheme();
   const logoutMutation = useLogout();
 
@@ -419,7 +418,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-400 shrink-0">
                     <LogOut className="h-4 w-4" />
                   </span>
-                  Sign Out
+                  {t('nav.signOut')}
                 </Button>
               </div>
             </SheetContent>
@@ -469,7 +468,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={10} className="bg-popover text-foreground border-border text-xs">
-                  Sign Out
+                  {t('nav.signOut')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -482,7 +481,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/15 text-red-400 shrink-0">
                   <LogOut className="h-[17px] w-[17px]" />
                 </span>
-                Sign Out
+                {t('nav.signOut')}
               </button>
             </>
           )}
@@ -506,7 +505,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <ChevronRight className="h-4 w-4" />
               </button>
             )}
-            <h1 className="text-lg font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-lg font-bold text-foreground">{t('nav.dashboard')}</h1>
           </div>
           <div className="flex items-center gap-2">
             <Select value={language} onValueChange={(value: string) => setLanguage(value as any)}>
@@ -564,14 +563,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
                     <UserCog className="h-4 w-4 text-muted-foreground" />
-                    My Profile
+                    {t('nav.myProfile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setLocation("/settings")}
                     className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
                     <Settings className="h-4 w-4 text-muted-foreground" />
-                    Settings
+                    {t('nav.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border my-1" />
                   <DropdownMenuItem
@@ -579,7 +578,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
                     <LogOut className="h-4 w-4 text-muted-foreground" />
-                    Logout
+                    {t('nav.logout')}
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
