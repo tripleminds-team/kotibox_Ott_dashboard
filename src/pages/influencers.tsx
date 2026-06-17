@@ -35,6 +35,8 @@ interface Influencer {
 
 const defaultModulePermissions = {
   movies: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  shows: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  shortDramas: { canView: true, canCreate: false, canEdit: false, canDelete: false },
   genres: { canView: true, canCreate: false, canEdit: false, canDelete: false },
   actors: { canView: true, canCreate: false, canEdit: false, canDelete: false },
   directors: { canView: true, canCreate: false, canEdit: false, canDelete: false },
@@ -43,6 +45,15 @@ const defaultModulePermissions = {
   mediaLibrary: { canView: true, canUpload: false, canDelete: false },
   banners: { canView: true, canCreate: false, canEdit: false, canDelete: false },
   promotions: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  influencers: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  ads: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  pages: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  faqs: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  subscriptions: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  subscriptionPlans: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  planLimits: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  notifications: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  notificationTemplates: { canView: true, canCreate: false, canEdit: false, canDelete: false },
 };
 
 export default function InfluencersPage() {

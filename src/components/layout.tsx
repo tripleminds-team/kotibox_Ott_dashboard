@@ -196,12 +196,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const filteredNavSections = navSections
     .map(section => ({
       ...section,
-      items: section.items.filter(item => hasPermission(item.permission))
+      items: section.items.map(item => {
+        if ("children" in item && item.children) {
+          // Filter children first
+          const filteredChildren = item.children.filter(child => hasPermission(child.permission));
+          if (filteredChildren.length === 0) return null; // No children left, hide this item
+          return { ...item, children: filteredChildren };
+        }
+        if (!hasPermission(item.permission)) return null;
+        return item;
+      }).filter(Boolean) as any[]
     }))
     .filter(section => section.items.length > 0);
 
   // Filter flat items too
-  const filteredNavItemsFlat = filteredNavSections.flatMap(s => s.items);
+  const filteredNavItemsFlat = filteredNavSections.flatMap((s) =>
+    s.items.flatMap((item) => ("children" in item && item.children ? item.children : [item]))
+  );
 
   // Expanded nav: sections with group headers
   const NavExpanded = ({ onClose }: { onClose?: () => void }) => (

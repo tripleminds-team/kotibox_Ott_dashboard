@@ -129,6 +129,11 @@ import EpisodeDetailPage from "@/pages/episode-detail";
 import CategoriesBrowsePage from "@/pages/categories-browse";
 import InfluencersPage from "@/pages/influencers";
 import ApprovalsPage from "@/pages/approvals";
+import ShortDramasPage from "@/pages/short-dramas";
+import ShortDramaForm from "@/pages/short-drama-form";
+import ShortDramaDetail from "@/pages/short-drama-detail";
+import ShortDramaSeasonsPage from "@/pages/short-drama-seasons";
+import ShortDramaEpisodesPage from "@/pages/short-drama-episodes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -151,6 +156,10 @@ const routePermissions: Record<string, string | null> = {
   "/genres": "genres",
   "/movies": "movies",
   "/shows": "shows",
+  "/tv-shows": "shows",
+  "/seasons": "shows",
+  "/episodes": "shows",
+  "/categories": "categories",
   "/ads": "ads",
   "/pages": "pages",
   "/promotions": "promotions",
@@ -167,7 +176,9 @@ const routePermissions: Record<string, string | null> = {
   "/settings/branding": null,
   "/settings/icons": null,
   "/profile": null,
-  "/login": null,
+  "/short-dramas": "shortDramas",
+  "/short-drama-seasons": "shortDramas",
+  "/short-drama-episodes": "shortDramas",
 };
 
 const hasPermissionForRoute = (path: string, user: any): boolean => {
@@ -304,6 +315,18 @@ function Router() {
       <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
       <Route path="/influencers" component={() => <ProtectedRoute component={InfluencersPage} />} />
       <Route path="/approvals" component={() => <ProtectedRoute component={ApprovalsPage} />} />
+      <Route path="/short-dramas/new" component={() => <ProtectedRoute component={ShortDramaForm} />} />
+      <Route path="/short-dramas/:id/edit" component={() => <ProtectedRoute component={ShortDramaForm} />} />
+      <Route path="/short-dramas/:id" component={() => <ProtectedRoute component={ShortDramaDetail} />} />
+      <Route path="/short-dramas" component={() => <ProtectedRoute component={ShortDramasPage} />} />
+      <Route path="/short-drama-seasons/new" component={() => <ProtectedRoute component={SeasonForm} />} />
+      <Route path="/short-drama-seasons/:id/edit" component={() => <ProtectedRoute component={SeasonForm} />} />
+      <Route path="/short-drama-seasons/:id" component={() => <ProtectedRoute component={SeasonForm} />} />
+      <Route path="/short-drama-seasons" component={() => <ProtectedRoute component={ShortDramaSeasonsPage} />} />
+      <Route path="/short-drama-episodes/new" component={() => <ProtectedRoute component={EpisodeForm} />} />
+      <Route path="/short-drama-episodes/:id/edit" component={() => <ProtectedRoute component={EpisodeForm} />} />
+      <Route path="/short-drama-episodes/:id" component={() => <ProtectedRoute component={EpisodeForm} />} />
+      <Route path="/short-drama-episodes" component={() => <ProtectedRoute component={ShortDramaEpisodesPage} />} />
       
       {/* Public streaming routes */}
       <Route path="/" component={StreamingHomePage} />
