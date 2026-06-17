@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { Play, Search, ChevronLeft, ChevronRight, X, Download, History, ChevronDown, User } from "lucide-react";
-import type { Show } from "@/data/shows";
-import { heroShows, homeSections, continueWatching } from "@/data/shows";
+import { Play, Search, ChevronLeft, ChevronRight, X, Download, History, ChevronDown, User, Loader2 } from "lucide-react";
+import { useGetHomePage } from "@/lib/api-client";
 
 /* ─── BADGE COLORS ─── */
 function Badge({ text }: { text: string }) {
@@ -19,7 +18,7 @@ function Badge({ text }: { text: string }) {
 }
 
 /* ─── SHOW CARD ─── */
-function ShowCard({ show }: { show: Show }) {
+function ShowCard({ show }: { show: any }) {
   return (
     <Link
       href={`/show/${encodeURIComponent(show.title)}/episode/1`}
@@ -49,24 +48,20 @@ function ShowCard({ show }: { show: Show }) {
           </button>
         </div>
 
-        {/* Progress bar (Continue Watching) */}
-        {show.progress !== undefined && (
-          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-zinc-700">
-            <div className="h-full bg-[#E50914] transition-none" style={{ width: `${show.progress}%` }} />
-          </div>
-        )}
-
         {show.badge && <Badge text={show.badge} />}
+        {show.featured && <Badge text="FEATURED" />}
+        {show.trending && <Badge text="TRENDING" />}
+        {show.isNewContent && <Badge text="NEW" />}
       </div>
 
       <div className="mt-2 px-0.5">
         <p className="text-white text-xs sm:text-[13px] font-semibold leading-tight line-clamp-2 group-hover:text-zinc-200 transition-colors">
           {show.title}
         </p>
-        {show.progress !== undefined ? (
-          <p className="text-zinc-500 text-[11px] mt-0.5">EP.{Math.ceil((show.progress / 100) * show.episodes)} / EP.{show.episodes}</p>
+        {show.episodeCount !== undefined && show.episodeCount > 0 ? (
+          <p className="text-[#E50914] text-[11px] mt-0.5 font-medium">EP.1 / EP.{show.episodeCount}</p>
         ) : (
-          <p className="text-[#E50914] text-[11px] mt-0.5 font-medium">EP.1 / EP.{show.episodes}</p>
+          show.duration && <p className="text-zinc-500 text-[11px] mt-0.5">{Math.round(show.duration / 60)} min</p>
         )}
       </div>
     </Link>
@@ -90,7 +85,7 @@ function SectionTitle({ title, emoji }: { title: string; emoji: string }) {
 }
 
 /* ─── CONTENT ROW ─── */
-function ContentRow({ title, emoji, shows }: { title: string; emoji: string; shows: Show[] }) {
+function ContentRow({ title, emoji, shows }: { title: string; emoji?: string; shows: any[] }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: "left" | "right") => {
     if (!rowRef.current) return;
@@ -99,7 +94,19 @@ function ContentRow({ title, emoji, shows }: { title: string; emoji: string; sho
 
   return (
     <div className="mb-10">
-      <SectionTitle title={title} emoji={emoji} />
+      {emoji ? (
+        <SectionTitle title={title} emoji={emoji} />
+      ) : (
+        <div className="flex items-center gap-3 mb-5 px-4 sm:px-8 lg:px-12">
+          <div className="w-[3px] h-6 bg-[#E50914] rounded-full flex-shrink-0" />
+          <h2 className="text-white font-black text-xl sm:text-2xl tracking-tight leading-none">{title}</h2>
+          <div className="flex-1" />
+          <a href="#" className="text-zinc-500 hover:text-white text-sm transition-colors flex items-center gap-0.5 group/link">
+            View all
+            <ChevronRight className="w-4 h-4 group-hover/link:translate-x-0.5 transition-transform" />
+          </a>
+        </div>
+      )}
       <div className="relative group/row">
         <button
           onClick={() => scroll("left")}
@@ -128,7 +135,7 @@ function ContentRow({ title, emoji, shows }: { title: string; emoji: string; sho
 }
 
 /* ─── HERO ─── */
-function Hero() {
+function Hero({ banners }: { banners: any[] }) {
   const [current, setCurrent] = useState(0);
   const [fading, setFading] = useState(false);
 
@@ -138,18 +145,22 @@ function Hero() {
   };
 
   useEffect(() => {
-    const timer = setInterval(() => go((current + 1) % heroShows.length), 7000);
-    return () => clearInterval(timer);
-  }, [current]);
+    if (banners.length > 0) {
+      const timer = setInterval(() => go((current + 1) % banners.length), 7000);
+      return () => clearInterval(timer);
+    }
+  }, [current, banners.length]);
 
-  const show = heroShows[current];
+  const banner = banners[current];
+
+  if (!banner) return null;
 
   return (
     <div className="relative w-full overflow-hidden" style={{ height: "88vh", minHeight: 520 }}>
       {/* BG Image */}
       <div
         className={`absolute inset-0 transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}
-        style={{ backgroundImage: `url(${show.bg})`, backgroundSize: "cover", backgroundPosition: "center top" }}
+        style={{ backgroundImage: `url(${banner.imageUrl || banner.thumbnail})`, backgroundSize: "cover", backgroundPosition: "center top" }}
       />
       {/* Overlays */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/10" />
@@ -160,24 +171,24 @@ function Hero() {
       <div className="absolute bottom-16 left-0 px-6 sm:px-10 lg:px-14 max-w-3xl">
         <div className={`transition-all duration-500 ${fading ? "opacity-0 translate-y-5" : "opacity-100 translate-y-0"}`}>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-[#E50914] text-xs font-bold uppercase tracking-widest">{show.genre}</span>
+            <span className="text-[#E50914] text-xs font-bold uppercase tracking-widest">{banner.type?.toUpperCase() || "FEATURED"}</span>
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-[70px] font-black text-white leading-none mb-2 tracking-tight drop-shadow-2xl">
-            {show.title}
+            {banner.title}
           </h1>
           <div className="w-12 h-[2px] bg-[#E50914] mb-4" />
           <p className="text-zinc-300 text-sm sm:text-base leading-relaxed mb-7 max-w-lg line-clamp-2">
-            {show.description}
+            {banner.description || banner.subtitle || ""}
           </p>
           <button className="flex items-center gap-2.5 px-9 py-3.5 bg-white hover:bg-zinc-100 text-black font-black rounded-sm text-sm tracking-wide transition-all active:scale-95 shadow-2xl">
-            <Play className="w-4 h-4 fill-black" /> PLAY
+            <Play className="w-4 h-4 fill-black" /> {banner.ctaText || "PLAY"}
           </button>
         </div>
       </div>
 
       {/* Dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
-        {heroShows.map((_, i) => (
+        {banners.map((_, i) => (
           <button
             key={i}
             onClick={() => go(i)}
@@ -188,13 +199,13 @@ function Hero() {
 
       {/* Arrows */}
       <button
-        onClick={() => go((current - 1 + heroShows.length) % heroShows.length)}
+        onClick={() => go((current - 1 + banners.length) % banners.length)}
         className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/15 hover:border-white/40 transition-all"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button
-        onClick={() => go((current + 1) % heroShows.length)}
+        onClick={() => go((current + 1) % banners.length)}
         className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/15 hover:border-white/40 transition-all"
       >
         <ChevronRight className="w-6 h-6" />
@@ -772,17 +783,63 @@ export function PublicFooter() {
 
 /* ─── MAIN PAGE ─── */
 export default function StreamingHomePage() {
+  const [activeTab, setActiveTab] = useState<'drama' | 'movie'>('drama');
+  const { data, isLoading, error } = useGetHomePage({ platform: "web", tab: activeTab });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white text-xl">Error loading home page</p>
+          <p className="text-gray-500">{(error as Error).message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const banners = data?.data?.banners || [];
+  const sections = data?.data?.sections || [];
+
   return (
     <div className="min-h-screen bg-black">
       <PublicHeader />
-      <main>
-        <Hero />
+      <main className="pt-20">
+        {/* Tab selector */}
+        <div className="flex justify-center gap-8 mb-8 px-4">
+          <button
+            onClick={() => setActiveTab('drama')}
+            className={`text-xl font-bold transition-all ${activeTab === 'drama' ? 'text-white border-b-2 border-pink-500' : 'text-zinc-500'}`}
+          >
+            Drama
+          </button>
+          <button
+            onClick={() => setActiveTab('movie')}
+            className={`text-xl font-bold transition-all ${activeTab === 'movie' ? 'text-white border-b-2 border-pink-500' : 'text-zinc-500'}`}
+          >
+            Movies
+          </button>
+        </div>
+
+        {banners.length > 0 && (
+          <Hero banners={banners} />
+        )}
         <div className="pt-8 pb-2">
-          {/* Continue Watching */}
-          <ContentRow title="Continue Watching" emoji="▶" shows={continueWatching} />
           {/* Main sections */}
-          {homeSections.map((section) => (
-            <ContentRow key={section.title} title={section.title} emoji={section.emoji} shows={section.shows} />
+          {sections.map((section: any, index: number) => (
+            <ContentRow 
+              key={section.key || index} 
+              title={section.title} 
+              emoji={section.emoji} 
+              shows={section.shows} 
+            />
           ))}
         </div>
       </main>

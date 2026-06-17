@@ -85,6 +85,17 @@ const navSections = [
       { href: "/movies", label: "Movies", icon: Film, permission: "movies" },
       { href: "/shows", label: "Shows", icon: PlaySquare, permission: "shows" },
       {
+        href: "/short-dramas",
+        label: "Short Dramas",
+        icon: Video,
+        permission: "shortDramas",
+        children: [
+          { href: "/short-dramas", label: "Short Dramas", icon: Video, permission: "shortDramas" },
+          { href: "/short-drama-seasons", label: "Short Drama Seasons", icon: LayoutList, permission: "shortDramas" },
+          { href: "/short-drama-episodes", label: "Short Drama Episodes", icon: Video, permission: "shortDramas" },
+        ],
+      },
+      {
         href: "/tv-shows",
         label: "TV Shows",
         icon: Tv2,

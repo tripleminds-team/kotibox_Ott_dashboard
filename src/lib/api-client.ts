@@ -496,6 +496,14 @@ export const useBulkDeletePromotions = () => {
   });
 };
 
+// Home Page
+export const getHomePage = async (options) => {
+  const params = new URLSearchParams();
+  if (options?.platform) params.set("platform", options.platform);
+  if (options?.limit) params.set("limit", options.limit.toString());
+  return api(`/home?${params.toString()}`);
+};
+
 // Banner Shows
 export const getBannersList = async (options) => {
   const params = new URLSearchParams();
@@ -667,6 +675,13 @@ export const useAppendBannerShowVideo = () => {
       queryClient.invalidateQueries({ queryKey: ["banners-list"] });
       queryClient.invalidateQueries({ queryKey: ["banner-show", variables.contentId] });
     },
+  });
+};
+
+export const useGetHomePage = (options) => {
+  return useQuery({
+    queryKey: ["home-page", options],
+    queryFn: () => getHomePage(options),
   });
 };
 
