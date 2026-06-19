@@ -91,7 +91,7 @@ const SortableSetting = ({ setting, onToggle, onEditItems, onEditMeta, onDelete 
                   <Badge
                     key={idx}
                     variant="secondary"
-                    className="bg-red-600 text-white hover:bg-red-700"
+                    className="bg-primary text-white hover:bg-primary/90"
                   >
                     <X className="h-3 w-3 mr-1" />
                     {item}
@@ -126,7 +126,7 @@ const SortableSetting = ({ setting, onToggle, onEditItems, onEditMeta, onDelete 
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-lg text-red-500 hover:bg-red-500/10"
+            className="h-9 w-9 rounded-lg text-primary hover:bg-primary/10"
             onClick={() => onDelete(setting.id)}
           >
             <Trash2 className="h-4 w-4" />
@@ -135,7 +135,7 @@ const SortableSetting = ({ setting, onToggle, onEditItems, onEditMeta, onDelete 
           <Switch
             checked={setting.enabled}
             onCheckedChange={() => onToggle(setting.id)}
-            className="data-[state=checked]:bg-red-600"
+            className="data-[state=checked]:bg-primary"
           />
         </div>
       </div>
@@ -271,7 +271,7 @@ export default function AppManagement() {
         <h1 className="text-2xl font-bold text-foreground">App Management</h1>
         <Dialog open={addSettingOpen} onOpenChange={setAddSettingOpen}>
           <DialogTrigger asChild>
-            <Button variant="default" className="bg-red-600 hover:bg-red-700 text-white">
+            <Button variant="default" className="bg-primary hover:bg-primary/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Add Setting
             </Button>
@@ -282,7 +282,7 @@ export default function AppManagement() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label className="text-foreground">Name <span className="text-red-500">*</span></Label>
+                <Label className="text-foreground">Name <span className="text-primary">*</span></Label>
                 <Input
                   value={newSettingName}
                   onChange={(e) => setNewSettingName(e.target.value)}
@@ -291,19 +291,19 @@ export default function AppManagement() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-foreground">Type <span className="text-red-500">*</span></Label>
+                <Label className="text-foreground">Type <span className="text-primary">*</span></Label>
                 <div className="flex gap-2">
                   <Button
                     variant={newSettingType === 'simple' ? 'default' : 'ghost'}
                     onClick={() => setNewSettingType('simple')}
-                    className={newSettingType === 'simple' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-transparent hover:bg-muted'}
+                    className={newSettingType === 'simple' ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-transparent hover:bg-muted'}
                   >
                     Simple
                   </Button>
                   <Button
                     variant={newSettingType === 'select' ? 'default' : 'ghost'}
                     onClick={() => setNewSettingType('select')}
-                    className={newSettingType === 'select' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-transparent hover:bg-muted'}
+                    className={newSettingType === 'select' ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-transparent hover:bg-muted'}
                   >
                     Select
                   </Button>
@@ -319,7 +319,7 @@ export default function AppManagement() {
                 Cancel
               </Button>
               <Button
-                className="bg-red-600 hover:bg-red-700 text-foreground"
+                className="bg-primary hover:bg-primary/90 text-foreground"
                 onClick={handleAddSetting}
               >
                 Add
@@ -396,7 +396,7 @@ export default function AppManagement() {
                   <Badge
                     key={idx}
                     variant="secondary"
-                    className="bg-red-600 text-white hover:bg-red-700 cursor-pointer"
+                    className="bg-primary text-white hover:bg-primary/90 cursor-pointer"
                     onClick={() => removeItem(item)}
                   >
                     <X className="h-3 w-3 mr-1" />
@@ -446,7 +446,7 @@ export default function AppManagement() {
               Cancel
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700 text-foreground"
+              className="bg-primary hover:bg-primary/90 text-foreground"
               onClick={handleSaveEdit}
             >
               Save
@@ -467,7 +467,7 @@ export default function AppManagement() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-foreground">Name <span className="text-red-500">*</span></Label>
+              <Label className="text-foreground">Name <span className="text-primary">*</span></Label>
               <Input
                 value={editingSettingMeta?.name || ''}
                 onChange={(e) => setEditingSettingMeta({ ...editingSettingMeta, name: e.target.value })}
@@ -475,19 +475,19 @@ export default function AppManagement() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground">Type <span className="text-red-500">*</span></Label>
+              <Label className="text-foreground">Type <span className="text-primary">*</span></Label>
               <div className="flex gap-2">
                 <Button
                   variant={editingSettingMeta?.type === 'simple' ? 'default' : 'ghost'}
                   onClick={() => setEditingSettingMeta({ ...editingSettingMeta, type: 'simple' })}
-                  className={editingSettingMeta?.type === 'simple' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-transparent hover:bg-muted'}
+                  className={editingSettingMeta?.type === 'simple' ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-transparent hover:bg-muted'}
                 >
                   Simple
                 </Button>
                 <Button
                   variant={editingSettingMeta?.type === 'select' ? 'default' : 'ghost'}
                   onClick={() => setEditingSettingMeta({ ...editingSettingMeta, type: 'select' })}
-                  className={editingSettingMeta?.type === 'select' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-transparent hover:bg-muted'}
+                  className={editingSettingMeta?.type === 'select' ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-transparent hover:bg-muted'}
                 >
                   Select
                 </Button>
@@ -503,7 +503,7 @@ export default function AppManagement() {
               Cancel
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700 text-foreground"
+              className="bg-primary hover:bg-primary/90 text-foreground"
               onClick={handleEditSettingMeta}
             >
               Save

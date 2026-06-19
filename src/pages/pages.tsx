@@ -126,7 +126,7 @@ export default function PagesPage() {
         <Button
           onClick={handleApply}
           disabled={bulkDeleteMutation.isPending}
-          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -139,12 +139,12 @@ export default function PagesPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button
           onClick={() => setLocation("/pages/new")}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -159,7 +159,7 @@ export default function PagesPage() {
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Name</TableHead>
@@ -189,7 +189,7 @@ export default function PagesPage() {
                     <Checkbox
                       checked={selectedIds.includes(page._id)}
                       onCheckedChange={() => toggleSelect(page._id)}
-                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
                   <TableCell className="text-foreground font-medium text-sm">{page.title}</TableCell>
@@ -198,7 +198,7 @@ export default function PagesPage() {
                     <Switch
                       checked={page.status === "published"}
                       onCheckedChange={() => handleToggleActive(page)}
-                      className="data-[state=checked]:bg-red-600"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </TableCell>
                   <TableCell className="text-zinc-300 text-sm">{page.order}</TableCell>
@@ -220,7 +220,7 @@ export default function PagesPage() {
                       <button
                         onClick={() => setConfirmDelete(page)}
                         disabled={deletingId === page._id}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors disabled:opacity-40"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors disabled:opacity-40"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -253,7 +253,7 @@ export default function PagesPage() {
                 onClick={() => setCurrentPage(i + 1)}
                 className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                   pagination.page === i + 1
-                    ? "bg-red-600 text-foreground"
+                    ? "bg-primary text-foreground"
                     : "bg-muted border border-border text-zinc-300 hover:bg-muted"
                 }`}
               >
@@ -283,7 +283,7 @@ export default function PagesPage() {
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

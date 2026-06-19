@@ -23,7 +23,7 @@ import {
 const DEVICE_OPTIONS = ["mobile", "tablet", "tv", "desktop"];
 
 const inputCls =
-  "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 h-11 rounded-lg";
+  "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary h-11 rounded-lg";
 const labelCls = "text-foreground text-sm font-medium";
 
 export default function PlanLimitFormPage() {
@@ -160,7 +160,7 @@ export default function PlanLimitFormPage() {
       {/* Back */}
       <button
         onClick={() => setLocation("/plan-limits")}
-        className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+        className="flex items-center gap-1.5 text-sm text-primary hover:text-red-300 font-medium transition-colors"
       >
         <span className="text-base leading-none">«</span>
         Back
@@ -171,7 +171,7 @@ export default function PlanLimitFormPage() {
         {/* Plan Name */}
         <div className="space-y-2">
           <Label className={labelCls}>
-            Plan <span className="text-red-500">*</span>
+            Plan <span className="text-primary">*</span>
           </Label>
           <Select value={form.planId} onValueChange={(v) => set("planId", v)}>
             <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg">
@@ -200,7 +200,7 @@ export default function PlanLimitFormPage() {
             <Switch
               checked={form.videoCast}
               onCheckedChange={(v) => set("videoCast", v)}
-              className="data-[state=checked]:bg-red-600"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
 
@@ -210,7 +210,7 @@ export default function PlanLimitFormPage() {
             <Switch
               checked={form.ads}
               onCheckedChange={(v) => set("ads", v)}
-              className="data-[state=checked]:bg-red-600"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
 
@@ -221,7 +221,7 @@ export default function PlanLimitFormPage() {
               <Switch
                 checked={form.deviceLimit}
                 onCheckedChange={(v) => set("deviceLimit", v)}
-                className="data-[state=checked]:bg-red-600"
+                className="data-[state=checked]:bg-primary"
               />
             </div>
             {form.deviceLimit && (
@@ -231,7 +231,7 @@ export default function PlanLimitFormPage() {
                 value={form.deviceLimitCount}
                 onChange={(e) => set("deviceLimitCount", e.target.value)}
                 placeholder="Number of devices"
-                className="bg-card border-border text-foreground focus:border-red-500 h-10 rounded-lg text-sm"
+                className="bg-card border-border text-foreground focus:border-primary h-10 rounded-lg text-sm"
               />
             )}
           </div>
@@ -242,7 +242,7 @@ export default function PlanLimitFormPage() {
             <Switch
               checked={form.downloadStatus}
               onCheckedChange={(v) => set("downloadStatus", v)}
-              className="data-[state=checked]:bg-red-600"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
 
@@ -253,7 +253,7 @@ export default function PlanLimitFormPage() {
               <Switch
                 checked={form.supportedDeviceType}
                 onCheckedChange={(v) => set("supportedDeviceType", v)}
-                className="data-[state=checked]:bg-red-600"
+                className="data-[state=checked]:bg-primary"
               />
             </div>
             {form.supportedDeviceType && (
@@ -265,7 +265,7 @@ export default function PlanLimitFormPage() {
                     onClick={() => toggleDevice(device)}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
                       form.supportedDevices.includes(device)
-                        ? "border-red-500/60 bg-red-600/20 text-red-300"
+                        ? "border-primary/60 bg-primary/20 text-red-300"
                         : "border-border bg-card text-muted-foreground hover:border-border"
                     }`}
                   >
@@ -283,7 +283,7 @@ export default function PlanLimitFormPage() {
               <Switch
                 checked={form.profileLimit}
                 onCheckedChange={(v) => set("profileLimit", v)}
-                className="data-[state=checked]:bg-red-600"
+                className="data-[state=checked]:bg-primary"
               />
             </div>
             {form.profileLimit && (
@@ -293,7 +293,7 @@ export default function PlanLimitFormPage() {
                 value={form.profileLimitCount}
                 onChange={(e) => set("profileLimitCount", e.target.value)}
                 placeholder="Number of profiles"
-                className="bg-card border-border text-foreground focus:border-red-500 h-10 rounded-lg text-sm"
+                className="bg-card border-border text-foreground focus:border-primary h-10 rounded-lg text-sm"
               />
             )}
           </div>
@@ -320,7 +320,7 @@ export default function PlanLimitFormPage() {
               <Switch
                 checked={form[key]}
                 onCheckedChange={(v) => set(key, v)}
-                className="data-[state=checked]:bg-red-600"
+                className="data-[state=checked]:bg-primary"
               />
             </div>
           ))}
@@ -332,7 +332,7 @@ export default function PlanLimitFormPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[120px]"
+          className="bg-primary hover:bg-primary/90 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[120px]"
         >
           {saving ? "Saving..." : "Save"}
         </Button>

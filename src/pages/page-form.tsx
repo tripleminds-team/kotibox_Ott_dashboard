@@ -98,7 +98,7 @@ export default function PageForm() {
                 value={formData.title}
                 onChange={(e) => set("title", e.target.value)}
                 required
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -108,7 +108,7 @@ export default function PageForm() {
                 value={formData.slug}
                 onChange={(e) => set("slug", e.target.value)}
                 required
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function PageForm() {
                 onCheckedChange={(checked) =>
                   set("status", checked ? "published" : "draft")
                 }
-                className="data-[state=checked]:bg-red-600"
+                className="data-[state=checked]:bg-primary"
               />
             </div>
             <div className="space-y-1.5">
@@ -137,7 +137,7 @@ export default function PageForm() {
                 type="number"
                 value={formData.order}
                 onChange={(e) => set("order", Number(e.target.value) || 0)}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function PageForm() {
                   onChange={(e) => set("content", e.target.value)}
                   required
                   placeholder="Enter HTML content here..."
-                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 resize-none font-mono text-sm"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary resize-none font-mono text-sm"
                 />
               </TabsContent>
               <TabsContent value="preview" className="mt-3">
@@ -188,7 +188,7 @@ export default function PageForm() {
                 id="metaTitle"
                 value={formData.metaTitle}
                 onChange={(e) => set("metaTitle", e.target.value)}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -198,7 +198,7 @@ export default function PageForm() {
                 rows={3}
                 value={formData.metaDescription}
                 onChange={(e) => set("metaDescription", e.target.value)}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary resize-none"
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function PageForm() {
           <Button
             type="submit"
             disabled={updateMutation.isPending || createMutation.isPending}
-            className="bg-red-600 hover:bg-red-700 text-foreground px-6 h-11 font-semibold"
+            className="bg-primary hover:bg-primary/90 text-foreground px-6 h-11 font-semibold"
           >
             {isEditMode ? "Save Changes" : "Create Page"}
           </Button>

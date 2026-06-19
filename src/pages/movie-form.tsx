@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   ImageIcon, Plus, X, Trash2, Sparkles, Upload as UploadIcon,
@@ -13,48 +13,46 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import MediaPicker from "@/components/MediaPicker";
-import { useGetDirectors, useGetActors, useCreateMovie, useUpdateMovie, useGetGenres, useGetLanguagesList } from "@/lib/api-client";
+import {
+  useGetDirectors, useGetActors, useCreateMovie, useUpdateMovie,
+  useGetGenres, useGetLanguagesList, useGetMovieById, useGetCategoriesList,
+  getImageUrl,
+} from "@/lib/api-client";
 
-type Tab =
-  | "Movie Details"
-  | "Basic Info"
-  | "Quality Info"
-  | "Subtitle Info"
-  | "SEO Settings"
-  | "Clip Details"
-  | "Download Info";
+type Tab = "Movie Details" | "Basic Info" | "Quality Info" | "Subtitle Info" | "SEO Settings";
 
-const TABS: Tab[] = [
-  "Movie Details",
-  "Basic Info",
-  "Quality Info",
-  "Subtitle Info",
-  "SEO Settings",
-  "Clip Details",
-  "Download Info",
-];
+const TABS: Tab[] = ["Movie Details", "Basic Info", "Quality Info", "Subtitle Info", "SEO Settings"];
 
 type QualityRow = { id: string; type: string; quality: string; filePath: string; url: string };
 type SubtitleRow = { id: string; language: string; filePath: string };
-type ClipRow = { id: string; name: string; type: string; url: string; filePath: string };
-type DownloadRow = { id: string; type: string; quality: string; filePath: string; url: string };
+type CastItem = { id: string; actorId: string; character: string; role: string };
+type CrewItem = { id: string; directorId: string; role: string };
 
-/* ---- Reusable image upload box ---- */
-function ImageBox({
-  label,
-  preview,
-  onOpen,
-}: {
-  label: string;
-  preview: string;
-  onOpen: () => void;
-}) {
+const secsToDuration = (s: number): string => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h, m, sec].map((v) => String(v).padStart(2, "0")).join(":");
+};
+
+const durationToSecs = (d: string): number => {
+  if (!d) return 0;
+  const parts = d.split(":").map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parseInt(d) || 0;
+};
+
+const getId = (item: any): string =>
+  typeof item === "string" ? item : (item?._id || item?.id || "");
+
+function ImageBox({ label, preview, onOpen }: { label: string; preview: string; onOpen: () => void }) {
   return (
     <div className="flex-1 min-w-0">
       <p className="text-sm font-medium text-foreground mb-2">{label}</p>
       <div
         onClick={onOpen}
-        className="border-2 border-dashed border-border rounded-xl aspect-[4/3] flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors overflow-hidden"
+        className="border-2 border-dashed border-border rounded-xl aspect-[4/3] flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden"
       >
         {preview ? (
           <img src={preview} alt={label} className="h-full w-full object-contain" />
@@ -74,217 +72,383 @@ export default function MovieForm() {
 
   const [activeTab, setActiveTab] = useState<Tab>("Movie Details");
 
-  // Media picker states
+  /* ---- Media picker states ---- */
   const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
   const [posterPickerOpen, setPosterPickerOpen] = useState(false);
-  const [posterTvPickerOpen, setPosterTvPickerOpen] = useState(false);
+  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
   const [trailerPickerOpen, setTrailerPickerOpen] = useState(false);
   const [videoPickerOpen, setVideoPickerOpen] = useState(false);
-  const [downloadPickerOpen, setDownloadPickerOpen] = useState(false);
-  const [currentDownloadRowId, setCurrentDownloadRowId] = useState<string | null>(null);
   const [qualityPickerOpen, setQualityPickerOpen] = useState(false);
   const [currentQualityRowId, setCurrentQualityRowId] = useState<string | null>(null);
-  const [clipPickerOpen, setClipPickerOpen] = useState(false);
-  const [currentClipRowId, setCurrentClipRowId] = useState<string | null>(null);
   const [subtitlePickerOpen, setSubtitlePickerOpen] = useState(false);
   const [currentSubtitleRowId, setCurrentSubtitleRowId] = useState<string | null>(null);
   const [seoImagePickerOpen, setSeoImagePickerOpen] = useState(false);
 
-  // Fetch directors and actors
-  const { data: directorsData } = useGetDirectors({ page: 1, limit: 100 });
-  const directorsList = directorsData?.data || [];
-  const { data: actorsData } = useGetActors({ page: 1, limit: 100 });
-  const actorsList = actorsData?.data || [];
+  /* ---- API data ---- */
+  const { data: directorsData } = useGetDirectors({ page: 1, limit: 200 });
+  const directorsList = (directorsData as any)?.data || [];
+  const { data: actorsData } = useGetActors({ page: 1, limit: 200 });
+  const actorsList = (actorsData as any)?.data || [];
   const { data: genresData } = useGetGenres({ page: 1, limit: 100 });
-  const genresList = genresData?.data || [];
+  const genresList = (genresData as any)?.data || [];
   const { data: languagesData } = useGetLanguagesList();
-  const languagesList = languagesData?.data || [];
+  const languagesList = (languagesData as any)?.data || [];
+  const { data: categoriesData } = useGetCategoriesList({ limit: 100 });
+  const categoriesList = (categoriesData as any)?.data || [];
+
   const createMovieMutation = useCreateMovie();
   const updateMovieMutation = useUpdateMovie();
-  const params = useParams<{ id: string }>();
 
-  /* ---- Movie Details state ---- */
+  const { data: movieData } = useGetMovieById(isEdit ? id! : "");
+  const movie = (movieData as any)?.data;
+
+  /* ---- Movie Details ---- */
   const [thumbnail, setThumbnail] = useState({ filePath: "", preview: "" });
   const [poster, setPoster] = useState({ filePath: "", preview: "" });
-  const [posterTv, setPosterTv] = useState({ filePath: "", preview: "" });
-  const [name, setName] = useState("");
-  const [trailerUrlType, setTrailerUrlType] = useState("local");
+  const [banner, setBanner] = useState({ filePath: "", preview: "" });
+  const [title, setTitle] = useState("");
+  const [originalTitle, setOriginalTitle] = useState("");
+  const [trailerUrlType, setTrailerUrlType] = useState("url");
   const [trailerUrl, setTrailerUrl] = useState("");
   const [trailerFilePath, setTrailerFilePath] = useState("");
   const [description, setDescription] = useState("");
-  const [access, setAccess] = useState<"paid" | "free" | "pay_per_view">("paid");
-  const [plan, setPlan] = useState("");
-  const [statusActive, setStatusActive] = useState(true);
+  const [shortDescription, setShortDescription] = useState("");
+  const [planRequired, setPlanRequired] = useState<"free" | "basic" | "standard" | "premium">("free");
+  const [status, setStatus] = useState<"published" | "draft" | "processing" | "moderation" | "rejected">("draft");
 
-  /* ---- Basic Info state ---- */
-  const [language, setLanguage] = useState("");
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  /* ---- Basic Info ---- */
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [genreSearch, setGenreSearch] = useState("");
-  const [languageSearch, setLanguageSearch] = useState("");
-  const [countries, setCountries] = useState("");
+  const [selectedAudioLanguages, setSelectedAudioLanguages] = useState<string[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [year, setYear] = useState("");
+  const [rating, setRating] = useState("");
   const [imdbRating, setImdbRating] = useState("");
-  const [contentRating, setContentRating] = useState("");
   const [duration, setDuration] = useState("");
-  const [skipIntroStart, setSkipIntroStart] = useState("");
-  const [skipIntroEnd, setSkipIntroEnd] = useState("");
   const [releaseDate, setReleaseDate] = useState("");
-  const [ageRestricted, setAgeRestricted] = useState(false);
-  const [downloadStatus, setDownloadStatus] = useState(true);
-  const [selectedActors, setSelectedActors] = useState<string[]>([]);
-  const [actorSearch, setActorSearch] = useState("");
-  const [selectedDirectors, setSelectedDirectors] = useState<string[]>([]);
-  const [directorSearch, setDirectorSearch] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [country, setCountry] = useState("");
+  const [producer, setProducer] = useState("");
+  const [studio, setStudio] = useState("");
+  const [ageRating, setAgeRating] = useState("0");
+  const [downloadAllowed, setDownloadAllowed] = useState(true);
+  const [featured, setFeatured] = useState(false);
+  const [trending, setTrending] = useState(false);
+  const [isNewContent, setIsNewContent] = useState(true);
+  const [isExclusive, setIsExclusive] = useState(false);
+  const [maturityContent, setMaturityContent] = useState<string[]>([]);
+  const [maturityInput, setMaturityInput] = useState("");
+  const [castItems, setCastItems] = useState<CastItem[]>([]);
+  const [crewItems, setCrewItems] = useState<CrewItem[]>([]);
 
-  /* ---- Quality Info state ---- */
-  const [videoUploadType, setVideoUploadType] = useState("local");
+  /* ---- Quality Info ---- */
+  const [videoUploadType, setVideoUploadType] = useState("url");
   const [videoFilePath, setVideoFilePath] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-  const [qualityEnabled, setQualityEnabled] = useState(true);
+  const [qualityEnabled, setQualityEnabled] = useState(false);
   const [qualityRows, setQualityRows] = useState<QualityRow[]>([
-    { id: "1", type: "local", quality: "480p", filePath: "", url: "" },
+    { id: "1", type: "url", quality: "480p", filePath: "", url: "" },
   ]);
 
-  /* ---- Subtitle Info state ---- */
+  /* ---- Subtitle Info ---- */
+  const [selectedSubtitleLanguages, setSelectedSubtitleLanguages] = useState<string[]>([]);
   const [subtitleRows, setSubtitleRows] = useState<SubtitleRow[]>([]);
 
-  /* ---- SEO Settings state ---- */
-  const [seoEnabled, setSeoEnabled] = useState(true);
+  /* ---- SEO Settings ---- */
   const [seoImage, setSeoImage] = useState({ filePath: "", preview: "" });
+  const [slug, setSlug] = useState("");
   const [metaTitle, setMetaTitle] = useState("");
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [keywordInput, setKeywordInput] = useState("");
-  const [googleVerification, setGoogleVerification] = useState("");
-  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
 
-  /* ---- Clip Details state ---- */
-  const [clipRows, setClipRows] = useState<ClipRow[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  /* ---- Download Info state ---- */
-  const [downloadRows, setDownloadRows] = useState<DownloadRow[]>([]);
+  /* ---- Populate form on edit ---- */
+  useEffect(() => {
+    if (!isEdit || !movie) return;
+
+    setTitle(movie.title || "");
+    setOriginalTitle(movie.originalTitle || "");
+    setDescription(movie.description || "");
+    setShortDescription(movie.shortDescription || "");
+    setPlanRequired(movie.planRequired || "free");
+    setStatus(movie.status || "draft");
+
+    if (movie.thumbnail)
+      setThumbnail({ filePath: movie.thumbnail, preview: getImageUrl(movie.thumbnail) });
+    if (movie.posterImage)
+      setPoster({ filePath: movie.posterImage, preview: getImageUrl(movie.posterImage) });
+    if (movie.bannerImage)
+      setBanner({ filePath: movie.bannerImage, preview: getImageUrl(movie.bannerImage) });
+
+    if (movie.trailerUrl) {
+      if (movie.trailerUrl.startsWith("/uploads/") || movie.trailerUrl.startsWith("/images/")) {
+        setTrailerUrlType("local");
+        setTrailerFilePath(movie.trailerUrl);
+      } else {
+        setTrailerUrlType("url");
+        setTrailerUrl(movie.trailerUrl);
+      }
+    }
+
+    setYear(movie.year ? String(movie.year) : "");
+    setRating(movie.rating || "");
+    setImdbRating(movie.imdbRating != null ? String(movie.imdbRating) : "");
+    setDuration(movie.duration ? secsToDuration(movie.duration) : "");
+    setReleaseDate(
+      movie.releaseDate ? new Date(movie.releaseDate).toISOString().split("T")[0] : ""
+    );
+    setCountry(movie.country || "");
+    setProducer(movie.producer || "");
+    setStudio(movie.studio || "");
+    setAgeRating(movie.ageRating != null ? String(movie.ageRating) : "0");
+    setDownloadAllowed(movie.downloadAllowed !== false);
+    setFeatured(!!movie.featured);
+    setTrending(!!movie.trending);
+    setIsNewContent(movie.isNewContent !== false);
+    setIsExclusive(!!movie.isExclusive);
+    setMaturityContent(Array.isArray(movie.maturityContent) ? movie.maturityContent : []);
+
+    if (Array.isArray(movie.genres))
+      setSelectedGenres(movie.genres.map(getId).filter(Boolean));
+    if (Array.isArray(movie.categories))
+      setSelectedCategories(movie.categories.map(getId).filter(Boolean));
+    if (Array.isArray(movie.languages))
+      setSelectedLanguages(movie.languages.map(getId).filter(Boolean));
+    if (Array.isArray(movie.audioLanguages))
+      setSelectedAudioLanguages(movie.audioLanguages.map(getId).filter(Boolean));
+    if (Array.isArray(movie.subtitleLanguages))
+      setSelectedSubtitleLanguages(movie.subtitleLanguages.map(getId).filter(Boolean));
+
+    if (Array.isArray(movie.cast)) {
+      setCastItems(
+        movie.cast.map((c: any, i: number) => ({
+          id: String(i),
+          actorId: getId(c.actor),
+          character: c.character || "",
+          role: c.role || "Actor",
+        }))
+      );
+    }
+    if (Array.isArray(movie.crew)) {
+      setCrewItems(
+        movie.crew.map((c: any, i: number) => ({
+          id: String(i),
+          directorId: getId(c.director),
+          role: c.role || "Director",
+        }))
+      );
+    }
+
+    if (movie.hlsUrl) {
+      if (movie.hlsUrl.startsWith("/uploads/") || movie.hlsUrl.startsWith("/images/")) {
+        setVideoUploadType("local");
+        setVideoFilePath(movie.hlsUrl);
+      } else {
+        setVideoUploadType("url");
+        setVideoUrl(movie.hlsUrl);
+      }
+    }
+    if (Array.isArray(movie.videoQualities) && movie.videoQualities.length > 0) {
+      setQualityEnabled(true);
+      setQualityRows(
+        movie.videoQualities.map((q: any, i: number) => ({
+          id: String(i + 1),
+          type: "url",
+          quality: q.quality || "480p",
+          filePath: "",
+          url: q.url || "",
+        }))
+      );
+    }
+
+    setSlug(movie.slug || "");
+    setMetaTitle(movie.metaTitle || "");
+    setMetaDescription(movie.metaDescription || "");
+    setTags(Array.isArray(movie.tags) ? movie.tags : []);
+  }, [isEdit, movie]);
 
   /* ---- Helpers ---- */
   const addQualityRow = () =>
-    setQualityRows((p) => [...p, { id: Date.now().toString(), type: "local", quality: "480p", filePath: "", url: "" }]);
-  const removeQualityRow = (id: string) =>
-    setQualityRows((p) => p.filter((r) => r.id !== id));
-  const updateQualityRow = (id: string, key: keyof QualityRow, value: any) =>
-    setQualityRows((p) => p.map((r) => (r.id === id ? { ...r, [key]: value } : r)));
+    setQualityRows((p) => [...p, { id: Date.now().toString(), type: "url", quality: "480p", filePath: "", url: "" }]);
+  const removeQualityRow = (rowId: string) =>
+    setQualityRows((p) => p.filter((r) => r.id !== rowId));
+  const updateQualityRow = (rowId: string, key: keyof QualityRow, value: string) =>
+    setQualityRows((p) => p.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)));
 
   const addSubtitleRow = () =>
     setSubtitleRows((p) => [...p, { id: Date.now().toString(), language: "", filePath: "" }]);
-  const removeSubtitleRow = (id: string) =>
-    setSubtitleRows((p) => p.filter((r) => r.id !== id));
+  const removeSubtitleRow = (rowId: string) =>
+    setSubtitleRows((p) => p.filter((r) => r.id !== rowId));
 
-  const addClipRow = () =>
-    setClipRows((p) => [...p, { id: Date.now().toString(), name: "", type: "local", url: "", filePath: "" }]);
-  const removeClipRow = (id: string) =>
-    setClipRows((p) => p.filter((r) => r.id !== id));
+  const addCastItem = () =>
+    setCastItems((p) => [...p, { id: Date.now().toString(), actorId: "", character: "", role: "Actor" }]);
+  const removeCastItem = (itemId: string) =>
+    setCastItems((p) => p.filter((c) => c.id !== itemId));
+  const updateCastItem = (itemId: string, key: keyof CastItem, value: string) =>
+    setCastItems((p) => p.map((c) => (c.id === itemId ? { ...c, [key]: value } : c)));
 
-  const addDownloadRow = () =>
-    setDownloadRows((p) => [...p, { id: Date.now().toString(), type: "local", quality: "480p", filePath: "", url: "" }]);
-  const removeDownloadRow = (id: string) =>
-    setDownloadRows((p) => p.filter((r) => r.id !== id));
+  const addCrewItem = () =>
+    setCrewItems((p) => [...p, { id: Date.now().toString(), directorId: "", role: "Director" }]);
+  const removeCrewItem = (itemId: string) =>
+    setCrewItems((p) => p.filter((c) => c.id !== itemId));
+  const updateCrewItem = (itemId: string, key: keyof CrewItem, value: string) =>
+    setCrewItems((p) => p.map((c) => (c.id === itemId ? { ...c, [key]: value } : c)));
 
-  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if ((e.key === "Enter" || e.key === ",") && keywordInput.trim()) {
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
       e.preventDefault();
-      const kw = keywordInput.trim().replace(/,$/, "");
-      if (!keywords.includes(kw)) setKeywords((p) => [...p, kw]);
-      setKeywordInput("");
+      const kw = tagInput.trim().replace(/,$/, "");
+      if (!tags.includes(kw)) setTags((p) => [...p, kw]);
+      setTagInput("");
     }
   };
 
+  const handleMaturityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Enter" || e.key === ",") && maturityInput.trim()) {
+      e.preventDefault();
+      const val = maturityInput.trim().replace(/,$/, "");
+      if (!maturityContent.includes(val)) setMaturityContent((p) => [...p, val]);
+      setMaturityInput("");
+    }
+  };
+
+  /* ---- Save ---- */
   const handleSave = async () => {
-    if (uploadStatus === "uploading") return;
-    
+    if (!title.trim()) {
+      toast({ title: "Title is required", variant: "destructive" });
+      return;
+    }
     setIsSaving(true);
-    setUploadStatus("uploading");
-    setUploadProgress(0);
-
     try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + Math.random() * 10;
-        });
-      }, 500);
+      const effectiveTrailerUrl = trailerUrlType === "local" ? trailerFilePath : trailerUrl;
 
-      // Prepare movie data
-      const movieData = {
-        title: name,
-        description,
+      const payload: Record<string, any> = {
+        title: title.trim(),
+        originalTitle: originalTitle.trim(),
+        description: description.trim(),
+        shortDescription: shortDescription.trim(),
         thumbnail: thumbnail.filePath,
         posterImage: poster.filePath,
-        bannerImage: posterTv.filePath,
-        trailerUrl: trailerFilePath,
-        hlsUrl: videoUploadType === "hls" ? videoUrl : undefined,
-        videoQualities: videoUploadType === "local" ? qualityRows.map(q => ({
-          quality: q.quality as '144p' | '360p' | '480p' | '720p' | '1080p' | '4k',
-          url: q.type === "local" ? q.filePath : q.url,
-          size: 0
-        })) : undefined,
+        bannerImage: banner.filePath,
+        trailerUrl: effectiveTrailerUrl,
+        planRequired,
+        status,
         genres: selectedGenres,
+        categories: selectedCategories,
         languages: selectedLanguages,
-        subtitleLanguages: [],
-        audioLanguages: selectedLanguages,
-        releaseDate: releaseDate ? new Date(releaseDate) : undefined,
-        duration: duration ? parseInt(duration) : undefined,
-        ageRating: ageRestricted ? 18 : 0,
-        downloadAllowed: downloadStatus,
-        cast: selectedActors.map(actorId => ({ actor: actorId, role: "Actor" })),
-        crew: selectedDirectors.map(directorId => ({ director: directorId, role: "Director" })),
-        planRequired: access === "free" ? "free" : access === "pay_per_view" ? "premium" : "basic",
-        status: "draft" as const,
-        metaTitle,
-        metaDescription,
-        tags: keywords
+        subtitleLanguages: selectedSubtitleLanguages,
+        audioLanguages: selectedAudioLanguages.length > 0 ? selectedAudioLanguages : selectedLanguages,
+        year: year ? parseInt(year) : undefined,
+        rating: rating.trim(),
+        imdbRating: imdbRating ? parseFloat(imdbRating) : undefined,
+        duration: duration ? durationToSecs(duration) : undefined,
+        releaseDate: releaseDate ? new Date(releaseDate).toISOString() : undefined,
+        country: country.trim(),
+        producer: producer.trim(),
+        studio: studio.trim(),
+        ageRating: parseInt(ageRating) || 0,
+        downloadAllowed,
+        featured,
+        trending,
+        isNewContent,
+        isExclusive,
+        maturityContent,
+        tags,
+        cast: castItems
+          .filter((c) => c.actorId)
+          .map((c) => ({ actor: c.actorId, character: c.character, role: c.role })),
+        crew: crewItems
+          .filter((c) => c.directorId)
+          .map((c) => ({ director: c.directorId, role: c.role })),
+        hlsUrl: videoUploadType === "local" ? videoFilePath : videoUrl,
+        ...(qualityEnabled && {
+          videoQualities: qualityRows
+            .filter((q) => q.url || q.filePath)
+            .map((q) => ({
+              quality: q.quality as any,
+              url: q.type === "local" ? q.filePath : q.url,
+              size: 0,
+            })),
+        }),
+        slug: slug.trim(),
+        metaTitle: metaTitle.trim(),
+        metaDescription: metaDescription.trim(),
       };
 
-      // Call API to save movie data
       if (isEdit) {
-        await updateMovieMutation.mutateAsync({ id: params.id!, data: movieData });
+        await updateMovieMutation.mutateAsync({ id: id!, data: payload });
       } else {
-        await createMovieMutation.mutateAsync(movieData);
+        await createMovieMutation.mutateAsync(payload);
       }
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      setUploadStatus("success");
-      
+
       toast({ title: isEdit ? "Movie updated successfully!" : "Movie created successfully!" });
-      
-      // Redirect after success
-      setTimeout(() => {
-        setLocation("/movies");
-      }, 1500);
-    } catch (error) {
-      setUploadStatus("error");
-      setUploadProgress(0);
-      toast({ title: "Upload failed. Please try again.", variant: "destructive" });
+      setLocation("/movies");
+    } catch (error: any) {
+      toast({
+        title: error?.message || "Failed to save movie. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
-  /* ---- Shared section heading ---- */
-  const SectionHeading = ({ title }: { title: string }) => (
-    <p className="text-base font-semibold text-foreground">{title}</p>
+  /* ---- Reusable ---- */
+  const SectionHeading = ({ title: t }: { title: string }) => (
+    <p className="text-base font-semibold text-foreground">{t}</p>
   );
 
-  /* ---- Empty state placeholder ---- */
   const EmptyState = ({ message }: { message: string }) => (
     <div className="rounded-xl border-2 border-dashed border-border bg-muted/10 py-16 flex flex-col items-center gap-3">
       <UploadIcon className="h-9 w-9 text-zinc-600" />
       <p className="text-sm text-muted-foreground">{message}</p>
+    </div>
+  );
+
+  const MultiSelect = ({
+    label, required = false, items, selected, onAdd, onRemove, placeholder,
+  }: {
+    label: string; required?: boolean;
+    items: any[]; selected: string[];
+    onAdd: (id: string) => void; onRemove: (id: string) => void;
+    placeholder?: string;
+  }) => (
+    <div className="space-y-1.5">
+      <Label className="text-foreground text-sm font-medium">
+        {label} {required && <span className="text-primary">*</span>}
+      </Label>
+      <div className="space-y-2">
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {selected.map((itemId) => {
+              const item = items.find((i: any) => getId(i) === itemId);
+              return (
+                <div key={itemId} className="flex items-center gap-1 bg-muted border border-border rounded-lg px-2.5 py-1 text-xs">
+                  <span className="text-foreground">{item?.name || itemId}</span>
+                  <button type="button" onClick={() => onRemove(itemId)} className="text-muted-foreground hover:text-primary">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <Select value="" onValueChange={(v) => { if (v && !selected.includes(v)) onAdd(v); }}>
+          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+            <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+            {items
+              .filter((i: any) => !selected.includes(getId(i)))
+              .map((item: any) => (
+                <SelectItem key={getId(item)} value={getId(item)}>
+                  {item.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 
@@ -311,7 +475,7 @@ export default function MovieForm() {
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${
               activeTab === tab
-                ? "bg-red-600 text-white shadow-sm"
+                ? "bg-primary text-white shadow-sm"
                 : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
@@ -320,7 +484,7 @@ export default function MovieForm() {
         ))}
       </div>
 
-      {/* Tab Content Card */}
+      {/* Tab Content */}
       <div className="rounded-xl border border-border bg-card">
 
         {/* =========== MOVIE DETAILS =========== */}
@@ -328,53 +492,50 @@ export default function MovieForm() {
           <div className="p-6 space-y-6">
             <SectionHeading title="About Movie" />
 
-            {/* Image Upload Row */}
+            {/* Images */}
             <div className="rounded-xl border border-border bg-muted/10 p-5">
               <div className="flex gap-5">
-                <ImageBox
-                  label="Thumbnail"
-                  preview={thumbnail.preview}
-                  onOpen={() => setThumbnailPickerOpen(true)}
-                />
-                <ImageBox
-                  label="Poster"
-                  preview={poster.preview}
-                  onOpen={() => setPosterPickerOpen(true)}
-                />
-                <ImageBox
-                  label="Poster Tv Image"
-                  preview={posterTv.preview}
-                  onOpen={() => setPosterTvPickerOpen(true)}
-                />
+                <ImageBox label="Thumbnail" preview={thumbnail.preview} onOpen={() => setThumbnailPickerOpen(true)} />
+                <ImageBox label="Poster Image" preview={poster.preview} onOpen={() => setPosterPickerOpen(true)} />
+                <ImageBox label="Banner Image" preview={banner.preview} onOpen={() => setBannerPickerOpen(true)} />
               </div>
             </div>
 
-            {/* Name + Trailer URL Type + Trailer File/URL */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Title + Original Title */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-sm font-medium">
-                  Name <span className="text-red-500">*</span>
+                  Title <span className="text-primary">*</span>
                 </Label>
                 <Input
                   placeholder="e.g. Avengers: Endgame"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-foreground text-sm font-medium">
-                  Trailer URL Type <span className="text-red-500">*</span>
-                </Label>
+                <Label className="text-foreground text-sm font-medium">Original Title</Label>
+                <Input
+                  placeholder="Original language title (optional)"
+                  value={originalTitle}
+                  onChange={(e) => setOriginalTitle(e.target.value)}
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Trailer */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <Label className="text-foreground text-sm font-medium">Trailer URL Type</Label>
                 <Select value={trailerUrlType} onValueChange={setTrailerUrlType}>
                   <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border text-foreground">
-                    <SelectItem value="local">Local</SelectItem>
                     <SelectItem value="url">External URL</SelectItem>
-                    <SelectItem value="youtube">YouTube</SelectItem>
-                    <SelectItem value="vimeo">Vimeo</SelectItem>
+                    <SelectItem value="local">Local (Media Library)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -384,22 +545,20 @@ export default function MovieForm() {
                     <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
                     <div
                       onClick={() => setTrailerPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
                     >
                       {trailerFilePath ? (
                         <span className="text-sm text-foreground truncate px-3">{trailerFilePath}</span>
                       ) : (
-                        <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
                     </div>
                   </>
                 ) : (
                   <>
-                    <Label className="text-foreground text-sm font-medium">
-                      Trailer URL <span className="text-red-500">*</span>
-                    </Label>
+                    <Label className="text-foreground text-sm font-medium">Trailer URL</Label>
                     <Input
-                      placeholder="e.g. https://cdn.example.com/trailer.m3u8"
+                      placeholder="https://..."
                       value={trailerUrl}
                       onChange={(e) => setTrailerUrl(e.target.value)}
                       className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
@@ -413,50 +572,43 @@ export default function MovieForm() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label className="text-foreground text-sm font-medium">
-                  Description <span className="text-red-500">*</span>
+                  Description <span className="text-primary">*</span>
                 </Label>
-                <button className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1.5 transition-colors">
+                <button className="text-xs text-primary hover:text-red-300 flex items-center gap-1.5 transition-colors">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Generate Description with AI
+                  Generate with AI
                 </button>
               </div>
               <Textarea
-                placeholder="Enter movie description..."
+                placeholder="Full movie description..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={6}
+                rows={5}
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
               />
             </div>
 
-            {/* Access + Plan + Status */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-sm font-medium">Access</Label>
-                <div className="flex gap-2 flex-wrap pt-0.5">
-                  {(["paid", "free", "pay_per_view"] as const).map((a) => (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => setAccess(a)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                        access === a
-                          ? "bg-red-600 border-red-600 text-white"
-                          : "bg-muted border-border text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {a === "pay_per_view" ? "Pay Per View" : a.charAt(0).toUpperCase() + a.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* Short Description */}
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-sm font-medium">Short Description</Label>
+              <Textarea
+                placeholder="Brief summary shown in listings..."
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                rows={2}
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
+              />
+            </div>
+
+            {/* Plan + Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
                 <Label className="text-foreground text-sm font-medium">
-                  Plan <span className="text-red-500">*</span>
+                  Plan Required <span className="text-primary">*</span>
                 </Label>
-                <Select value={plan} onValueChange={setPlan}>
+                <Select value={planRequired} onValueChange={(v) => setPlanRequired(v as any)}>
                   <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                    <SelectValue placeholder="Select Plan" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="free">Free</SelectItem>
@@ -468,16 +620,18 @@ export default function MovieForm() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-foreground text-sm font-medium">Status</Label>
-                <div className="flex items-center gap-3 h-10">
-                  <span className="text-sm text-foreground">
-                    {statusActive ? "Active" : "Inactive"}
-                  </span>
-                  <Switch
-                    checked={statusActive}
-                    onCheckedChange={setStatusActive}
-                    className="data-[state=checked]:bg-red-600"
-                  />
-                </div>
+                <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border text-foreground">
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="moderation">Moderation</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -486,111 +640,58 @@ export default function MovieForm() {
         {/* =========== BASIC INFO =========== */}
         {activeTab === "Basic Info" && (
           <div className="p-6 space-y-6">
-            <SectionHeading title="Basic Info" />
+            <SectionHeading title="Media Info" />
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <MultiSelect
+                  label="Languages"
+                  required
+                  items={languagesList}
+                  selected={selectedLanguages}
+                  onAdd={(v) => setSelectedLanguages((p) => [...p, v])}
+                  onRemove={(v) => setSelectedLanguages((p) => p.filter((x) => x !== v))}
+                />
+                <MultiSelect
+                  label="Audio Languages"
+                  items={languagesList}
+                  selected={selectedAudioLanguages}
+                  onAdd={(v) => setSelectedAudioLanguages((p) => [...p, v])}
+                  onRemove={(v) => setSelectedAudioLanguages((p) => p.filter((x) => x !== v))}
+                />
+                <MultiSelect
+                  label="Genres"
+                  required
+                  items={genresList}
+                  selected={selectedGenres}
+                  onAdd={(v) => setSelectedGenres((p) => [...p, v])}
+                  onRemove={(v) => setSelectedGenres((p) => p.filter((x) => x !== v))}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <MultiSelect
+                  label="Categories"
+                  items={categoriesList}
+                  selected={selectedCategories}
+                  onAdd={(v) => setSelectedCategories((p) => [...p, v])}
+                  onRemove={(v) => setSelectedCategories((p) => p.filter((x) => x !== v))}
+                />
                 <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Languages <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedLanguages.map((langId) => {
-                        const lang = languagesList.find((l: any) => l.id === langId || l._id === langId);
-                        return (
-                          <div
-                            key={langId}
-                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
-                          >
-                            <span className="text-foreground">{lang?.name || langId}</span>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedLanguages((prev) => prev.filter((id) => id !== langId))}
-                              className="text-muted-foreground hover:text-red-400 transition-colors"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (value && !selectedLanguages.includes(value)) {
-                          setSelectedLanguages((prev) => [...prev, value]);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                        <SelectValue placeholder="Select languages..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
-                        {languagesList
-                          .filter((l: any) => !selectedLanguages.includes(l.id) && !selectedLanguages.includes(l._id))
-                          .map((lang: any) => (
-                            <SelectItem key={lang.id || lang._id} value={lang.id || lang._id}>
-                              {lang.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Genres <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedGenres.map((genreId) => {
-                        const genre = genresList.find((g: any) => g.id === genreId || g._id === genreId);
-                        return (
-                          <div
-                            key={genreId}
-                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
-                          >
-                            <span className="text-foreground">{genre?.name || genreId}</span>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedGenres((prev) => prev.filter((id) => id !== genreId))}
-                              className="text-muted-foreground hover:text-red-400 transition-colors"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (value && !selectedGenres.includes(value)) {
-                          setSelectedGenres((prev) => [...prev, value]);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                        <SelectValue placeholder="Select genres..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
-                        {genresList
-                          .filter((g: any) => !selectedGenres.includes(g.id) && !selectedGenres.includes(g._id))
-                          .map((genre: any) => (
-                            <SelectItem key={genre.id || genre._id} value={genre.id || genre._id}>
-                              {genre.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Countries</Label>
+                  <Label className="text-foreground text-sm font-medium">Country</Label>
                   <Input
-                    placeholder="USA, India, UK..."
-                    value={countries}
-                    onChange={(e) => setCountries(e.target.value)}
+                    placeholder="e.g. United States"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">Year</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 2024"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
                     className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
@@ -600,26 +701,42 @@ export default function MovieForm() {
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">IMDb Rating</Label>
                   <Input
-                    placeholder="IMDb Rating"
+                    type="number"
+                    placeholder="0.0 – 10.0"
+                    min="0"
+                    max="10"
+                    step="0.1"
                     value={imdbRating}
                     onChange={(e) => setImdbRating(e.target.value)}
                     className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Content Rating <span className="text-red-500">*</span>
-                  </Label>
+                  <Label className="text-foreground text-sm font-medium">Content Rating</Label>
                   <Input
-                    placeholder="e.g. Everyone. Content is generally suitable for all ages"
-                    value={contentRating}
-                    onChange={(e) => setContentRating(e.target.value)}
+                    placeholder="e.g. PG-13, U/A, R"
+                    value={rating}
+                    onChange={(e) => setRating(e.target.value)}
                     className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">Age Rating</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 0, 13, 18"
+                    min="0"
+                    value={ageRating}
+                    onChange={(e) => setAgeRating(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">
-                    Duration <span className="text-red-500">*</span>
+                    Duration <span className="text-primary">*</span>
                   </Label>
                   <Input
                     type="time"
@@ -628,33 +745,11 @@ export default function MovieForm() {
                     onChange={(e) => setDuration(e.target.value)}
                     className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Skip Intro Start Time</Label>
-                  <Input
-                    type="time"
-                    step="1"
-                    value={skipIntroStart}
-                    onChange={(e) => setSkipIntroStart(e.target.value)}
-                    className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Skip Intro End Time</Label>
-                  <Input
-                    type="time"
-                    step="1"
-                    value={skipIntroEnd}
-                    onChange={(e) => setSkipIntroEnd(e.target.value)}
-                    className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
-                  />
+                  <p className="text-xs text-muted-foreground">Format: HH:MM:SS</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">
-                    Release Date <span className="text-red-500">*</span>
+                    Release Date <span className="text-primary">*</span>
                   </Label>
                   <Input
                     type="date"
@@ -663,136 +758,190 @@ export default function MovieForm() {
                     className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">Producer</Label>
+                  <Input
+                    placeholder="Producer name"
+                    value={producer}
+                    onChange={(e) => setProducer(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Age Restricted</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Restricted Content</p>
-                  </div>
-                  <Switch
-                    checked={ageRestricted}
-                    onCheckedChange={setAgeRestricted}
-                    className="data-[state=checked]:bg-red-600"
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">Studio</Label>
+                  <Input
+                    placeholder="Production studio"
+                    value={studio}
+                    onChange={(e) => setStudio(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Download Status</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{downloadStatus ? "On" : "Off"}</p>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">Maturity Content</Label>
+                  <div
+                    className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
+                    onClick={() => document.getElementById("maturity-input")?.focus()}
+                  >
+                    {maturityContent.map((val) => (
+                      <span key={val} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-yellow-600/20 text-yellow-300 text-xs font-medium">
+                        {val}
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setMaturityContent((p) => p.filter((v) => v !== val)); }}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      id="maturity-input"
+                      value={maturityInput}
+                      onChange={(e) => setMaturityInput(e.target.value)}
+                      onKeyDown={handleMaturityKeyDown}
+                      placeholder={maturityContent.length === 0 ? "e.g. Violence, Language" : ""}
+                      className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
+                    />
                   </div>
-                  <Switch
-                    checked={downloadStatus}
-                    onCheckedChange={setDownloadStatus}
-                    className="data-[state=checked]:bg-red-600"
-                  />
                 </div>
+              </div>
+
+              {/* Content flags */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: "Featured", value: featured, setter: setFeatured },
+                  { label: "Trending", value: trending, setter: setTrending },
+                  { label: "New Content", value: isNewContent, setter: setIsNewContent },
+                  { label: "Exclusive", value: isExclusive, setter: setIsExclusive },
+                ].map(({ label, value, setter }) => (
+                  <div key={label} className="flex items-center justify-between p-3 rounded-xl border border-border bg-card">
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <Switch checked={value} onCheckedChange={setter} className="data-[state=checked]:bg-primary" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Download Allowed</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Allow users to download this content</p>
+                </div>
+                <Switch checked={downloadAllowed} onCheckedChange={setDownloadAllowed} className="data-[state=checked]:bg-primary" />
               </div>
             </div>
 
-            {/* Actors & Directors */}
-            <SectionHeading title="Actors & Directors" />
-            <div className="rounded-xl border border-border bg-muted/10 p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Actors <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedActors.map((actorId) => {
-                        const actor = actorsList.find((a: any) => a.id === actorId || a._id === actorId);
-                        return (
-                          <div
-                            key={actorId}
-                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
-                          >
-                            <span className="text-foreground">{actor?.name || actorId}</span>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedActors((prev) => prev.filter((id) => id !== actorId))}
-                              className="text-muted-foreground hover:text-red-400 transition-colors"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <Select
-                      value={actorSearch}
-                      onValueChange={(value) => {
-                        if (value && !selectedActors.includes(value)) {
-                          setSelectedActors((prev) => [...prev, value]);
-                        }
-                        setActorSearch("");
-                      }}
-                    >
-                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                        <SelectValue placeholder="Select actors..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
-                        {actorsList
-                          .filter((a: any) => !selectedActors.includes(a.id) && !selectedActors.includes(a._id))
-                          .map((actor: any) => (
-                            <SelectItem key={actor.id || actor._id} value={actor.id || actor._id}>
-                              {actor.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {/* Cast & Crew */}
+            <SectionHeading title="Cast & Crew" />
+            <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
+
+              {/* Cast */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-foreground">Cast (Actors)</p>
+                  <Button type="button" onClick={addCastItem}
+                    className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
+                    <Plus className="h-3.5 w-3.5" /> Add Actor
+                  </Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Directors <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDirectors.map((dirId) => {
-                        const director = directorsList.find((d: any) => d.id === dirId || d._id === dirId);
-                        return (
-                          <div
-                            key={dirId}
-                            className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-3 py-1.5 text-sm"
-                          >
-                            <span className="text-foreground">{director?.name || dirId}</span>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedDirectors((prev) => prev.filter((id) => id !== dirId))}
-                              className="text-muted-foreground hover:text-red-400 transition-colors"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
+                {castItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No cast added yet.</p>
+                ) : (
+                  castItems.map((item) => (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end p-3 rounded-xl border border-border bg-card">
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Actor</Label>
+                        <Select value={item.actorId} onValueChange={(v) => updateCastItem(item.id, "actorId", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue placeholder="Select actor..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                            {actorsList.map((a: any) => (
+                              <SelectItem key={getId(a)} value={getId(a)}>{a.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Character</Label>
+                        <Input
+                          placeholder="Character name"
+                          value={item.character}
+                          onChange={(e) => updateCastItem(item.id, "character", e.target.value)}
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 rounded-lg text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Role</Label>
+                        <Select value={item.role} onValueChange={(v) => updateCastItem(item.id, "role", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border text-foreground">
+                            <SelectItem value="Actor">Actor</SelectItem>
+                            <SelectItem value="Lead">Lead</SelectItem>
+                            <SelectItem value="Supporting">Supporting</SelectItem>
+                            <SelectItem value="Cameo">Cameo</SelectItem>
+                            <SelectItem value="Voice">Voice</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <button type="button" onClick={() => removeCastItem(item.id)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                    <Select
-                      value={directorSearch}
-                      onValueChange={(value) => {
-                        if (value && !selectedDirectors.includes(value)) {
-                          setSelectedDirectors((prev) => [...prev, value]);
-                        }
-                        setDirectorSearch("");
-                      }}
-                    >
-                      <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                        <SelectValue placeholder="Select directors..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border text-foreground max-h-60">
-                        {directorsList
-                          .filter((d: any) => !selectedDirectors.includes(d.id) && !selectedDirectors.includes(d._id))
-                          .map((director: any) => (
-                            <SelectItem key={director.id || director._id} value={director.id || director._id}>
-                              {director.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  ))
+                )}
+              </div>
+
+              {/* Crew */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-foreground">Crew (Directors)</p>
+                  <Button type="button" onClick={addCrewItem}
+                    className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
+                    <Plus className="h-3.5 w-3.5" /> Add Director
+                  </Button>
                 </div>
+                {crewItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No crew added yet.</p>
+                ) : (
+                  crewItems.map((item) => (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 rounded-xl border border-border bg-card">
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Director</Label>
+                        <Select value={item.directorId} onValueChange={(v) => updateCrewItem(item.id, "directorId", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue placeholder="Select director..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                            {directorsList.map((d: any) => (
+                              <SelectItem key={getId(d)} value={getId(d)}>{d.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Role</Label>
+                        <Select value={item.role} onValueChange={(v) => updateCrewItem(item.id, "role", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border text-foreground">
+                            <SelectItem value="Director">Director</SelectItem>
+                            <SelectItem value="Co-Director">Co-Director</SelectItem>
+                            <SelectItem value="Executive Producer">Executive Producer</SelectItem>
+                            <SelectItem value="Cinematographer">Cinematographer</SelectItem>
+                            <SelectItem value="Editor">Editor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <button type="button" onClick={() => removeCrewItem(item.id)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -801,43 +950,37 @@ export default function MovieForm() {
         {/* =========== QUALITY INFO =========== */}
         {activeTab === "Quality Info" && (
           <div className="p-6 space-y-6">
-            {/* Video Info */}
-            <SectionHeading title="Video Info" />
+            <SectionHeading title="Video Source" />
             <div className="rounded-xl border border-border bg-muted/10 p-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Video Upload Type <span className="text-red-500">*</span>
-                  </Label>
+                  <Label className="text-foreground text-sm font-medium">Video Upload Type</Label>
                   <Select value={videoUploadType} onValueChange={setVideoUploadType}>
                     <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border text-foreground">
-                      <SelectItem value="local">Local</SelectItem>
                       <SelectItem value="url">External URL</SelectItem>
-                      <SelectItem value="hls">HLS URL</SelectItem>
+                      <SelectItem value="local">Local (Media Library)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">
-                    Video File <span className="text-red-500">*</span>
-                  </Label>
+                  <Label className="text-foreground text-sm font-medium">Video</Label>
                   {videoUploadType === "local" ? (
                     <div
                       onClick={() => setVideoPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
                     >
                       {videoFilePath ? (
                         <span className="text-sm text-foreground truncate px-3">{videoFilePath}</span>
                       ) : (
-                        <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
                     </div>
                   ) : (
                     <Input
-                      placeholder="Enter video URL..."
+                      placeholder={videoUploadType === "hls" ? "https://cdn.example.com/video.m3u8" : "https://..."}
                       value={videoUrl}
                       onChange={(e) => setVideoUrl(e.target.value)}
                       className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
@@ -847,41 +990,39 @@ export default function MovieForm() {
               </div>
             </div>
 
-            {/* Quality rows */}
-            <SectionHeading title="Quality Info" />
+            <SectionHeading title="Quality Variants" />
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-foreground">Turn on switch to upload quality wise video</p>
-                <Switch
-                  checked={qualityEnabled}
-                  onCheckedChange={setQualityEnabled}
-                  className="data-[state=checked]:bg-red-600"
-                />
+                <p className="text-sm text-foreground">Enable quality-specific video files</p>
+                <Switch checked={qualityEnabled} onCheckedChange={setQualityEnabled} className="data-[state=checked]:bg-primary" />
               </div>
 
               {qualityEnabled && (
-                <div className="space-y-4 pt-1">
+                <div className="space-y-4">
                   {qualityRows.map((row) => (
                     <div key={row.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                       <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Video Upload Type</Label>
+                        <Label className="text-foreground text-sm font-medium">Upload Type</Label>
                         <Select value={row.type} onValueChange={(v) => updateQualityRow(row.id, "type", v)}>
                           <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border-border text-foreground">
-                            <SelectItem value="local">Local</SelectItem>
                             <SelectItem value="url">External URL</SelectItem>
+                            <SelectItem value="local">Local</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Video Quality</Label>
+                        <Label className="text-foreground text-sm font-medium">Quality</Label>
                         <Select value={row.quality} onValueChange={(v) => updateQualityRow(row.id, "quality", v)}>
                           <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border-border text-foreground">
+                            <SelectItem value="144p">144p</SelectItem>
+                            <SelectItem value="240p">240p</SelectItem>
+                            <SelectItem value="360p">360p</SelectItem>
                             <SelectItem value="480p">480p</SelectItem>
                             <SelectItem value="720p">720p</SelectItem>
                             <SelectItem value="1080p">1080p</SelectItem>
@@ -891,51 +1032,40 @@ export default function MovieForm() {
                       </div>
                       <div className="flex gap-2 items-end">
                         <div className="flex-1 space-y-1.5">
-                          <Label className="text-foreground text-sm font-medium">Video File</Label>
+                          <Label className="text-foreground text-sm font-medium">Video File / URL</Label>
                           {row.type === "local" ? (
                             <div
-                              onClick={() => {
-                                setCurrentQualityRowId(row.id);
-                                setQualityPickerOpen(true);
-                              }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                              onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
                             >
                               {row.filePath ? (
                                 <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
                               ) : (
-                                <span className="text-sm text-muted-foreground">Click to select video from media library</span>
+                                <span className="text-sm text-muted-foreground">Click to select</span>
                               )}
                             </div>
                           ) : (
                             <Input
-                              placeholder="Enter video URL..."
-                              value={row.url || ""}
+                              placeholder="https://..."
+                              value={row.url}
                               onChange={(e) => updateQualityRow(row.id, "url", e.target.value)}
                               className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                             />
                           )}
                         </div>
                         {qualityRows.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeQualityRow(row.id)}
-                            className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 shrink-0"
-                          >
+                          <button type="button" onClick={() => removeQualityRow(row.id)}
+                            className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 shrink-0">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         )}
                       </div>
                     </div>
                   ))}
-
-                  <div className="flex justify-end pt-1">
-                    <Button
-                      type="button"
-                      onClick={addQualityRow}
-                      className="bg-red-600 hover:bg-red-700 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add More
+                  <div className="flex justify-end">
+                    <Button type="button" onClick={addQualityRow}
+                      className="bg-primary hover:bg-primary/90 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold">
+                      <Plus className="h-4 w-4" /> Add Quality
                     </Button>
                   </div>
                 </div>
@@ -946,21 +1076,29 @@ export default function MovieForm() {
 
         {/* =========== SUBTITLE INFO =========== */}
         {activeTab === "Subtitle Info" && (
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-6">
+            <SectionHeading title="Subtitle Languages" />
+            <div className="rounded-xl border border-border bg-muted/10 p-5">
+              <MultiSelect
+                label="Subtitle Languages"
+                items={languagesList}
+                selected={selectedSubtitleLanguages}
+                onAdd={(v) => setSelectedSubtitleLanguages((p) => [...p, v])}
+                onRemove={(v) => setSelectedSubtitleLanguages((p) => p.filter((x) => x !== v))}
+                placeholder="Select subtitle languages..."
+              />
+            </div>
+
             <div className="flex items-center justify-between">
-              <SectionHeading title="Subtitle Info" />
-              <Button
-                type="button"
-                onClick={addSubtitleRow}
-                className="bg-red-600 hover:bg-red-700 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold"
-              >
-                <Plus className="h-4 w-4" />
-                Add Subtitle
+              <SectionHeading title="Subtitle Files" />
+              <Button type="button" onClick={addSubtitleRow}
+                className="bg-primary hover:bg-primary/90 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold">
+                <Plus className="h-4 w-4" /> Add Subtitle
               </Button>
             </div>
 
             {subtitleRows.length === 0 ? (
-              <EmptyState message='No subtitles added yet. Click "Add Subtitle" to get started.' />
+              <EmptyState message='No subtitle files added. Click "Add Subtitle" to upload .srt or .vtt files.' />
             ) : (
               <div className="space-y-3">
                 {subtitleRows.map((row) => (
@@ -969,18 +1107,15 @@ export default function MovieForm() {
                       <Label className="text-foreground text-sm font-medium">Language</Label>
                       <Select
                         value={row.language}
-                        onValueChange={(v) =>
-                          setSubtitleRows((p) => p.map((r) => r.id === row.id ? { ...r, language: v } : r))
-                        }
+                        onValueChange={(v) => setSubtitleRows((p) => p.map((r) => r.id === row.id ? { ...r, language: v } : r))}
                       >
                         <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                           <SelectValue placeholder="Select Language" />
                         </SelectTrigger>
-                        <SelectContent className="bg-popover border-border text-foreground">
-                          <SelectItem value="english">English</SelectItem>
-                          <SelectItem value="hindi">Hindi</SelectItem>
-                          <SelectItem value="tamil">Tamil</SelectItem>
-                          <SelectItem value="telugu">Telugu</SelectItem>
+                        <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                          {languagesList.map((lang: any) => (
+                            <SelectItem key={getId(lang)} value={getId(lang)}>{lang.name}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -988,24 +1123,18 @@ export default function MovieForm() {
                       <div className="flex-1 space-y-1.5">
                         <Label className="text-foreground text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
                         <div
-                          onClick={() => {
-                            setCurrentSubtitleRowId(row.id);
-                            setSubtitlePickerOpen(true);
-                          }}
-                          className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
+                          onClick={() => { setCurrentSubtitleRowId(row.id); setSubtitlePickerOpen(true); }}
+                          className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
                         >
                           {row.filePath ? (
                             <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
                           ) : (
-                            <span className="text-sm text-muted-foreground">Click to select subtitle from media library</span>
+                            <span className="text-sm text-muted-foreground">Click to select subtitle file</span>
                           )}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeSubtitleRow(row.id)}
-                        className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 shrink-0"
-                      >
+                      <button type="button" onClick={() => removeSubtitleRow(row.id)}
+                        className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 shrink-0">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -1021,463 +1150,131 @@ export default function MovieForm() {
           <div className="p-6 space-y-5">
             <SectionHeading title="SEO Settings" />
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
-              {/* Enable toggle */}
-              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                <p className="text-sm font-medium text-foreground">Enable SEO Setting</p>
-                <Switch
-                  checked={seoEnabled}
-                  onCheckedChange={setSeoEnabled}
-                  className="data-[state=checked]:bg-red-600"
-                />
-              </div>
-
-              {seoEnabled && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {/* SEO Image */}
-                    <div className="space-y-1.5">
-                      <Label className="text-foreground text-sm font-medium">
-                        SEO Image <span className="text-red-500">*</span>
-                      </Label>
-                      <div
-                        onClick={() => setSeoImagePickerOpen(true)}
-                        className="border-2 border-dashed border-border rounded-xl h-40 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-card transition-colors overflow-hidden"
-                      >
-                        {seoImage.preview ? (
-                          <img src={seoImage.preview} alt="SEO" className="h-full w-full object-contain" />
-                        ) : (
-                          <ImageIcon className="h-10 w-10 text-zinc-700" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Meta Title + Meta Keywords */}
-                    <div className="md:col-span-2 space-y-5">
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-center">
-                          <Label className="text-foreground text-sm font-medium">
-                            Meta Title <span className="text-red-500">*</span>
-                          </Label>
-                          <span className="text-xs text-muted-foreground">{metaTitle.length}/100</span>
-                        </div>
-                        <Input
-                          placeholder="Enter Meta Title"
-                          value={metaTitle}
-                          onChange={(e) => setMetaTitle(e.target.value.slice(0, 100))}
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">
-                          Meta Keywords <span className="text-red-500">*</span>
-                        </Label>
-                        <div
-                          className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
-                          onClick={() => document.getElementById("kw-input")?.focus()}
-                        >
-                          {keywords.map((kw) => (
-                            <span
-                              key={kw}
-                              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600/20 text-red-300 text-xs font-medium"
-                            >
-                              {kw}
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setKeywords((p) => p.filter((k) => k !== kw)); }}
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </span>
-                          ))}
-                          <input
-                            id="kw-input"
-                            value={keywordInput}
-                            onChange={(e) => setKeywordInput(e.target.value)}
-                            onKeyDown={handleKeywordKeyDown}
-                            placeholder={keywords.length === 0 ? "Type and press enter" : ""}
-                            className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
-                          />
-                        </div>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* SEO Image */}
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">SEO Image</Label>
+                  <div
+                    onClick={() => setSeoImagePickerOpen(true)}
+                    className="border-2 border-dashed border-border rounded-xl h-40 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-card transition-colors overflow-hidden"
+                  >
+                    {seoImage.preview ? (
+                      <img src={seoImage.preview} alt="SEO" className="h-full w-full object-contain" />
+                    ) : (
+                      <ImageIcon className="h-10 w-10 text-zinc-700" />
+                    )}
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
-                      <Label className="text-foreground text-sm font-medium">
-                        Google Site Verification <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        placeholder="Enter Google site verification"
-                        value={googleVerification}
-                        onChange={(e) => setGoogleVerification(e.target.value)}
-                        className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-foreground text-sm font-medium">
-                        Global Canonical URL <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        placeholder="Enter Global Canonical url"
-                        value={canonicalUrl}
-                        onChange={(e) => setCanonicalUrl(e.target.value)}
-                        className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
-
+                <div className="md:col-span-2 space-y-5">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-foreground text-sm font-medium">
-                        Site Meta Description <span className="text-red-500">*</span>
-                      </Label>
-                      <span className="text-xs text-muted-foreground">{metaDescription.length}/200</span>
-                    </div>
-                    <Textarea
-                      placeholder="Enter Meta Description"
-                      value={metaDescription}
-                      onChange={(e) => setMetaDescription(e.target.value.slice(0, 200))}
-                      rows={4}
-                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
+                    <Label className="text-foreground text-sm font-medium">URL Slug</Label>
+                    <Input
+                      placeholder="e.g. avengers-endgame"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                     />
                   </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* =========== CLIP DETAILS =========== */}
-        {activeTab === "Clip Details" && (
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <SectionHeading title="Clip Details" />
-              <Button
-                type="button"
-                onClick={addClipRow}
-                className="bg-red-600 hover:bg-red-700 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold"
-              >
-                <Plus className="h-4 w-4" />
-                Add Clip
-              </Button>
-            </div>
-
-            {clipRows.length === 0 ? (
-              <EmptyState message='No clips added yet. Click "Add Clip" to get started.' />
-            ) : (
-              <div className="space-y-3">
-                {clipRows.map((row) => (
-                  <div key={row.id} className="rounded-xl border border-border bg-muted/10 p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Clip Name</Label>
-                        <Input
-                          placeholder="Enter clip name"
-                          value={row.name}
-                          onChange={(e) =>
-                            setClipRows((p) => p.map((r) => r.id === row.id ? { ...r, name: e.target.value } : r))
-                          }
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Upload Type</Label>
-                        <Select
-                          value={row.type}
-                          onValueChange={(v) =>
-                            setClipRows((p) => p.map((r) => r.id === row.id ? { ...r, type: v } : r))
-                          }
-                        >
-                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-foreground">
-                            <SelectItem value="local">Local</SelectItem>
-                            <SelectItem value="url">External URL</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1 space-y-1.5">
-                          <Label className="text-foreground text-sm font-medium">
-                            {row.type === "local" ? "Clip File" : "Clip URL"}
-                          </Label>
-                          {row.type === "local" ? (
-                            <div
-                              onClick={() => {
-                                setCurrentClipRowId(row.id);
-                                setClipPickerOpen(true);
-                              }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
-                            >
-                              {row.filePath ? (
-                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">Click to select video from media library</span>
-                              )}
-                            </div>
-                          ) : (
-                            <Input
-                              placeholder="https://..."
-                              value={row.url}
-                              onChange={(e) =>
-                                setClipRows((p) => p.map((r) => r.id === row.id ? { ...r, url: e.target.value } : r))
-                              }
-                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                            />
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeClipRow(row.id)}
-                          className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 shrink-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-foreground text-sm font-medium">Meta Title</Label>
+                      <span className="text-xs text-muted-foreground">{metaTitle.length}/100</span>
                     </div>
+                    <Input
+                      placeholder="Enter meta title"
+                      value={metaTitle}
+                      onChange={(e) => setMetaTitle(e.target.value.slice(0, 100))}
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+                    />
                   </div>
-                ))}
+                </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* =========== DOWNLOAD INFO =========== */}
-        {activeTab === "Download Info" && (
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <SectionHeading title="Download Info" />
-              <Button
-                type="button"
-                onClick={addDownloadRow}
-                className="bg-red-600 hover:bg-red-700 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold"
-              >
-                <Plus className="h-4 w-4" />
-                Add Download
-              </Button>
+              <div className="space-y-1.5">
+                <Label className="text-foreground text-sm font-medium">Tags / Keywords</Label>
+                <div
+                  className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
+                  onClick={() => document.getElementById("tag-input")?.focus()}
+                >
+                  {tags.map((kw) => (
+                    <span key={kw} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/20 text-red-300 text-xs font-medium">
+                      {kw}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setTags((p) => p.filter((k) => k !== kw)); }}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    id="tag-input"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder={tags.length === 0 ? "Type and press Enter" : ""}
+                    className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <Label className="text-foreground text-sm font-medium">Meta Description</Label>
+                  <span className="text-xs text-muted-foreground">{metaDescription.length}/200</span>
+                </div>
+                <Textarea
+                  placeholder="Enter meta description"
+                  value={metaDescription}
+                  onChange={(e) => setMetaDescription(e.target.value.slice(0, 200))}
+                  rows={4}
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
+                />
+              </div>
             </div>
-
-            {downloadRows.length === 0 ? (
-              <EmptyState message="No download options added yet. Click &quot;Add Download&quot; to get started." />
-            ) : (
-              <div className="space-y-3">
-                {downloadRows.map((row) => (
-                  <div key={row.id} className="rounded-xl border border-border bg-muted/10 p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Upload Type</Label>
-                        <Select
-                          value={row.type}
-                          onValueChange={(v) =>
-                            setDownloadRows((p) => p.map((r) => r.id === row.id ? { ...r, type: v } : r))
-                          }
-                        >
-                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-foreground">
-                            <SelectItem value="local">Local</SelectItem>
-                            <SelectItem value="url">External URL</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Quality</Label>
-                        <Select
-                          value={row.quality}
-                          onValueChange={(v) =>
-                            setDownloadRows((p) => p.map((r) => r.id === row.id ? { ...r, quality: v } : r))
-                          }
-                        >
-                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-foreground">
-                            <SelectItem value="480p">480p</SelectItem>
-                            <SelectItem value="720p">720p</SelectItem>
-                            <SelectItem value="1080p">1080p</SelectItem>
-                            <SelectItem value="4k">4K</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1 space-y-1.5">
-                          <Label className="text-foreground text-sm font-medium">
-                            {row.type === "local" ? "File" : "Download URL"}
-                          </Label>
-                          {row.type === "local" ? (
-                            <div
-                              onClick={() => {
-                                setCurrentDownloadRowId(row.id);
-                                setDownloadPickerOpen(true);
-                              }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-red-500/40 bg-muted/20 transition-colors"
-                            >
-                              {row.filePath ? (
-                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">Click to select video from media library</span>
-                              )}
-                            </div>
-                          ) : (
-                            <Input
-                              placeholder="https://..."
-                              value={row.url}
-                              onChange={(e) =>
-                                setDownloadRows((p) => p.map((r) => r.id === row.id ? { ...r, url: e.target.value } : r))
-                              }
-                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                            />
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeDownloadRow(row.id)}
-                          className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 shrink-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
 
       {/* Save Button */}
-      <div className="flex flex-col gap-4">
-        {/* Upload Progress Bar */}
-        {uploadStatus !== "idle" && (
-          <div className="w-full max-w-md">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-foreground font-medium">
-                {uploadStatus === "uploading" && "Uploading video..."}
-                {uploadStatus === "success" && "Upload complete!"}
-                {uploadStatus === "error" && "Upload failed"}
-              </span>
-              <span className="text-sm text-muted-foreground">{uploadProgress}%</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  uploadStatus === "success" ? "bg-green-500" : uploadStatus === "error" ? "bg-red-500" : "bg-red-600"
-                }`}
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-            {uploadStatus === "error" && (
-              <button
-                type="button"
-                onClick={handleSave}
-                className="mt-2 text-sm text-red-400 hover:text-red-300 font-medium"
-              >
-                Retry upload
-              </button>
-            )}
-          </div>
-        )}
-        
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || uploadStatus === "uploading"}
-            className="bg-red-600 hover:bg-red-700 text-white h-11 px-10 rounded-lg font-semibold text-sm"
-          >
-            {isSaving ? "Saving..." : uploadStatus === "uploading" ? "Uploading..." : "Save"}
-          </Button>
-        </div>
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="bg-primary hover:bg-primary/90 text-white h-11 px-10 rounded-lg font-semibold text-sm"
+        >
+          {isSaving ? "Saving..." : isEdit ? "Update Movie" : "Create Movie"}
+        </Button>
       </div>
 
       {/* Media Pickers */}
-      <MediaPicker
-        open={thumbnailPickerOpen}
-        onClose={() => setThumbnailPickerOpen(false)}
-        onSelect={(media) => setThumbnail({ filePath: media.filePath, preview: media.url })}
-        source="movie"
-        accept="image/*"
-      />
-      <MediaPicker
-        open={posterPickerOpen}
-        onClose={() => setPosterPickerOpen(false)}
-        onSelect={(media) => setPoster({ filePath: media.filePath, preview: media.url })}
-        source="movie"
-        accept="image/*"
-      />
-      <MediaPicker
-        open={posterTvPickerOpen}
-        onClose={() => setPosterTvPickerOpen(false)}
-        onSelect={(media) => setPosterTv({ filePath: media.filePath, preview: media.url })}
-        source="movie"
-        accept="image/*"
-      />
-      <MediaPicker
-        open={trailerPickerOpen}
-        onClose={() => setTrailerPickerOpen(false)}
-        onSelect={(media) => setTrailerFilePath(media.filePath)}
-        source="movie"
-        accept="video/*"
-      />
-      <MediaPicker
-        open={videoPickerOpen}
-        onClose={() => setVideoPickerOpen(false)}
-        onSelect={(media) => setVideoFilePath(media.filePath)}
-        source="movie"
-        accept="video/*"
-      />
-      <MediaPicker
-        open={downloadPickerOpen}
-        onClose={() => {
-          setDownloadPickerOpen(false);
-          setCurrentDownloadRowId(null);
-        }}
-        onSelect={(media) => {
-          if (currentDownloadRowId) {
-            setDownloadRows((p) => p.map((r) => r.id === currentDownloadRowId ? { ...r, filePath: media.filePath } : r));
-          }
-        }}
-        source="movie"
-        accept="video/*"
-      />
+      <MediaPicker open={thumbnailPickerOpen} onClose={() => setThumbnailPickerOpen(false)}
+        onSelect={(m) => setThumbnail({ filePath: m.filePath, preview: m.url })} source="movie" accept="image/*" />
+      <MediaPicker open={posterPickerOpen} onClose={() => setPosterPickerOpen(false)}
+        onSelect={(m) => setPoster({ filePath: m.filePath, preview: m.url })} source="movie" accept="image/*" />
+      <MediaPicker open={bannerPickerOpen} onClose={() => setBannerPickerOpen(false)}
+        onSelect={(m) => setBanner({ filePath: m.filePath, preview: m.url })} source="movie" accept="image/*" />
+      <MediaPicker open={trailerPickerOpen} onClose={() => setTrailerPickerOpen(false)}
+        onSelect={(m) => setTrailerFilePath(m.filePath)} source="movie" accept="video/*" />
+      <MediaPicker open={videoPickerOpen} onClose={() => setVideoPickerOpen(false)}
+        onSelect={(m) => setVideoFilePath(m.filePath)} source="movie" accept="video/*" />
       <MediaPicker
         open={qualityPickerOpen}
-        onClose={() => {
-          setQualityPickerOpen(false);
-          setCurrentQualityRowId(null);
+        onClose={() => { setQualityPickerOpen(false); setCurrentQualityRowId(null); }}
+        onSelect={(m) => {
+          if (currentQualityRowId) updateQualityRow(currentQualityRowId, "filePath", m.filePath);
         }}
-        onSelect={(media) => {
-          if (currentQualityRowId) {
-            setQualityRows((p) => p.map((r) => r.id === currentQualityRowId ? { ...r, filePath: media.filePath } : r));
-          }
-        }}
-        source="movie"
-        accept="video/*"
+        source="movie" accept="video/*"
       />
       <MediaPicker
         open={subtitlePickerOpen}
-        onClose={() => {
-          setSubtitlePickerOpen(false);
-          setCurrentSubtitleRowId(null);
+        onClose={() => { setSubtitlePickerOpen(false); setCurrentSubtitleRowId(null); }}
+        onSelect={(m) => {
+          if (currentSubtitleRowId)
+            setSubtitleRows((p) => p.map((r) => r.id === currentSubtitleRowId ? { ...r, filePath: m.filePath } : r));
         }}
-        onSelect={(media) => {
-          if (currentSubtitleRowId) {
-            setSubtitleRows((p) => p.map((r) => r.id === currentSubtitleRowId ? { ...r, filePath: media.filePath } : r));
-          }
-        }}
-        source="movie"
-        accept=".srt,.vtt,.ass,.ssa"
+        source="movie" accept=".srt,.vtt,.ass,.ssa"
       />
-      <MediaPicker
-        open={seoImagePickerOpen}
-        onClose={() => setSeoImagePickerOpen(false)}
-        onSelect={(media) => setSeoImage({ filePath: media.filePath, preview: media.url })}
-        source="movie"
-        accept="image/*"
-      />
+      <MediaPicker open={seoImagePickerOpen} onClose={() => setSeoImagePickerOpen(false)}
+        onSelect={(m) => setSeoImage({ filePath: m.filePath, preview: m.url })} source="movie" accept="image/*" />
     </div>
   );
 }

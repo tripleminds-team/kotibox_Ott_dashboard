@@ -1,7 +1,40 @@
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronLeft, ChevronRight, Play, Pause, Lock, X, Crown, Star, Volume2, VolumeX, FastForward } from "lucide-react";
+import Hls from "hls.js";
+import { useAdPlayback } from "@/hooks/useAdPlayback";
+import AdOverlay from "@/components/AdOverlay";
 
-import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Play, Pause, Lock, X, Crown, Star, Volume2, VolumeX } from "lucide-react";
-import type { ShortDrama, Episode } from "@/data/short-dramas";
+interface DramaProp {
+  id: string | number;
+  title: string;
+  poster: string;
+  rating: string;
+  totalEpisodes: number;
+  freeEpisodes: number;
+  language: string;
+  badge?: string;
+  genres: string[];
+}
+
+interface EpisodeProp {
+  id: string;
+  number: number | string;
+  title: string;
+  description?: string;
+  duration: string;
+  videoUrl: string;
+  thumbnail?: string;
+  isFree: boolean;
+  isLocked: boolean;
+}
+
+interface ShortDramaPlayerProps {
+  drama: DramaProp;
+  episodes: EpisodeProp[];
+  onClose: () => void;
+  onNextEpisode?: () => void;
+  onPrevEpisode?: () => void;
+}
 
 function getRanges(totalEpisodes: number): { label: string; start: number; end: number }[] {
   const ranges: { label: string; start: number; end: number }[] = [];
@@ -12,35 +45,107 @@ function getRanges(totalEpisodes: number): { label: string; start: number; end: 
   return ranges;
 }
 
+function epNum(ep: EpisodeProp): number {
+  if (ep.number === "Trailer") return 0;
+  return typeof ep.number === "number" ? ep.number : parseInt(String(ep.number), 10) || 0;
+}
+
 export default function ShortDramaPlayer({
   drama,
+  episodes,
   onClose,
-}: {
-  drama: ShortDrama;
-  onClose: () => void;
-}) {
-  const firstFreeEp = drama.episodes.find((e) => e.number === 1) ?? drama.episodes[0];
-  const [currentEp, setCurrentEp] = useState<Episode>(firstFreeEp);
+  onNextEpisode,
+  onPrevEpisode,
+}: ShortDramaPlayerProps) {
+  const firstFreeIndex = episodes.findIndex((e) => !e.isLocked);
+  const startIndex = firstFreeIndex >= 0 ? firstFreeIndex : 0;
+  const [currentEpIndex, setCurrentEpIndex] = useState(startIndex);
+  const currentEp = episodes[currentEpIndex];
+
   const [rangeStart, setRangeStart] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [showLockModal, setShowLockModal] = useState(false);
-  const [lockedEpNum, setLockedEpNum] = useState<number | null>(null);
+  const [lockedEpNum, setLockedEpNum] = useState<number | string | null>(null);
+  const [showAutoAdvance, setShowAutoAdvance] = useState(false);
+  const [autoAdvanceCount, setAutoAdvanceCount] = useState(5);
+  const [episodeProgress, setEpisodeProgress] = useState(0);
+  const [epDuration, setEpDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const touchStartY = useRef<number | null>(null);
+
+  const doSwitchEpisode = useCallback((index: number) => {
+    if (index < 0 || index >= episodes.length) return;
+    const ep = episodes[index];
+    if (ep.isLocked) {
+      setLockedEpNum(ep.number);
+      setShowLockModal(true);
+      return;
+    }
+    setCurrentEpIndex(index);
+    const n = epNum(ep);
+    const correctRange = Math.floor(n / 50) * 50;
+    if (correctRange !== rangeStart) setRangeStart(correctRange);
+  }, [episodes, rangeStart]);
+
+  const handleAdComplete = useCallback(() => {
+    if (pendingEpIndexRef.current !== null) {
+      doSwitchEpisode(pendingEpIndexRef.current);
+      pendingEpIndexRef.current = null;
+    }
+  }, [doSwitchEpisode]);
+
+  const {
+    phase: adPhase,
+    timer: adTimer,
+    canSkip: adCanSkip,
+    startAd,
+    skipAd,
+    reset: resetAd,
+    isActive: adIsActive,
+  } = useAdPlayback({
+    onAdComplete: handleAdComplete,
+  });
+
+  const pendingEpIndexRef = useRef<number | null>(null);
 
   const ranges = getRanges(drama.totalEpisodes);
 
-  // Episodes visible in current range tab (Trailer counted as 0)
-  const displayedEpisodes = drama.episodes.filter((ep) => {
-    const n = ep.number === "Trailer" ? 0 : (ep.number as number);
+  const displayedEpisodes = episodes.filter((ep) => {
+    const n = epNum(ep);
     return n >= rangeStart && n <= rangeStart + 49;
   });
 
+  // Load episode video
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
-    v.load();
+    if (!v || !currentEp?.videoUrl) return;
+
+    let hls: Hls | null = null;
+    const isM3u8 = currentEp.videoUrl.includes('.m3u8');
+
+    setEpisodeProgress(0);
+    setEpDuration(0);
     setPlaying(false);
+
+    if (isM3u8 && Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(currentEp.videoUrl);
+      hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setEpDuration(v.duration || 0);
+      });
+    } else {
+      v.src = currentEp.videoUrl;
+      v.load();
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
   }, [currentEp]);
 
   useEffect(() => {
@@ -50,7 +155,7 @@ export default function ShortDramaPlayer({
 
   const togglePlay = () => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || adIsActive) return;
     if (v.paused) { v.play().catch(() => {}); setPlaying(true); }
     else { v.pause(); setPlaying(false); }
   };
@@ -63,21 +168,95 @@ export default function ShortDramaPlayer({
     setMuted(v.muted);
   };
 
-  const handleEpClick = (ep: Episode) => {
-    if (ep.locked) {
-      setLockedEpNum(ep.number as number);
+  const handleEpClick = (ep: EpisodeProp) => {
+    if (ep.isLocked) {
+      setLockedEpNum(ep.number);
       setShowLockModal(true);
       return;
     }
-    setCurrentEp(ep);
-    // Switch range tab if needed
-    const n = ep.number === "Trailer" ? 0 : (ep.number as number);
-    const correctRange = Math.floor(n / 50) * 50;
-    if (correctRange !== rangeStart) setRangeStart(correctRange);
+    const index = episodes.findIndex((e) => e.id === ep.id);
+    if (index === currentEpIndex) {
+      togglePlay();
+      return;
+    }
+    // Show ad between episodes before switching
+    pendingEpIndexRef.current = index;
+    startAd('between-episode', { duration: 3, skippableAfter: 1 });
   };
 
-  const epNum = (ep: Episode) => ep.number === "Trailer" ? 0 : (ep.number as number);
-  const isActive = (ep: Episode) => ep.number === currentEp.number;
+  const handleNext = useCallback(() => {
+    if (currentEpIndex < episodes.length - 1) {
+      const nextIdx = currentEpIndex + 1;
+      const nextEp = episodes[nextIdx];
+      if (nextEp.isLocked) {
+        setLockedEpNum(nextEp.number);
+        setShowLockModal(true);
+        return;
+      }
+      pendingEpIndexRef.current = nextIdx;
+      startAd('between-episode', { duration: 3, skippableAfter: 1 });
+    } else {
+      onNextEpisode?.();
+    }
+  }, [currentEpIndex, episodes, onNextEpisode, startAd]);
+
+  const handlePrev = useCallback(() => {
+    if (currentEpIndex > 0) {
+      const prevIdx = currentEpIndex - 1;
+      const prevEp = episodes[prevIdx];
+      if (prevEp.isLocked) {
+        setLockedEpNum(prevEp.number);
+        setShowLockModal(true);
+        return;
+      }
+      pendingEpIndexRef.current = prevIdx;
+      startAd('between-episode', { duration: 3, skippableAfter: 1 });
+    } else {
+      onPrevEpisode?.();
+    }
+  }, [currentEpIndex, episodes, onPrevEpisode, startAd]);
+
+  // Auto advance countdown at episode end
+  const startAutoAdvance = useCallback(() => {
+    if (showAutoAdvance) return;
+    setShowAutoAdvance(true);
+    setAutoAdvanceCount(5);
+    autoAdvanceTimerRef.current = setInterval(() => {
+      setAutoAdvanceCount((prev) => {
+        if (prev <= 1) {
+          clearInterval(autoAdvanceTimerRef.current);
+          setShowAutoAdvance(false);
+          handleNext();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [showAutoAdvance, handleNext]);
+
+  const cancelAutoAdvance = () => {
+    if (autoAdvanceTimerRef.current) clearInterval(autoAdvanceTimerRef.current);
+    setShowAutoAdvance(false);
+  };
+
+  // Touch swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartY.current = null;
+    if (Math.abs(deltaY) < 50) return;
+    if (deltaY < 0) {
+      handleNext();
+    } else {
+      handlePrev();
+    }
+  };
+
+  const isActive = (ep: EpisodeProp) => ep.id === currentEp?.id;
 
   const badgeMap: Record<string, string> = {
     NEW: "bg-emerald-500 text-white",
@@ -116,7 +295,7 @@ export default function ShortDramaPlayer({
               )}
             </div>
             <p className="text-zinc-500 text-[11px] mt-0.5">
-              {currentEp.number === "Trailer" ? "Trailer" : `EP ${currentEp.number}`} · {currentEp.duration} · {drama.language}
+              {currentEp?.number === "Trailer" ? "Trailer" : `EP ${currentEp?.number}`} · {currentEp?.duration} · {drama.language}
             </p>
           </div>
         </div>
@@ -144,17 +323,65 @@ export default function ShortDramaPlayer({
             className="relative bg-zinc-900 rounded-2xl overflow-hidden w-full cursor-pointer shadow-2xl shadow-black/60"
             style={{ aspectRatio: "9/16" }}
             onClick={togglePlay}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
             <video
               ref={videoRef}
-              src={currentEp.videoUrl}
               poster={drama.poster}
               className="w-full h-full object-cover"
               playsInline
-              loop
               onPlay={() => setPlaying(true)}
               onPause={() => setPlaying(false)}
+              onTimeUpdate={() => {
+                const v = videoRef.current;
+                if (!v) return;
+                setEpisodeProgress(v.duration ? (v.currentTime / v.duration) * 100 : 0);
+              }}
+              onLoadedMetadata={() => {
+                const v = videoRef.current;
+                if (v) setEpDuration(v.duration || 0);
+              }}
+              onEnded={() => {
+                setPlaying(false);
+                if (currentEpIndex < episodes.length - 1) {
+                  startAutoAdvance();
+                }
+              }}
             />
+
+            {/* Ad Overlay between episodes */}
+            {adIsActive && (
+              <AdOverlay
+                timer={adTimer}
+                canSkip={adCanSkip}
+                onSkip={skipAd}
+                label="Up Next"
+              />
+            )}
+
+            {/* Auto Advance Countdown Overlay */}
+            {showAutoAdvance && !adIsActive && (
+              <div className="absolute inset-0 z-[350] bg-black/80 flex flex-col items-center justify-center gap-4">
+                <p className="text-white/70 text-xs uppercase tracking-widest font-bold">Next Episode In</p>
+                <div className="text-white font-black text-6xl tabular-nums">{autoAdvanceCount}</div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); cancelAutoAdvance(); handleNext(); }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-full text-sm transition-all"
+                  >
+                    <FastForward className="w-4 h-4" />
+                    Play Now
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); cancelAutoAdvance(); }}
+                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-full text-sm transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Play/pause overlay */}
             <div
@@ -183,17 +410,24 @@ export default function ShortDramaPlayer({
               </button>
             </div>
 
-            {/* Bottom: episode label */}
+            {/* Bottom: episode label + progress bar */}
             <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none">
               <p className="text-white text-xs font-black">
-                {currentEp.number === "Trailer" ? "Trailer" : `EP ${currentEp.number}`}
+                {currentEp?.number === "Trailer" ? "Trailer" : `EP ${currentEp?.number}`}
               </p>
-              <p className="text-zinc-400 text-[10px] mt-0.5 truncate">{currentEp.title}</p>
+              <p className="text-zinc-400 text-[10px] mt-0.5 truncate">{currentEp?.title}</p>
+              {/* Progress bar */}
+              <div className="mt-2 h-[3px] bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${episodeProgress}%` }}
+                />
+              </div>
             </div>
 
             {/* Playing indicator dot */}
             {playing && (
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-red-600/85 text-white text-[9px] font-black px-2 py-[3px] rounded-full pointer-events-none backdrop-blur-sm">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-primary/85 text-white text-[9px] font-black px-2 py-[3px] rounded-full pointer-events-none backdrop-blur-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 LIVE
               </div>
@@ -235,12 +469,12 @@ export default function ShortDramaPlayer({
                 const active = isActive(ep);
                 return (
                   <button
-                    key={String(ep.number)}
+                    key={ep.id}
                     onClick={() => handleEpClick(ep)}
                     className={`relative flex items-center justify-center rounded-lg font-bold transition-all border select-none ${
                       active
                         ? "bg-zinc-600 border-zinc-400 text-white shadow-md"
-                        : ep.locked
+                        : ep.isLocked
                           ? "bg-zinc-900 border-zinc-800 text-zinc-600 hover:border-zinc-700 cursor-pointer"
                           : "bg-zinc-800/80 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-500 cursor-pointer"
                     }`}
@@ -253,15 +487,15 @@ export default function ShortDramaPlayer({
                     )}
 
                     {/* Lock badge */}
-                    {ep.locked && (
-                      <span className="absolute top-0.5 right-0.5 w-[14px] h-[14px] bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    {ep.isLocked && (
+                      <span className="absolute top-0.5 right-0.5 w-[14px] h-[14px] bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                         <Lock className="w-[7px] h-[7px] text-white" />
                       </span>
                     )}
 
                     {/* Currently playing bar */}
                     {active && (
-                      <span className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-4 h-[3px] bg-red-500 rounded-full" />
+                      <span className="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-4 h-[3px] bg-primary rounded-full" />
                     )}
                   </button>
                 );
@@ -273,11 +507,11 @@ export default function ShortDramaPlayer({
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[11px] text-zinc-500">Now Playing</span>
                 <span className="text-[11px] text-white font-bold">
-                  {currentEp.number === "Trailer" ? "Trailer" : `Episode ${currentEp.number}`}
+                  {currentEp?.number === "Trailer" ? "Trailer" : `Episode ${currentEp?.number}`}
                 </span>
-                <span className="text-[11px] text-zinc-600">· {currentEp.duration}</span>
+                <span className="text-[11px] text-zinc-600">· {currentEp?.duration}</span>
               </div>
-              <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">{drama.description}</p>
+              <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">{currentEp?.description || "No description available."}</p>
               <div className="flex items-center gap-2 mt-2">
                 {drama.genres.map((g) => (
                   <span key={g} className="text-[9px] bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded-sm">{g}</span>
@@ -304,10 +538,20 @@ export default function ShortDramaPlayer({
             className="absolute inset-0 bg-black/75 backdrop-blur-sm"
             onClick={() => setShowLockModal(false)}
           />
-          <div className="relative z-10 bg-zinc-900 border border-zinc-700/80 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-[360px] mx-auto p-6 shadow-2xl">
+          <div className="relative z-10 bg-zinc-900 border border-zinc-700/80 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-[380px] mx-auto p-6 shadow-2xl">
+            {/* Poster backdrop */}
+            <div className="relative mb-5 rounded-xl overflow-hidden h-32">
+              <img src={drama.poster} alt="" className="w-full h-full object-cover opacity-40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3">
+                <p className="text-white font-bold text-sm truncate">{drama.title}</p>
+                <p className="text-zinc-400 text-[10px] mt-0.5">Episode {lockedEpNum} is locked</p>
+              </div>
+            </div>
+
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-xl shadow-amber-500/30">
-                <Crown className="w-8 h-8 text-white" />
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-xl shadow-amber-500/30">
+                <Crown className="w-7 h-7 text-white" />
               </div>
             </div>
             <h3 className="text-white font-black text-xl text-center mb-1">Premium Episode</h3>
@@ -318,15 +562,18 @@ export default function ShortDramaPlayer({
               Subscribe to unlock all {drama.totalEpisodes} episodes of
               <br /><span className="text-white font-semibold">"{drama.title}"</span>
             </p>
-            <button className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-sm mb-2.5 shadow-lg shadow-amber-500/25 transition-all active:scale-95">
-              Subscribe Now — Unlock All
-            </button>
-            <button
-              onClick={() => setShowLockModal(false)}
-              className="w-full py-2.5 text-zinc-500 hover:text-white text-sm transition-colors rounded-xl hover:bg-white/5"
-            >
-              Maybe Later
-            </button>
+
+            <div className="space-y-2">
+              <button className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl text-sm shadow-lg shadow-amber-500/25 transition-all active:scale-95">
+                Subscribe Now — Unlock All
+              </button>
+              <button
+                onClick={() => setShowLockModal(false)}
+                className="w-full py-2.5 text-zinc-500 hover:text-white text-sm transition-colors rounded-xl hover:bg-white/5"
+              >
+                Maybe Later
+              </button>
+            </div>
           </div>
         </div>
       )}

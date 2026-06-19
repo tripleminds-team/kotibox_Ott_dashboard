@@ -1,16 +1,10 @@
-
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -21,21 +15,38 @@ import {
   useGetUsersList,
 } from "@/lib/api-client";
 
+const inputCls =
+  "bg-muted border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-11 rounded-lg text-sm";
+const labelCls = "text-foreground text-sm font-medium";
+
+const addDuration = (start: string, dur: string, val: number): string => {
+  const d = new Date(start);
+  const v = Math.max(1, val);
+  const n = dur.toLowerCase();
+  if (n.includes("day")) d.setDate(d.getDate() + v);
+  else if (n.includes("week")) d.setDate(d.getDate() + v * 7);
+  else if (n.includes("year")) d.setFullYear(d.getFullYear() + v);
+  else d.setMonth(d.getMonth() + v);
+  return d.toISOString().split("T")[0];
+};
+
 export default function SubscriptionFormPage() {
   const [, setLocation] = useLocation();
-  const params = useParams<{ id?: string }>();
-  const isEdit = !!params.id;
+  const { id } = useParams<{ id?: string }>();
+  const isEdit = !!id;
   const { toast } = useToast();
-  const { data: usersData } = useGetUsersList({});
-  const { data: plansData } = useGetSubscriptionPlans();
-  const { data: subscriptionData } = useGetSubscriptionById(params.id || "");
+
+  const { data: usersData } = useGetUsersList({ limit: 200 });
+  const { data: plansData } = useGetSubscriptionPlans({ limit: 100 });
+  const { data: subscriptionData } = useGetSubscriptionById(isEdit ? id! : "");
   const createSubscription = useCreateSubscription();
   const updateSubscription = useUpdateSubscription();
 
-  const users = usersData?.data || [];
-  const plans = plansData?.data || [];
+  const users: any[] = usersData?.data || [];
+  const plans: any[] = plansData?.data || [];
   const subscription = subscriptionData?.data;
 
+  // ─── form state ────────────────────────────────────────────────────────────
   const [userId, setUserId] = useState("");
   const [planId, setPlanId] = useState("");
   const [duration, setDuration] = useState("Month");
@@ -51,97 +62,73 @@ export default function SubscriptionFormPage() {
   const [status, setStatus] = useState<"active" | "inactive">("active");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedPlan = useMemo(
-    () => plans.find((plan: any) => String(plan.id || plan._id) === planId),
-    [plans, planId]
+  // Track whether user has manually overridden auto-calculated values
+  const [endDateOverridden, setEndDateOverridden] = useState(false);
+  const [totalOverridden, setTotalOverridden] = useState(false);
+
+  // ─── Derived end date ──────────────────────────────────────────────────────
+  const derivedEndDate = useMemo(
+    () => addDuration(startDate, duration, parseInt(durationValue) || 1),
+    [startDate, duration, durationValue]
   );
 
-  // Calculate end date based on start date and duration
-  const calculateEndDate = (start: string, dur: string, val: number): string => {
-    const date = new Date(start);
-    const value = Math.max(1, val);
-    const normalized = dur.toLowerCase();
-    if (normalized.includes("day")) {
-      date.setDate(date.getDate() + value);
-    } else if (normalized.includes("week")) {
-      date.setDate(date.getDate() + value * 7);
-    } else if (normalized.includes("year")) {
-      date.setFullYear(date.getFullYear() + value);
-    } else {
-      date.setMonth(date.getMonth() + value);
-    }
-    return date.toISOString().split("T")[0];
-  };
-
-  // Calculate total amount
-  const calculateTotal = (p: string, d: string, cd: string, t: string): string => {
-    const priceNum = parseFloat(p) || 0;
-    const discountNum = parseFloat(d) || 0;
-    const couponDiscountNum = parseFloat(cd) || 0;
-    const taxNum = parseFloat(t) || 0;
-    const total = priceNum - discountNum - couponDiscountNum + taxNum;
-    return total.toFixed(2);
-  };
-
-  // Update when plan changes
-  const handlePlanChange = (value: string) => {
-    setPlanId(value);
-    const plan = plans.find((item: any) => String(item.id || item._id) === value);
-    if (plan) {
-      if (!price) setPrice(String(plan.totalPrice ?? plan.price ?? 0));
-      if (plan.duration) setDuration(plan.duration);
-      if (plan.durationValue) setDurationValue(String(plan.durationValue));
-    }
-  };
-
-  // Update end date when start date or duration changes
-  useEffect(() => {
-    if (!endDate) {
-      setEndDate(calculateEndDate(startDate, duration, parseInt(durationValue) || 1));
-    }
-  }, [startDate, duration, durationValue]);
-
-  // Update total amount when price/discount/coupon/tax changes
-  useEffect(() => {
-    if (!totalAmount) {
-      setTotalAmount(calculateTotal(price, discount, couponDiscount, tax));
-    }
+  // ─── Derived total ─────────────────────────────────────────────────────────
+  const derivedTotal = useMemo(() => {
+    const p = parseFloat(price) || 0;
+    const d = parseFloat(discount) || 0;
+    const cd = parseFloat(couponDiscount) || 0;
+    const t = parseFloat(tax) || 0;
+    return Math.max(0, p - d - cd + t).toFixed(2);
   }, [price, discount, couponDiscount, tax]);
 
-  // Populate form if editing
+  // ─── Sync auto-calculated values unless overridden ─────────────────────────
   useEffect(() => {
-    if (isEdit && subscription) {
-      setUserId(subscription.userId);
-      setPlanId(subscription.planId);
-      setDuration(subscription.duration || "Month");
-      setDurationValue(String(subscription.durationValue || 1));
-      setPaymentMethod(subscription.paymentMethod || "-");
-      setStartDate(subscription.startDate);
-      setEndDate(subscription.endDate);
-      setPrice(String(subscription.price));
-      setDiscount(String(subscription.discount));
-      setCouponDiscount(String(subscription.couponDiscount));
-      setTax(String(subscription.tax));
-      setTotalAmount(String(subscription.totalAmount));
-      setStatus(subscription.status);
+    if (!endDateOverridden) setEndDate(derivedEndDate);
+  }, [derivedEndDate, endDateOverridden]);
+
+  useEffect(() => {
+    if (!totalOverridden) setTotalAmount(derivedTotal);
+  }, [derivedTotal, totalOverridden]);
+
+  // ─── Auto-fill plan details when plan is selected ─────────────────────────
+  const handlePlanChange = (value: string) => {
+    setPlanId(value);
+    const plan = plans.find((p: any) => String(p.id || p._id) === value);
+    if (plan) {
+      setPrice(String(plan.totalPrice ?? plan.price ?? ""));
+      setDuration(plan.duration || "Month");
+      setDurationValue(String(plan.durationValue ?? 1));
+      setTotalOverridden(false);
+      setEndDateOverridden(false);
     }
+  };
+
+  // ─── Populate form when editing ───────────────────────────────────────────
+  useEffect(() => {
+    if (!isEdit || !subscription) return;
+    setUserId(String(subscription.userId || ""));
+    setPlanId(String(subscription.planId || ""));
+    setDuration(subscription.duration || "Month");
+    setDurationValue(String(subscription.durationValue ?? 1));
+    setPaymentMethod(subscription.paymentMethod || "-");
+    setStartDate(subscription.startDate || new Date().toISOString().split("T")[0]);
+    setEndDate(subscription.endDate || "");
+    setPrice(subscription.price != null ? String(subscription.price) : "");
+    setDiscount(subscription.discount != null ? String(subscription.discount) : "0");
+    setCouponDiscount(subscription.couponDiscount != null ? String(subscription.couponDiscount) : "0");
+    setTax(subscription.tax != null ? String(subscription.tax) : "0");
+    setTotalAmount(subscription.totalAmount != null ? String(subscription.totalAmount) : "");
+    setStatus(subscription.status || "active");
+    // Mark overrides so derived values don't stomp over fetched data
+    setEndDateOverridden(true);
+    setTotalOverridden(true);
   }, [isEdit, subscription]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!userId) {
-      toast({ title: "Please select a user", variant: "destructive" });
-      return;
-    }
-    if (!planId) {
-      toast({ title: "Please select a plan", variant: "destructive" });
-      return;
-    }
-    if (!startDate) {
-      toast({ title: "Please enter start date", variant: "destructive" });
-      return;
-    }
+    if (!userId) { toast({ title: "Please select a user", variant: "destructive" }); return; }
+    if (!planId) { toast({ title: "Please select a plan", variant: "destructive" }); return; }
+    if (!startDate) { toast({ title: "Start date is required", variant: "destructive" }); return; }
 
     setIsSubmitting(true);
     try {
@@ -152,94 +139,92 @@ export default function SubscriptionFormPage() {
         durationValue: parseInt(durationValue) || 1,
         paymentMethod,
         startDate,
-        endDate: endDate || calculateEndDate(startDate, duration, parseInt(durationValue) || 1),
+        endDate: endDate || derivedEndDate,
         price: parseFloat(price) || 0,
         discount: parseFloat(discount) || 0,
         couponDiscount: parseFloat(couponDiscount) || 0,
         tax: parseFloat(tax) || 0,
-        totalAmount: parseFloat(totalAmount) || parseFloat(calculateTotal(price, discount, couponDiscount, tax)),
+        totalAmount: parseFloat(totalAmount) || parseFloat(derivedTotal),
         status,
       };
 
       if (isEdit) {
-        await updateSubscription.mutateAsync({ id: params.id!, data });
+        await updateSubscription.mutateAsync({ id: id!, data });
         toast({ title: "Subscription updated successfully" });
       } else {
         await createSubscription.mutateAsync(data);
         toast({ title: "Subscription created successfully" });
       }
       setLocation("/subscriptions");
-    } catch {
-      toast({ title: `Failed to ${isEdit ? "update" : "create"} subscription`, variant: "destructive" });
+    } catch (err: any) {
+      toast({
+        title: err?.message || `Failed to ${isEdit ? "update" : "create"} subscription`,
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+        <button onClick={() => setLocation("/subscriptions")} className="hover:text-foreground transition-colors">
+          Dashboard
+        </button>
         <span>/</span>
-        <span
-          onClick={() => setLocation("/subscriptions")}
-          className="cursor-pointer hover:text-foreground"
-        >
+        <button onClick={() => setLocation("/subscriptions")} className="hover:text-foreground transition-colors">
           Subscriptions
-        </span>
+        </button>
         <span>/</span>
         <span className="text-foreground font-medium">
           {isEdit ? "Edit Subscription" : "New Subscription"}
         </span>
       </div>
 
-      {/* Back Button */}
-      <button
-        onClick={() => setLocation("/subscriptions")}
-        className="flex items-center gap-1 text-red-400 hover:text-red-300 font-semibold text-sm transition-colors"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        <ChevronLeft className="h-4 w-4 -ml-2.5" />
-        Back
+      <button onClick={() => setLocation("/subscriptions")}
+        className="flex items-center gap-1.5 text-sm text-primary hover:text-red-300 font-medium transition-colors">
+        <span className="text-base leading-none">«</span> Back
       </button>
 
-      {/* Form Card */}
       <form onSubmit={handleSubmit}>
-        <div className="rounded-xl border border-border bg-card/50 p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+          <p className="text-base font-semibold text-foreground">Subscription Details</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* User */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">
-                User <span className="text-red-500">*</span>
+            <div className="space-y-1.5">
+              <Label className={labelCls}>
+                User <span className="text-primary">*</span>
               </Label>
               <Select value={userId} onValueChange={setUserId}>
-                <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg focus:ring-red-500 focus:border-red-500">
+                <SelectTrigger className={inputCls}>
                   <SelectValue placeholder="Select User" />
                 </SelectTrigger>
-                <SelectContent className="bg-muted border-border text-foreground max-h-60">
+                <SelectContent className="bg-popover border-border text-foreground max-h-60">
                   {users.map((u: any) => (
                     <SelectItem key={u.id || u._id} value={String(u.id || u._id)}>
-                      {u.name || u.email}
+                      {u.name ? `${u.name} (${u.email})` : u.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Plans */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">
-                Plan <span className="text-red-500">*</span>
+            {/* Plan */}
+            <div className="space-y-1.5">
+              <Label className={labelCls}>
+                Plan <span className="text-primary">*</span>
               </Label>
               <Select value={planId} onValueChange={handlePlanChange}>
-                <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg focus:ring-red-500 focus:border-red-500">
+                <SelectTrigger className={inputCls}>
                   <SelectValue placeholder="Select Plan" />
                 </SelectTrigger>
-                <SelectContent className="bg-muted border-border text-foreground max-h-60">
+                <SelectContent className="bg-popover border-border text-foreground max-h-60">
                   {plans.map((p: any) => (
                     <SelectItem key={p.id || p._id} value={String(p.id || p._id)}>
-                      {p.name}
+                      {p.name} — ${Number(p.totalPrice ?? p.price).toFixed(2)} / {p.durationValue} {p.duration}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -247,13 +232,13 @@ export default function SubscriptionFormPage() {
             </div>
 
             {/* Status */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Status</Label>
-              <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg focus:ring-red-500 focus:border-red-500">
-                  <SelectValue placeholder="Select Status" />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Status</Label>
+              <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                <SelectTrigger className={inputCls}>
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-muted border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-foreground">
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
@@ -261,16 +246,13 @@ export default function SubscriptionFormPage() {
             </div>
 
             {/* Duration Type */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Duration Type</Label>
-              <Select value={duration} onValueChange={(val) => {
-                setDuration(val);
-                setEndDate(""); // Reset end date when duration type changes
-              }}>
-                <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg focus:ring-red-500 focus:border-red-500">
-                  <SelectValue placeholder="Select Duration Type" />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Duration Type</Label>
+              <Select value={duration} onValueChange={(v) => { setDuration(v); setEndDateOverridden(false); }}>
+                <SelectTrigger className={inputCls}>
+                  <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-muted border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-foreground">
                   <SelectItem value="Day">Day</SelectItem>
                   <SelectItem value="Week">Week</SelectItem>
                   <SelectItem value="Month">Month</SelectItem>
@@ -280,150 +262,99 @@ export default function SubscriptionFormPage() {
             </div>
 
             {/* Duration Value */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Duration Value</Label>
-              <Input
-                type="number"
-                min="1"
-                value={durationValue}
-                onChange={(e) => {
-                  setDurationValue(e.target.value);
-                  setEndDate(""); // Reset end date when duration value changes
-                }}
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Duration Value</Label>
+              <Input type="number" min="1" value={durationValue}
+                onChange={(e) => { setDurationValue(e.target.value); setEndDateOverridden(false); }}
+                className={inputCls} />
             </div>
 
             {/* Payment Method */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Payment Method</Label>
-              <Input
-                type="text"
-                value={paymentMethod}
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Payment Method</Label>
+              <Input type="text" value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                placeholder="e.g., Credit Card, PayPal"
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500"
-              />
+                placeholder="e.g. Credit Card, PayPal, Stripe"
+                className={inputCls} />
             </div>
 
             {/* Start Date */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">
-                Start Date <span className="text-red-500">*</span>
+            <div className="space-y-1.5">
+              <Label className={labelCls}>
+                Start Date <span className="text-primary">*</span>
               </Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setEndDate(""); // Reset end date when start date changes
-                }}
-                className="bg-card border-border text-foreground h-11 rounded-lg focus:border-red-500"
-              />
+              <Input type="date" value={startDate}
+                onChange={(e) => { setStartDate(e.target.value); setEndDateOverridden(false); }}
+                className={inputCls} />
             </div>
 
             {/* End Date */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">End Date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-card border-border text-foreground h-11 rounded-lg focus:border-red-500"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>End Date</Label>
+              <Input type="date" value={endDate}
+                onChange={(e) => { setEndDate(e.target.value); setEndDateOverridden(true); }}
+                className={inputCls} />
+              {!endDateOverridden && (
+                <p className="text-xs text-muted-foreground">Auto-calculated from start date + duration</p>
+              )}
             </div>
 
             {/* Price */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Price</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={price}
-                onChange={(e) => {
-                  setPrice(e.target.value);
-                  setTotalAmount(""); // Reset total when price changes
-                }}
-                placeholder="Enter Price"
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Price ({settings.currencySymbol})</Label>
+              <Input type="number" min="0" step="0.01" value={price}
+                onChange={(e) => { setPrice(e.target.value); setTotalOverridden(false); }}
+                placeholder="0.00" className={inputCls} />
             </div>
 
             {/* Discount */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Discount</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={discount}
-                onChange={(e) => {
-                  setDiscount(e.target.value);
-                  setTotalAmount(""); // Reset total when discount changes
-                }}
-                placeholder="Enter Discount"
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Discount ({settings.currencySymbol})</Label>
+              <Input type="number" min="0" step="0.01" value={discount}
+                onChange={(e) => { setDiscount(e.target.value); setTotalOverridden(false); }}
+                placeholder="0.00" className={inputCls} />
             </div>
 
             {/* Coupon Discount */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Coupon Discount</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={couponDiscount}
-                onChange={(e) => {
-                  setCouponDiscount(e.target.value);
-                  setTotalAmount(""); // Reset total when coupon discount changes
-                }}
-                placeholder="Enter Coupon Discount"
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Coupon Discount ({settings.currencySymbol})</Label>
+              <Input type="number" min="0" step="0.01" value={couponDiscount}
+                onChange={(e) => { setCouponDiscount(e.target.value); setTotalOverridden(false); }}
+                placeholder="0.00" className={inputCls} />
             </div>
 
             {/* Tax */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Tax</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={tax}
-                onChange={(e) => {
-                  setTax(e.target.value);
-                  setTotalAmount(""); // Reset total when tax changes
-                }}
-                placeholder="Enter Tax"
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Tax ({settings.currencySymbol})</Label>
+              <Input type="number" min="0" step="0.01" value={tax}
+                onChange={(e) => { setTax(e.target.value); setTotalOverridden(false); }}
+                placeholder="0.00" className={inputCls} />
             </div>
 
             {/* Total Amount */}
-            <div className="space-y-2">
-              <Label className="text-zinc-300 font-medium text-sm">Total Amount</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
-                placeholder="Enter Total Amount"
-                className="bg-card border-border text-foreground placeholder:text-zinc-500 h-11 rounded-lg focus:border-red-500 font-semibold"
-              />
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Total Amount ({settings.currencySymbol})</Label>
+              <div className="relative">
+                <Input type="number" min="0" step="0.01" value={totalAmount}
+                  onChange={(e) => { setTotalAmount(e.target.value); setTotalOverridden(true); }}
+                  placeholder="0.00"
+                  className={`${inputCls} font-semibold`} />
+                {!totalOverridden && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-400 font-medium">
+                    auto
+                  </span>
+                )}
+              </div>
+              {!totalOverridden && (
+                <p className="text-xs text-muted-foreground">price − discount − coupon + tax</p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Submit */}
-        <div className="flex justify-end mt-6">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-8 rounded-lg font-semibold text-sm"
-          >
+        <div className="flex justify-end mt-5">
+          <Button type="submit" disabled={isSubmitting}
+            className="bg-primary hover:bg-primary/90 text-white h-11 px-10 rounded-lg font-semibold text-sm min-w-[160px]">
             {isSubmitting ? "Saving..." : isEdit ? "Update Subscription" : "Create Subscription"}
           </Button>
         </div>

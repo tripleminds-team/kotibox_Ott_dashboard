@@ -449,7 +449,7 @@ export default function CategoryShowDetail() {
                   </div>
                   <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-600 transition-all duration-300 ease-linear"
+                      className="h-full bg-primary transition-all duration-300 ease-linear"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>

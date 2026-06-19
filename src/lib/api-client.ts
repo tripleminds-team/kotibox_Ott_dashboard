@@ -685,6 +685,57 @@ export const useGetHomePage = (options) => {
   });
 };
 
+export const getWebHome = async () => {
+  return api(`/web-home`);
+};
+
+export const useGetWebHome = () => {
+  return useQuery({
+    queryKey: ["web-home"],
+    queryFn: async () => {
+      const res = await getWebHome();
+      return res.data;
+    },
+  });
+};
+
+export const getWebBrowse = async (options: { type: string, genre?: string, page?: number, search?: string, limit?: number }) => {
+  const params = new URLSearchParams();
+  if (options.type) params.set("type", options.type);
+  if (options.genre && options.genre !== "All") params.set("genre", options.genre);
+  if (options.page) params.set("page", options.page.toString());
+  if (options.search) params.set("search", options.search);
+  if (options.limit) params.set("limit", options.limit.toString());
+  return api(`/web-browse?${params.toString()}`);
+};
+
+export const useGetWebBrowse = (options: { type: string, genre?: string, page?: number, search?: string, limit?: number }, enabled = true) => {
+  return useQuery({
+    queryKey: ["web-browse", options],
+    queryFn: async () => {
+      const res = await getWebBrowse(options);
+      return res.data;
+    },
+    enabled,
+  });
+};
+
+export const getWebDetail = async (contentId: string) => {
+  return api(`/web-detail/${contentId}`);
+};
+
+export const useGetWebDetail = (contentId: string) => {
+  return useQuery({
+    queryKey: ["web-detail", contentId],
+    queryFn: async () => {
+      if (!contentId) throw new Error("Missing contentId");
+      const res = await getWebDetail(contentId);
+      return res.data;
+    },
+    enabled: !!contentId,
+  });
+};
+
 export const useUpdateEpisodeLock = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
@@ -1052,6 +1103,7 @@ export const getContentList = async (options) => {
   if (options?.limit) params.set("limit", options.limit.toString());
   if (options?.search) params.set("search", options.search);
   if (options?.type) params.set("type", options.type);
+  if (options?.contentType) params.set("contentType", options.contentType);
   if (options?.status) params.set("status", options.status);
   return api(`/contents?${params.toString()}`);
 };
@@ -1176,6 +1228,126 @@ export const useDeleteContent = () => {
   });
 };
 
+// Episodes API
+export const getEpisodeList = async (options: any = {}) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set("page", options.page.toString());
+  if (options?.limit) params.set("limit", options.limit.toString());
+  if (options?.contentId) params.set("contentId", options.contentId);
+  if (options?.season) params.set("season", options.season.toString());
+  if (options?.contentType) params.set("contentType", options.contentType);
+  if (options?.search) params.set("search", options.search);
+  return api(`/episodes?${params.toString()}`);
+};
+
+export const getSeasonList = async (options: any = {}) => {
+  const params = new URLSearchParams();
+  if (options?.contentType) params.set("contentType", options.contentType);
+  if (options?.contentId) params.set("contentId", options.contentId);
+  return api(`/episodes/seasons?${params.toString()}`);
+};
+
+export const getEpisodeById = async (id: string) => {
+  return api(`/episodes/${id}`);
+};
+
+export const createEpisode = async (data: any) => {
+  return api("/episodes", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+export const updateEpisode = async (id: string, data: any) => {
+  return api(`/episodes/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+export const deleteEpisode = async (id: string) => {
+  return api(`/episodes/${id}`, { method: "DELETE" });
+};
+
+export const toggleEpisodeLock = async (id: string, isLocked: boolean) => {
+  return api(`/episodes/${id}/lock`, {
+    method: "PATCH",
+    body: JSON.stringify({ isLocked }),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+export const useGetEpisodeList = (options: any) => {
+  return useQuery({
+    queryKey: ["episode-list", options],
+    queryFn: () => getEpisodeList(options),
+  });
+};
+
+export const useGetSeasonList = (options: any) => {
+  return useQuery({
+    queryKey: ["season-list", options],
+    queryFn: () => getSeasonList(options),
+  });
+};
+
+export const useGetEpisodeById = (id: string) => {
+  return useQuery({
+    queryKey: ["episode", id],
+    queryFn: async () => {
+      const result = await getEpisodeById(id);
+      return result.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useCreateEpisode = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (data: any) => createEpisode(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["episode-list"] });
+      queryClient.invalidateQueries({ queryKey: ["season-list"] });
+    },
+  });
+};
+
+export const useUpdateEpisode = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateEpisode(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["episode-list"] });
+      queryClient.invalidateQueries({ queryKey: ["episode", variables.id] });
+    },
+  });
+};
+
+export const useDeleteEpisode = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (id: string) => deleteEpisode(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["episode-list"] });
+      queryClient.invalidateQueries({ queryKey: ["season-list"] });
+    },
+  });
+};
+
+export const useToggleEpisodeLock = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, isLocked }: { id: string; isLocked: boolean }) =>
+      toggleEpisodeLock(id, isLocked),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["episode-list"] });
+    },
+  });
+};
+
 // Pages API
 export const getPages = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
   const params = new URLSearchParams();
@@ -1278,8 +1450,9 @@ export const useBulkDeletePages = () => {
 // Ads API
 export const getAds = async (options?: any) => {
   const params = new URLSearchParams();
-  if (options?.type) params.set('type', options.type);
-  if (options?.platform) params.set('platform', options.platform);
+  if (options?.adType) params.set('adType', options.adType);
+  if (options?.placement) params.set('placement', options.placement);
+  if (options?.status) params.set('status', options.status);
   return api(`/ads?${params.toString()}`);
 };
 
@@ -1303,10 +1476,44 @@ export const deleteAd = async (id: string) => {
   return api(`/ads/${id}`, { method: 'DELETE' });
 };
 
+export const bulkDeleteAds = async (ids: string[]) => {
+  return api('/ads/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+};
+
 export const useGetAds = (options?: any) => {
   return useQuery({
     queryKey: ['ads', options],
     queryFn: () => getAds(options)
+  });
+};
+
+export const getPublicAds = async (options?: { placement?: string; targetContentType?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.placement) params.set('placement', options.placement);
+  if (options?.targetContentType) params.set('targetContentType', options.targetContentType);
+  return api(`/public/ads?${params.toString()}`);
+};
+
+export const useGetPublicAds = (options?: { placement?: string; targetContentType?: string }) => {
+  return useQuery({
+    queryKey: ['public-ads', options],
+    queryFn: () => getPublicAds(options),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const getPublicNotifications = async () => api('/public/notifications');
+
+export const useGetPublicNotifications = () => {
+  return useQuery({
+    queryKey: ['public-notifications'],
+    queryFn: getPublicNotifications,
+    staleTime: 2 * 60 * 1000,
+    retry: false,
   });
 };
 
@@ -1334,6 +1541,16 @@ export const useDeleteAd = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
     mutationFn: deleteAd,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ads'] });
+    }
+  });
+};
+
+export const useBulkDeleteAds = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteAds,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ads'] });
     }
@@ -1388,6 +1605,32 @@ export const useUploadSettingsLogos = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
     },
+  });
+};
+
+// Email Diagnostics
+export const getEmailStatus = async () => {
+  return api("/settings/email-status");
+};
+
+export const testEmail = async (to: string) => {
+  return api("/settings/test-email", {
+    method: "POST",
+    body: JSON.stringify({ to }),
+  });
+};
+
+export const useGetEmailStatus = () => {
+  return useQuery({
+    queryKey: ["email-status"],
+    queryFn: getEmailStatus,
+    retry: 1,
+  });
+};
+
+export const useTestEmail = () => {
+  return useMutation<any, Error, string>({
+    mutationFn: (to) => testEmail(to),
   });
 };
 
@@ -1559,6 +1802,102 @@ export const getAllMediaFiles = async (options?: {
   if (options?.fileType) params.set('fileType', options.fileType);
   if (options?.search) params.set('search', options.search);
   return api(`/media/files/all?${params.toString()}`);
+};
+
+// Sections API
+export const getSections = async (params?: { contentType?: string; activeOnly?: boolean }) => {
+  const query = new URLSearchParams();
+  if (params?.contentType) query.append('contentType', params.contentType);
+  if (params?.activeOnly) query.append('activeOnly', 'true');
+  return api(`/sections?${query.toString()}`);
+};
+
+export const getSectionById = async (id: string) => {
+  return api(`/sections/${id}`);
+};
+
+export const createSection = async (data: any) => {
+  return api('/sections', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const updateSection = async (id: string, data: any) => {
+  return api(`/sections/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const deleteSection = async (id: string) => {
+  return api(`/sections/${id}`, { method: 'DELETE' });
+};
+
+export const reorderSections = async (updates: { id: string, position: number }[]) => {
+  return api('/sections/reorder', {
+    method: 'PUT',
+    body: JSON.stringify({ updates }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+// Sections Hooks
+export const useGetSections = (params?: { contentType?: string; activeOnly?: boolean }) => {
+  return useQuery({
+    queryKey: ['sections', params],
+    queryFn: () => getSections(params),
+  });
+};
+
+export const useGetSection = (id: string) => {
+  return useQuery({
+    queryKey: ['sections', id],
+    queryFn: () => getSectionById(id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateSection = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: createSection,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
+    },
+  });
+};
+
+export const useUpdateSection = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { id: string; data: any }>({
+    mutationFn: ({ id, data }) => updateSection(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
+    },
+  });
+};
+
+export const useDeleteSection = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: deleteSection,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
+    },
+  });
+};
+
+export const useReorderSections = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, { id: string, position: number }[]>({
+    mutationFn: reorderSections,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections'] });
+    },
+  });
 };
 
 // App Settings API
@@ -1969,6 +2308,10 @@ export const useToggleMovieTrending = () => {
       queryClient.invalidateQueries({ queryKey: ['movies'] });
     },
   });
+};
+
+export const setupAdmin = async (data: { setupKey: string; email: string; password: string; name?: string }) => {
+  return api('/auth/setup-admin', { method: 'POST', body: JSON.stringify(data) });
 };
 
 // Profile and Password API
@@ -2757,5 +3100,254 @@ export const useGetTransactions = () => {
   return useQuery({
     queryKey: ["transactions-data"],
     queryFn: getTransactions,
+  });
+};
+
+export const loginClient = async (data: any) => { return api('/app/auth/login', { method: 'POST', body: JSON.stringify(data) }); };
+export const registerClient = async (data: any) => { return api('/app/auth/register', { method: 'POST', body: JSON.stringify(data) }); };
+
+// Countries API
+export const getCountries = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.admin) params.set('admin', 'true');
+  return api(`/countries?${params.toString()}`);
+};
+
+export const getCountryById = async (id: string) => {
+  return api(`/countries/${id}`);
+};
+
+export const useGetCountryById = (id: string) => {
+  return useQuery({ queryKey: ['country', id], queryFn: () => getCountryById(id), enabled: !!id });
+};
+
+export const createCountry = async (data: any) => {
+  return api('/countries', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+};
+
+export const updateCountry = async (id: string, data: any) => {
+  return api(`/countries/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+};
+
+export const deleteCountry = async (id: string) => {
+  return api(`/countries/${id}`, { method: 'DELETE' });
+};
+
+export const useGetCountries = (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  return useQuery({ queryKey: ['countries', options], queryFn: () => getCountries(options) });
+};
+
+export const useCreateCountry = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (data: any) => createCountry(data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['countries'] }); }
+  });
+};
+
+export const useUpdateCountry = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updateCountry(id, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['countries'] }); }
+  });
+};
+
+export const useDeleteCountry = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (id: string) => deleteCountry(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['countries'] }); }
+  });
+};
+
+// Crews API
+export const getCrews = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  if (options?.admin) params.set('admin', 'true');
+  return api(`/crews?${params.toString()}`);
+};
+
+export const getCrewById = async (id: string) => {
+  return api(`/crews/${id}`);
+};
+
+export const useGetCrewById = (id: string) => {
+  return useQuery({ queryKey: ['crew', id], queryFn: () => getCrewById(id), enabled: !!id });
+};
+
+export const createCrew = async (data: any) => {
+  return api('/crews', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+};
+
+export const updateCrew = async (id: string, data: any) => {
+  return api(`/crews/${id}`, { method: 'PUT', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+};
+
+export const deleteCrew = async (id: string) => {
+  return api(`/crews/${id}`, { method: 'DELETE' });
+};
+
+export const bulkDeleteCrews = async (ids: string[]) => {
+  return api('/crews/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const useGetCrews = (options?: { page?: number; limit?: number; admin?: boolean }) => {
+  return useQuery({ queryKey: ['crews', options], queryFn: () => getCrews(options) });
+};
+
+export const useCreateCrew = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (data: any) => createCrew(data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['crews'] }); }
+  });
+};
+
+export const useUpdateCrew = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: ({ id, data }: any) => updateCrew(id, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['crews'] }); }
+  });
+};
+
+export const useDeleteCrew = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (id: string) => deleteCrew(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['crews'] }); }
+  });
+};
+
+export const useBulkDeleteCrews = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, string[]>({
+    mutationFn: bulkDeleteCrews,
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['crews'] }); }
+  });
+};
+
+export const useGetAdminNotifications = () => {
+  return useQuery({
+    queryKey: ["admin-notifications"],
+    queryFn: () => api("/admin-notifications"),
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
+};
+
+export const useMarkAdminNotificationsRead = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      api("/admin-notifications/read-all", {
+        method: "PATCH",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+    },
+  });
+};
+
+// ─── WISHLIST (Public User) ───────────────────────────────────────────────────
+
+export const getWishlist = async (options?: { page?: number; limit?: number }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  return api(`/wishlist?${params.toString()}`);
+};
+
+export const toggleWishlistItem = async (data: { contentId: string; contentType: 'movie' | 'show' | 'drama' }) => {
+  const type = data.contentType === 'movie' ? 'movie' : 'show';
+  return api('/wishlist', {
+    method: 'POST',
+    body: JSON.stringify({ contentId: data.contentId, type }),
+  });
+};
+
+export const useGetWishlist = (options?: { page?: number; limit?: number }) => {
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  return useQuery({
+    queryKey: ['wishlist', options],
+    queryFn: async () => {
+      const res = await getWishlist(options);
+      return res.data;
+    },
+    enabled: hasToken,
+    retry: false,
+    staleTime: 30000,
+  });
+};
+
+export const useToggleWishlist = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: toggleWishlistItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+    },
+  });
+};
+
+// ─── DOWNLOADS (Public User) ──────────────────────────────────────────────────
+
+export const getDownloads = async (options?: { page?: number; limit?: number }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  return api(`/app/downloads?${params.toString()}`);
+};
+
+export const requestDownload = async (data: { contentId: string; contentType: 'movie' | 'drama' | 'series'; episodeId?: string }) => {
+  return api('/app/download', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const removeDownload = async (id: string) => {
+  return api(`/app/downloads/${id}`, { method: 'DELETE' });
+};
+
+export const useGetDownloads = (options?: { page?: number; limit?: number }) => {
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  return useQuery({
+    queryKey: ['downloads', options],
+    queryFn: async () => {
+      const res = await getDownloads(options);
+      return res.data;
+    },
+    enabled: hasToken,
+    retry: false,
+    staleTime: 30000,
+  });
+};
+
+export const useRemoveDownload = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeDownload,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['downloads'] });
+    },
+  });
+};
+
+export const useRequestDownload = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: requestDownload,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['downloads'] });
+    },
   });
 };

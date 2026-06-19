@@ -118,14 +118,14 @@ export default function LanguagesList() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search languages..."
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Button
           onClick={openCreate}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -199,7 +199,7 @@ export default function LanguagesList() {
                       <button
                         onClick={() => setConfirmDelete(lang)}
                         disabled={deleteMutation.isPending}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors disabled:opacity-40"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors disabled:opacity-40"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -227,7 +227,7 @@ export default function LanguagesList() {
                 placeholder="e.g. English"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -236,7 +236,7 @@ export default function LanguagesList() {
                 placeholder="e.g. en"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
             <div className="space-y-1.5">
@@ -271,7 +271,7 @@ export default function LanguagesList() {
             <Button
               onClick={handleSave}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-foreground font-semibold"
+              className="bg-primary hover:bg-primary/90 text-foreground font-semibold"
             >
               {editingLanguage ? "Update" : "Create"}
             </Button>
@@ -292,7 +292,7 @@ export default function LanguagesList() {
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   useBulkDeleteSubscriptions,
   useDeleteSubscription,
@@ -136,7 +137,8 @@ export default function SubscriptionsListPage() {
     setConfirmDelete(null);
   };
 
-  const fmt = (n: number) => `$${n.toFixed(2)}`;
+  const { settings } = useSettings();
+  const fmt = (n: number) => settings.currencyPosition === "before" ? `${settings.currencySymbol}${n.toFixed(settings.decimalPlaces)}` : `${n.toFixed(settings.decimalPlaces)} ${settings.currencySymbol}`;
 
   return (
     <div className="space-y-6">
@@ -160,7 +162,7 @@ export default function SubscriptionsListPage() {
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -207,7 +209,7 @@ export default function SubscriptionsListPage() {
         {/* Filter Button */}
         <Button
           onClick={() => {}}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-4"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-4"
         >
           <Filter className="h-4 w-4" />
           Filter
@@ -222,14 +224,14 @@ export default function SubscriptionsListPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
         {/* New Button */}
         <Button
           onClick={() => setLocation("/subscriptions/new")}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -283,7 +285,7 @@ export default function SubscriptionsListPage() {
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           sub.status === "active"
                             ? "bg-emerald-500/15 text-emerald-400"
-                            : "bg-red-500/15 text-red-400"
+                            : "bg-primary/15 text-primary"
                         }`}
                       >
                         {sub.status === "active" ? "Active" : "Inactive"}
@@ -293,14 +295,14 @@ export default function SubscriptionsListPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setLocation(`/subscriptions/${sub.id}/edit`)}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-blue-400 hover:bg-primary/80/30 transition-colors"
                           title="Edit"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                         </button>
                         <button
                           onClick={() => setConfirmDelete(sub)}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -330,7 +332,7 @@ export default function SubscriptionsListPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-foreground"
+              className="bg-primary hover:bg-primary/90 text-foreground"
             >
               Delete
             </AlertDialogAction>

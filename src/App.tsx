@@ -110,11 +110,16 @@ import ActorsListPage from "@/pages/actors-list";
 import ActorFormPage from "@/pages/actor-form";
 import DirectorsListPage from "@/pages/directors-list";
 import DirectorFormPage from "@/pages/director-form";
+import CrewListPage from "@/pages/crew-list";
+import CrewFormPage from "@/pages/crew-form";
+import CountriesListPage from "@/pages/countries-list";
+import CountryFormPage from "@/pages/country-form";
 import NotificationListPage from "@/pages/notification-list";
 import NotificationTemplatesPage from "@/pages/notification-templates";
 import NotificationTemplateFormPage from "@/pages/notification-template-form";
 import ProfilePage from "@/pages/profile";
 import AppManagement from "@/pages/app-management";
+import HomeSections from "@/pages/home-sections";
 import MoviesPage from "@/pages/movies";
 import MovieForm from "@/pages/movie-form";
 import TvShowsPage from "@/pages/tv-shows";
@@ -127,6 +132,10 @@ import StreamingHomePage from "@/pages/streaming-home";
 import MovieDetailPage from "@/pages/movie-detail";
 import EpisodeDetailPage from "@/pages/episode-detail";
 import CategoriesBrowsePage from "@/pages/categories-browse";
+import PublicAuthPage from "@/pages/public-auth";
+import TvShowsPublicPage from "@/pages/tv-shows-public";
+import UserProfilePage from "@/pages/user-profile";
+import PublicPagePage from "@/pages/public-page";
 import InfluencersPage from "@/pages/influencers";
 import ApprovalsPage from "@/pages/approvals";
 import ShortDramasPage from "@/pages/short-dramas";
@@ -134,6 +143,7 @@ import ShortDramaForm from "@/pages/short-drama-form";
 import ShortDramaDetail from "@/pages/short-drama-detail";
 import ShortDramaSeasonsPage from "@/pages/short-drama-seasons";
 import ShortDramaEpisodesPage from "@/pages/short-drama-episodes";
+import GoogleAdsPage from "@/pages/google-ads";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -149,6 +159,7 @@ const routePermissions: Record<string, string | null> = {
   "/dashboard": null,
   "/media-library": "mediaLibrary",
   "/app-management": null,
+  "/home-sections": null,
   "/influencers": "influencers",
   "/approvals": null,
   "/users": null,
@@ -161,12 +172,15 @@ const routePermissions: Record<string, string | null> = {
   "/episodes": "shows",
   "/categories": "categories",
   "/ads": "ads",
+  "/google-ads": "ads",
   "/pages": "pages",
   "/promotions": "promotions",
   "/banners": "banners",
   "/faq": "faqs",
   "/actors": "actors",
   "/directors": "directors",
+  "/crew": "crew",
+  "/countries": "countries",
   "/subscriptions": "subscriptions",
   "/plans": "subscriptionPlans",
   "/plan-limits": "planLimits",
@@ -208,13 +222,13 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
 
   useEffect(() => {
     if (!token) {
-      setLocation("/login");
-    } else if (!isLoading && user === null && error) {
+      setLocation("/admin/login");
+    } else if (!isLoading && error) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      setLocation("/login");
+      setLocation("/admin/login");
     }
-  }, [token, user, isLoading, error, setLocation]);
+  }, [token, isLoading, error, setLocation]);
 
   if (!token) return null;
   
@@ -222,7 +236,8 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
   
   if (error) {
     console.error("Error fetching user:", error);
-    return <div className="min-h-screen flex items-center justify-center">Error loading user data. Please try again.</div>;
+    // While redirecting, show nothing or a subtle message instead of an error block
+    return <div className="min-h-screen flex items-center justify-center">Session expired. Redirecting...</div>;
   }
   
   // Check permission
@@ -243,7 +258,7 @@ function Router() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (token && location === "/login") {
+    if (token && location === "/admin/login") {
       setLocation("/dashboard");
     }
   }, [token, location, setLocation]);
@@ -251,7 +266,7 @@ function Router() {
   return (
     <Switch>
       {/* Admin routes */}
-      <Route path="/login" component={Login} />
+      <Route path="/admin/login" component={Login} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/users" component={() => <ProtectedRoute component={UsersList} />} />
       <Route path="/users/:id" component={() => <ProtectedRoute component={UserDetail} />} />
@@ -281,6 +296,7 @@ function Router() {
       <Route path="/episodes" component={() => <ProtectedRoute component={EpisodesPage} />} />
       <Route path="/ads/:id" component={() => <ProtectedRoute component={AdForm} />} />
       <Route path="/ads" component={() => <ProtectedRoute component={AdsPage} />} />
+      <Route path="/google-ads" component={() => <ProtectedRoute component={GoogleAdsPage} />} />
       <Route path="/pages/:id" component={() => <ProtectedRoute component={PageForm} />} />
       <Route path="/pages" component={() => <ProtectedRoute component={PagesPage} />} />
       <Route path="/media-library" component={() => <ProtectedRoute component={MediaLibraryPage} />} />
@@ -305,6 +321,12 @@ function Router() {
       <Route path="/directors/new" component={() => <ProtectedRoute component={DirectorFormPage} />} />
       <Route path="/directors/:id/edit" component={() => <ProtectedRoute component={DirectorFormPage} />} />
       <Route path="/directors" component={() => <ProtectedRoute component={DirectorsListPage} />} />
+      <Route path="/crew/new" component={() => <ProtectedRoute component={CrewFormPage} />} />
+      <Route path="/crew/:id/edit" component={() => <ProtectedRoute component={CrewFormPage} />} />
+      <Route path="/crew" component={() => <ProtectedRoute component={CrewListPage} />} />
+      <Route path="/countries/new" component={() => <ProtectedRoute component={CountryFormPage} />} />
+      <Route path="/countries/:id/edit" component={() => <ProtectedRoute component={CountryFormPage} />} />
+      <Route path="/countries" component={() => <ProtectedRoute component={CountriesListPage} />} />
       <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
       <Route path="/notifications" component={() => <ProtectedRoute component={NotificationListPage} />} />
       <Route path="/notification-templates/:id/edit" component={() => <ProtectedRoute component={NotificationTemplateFormPage} />} />
@@ -313,6 +335,7 @@ function Router() {
       <Route path="/settings/branding" component={() => <ProtectedRoute component={Branding} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
       <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
+      <Route path="/home-sections" component={() => <ProtectedRoute component={HomeSections} />} />
       <Route path="/influencers" component={() => <ProtectedRoute component={InfluencersPage} />} />
       <Route path="/approvals" component={() => <ProtectedRoute component={ApprovalsPage} />} />
       <Route path="/short-dramas/new" component={() => <ProtectedRoute component={ShortDramaForm} />} />
@@ -330,10 +353,15 @@ function Router() {
       
       {/* Public streaming routes */}
       <Route path="/" component={StreamingHomePage} />
+      <Route path="/login" component={PublicAuthPage} />
+      <Route path="/register" component={PublicAuthPage} />
       <Route path="/movie/:id" component={MovieDetailPage} />
       <Route path="/show/:showTitle/episode/:epNum" component={EpisodeDetailPage} />
       <Route path="/browse/:tab" component={CategoriesBrowsePage} />
       <Route path="/browse" component={CategoriesBrowsePage} />
+      <Route path="/tv-shows-browse" component={TvShowsPublicPage} />
+      <Route path="/account" component={UserProfilePage} />
+      <Route path="/page/:slug" component={PublicPagePage} />
       <Route component={NotFound} />
     </Switch>
   );

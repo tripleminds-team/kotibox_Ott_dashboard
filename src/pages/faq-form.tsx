@@ -63,7 +63,7 @@ export default function FaqFormPage() {
       {/* Back */}
       <button
         onClick={() => setLocation("/faq")}
-        className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+        className="flex items-center gap-1.5 text-sm text-primary hover:text-red-300 font-medium transition-colors"
       >
         <span className="text-base leading-none">«</span>
         Back
@@ -76,21 +76,21 @@ export default function FaqFormPage() {
           {/* Question */}
           <div className="space-y-2">
             <Label className={labelCls}>
-              Question <span className="text-red-500">*</span>
+              Question <span className="text-primary">*</span>
             </Label>
             <Textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Enter question"
               rows={8}
-              className="bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 rounded-lg resize-none"
+              className="bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary rounded-lg resize-none"
             />
           </div>
 
           {/* Answer */}
           <div className="space-y-2">
             <Label className={labelCls}>
-              Answer <span className="text-red-500">*</span>
+              Answer <span className="text-primary">*</span>
             </Label>
             {/* Toolbar mock */}
             <div className="rounded-t-lg border border-border bg-card px-3 py-2 flex flex-wrap items-center gap-1">
@@ -119,7 +119,7 @@ export default function FaqFormPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Enter answer..."
               rows={8}
-              className="rounded-t-none border-t-0 bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 rounded-lg resize-none"
+              className="rounded-t-none border-t-0 bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary rounded-lg resize-none"
             />
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function FaqFormPage() {
             <Switch
               checked={status}
               onCheckedChange={setStatus}
-              className="data-[state=checked]:bg-red-600"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function FaqFormPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]"
+          className="bg-primary hover:bg-primary/90 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]"
         >
           {saving ? "Saving..." : "Save"}
         </Button>

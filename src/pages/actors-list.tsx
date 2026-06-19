@@ -184,7 +184,7 @@ export default function ActorsListPage() {
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleApply} className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold">
+        <Button onClick={handleApply} className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold">
           Apply
         </Button>
         <Button variant="outline" onClick={handleExport} className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg">
@@ -203,10 +203,10 @@ export default function ActorsListPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
-        <Button onClick={() => setLocation("/actors/new")} className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold">
+        <Button onClick={() => setLocation("/actors/new")} className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold">
           <Plus className="h-4 w-4" />New
         </Button>
       </div>
@@ -217,7 +217,7 @@ export default function ActorsListPage() {
           <TableHeader>
             <TableRow className="border-border bg-card hover:bg-card">
               <TableHead className="w-10">
-                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
+                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Actors</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Date Of Birth</TableHead>
@@ -235,7 +235,7 @@ export default function ActorsListPage() {
               filtered.map((actor) => (
                 <TableRow key={actor.id} className="border-border hover:bg-muted/40">
                   <TableCell>
-                    <Checkbox checked={selectedIds.includes(actor.id)} onCheckedChange={() => toggleSelect(actor.id)} className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600" />
+                    <Checkbox checked={selectedIds.includes(actor.id)} onCheckedChange={() => toggleSelect(actor.id)} className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -255,14 +255,14 @@ export default function ActorsListPage() {
                   <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{actor.dateOfBirth}</TableCell>
                   <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{actor.birthPlace}</TableCell>
                   <TableCell>
-                    <Switch checked={actor.status} onCheckedChange={() => toggleStatus(actor.id, actor.status)} className="data-[state=checked]:bg-red-600" />
+                    <Switch checked={actor.status} onCheckedChange={() => toggleStatus(actor.id, actor.status)} className="data-[state=checked]:bg-primary" />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setLocation(`/actors/${actor.id}/edit`)} className="h-8 w-8 flex items-center justify-center rounded-lg bg-amber-600/15 text-amber-400 hover:bg-amber-600/30 transition-colors">
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={() => setConfirmDelete(actor)} className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors">
+                      <button onClick={() => setConfirmDelete(actor)} className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -284,7 +284,7 @@ export default function ActorsListPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

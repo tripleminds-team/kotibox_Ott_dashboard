@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import MediaPicker from "@/components/MediaPicker";
 import {
   Command,
   CommandEmpty,
@@ -72,11 +73,10 @@ export default function ShowForm() {
   const [isUploading, setIsUploading] = useState(false);
   const uploadStartRef = useRef<number | null>(null);
 
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-
-  const [thumbnailMode, setThumbnailMode] = useState("upload");
   const [videoMode, setVideoMode] = useState("upload");
+  const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
+  const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -118,9 +118,6 @@ export default function ShowForm() {
         lockEpisodes: true,
         categories: (data.categories || []).map((c: any) => c._id || c.id || c),
       });
-      if (data.thumbnail) {
-        setThumbnailMode("url");
-      }
     }
   }, [showData, isCreate]);
 
@@ -147,12 +144,11 @@ export default function ShowForm() {
         formDataToSend.append("freeEpisodeCount", formData.freeEpisodeCount.toString());
         formDataToSend.append("lockEpisodes", formData.lockEpisodes.toString());
 
-        if (thumbnailMode === "url") {
-          if (formData.thumbnail) {
-            formDataToSend.append("thumbnail", formData.thumbnail);
-          }
-        } else if (thumbnailFile) {
-          formDataToSend.append("thumbnailFile", thumbnailFile);
+        if (formData.thumbnail) {
+          formDataToSend.append("thumbnail", formData.thumbnail);
+        }
+        if (formData.bannerImage) {
+          formDataToSend.append("bannerImage", formData.bannerImage);
         }
 
         if (videoMode === "url") {
@@ -360,65 +356,97 @@ export default function ShowForm() {
                   <ImageIcon className="h-5 w-5 text-muted-foreground" />
                   <CardTitle>Artwork</CardTitle>
                 </div>
-                <CardDescription>Thumbnail for your show</CardDescription>
+                <CardDescription>Thumbnail and banner image for your show</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Thumbnail */}
+                <div className="space-y-3">
                   <Label>Thumbnail</Label>
-                  <Tabs value={thumbnailMode} onValueChange={setThumbnailMode}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="url">
-                        <Link2 className="w-4 h-4 mr-2" />
-                        URL
-                      </TabsTrigger>
-                      <TabsTrigger value="upload">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload File
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="url" className="mt-4 space-y-4">
-                      <Input
-                        placeholder="https://example.com/thumbnail.jpg"
-                        value={formData.thumbnail}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, thumbnail: e.target.value }))
-                        }
+                  {formData.thumbnail ? (
+                    <div className="group relative inline-block">
+                      <img
+                        src={getImageUrl(formData.thumbnail)}
+                        alt="Thumbnail preview"
+                        className="h-40 w-28 rounded-md object-cover border border-border"
                       />
-                      {formData.thumbnail && (
-                        <img
-                          src={getImageUrl(formData.thumbnail)}
-                          alt="Thumbnail preview"
-                          className="h-40 w-28 rounded-md object-cover border border-border"
-                        />
-                      )}
-                    </TabsContent>
-                    <TabsContent value="upload" className="mt-4 space-y-4">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          setThumbnailFile(e.target.files?.[0] || null)
-                        }
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, thumbnail: "" }))}
+                        className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white hover:bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => setThumbnailPickerOpen(true)}
+                      className="h-40 w-28 rounded-md border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/20"
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setThumbnailPickerOpen(true)}
+                    className="gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    {formData.thumbnail ? "Change Thumbnail" : "Pick from Media Library"}
+                  </Button>
+                  <MediaPicker
+                    open={thumbnailPickerOpen}
+                    onClose={() => setThumbnailPickerOpen(false)}
+                    onSelect={(media) => setFormData((prev) => ({ ...prev, thumbnail: media.filePath || media.url }))}
+                    source="show"
+                    accept="image/*"
+                  />
+                </div>
+
+                {/* Banner Image */}
+                <div className="space-y-3">
+                  <Label>Banner Image</Label>
+                  {formData.bannerImage ? (
+                    <div className="group relative inline-block">
+                      <img
+                        src={getImageUrl(formData.bannerImage)}
+                        alt="Banner preview"
+                        className="h-28 w-64 rounded-md object-cover border border-border"
                       />
-                      {thumbnailFile && (
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={URL.createObjectURL(thumbnailFile)}
-                            alt="Thumbnail preview"
-                            className="h-40 w-28 rounded-md object-cover border border-border"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            onClick={() => setThumbnailFile(null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </TabsContent>
-                  </Tabs>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, bannerImage: "" }))}
+                        className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white hover:bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => setBannerPickerOpen(true)}
+                      className="h-28 w-64 rounded-md border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/20"
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBannerPickerOpen(true)}
+                    className="gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    {formData.bannerImage ? "Change Banner" : "Pick from Media Library"}
+                  </Button>
+                  <MediaPicker
+                    open={bannerPickerOpen}
+                    onClose={() => setBannerPickerOpen(false)}
+                    onSelect={(media) => setFormData((prev) => ({ ...prev, bannerImage: media.filePath || media.url }))}
+                    source="show"
+                    accept="image/*"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -648,7 +676,7 @@ export default function ShowForm() {
                           <button
                             type="button"
                             onClick={() => toggleCategory(catId)}
-                            className="ml-2 hover:text-red-500"
+                            className="ml-2 hover:text-primary"
                           >
                             <span className="text-xs">×</span>
                           </button>
@@ -713,7 +741,7 @@ export default function ShowForm() {
             </div>
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-600 transition-all duration-300 ease-linear"
+                className="h-full bg-primary transition-all duration-300 ease-linear"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>

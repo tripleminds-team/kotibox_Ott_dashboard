@@ -58,12 +58,13 @@ import { useLanguage, languages } from "@/contexts/LanguageContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from "next-themes";
+import { HeaderNotifications } from "./HeaderNotifications";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(["/tv-shows"]);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["/tv-shows", "/short-dramas"]);
   const { data: user, isLoading } = useGetMe();
   const { language, setLanguage, t } = useLanguage();
   const { settings } = useSettings();
@@ -75,6 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         { href: "/dashboard", label: t('nav.dashboard'), icon: Home, permission: null },
         { href: "/media-library", label: t('nav.mediaLibrary'), icon: Image, permission: "mediaLibrary" },
         { href: "/app-management", label: t('nav.appManagement'), icon: UserCog, permission: null },
+        { href: "/home-sections", label: "Home Layout Builder", icon: LayoutList, permission: null },
       ],
     },
     {
@@ -91,7 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         { href: "/languages", label: t('nav.languages'), icon: Languages, permission: "languages" },
         { href: "/genres", label: t('nav.genres'), icon: Tags, permission: "genres" },
         { href: "/movies", label: t('nav.movies'), icon: Film, permission: "movies" },
-        { href: "/shows", label: t('nav.shows'), icon: PlaySquare, permission: "shows" },
+        
         {
           href: "/tv-shows",
           label: "TV Shows",
@@ -103,7 +105,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
             { href: "/episodes", label: "Episodes", icon: Video },
           ],
         },
-        { href: "/ads", label: t('nav.ads'), icon: PlusSquare, permission: "ads" },
+        {
+          href: "/short-dramas",
+          label: "Short Dramas",
+          icon: Clapperboard,
+          permission: "shortDramas",
+          children: [
+            { href: "/short-dramas", label: "Short Dramas", icon: Monitor, permission: "shortDramas" },
+            { href: "/short-drama-seasons", label: "Seasons", icon: LayoutList, permission: "shortDramas" },
+            { href: "/short-drama-episodes", label: "Episodes", icon: Video, permission: "shortDramas" },
+          ],
+        },
+        {
+          href: "/ads-group",
+          label: "Ads",
+          icon: PlusSquare,
+          permission: "ads",
+          children: [
+            { href: "/ads", label: "Manual Ads", icon: Monitor, permission: "ads" },
+            { href: "/google-ads", label: "Ad Networks", icon: Globe, permission: "ads" },
+          ],
+        },
         { href: "/pages", label: t('nav.pages'), icon: FileText, permission: "pages" },
         { href: "/promotions", label: t('nav.promotions'), icon: Megaphone, permission: "promotions" },
         { href: "/banners", label: t('nav.banners'), icon: Layers, permission: "banners" },
@@ -115,6 +137,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/actors", label: t('nav.actors'), icon: UserRound, permission: "actors" },
         { href: "/directors", label: t('nav.directors'), icon: Clapperboard, permission: "directors" },
+        { href: "/crew", label: "Crew", icon: UserCog, permission: null },
+        { href: "/countries", label: "Countries", icon: Globe, permission: null },
       ],
     },
     {
@@ -135,7 +159,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     {
       label: t('nav.system'),
       items: [
-        { href: "/settings", label: t('nav.settings'), icon: Settings, permission: null },
+      { href: "/settings", label: t('nav.settings'), icon: Settings, permission: "settings" },
       ],
     },
   ];
@@ -150,17 +174,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
     if (!isLoading && user === null) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      setLocation("/login");
+      setLocation("/admin/login");
     }
   }, [isLoading, user, setLocation]);
 
   const handleLogout = async () => {
     try {
       await logoutMutation.mutateAsync(undefined);
-      setLocation("/login");
+      setLocation("/admin/login");
     } catch (error) {
       console.error("Logout error:", error);
-      setLocation("/login");
+      setLocation("/admin/login");
     }
   };
 
@@ -248,11 +272,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       }`}
                     >
                       {isGroupActive && (
-                        <span className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-red-500" />
+                        <span className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-primary" />
                       )}
                       <span
                         className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
-                          isGroupActive ? "bg-red-600/20 text-red-400" : "text-muted-foreground group-hover:text-foreground"
+                          isGroupActive ? "bg-primary/20 text-primary" : "text-muted-foreground group-hover:text-foreground"
                         }`}
                       >
                         <Icon className="h-[17px] w-[17px]" />
@@ -280,7 +304,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                             >
                               <span
                                 className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 transition-colors ${
-                                  childActive ? "bg-red-600/20 text-red-400" : "text-muted-foreground group-hover:text-foreground"
+                                  childActive ? "bg-primary/20 text-primary" : "text-muted-foreground group-hover:text-foreground"
                                 }`}
                               >
                                 <ChildIcon className="h-4 w-4" />
@@ -308,12 +332,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   }`}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-red-500" />
+                    <span className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-primary" />
                   )}
                   <span
                     className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
                       isActive
-                        ? "bg-red-600/20 text-red-400"
+                        ? "bg-primary/20 text-primary"
                         : "text-muted-foreground group-hover:text-foreground"
                     }`}
                   >
@@ -343,12 +367,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={`relative flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? "bg-muted text-red-400"
+                      ? "bg-muted text-primary"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-red-500" />
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-primary" />
                   )}
                   <Icon className="h-[18px] w-[18px]" />
                 </Link>
@@ -373,7 +397,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             className="h-9 w-auto object-contain"
           />
         ) : (
-          <Film className={`text-red-500 ${collapsed ? "h-7 w-7" : "h-9 w-9"}`} />
+          <Film className={`text-primary ${collapsed ? "h-7 w-7" : "h-9 w-9"}`} />
         )}
       </div>
     );
@@ -396,9 +420,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
-            <Bell className="h-4 w-4" />
-          </Button>
+          <HeaderNotifications />
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground">
@@ -426,7 +448,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className="w-full justify-start gap-3 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted px-3"
                   onClick={handleLogout}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-400 shrink-0">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0">
                     <LogOut className="h-4 w-4" />
                   </span>
                   {t('nav.signOut')}
@@ -473,7 +495,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-muted-foreground hover:bg-muted hover:text-red-400 transition-colors"
+                    className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
                   >
                     <LogOut className="h-[18px] w-[18px]" />
                   </button>
@@ -489,7 +511,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 className="group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/15 text-red-400 shrink-0">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0">
                   <LogOut className="h-[17px] w-[17px]" />
                 </span>
                 {t('nav.signOut')}
@@ -506,7 +528,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }`}
       >
         {/* Top Navbar */}
-        <header className="hidden md:flex items-center justify-between px-6 py-3.5 border-b border-border bg-sidebar/90 backdrop-blur-xl sticky top-0 z-30">
+        {!settings.navbarHide && (
+        <header className={`hidden md:flex items-center justify-between px-6 py-3.5 border-b border-border z-30 ${
+          settings.navbarStyle === 'transparent' ? 'bg-transparent' :
+          settings.navbarStyle === 'glass' ? 'bg-sidebar/50 backdrop-blur-md sticky top-0' :
+          settings.navbarStyle === 'sticky' ? 'bg-sidebar sticky top-0' :
+          'bg-sidebar/90 backdrop-blur-xl sticky top-0' // default
+        }`}>
           <div className="flex items-center gap-3">
             {sidebarCollapsed && (
               <button
@@ -530,18 +558,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
-            </Button>
+            <HeaderNotifications />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="outline-none">
-                  <Avatar className="h-9 w-9 rounded-lg bg-gradient-to-br from-red-600 to-red-700 cursor-pointer hover:opacity-90 transition-opacity">
+                  <Avatar className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 cursor-pointer hover:opacity-90 transition-opacity">
                     <AvatarFallback className="text-white font-bold text-sm">
                       {user?.name?.charAt(0) || "A"}
                     </AvatarFallback>
@@ -553,7 +574,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className="w-56 bg-popover border-border text-foreground p-0 overflow-hidden"
               >
                 {/* User info header */}
-                <div className="bg-red-700 px-4 py-3 flex items-center gap-3">
+                <div className="bg-primary/90 px-4 py-3 flex items-center gap-3">
                   <Avatar className="h-9 w-9 rounded-full bg-muted shrink-0">
                     <AvatarFallback className="text-white font-bold text-sm bg-zinc-700">
                       {user?.name?.charAt(0) || "A"}
@@ -563,7 +584,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <p className="text-white font-semibold text-sm truncate">
                       {user?.name || "Admin"}
                     </p>
-                    <p className="text-red-200 text-xs truncate">
+                    <p className="text-primary-foreground/80 text-xs truncate">
                       {user?.email || "admin@streamit.com"}
                     </p>
                   </div>
@@ -595,7 +616,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </header>
+        </header>)}
 
         <div className="flex-1 p-4 md:p-6">{children}</div>
       </main>

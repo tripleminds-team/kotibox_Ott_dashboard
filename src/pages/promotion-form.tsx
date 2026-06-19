@@ -628,7 +628,7 @@ export default function PromotionForm() {
           </div>
           <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-600 transition-all duration-300 ease-linear"
+              className="h-full bg-primary transition-all duration-300 ease-linear"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
@@ -647,7 +647,7 @@ export default function PromotionForm() {
           <Button
             type="submit"
             disabled={createMutation.isPending || updateMutation.isPending || isUploading}
-            className="bg-red-600 hover:bg-red-700 text-foreground px-6 h-11 font-semibold"
+            className="bg-primary hover:bg-primary/90 text-foreground px-6 h-11 font-semibold"
           >
             {isEdit ? "Update Promotion" : "Create Promotion"}
           </Button>

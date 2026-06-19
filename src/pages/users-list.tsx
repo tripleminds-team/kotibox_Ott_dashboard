@@ -79,7 +79,7 @@ export default function UsersList() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -132,7 +132,7 @@ export default function UsersList() {
                     <div className="flex items-center gap-2">
                       <span
                         className={`h-2 w-2 rounded-full ${
-                          user.status === "banned" ? "bg-red-500" : "bg-green-500"
+                          user.status === "banned" ? "bg-primary" : "bg-green-500"
                         }`}
                       />
                       <span className="text-zinc-300 text-sm capitalize">
@@ -144,9 +144,9 @@ export default function UsersList() {
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         user.subscriptionPlan === "premium"
-                          ? "bg-red-500/15 text-red-400"
+                          ? "bg-primary/15 text-primary"
                           : user.subscriptionPlan === "standard"
-                          ? "bg-blue-500/15 text-blue-400"
+                          ? "bg-primary/15 text-blue-400"
                           : user.subscriptionPlan === "basic"
                           ? "bg-muted/50 text-zinc-300"
                           : "bg-muted text-zinc-400"
@@ -181,7 +181,7 @@ export default function UsersList() {
                         <button
                           onClick={() => handleBan(user.id)}
                           disabled={banMutation.isPending}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors"
                           title="Suspend"
                         >
                           <ShieldAlert className="h-3.5 w-3.5" />

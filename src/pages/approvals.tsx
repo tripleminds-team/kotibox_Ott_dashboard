@@ -71,7 +71,7 @@ export default function ApprovalsPage() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'movie': return 'bg-blue-500/10 text-blue-500';
+      case 'movie': return 'bg-primary/10 text-primary';
       case 'genre': return 'bg-purple-500/10 text-purple-500';
       case 'actor': return 'bg-green-500/10 text-green-500';
       case 'director': return 'bg-orange-500/10 text-orange-500';
@@ -164,7 +164,7 @@ export default function ApprovalsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleReject(item)}
-                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        className="border-primary text-primary hover:bg-primary hover:text-white"
                       >
                         <X className="h-4 w-4 mr-2" />
                         Reject
@@ -206,7 +206,7 @@ export default function ApprovalsPage() {
               </Button>
               <Button
                 onClick={handleRejectSubmit}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-white"
               >
                 Reject
               </Button>

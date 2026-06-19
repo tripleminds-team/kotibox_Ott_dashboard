@@ -1,4 +1,4 @@
-
+import { useSettings } from "@/contexts/SettingsContext";
 import { 
   useGetMe, 
   useGetDashboardStats, 
@@ -52,6 +52,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const COLORS = ['#7f1d1d', '#991b1b', '#b91c1c', '#dc2626', '#ef4444'];
 
 export default function Dashboard() {
+  const { settings } = useSettings();
+  const formatCurrency = (val) => {
+    const num = Number(val && typeof val === "string" ? val.replace(/[^0-9.-]+/g,"") : val) || 0;
+    return settings.currencyPosition === "before" ? `${settings.currencySymbol}${num.toFixed(settings.decimalPlaces)}` : `${num.toFixed(settings.decimalPlaces)} ${settings.currencySymbol}`;
+  };
   const { data: user } = useGetMe();
   const { data: dashboardStats, isLoading: statsLoading } = useGetDashboardStats();
   const { data: revenueData = [], isLoading: revenueLoading } = useGetRevenueData();
@@ -77,7 +82,7 @@ export default function Dashboard() {
       title: "Total Users",
       value: dashboardStats?.totalUsers?.toString() || "0",
       icon: Users,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+15%",
       trendUp: true,
     },
@@ -85,7 +90,7 @@ export default function Dashboard() {
       title: "Total Subscribers",
       value: dashboardStats?.totalSubscribers?.toString() || "0",
       icon: Users,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+18%",
       trendUp: true,
     },
@@ -93,7 +98,7 @@ export default function Dashboard() {
       title: "Total Soon to Expire",
       value: dashboardStats?.soonToExpire?.toString() || "0",
       icon: Clock,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+10%",
       trendUp: true,
     },
@@ -101,7 +106,7 @@ export default function Dashboard() {
       title: "Total Reviews",
       value: dashboardStats?.totalReviews?.toString() || "0",
       icon: Star,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+9.23%",
       trendUp: true,
     },
@@ -109,7 +114,7 @@ export default function Dashboard() {
       title: "Total Storage Usage",
       value: dashboardStats?.totalStorageUsage || "0 MB",
       icon: TrendingUp,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+18%",
       trendUp: true,
     },
@@ -117,31 +122,31 @@ export default function Dashboard() {
       title: "Rest Content",
       value: dashboardStats?.restContent?.toString() || "0",
       icon: Film,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+15%",
       trendUp: true,
     },
     {
       title: "Subscription Revenue",
-      value: dashboardStats?.subscriptionRevenue || "₱0.00",
+      value: dashboardStats?.subscriptionRevenue ? formatCurrency(dashboardStats.subscriptionRevenue) : formatCurrency(0),
       icon: DollarSign,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+15%",
       trendUp: true,
     },
     {
       title: "Rent Revenue",
-      value: dashboardStats?.rentRevenue || "₱0.00",
+      value: dashboardStats?.rentRevenue ? formatCurrency(dashboardStats.rentRevenue) : formatCurrency(0),
       icon: DollarSign,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+10%",
       trendUp: true,
     },
     {
       title: "Total Revenue",
-      value: dashboardStats?.totalRevenue || "₱0.00",
+      value: dashboardStats?.totalRevenue ? formatCurrency(dashboardStats.totalRevenue) : formatCurrency(0),
       icon: DollarSign,
-      iconBg: "from-red-600 to-red-700",
+      iconBg: "from-primary to-primary/80",
       trend: "+12%",
       trendUp: true,
     },
@@ -156,10 +161,10 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-sm text-muted-foreground">2026-01-01 to 2026-06-</div>
-          <Button className="bg-red-600 hover:bg-red-700 text-foreground rounded-lg">
+          <Button className="bg-primary hover:bg-primary/90 text-foreground rounded-lg">
             Submit
           </Button>
-          <Button className="bg-red-500 hover:bg-red-600 text-foreground rounded-lg">
+          <Button className="bg-primary hover:bg-primary/80 text-foreground rounded-lg">
             Reset
           </Button>
         </div>
@@ -179,7 +184,7 @@ export default function Dashboard() {
                   <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.iconBg} text-foreground`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className={`flex items-center gap-1 text-xs font-semibold ${stat.trendUp ? "text-green-500" : "text-red-500"}`}>
+                  <span className={`flex items-center gap-1 text-xs font-semibold ${stat.trendUp ? "text-green-500" : "text-primary"}`}>
                     {stat.trendUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                     {stat.trend}
                   </span>
@@ -217,8 +222,8 @@ export default function Dashboard() {
                 <AreaChart data={revenueData}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#dc2626" stopOpacity={0.5} />
-                      <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
@@ -232,7 +237,7 @@ export default function Dashboard() {
                   <Area
                     type="monotone"
                     dataKey="value"
-                    stroke="#dc2626"
+                    stroke="hsl(var(--primary))"
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorRevenue)"
@@ -359,7 +364,7 @@ export default function Dashboard() {
         <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold text-foreground">Reviews</CardTitle>
-            <Button variant="ghost" className="text-red-500 hover:text-red-400 p-0 h-auto text-sm">
+            <Button variant="ghost" className="text-primary hover:text-primary p-0 h-auto text-sm">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -379,7 +384,7 @@ export default function Dashboard() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 bg-muted rounded-lg">
-                          <AvatarFallback className="text-sm text-red-400">{review.avatar}</AvatarFallback>
+                          <AvatarFallback className="text-sm text-primary">{review.avatar}</AvatarFallback>
                         </Avatar>
                         <span className="text-foreground">{review.name}</span>
                       </div>
@@ -407,7 +412,7 @@ export default function Dashboard() {
         <Card className="bg-card border-border text-foreground shadow-lg border-0 overflow-hidden lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold text-foreground">Transactions</CardTitle>
-            <Button variant="ghost" className="text-red-500 hover:text-red-400 p-0 h-auto text-sm">
+            <Button variant="ghost" className="text-primary hover:text-primary p-0 h-auto text-sm">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -427,7 +432,7 @@ export default function Dashboard() {
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6 bg-muted rounded-lg">
-                          <AvatarFallback className="text-xs text-red-400">{transaction.avatar}</AvatarFallback>
+                          <AvatarFallback className="text-xs text-primary">{transaction.avatar}</AvatarFallback>
                         </Avatar>
                         <span className="text-foreground">{transaction.name}</span>
                       </div>

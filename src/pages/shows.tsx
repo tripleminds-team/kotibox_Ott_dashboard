@@ -87,12 +87,12 @@ export default function ShowsPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button
           onClick={() => setLocation("/shows/new")}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -182,7 +182,7 @@ export default function ShowsPage() {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setLocation(`/shows/${item._id}`)}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-blue-400 hover:bg-primary/80/30 transition-colors"
                         title="View"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -206,7 +206,7 @@ export default function ShowsPage() {
                       <button
                         onClick={() => setConfirmDelete(item)}
                         disabled={deletingId === item._id}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors disabled:opacity-40"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors disabled:opacity-40"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -231,7 +231,7 @@ export default function ShowsPage() {
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

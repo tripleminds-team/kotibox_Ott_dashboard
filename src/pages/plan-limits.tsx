@@ -109,7 +109,7 @@ export default function PlanLimitsPage() {
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${
         active
           ? "border-green-700/40 bg-green-600/20 text-green-400"
-          : "border-red-700/40 bg-red-600/20 text-red-400"
+          : "border-red-700/40 bg-primary/20 text-primary"
       }`}
     >
       <span
@@ -166,7 +166,7 @@ export default function PlanLimitsPage() {
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -192,14 +192,14 @@ export default function PlanLimitsPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
         {/* New button */}
         <Button
           onClick={() => setLocation("/plan-limits/new")}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -215,7 +215,7 @@ export default function PlanLimitsPage() {
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-foreground font-semibold text-sm">
@@ -276,7 +276,7 @@ export default function PlanLimitsPage() {
                     <Checkbox
                       checked={selectedIds.includes(item.id)}
                       onCheckedChange={() => toggleSelect(item.id)}
-                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">{item.planName}</TableCell>
@@ -305,7 +305,7 @@ export default function PlanLimitsPage() {
                         size="icon"
                         variant="ghost"
                         onClick={() => setConfirmDelete(item)}
-                        className="h-8 w-8 rounded-lg bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-600/30"
+                        className="h-8 w-8 rounded-lg bg-primary/20 hover:bg-primary/80/40 text-primary border border-red-600/30"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -340,7 +340,7 @@ export default function PlanLimitsPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteAction}
-              className="bg-red-600 hover:bg-red-700 text-foreground border-0"
+              className="bg-primary hover:bg-primary/90 text-foreground border-0"
             >
               Delete
             </AlertDialogAction>

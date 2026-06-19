@@ -312,6 +312,63 @@ function applyFavicon(url: string) {
   link.href = url;
 }
 
+function hexToHsl(hex: string) {
+  hex = hex.replace(/^#/, '');
+  if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+  let r = parseInt(hex.substring(0, 2), 16) / 255;
+  let g = parseInt(hex.substring(2, 4), 16) / 255;
+  let b = parseInt(hex.substring(4, 6), 16) / 255;
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+export function applyColorTheme(theme: string) {
+  const root = document.documentElement;
+  
+  // Base primary colors in HSL for Tailwind
+  const themeMap: Record<string, string> = {
+    "blue-green": "217 91% 60%", // #3b82f6
+    "orange-yellow": "24 95% 53%", // #f97316
+    "pink-purple": "330 81% 60%", // #ec4899
+    "purple-orange": "258 90% 66%", // #8b5cf6
+    "green-pink": "142 71% 45%", // #22c55e
+  };
+
+  let hsl = themeMap[theme] || "357 93% 47%"; // Default to red
+  if (theme && theme.startsWith('#')) {
+    hsl = hexToHsl(theme);
+  }
+  
+  root.style.setProperty('--primary', hsl);
+  root.style.setProperty('--ring', hsl);
+  root.style.setProperty('--sidebar-primary', hsl);
+  root.style.setProperty('--sidebar-ring', hsl);
+}
+
+export function applyBodyClasses(cardStyle: string, menuStyle: string) {
+  const body = document.body;
+  
+  // Clean up old classes
+  body.classList.remove('card-style-default', 'card-style-glass', 'card-style-transparent');
+  body.classList.remove('menu-style-mini', 'menu-style-hover', 'menu-style-boxed', 'menu-style-soft');
+  
+  // Apply new classes
+  if (cardStyle) body.classList.add(`card-style-${cardStyle}`);
+  if (menuStyle) body.classList.add(`menu-style-${menuStyle}`);
+}
+
+
 interface SettingsContextType {
   settings: AppSettings;
   updateSettings: (patch: Partial<AppSettings>) => void;
@@ -331,7 +388,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         if (parsed.logoUrl?.includes("imgur.com")) parsed.logoUrl = "";
         if (parsed.darkLogoUrl?.includes("imgur.com")) parsed.darkLogoUrl = "";
         if (parsed.lightLogoUrl?.includes("imgur.com")) parsed.lightLogoUrl = "";
-        return { ...DEFAULT, ...parsed };
+        const s = { ...DEFAULT, ...parsed };
+        applyColorTheme(s.colorTheme);
+        applyBodyClasses(s.cardStyle, s.menuStyle);
+        return s;
       }
     } catch {}
     return DEFAULT;
@@ -350,6 +410,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(mapped);
       persist(mapped);
       applyFavicon(mapped.faviconUrl);
+      applyColorTheme(mapped.colorTheme);
+      applyBodyClasses(mapped.cardStyle, mapped.menuStyle);
+      applyColorTheme(mapped.colorTheme);
+      applyBodyClasses(mapped.cardStyle, mapped.menuStyle);
     } catch (e) {
       console.warn("Settings fetch failed, using cached values:", e);
     } finally {

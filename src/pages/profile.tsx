@@ -126,7 +126,7 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("personal")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "personal"
-                ? "bg-red-600 text-foreground"
+                ? "bg-primary text-foreground"
                 : "bg-card border border-border text-zinc-300 hover:bg-muted"
             }`}
           >
@@ -137,7 +137,7 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("password")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "password"
-                ? "bg-red-600 text-foreground"
+                ? "bg-primary text-foreground"
                 : "bg-card border border-border text-zinc-300 hover:bg-muted"
             }`}
           >
@@ -160,22 +160,22 @@ export default function ProfilePage() {
                 <div className="flex-1 space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-zinc-400 text-sm">
-                      Name <span className="text-red-500">*</span>
+                      Name <span className="text-primary">*</span>
                     </Label>
                     <Input
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="bg-muted border-border text-foreground focus:border-red-500 h-11"
+                      className="bg-muted border-border text-foreground focus:border-primary h-11"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-zinc-400 text-sm">
-                      Email <span className="text-red-500">*</span>
+                      Email <span className="text-primary">*</span>
                     </Label>
                     <Input
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="bg-muted border-border text-foreground focus:border-red-500 h-11"
+                      className="bg-muted border-border text-foreground focus:border-primary h-11"
                     />
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                             setPhotoPreview(null);
                             if (fileInputRef.current) fileInputRef.current.value = "";
                           }}
-                          className="absolute top-1.5 right-1.5 h-5 w-5 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
+                          className="absolute top-1.5 right-1.5 h-5 w-5 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors"
                         >
                           <X className="h-3 w-3 text-foreground" />
                         </button>
@@ -233,7 +233,7 @@ export default function ProfilePage() {
                 <Button
                   onClick={handleSave}
                   disabled={updateProfileMutation.isPending}
-                  className="bg-red-600 hover:bg-red-700 text-foreground px-8 h-11 font-semibold"
+                  className="bg-primary hover:bg-primary/90 text-foreground px-8 h-11 font-semibold"
                 >
                   {updateProfileMutation.isPending ? (
                     <>
@@ -261,7 +261,7 @@ export default function ProfilePage() {
                     placeholder="Enter Current Password"
                     value={passwords.currentPassword}
                     onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                     placeholder="Enter New Password (min 6 characters)"
                     value={passwords.newPassword}
                     onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -283,7 +283,7 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setPasswords({ ...passwords, confirmPassword: e.target.value })
                     }
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
                   />
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                 <Button
                   onClick={handleChangePassword}
                   disabled={updatePasswordMutation.isPending}
-                  className="bg-red-600 hover:bg-red-700 text-foreground px-8 h-11 font-semibold"
+                  className="bg-primary hover:bg-primary/90 text-foreground px-8 h-11 font-semibold"
                 >
                   {updatePasswordMutation.isPending ? (
                     <>

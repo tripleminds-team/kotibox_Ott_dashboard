@@ -3,84 +3,44 @@ import { useParams, useLocation } from "wouter";
 import {
   ChevronLeft, ChevronRight, Heart, Star, Share2, Lock,
   Play, Pause, Volume2, VolumeX, Volume1, Maximize, Minimize,
-  SkipForward, Home, Loader2, X, CreditCard,
+  SkipForward, Home, Loader2, X, CreditCard, Crown,
 } from "lucide-react";
 import { PublicHeader, PublicFooter } from "./streaming-home";
+import Hls from "hls.js";
+import { useGetSubscriptionPlans, useCreateSubscription, useGetWebDetail, getImageUrl, useGetPublicAds } from "@/lib/api-client";
 
-/* ─────────────────────────────────────────────────────────────
-   DEMO VIDEO URL
-   API integration ke baad: getEpisodeVideo() mein API call add karo
-   ───────────────────────────────────────────────────────────── */
-const DEMO_VIDEO_URL = "https://cdn.pixabay.com/video/2023/11/19/189692-886572510_large.mp4";
+/* ─── AD OVERLAY ─── */
+function AdOverlay({ ad, onSkip }: { ad: any; onSkip: () => void }) {
+  const [countdown, setCountdown] = useState(5);
 
-/**
- * API-ready function — abhi demo URL return karta hai.
- * API integrate karne pe sirf yahan replace karo:
- *   const res = await fetch(`/api/shows/${showTitle}/episodes/${epNum}`);
- *   return res.json().videoUrl;
- */
-function getEpisodeVideo(_showTitle: string, _epNum: number): string {
-  return DEMO_VIDEO_URL;
-}
+  useEffect(() => {
+    const timer = setInterval(() => setCountdown((c) => { if (c <= 1) { clearInterval(timer); return 0; } return c - 1; }), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-/* ─── POSTERS ───────────────────────────────────────────────── */
-const POSTERS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1521119989659-a83eee488004?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1510771463146-e89e6e86560e?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1474978528675-4a50a8716a53?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=900&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=900&fit=crop&q=80",
-];
+  const adSrc = ad.urlType === "URL" ? ad.mediaUrl : getImageUrl(ad.mediaUrl);
 
-/* ─── DATA HELPERS ──────────────────────────────────────────── */
-const TAG_MAP: Record<string, string[]> = {
-  Romance:  ["Independent Woman", "Strong-Willed", "Hidden Identity", "Love After Marriage", "Business", "Enemies to Lovers"],
-  Drama:    ["Family Secrets", "Betrayal", "Second Chances", "Social Class", "Forbidden Love", "Job Seeker"],
-  Thriller: ["Dark Past", "Power Struggle", "Dangerous Man", "Hidden Truth", "Obsession", "Escape"],
-  Action:   ["Crime World", "Undercover Agent", "Dark Syndicate", "Loyalty", "Power", "Dangerous"],
-  Mystery:  ["Cold Case", "Hidden Identity", "Psychological", "Unreliable Narrator", "Twist Ending", "Suspense"],
-  Suspense: ["Hidden Enemy", "Cat & Mouse", "High Stakes", "Danger", "Psychological Thriller", "Tension"],
-};
-
-const DESCS = [
-  "She never expected to fall for him — but fate had other plans. Now caught between loyalty and love, she must choose before it's too late.",
-  "A ruthless billionaire with a dark past. A woman who refuses to be silenced. When their worlds collide, nothing will ever be the same.",
-  "He came back for revenge, but found love instead. Now every choice he makes ripples out in ways he never saw coming.",
-  "Married by contract, bound by fate. What started as a cold arrangement slowly becomes the most passionate story of their lives.",
-  "Harrison had deliberately gone to prison to gather the evidence he needed to take back everything that's owed to him. Nothing will stop him now.",
-  "She was just his personal secretary. He was her entire world — until the truth finally came out and everything fell apart in an instant.",
-  "Two strangers, one dangerous secret. When she stumbles into his world, there's no going back for either of them.",
-  "He never wanted a wife. She never wanted a captor. But when destiny writes their story, even the coldest hearts can slowly melt.",
-];
-
-function hashStr(s: string): number {
-  return Math.abs(s.split("").reduce((a, c) => a + c.charCodeAt(0), 0));
-}
-
-function buildShowDetail(title: string) {
-  const h = hashStr(title);
-  const genres = ["Romance", "Drama", "Thriller", "Action", "Mystery", "Suspense"] as const;
-  const genre = genres[h % genres.length];
-  return {
-    genre,
-    tags: TAG_MAP[genre],
-    description: DESCS[h % DESCS.length],
-    likes: 1000 + (h % 8500),
-    favorites: 12000 + (h % 130000),
-    totalEpisodes: [49, 60, 80, 117, 50, 72][h % 6],
-    freeEpisodes: 11,
-    thumbnail: POSTERS[h % POSTERS.length],
-  };
+  return (
+    <div className="absolute inset-0 z-30 bg-black flex flex-col items-center justify-center">
+      {ad.adType === "Video" ? (
+        <video src={adSrc} className="w-full h-full object-contain" autoPlay onEnded={onSkip} playsInline />
+      ) : ad.adType === "Image" ? (
+        <a href={ad.redirectUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full h-full flex items-center justify-center">
+          <img src={adSrc} alt={ad.adName} className="max-w-full max-h-full object-contain" />
+        </a>
+      ) : (
+        <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: ad.mediaUrl }} />
+      )}
+      <div className="absolute bottom-4 right-4 flex items-center gap-3">
+        <span className="text-zinc-400 text-xs bg-black/60 px-2 py-1 rounded">Advertisement</span>
+        {countdown > 0 ? (
+          <span className="bg-black/70 text-white text-xs px-3 py-1.5 rounded-lg font-bold border border-zinc-700">Skip in {countdown}s</span>
+        ) : (
+          <button onClick={onSkip} className="bg-white/90 hover:bg-white text-black text-xs font-black px-3 py-1.5 rounded-lg transition-colors">Skip Ad ›</button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function fmtCount(n: number): string {
@@ -128,7 +88,7 @@ function VideoPlayer({
   const [buffered,       setBuffered]       = useState(0);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isFullscreen,   setIsFullscreen]   = useState(false);
-  const [loading,        setLoading]        = useState(false);
+  const [loading,        setLoading]        = useState(true);
 
   /* auto-hide controls */
   const scheduleHide = useCallback(() => {
@@ -263,14 +223,41 @@ function VideoPlayer({
     };
   }, [scheduleHide, onNext]);
 
-  /* auto-play when episode changes (user clicked next/episode grid) */
+  // Load source with HLS support if needed
   useEffect(() => {
-    if (autoPlay) {
-      videoRef.current?.play().catch(() => {});
+    const v = videoRef.current;
+    if (!v || !videoSrc) return;
+
+    let hls: Hls | null = null;
+    const isM3u8 = videoSrc.includes('.m3u8');
+
+    setLoading(true);
+    if (isM3u8 && Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(videoSrc);
+      hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setLoading(false);
+        if (autoPlay) {
+          v.play().catch(() => {});
+          setPlaying(true);
+        }
+      });
+    } else {
+      v.src = videoSrc;
+      v.load();
+      if (autoPlay) {
+        v.play().catch(() => {});
+        setPlaying(true);
+      }
     }
-  // runs once on mount — autoPlay is stable per key-remount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [videoSrc, autoPlay]);
 
   /* set initial volume */
   useEffect(() => {
@@ -351,7 +338,6 @@ function VideoPlayer({
       {/* Real video element */}
       <video
         ref={videoRef}
-        src={videoSrc}
         poster={thumbnail}
         className="absolute inset-0 w-full h-full object-cover"
         preload="metadata"
@@ -490,6 +476,8 @@ function EpisodeGrid({
   const [activeTab, setActiveTab] = useState(Math.min(defaultTab, tabs.length - 1));
   const tab = tabs[activeTab] ?? tabs[0];
 
+  if (!tab) return null;
+
   const cells: Array<{ n: number; isTrailer: boolean }> = [];
   if (tab.start === 0) cells.push({ n: 0, isTrailer: true });
   for (let i = Math.max(1, tab.start); i <= tab.end; i++) cells.push({ n: i, isTrailer: false });
@@ -559,16 +547,52 @@ function EpisodeGrid({
 /* ─────────────────────────────────────────────────────────────
    LOCK / PAYWALL POPUP
    ───────────────────────────────────────────────────────────── */
-const COIN_PACKS = [
-  { coins: 1150, bonus: "+15%", immediate: 1000, free: 150,  price: "$9.99"  },
-  { coins: 550,  bonus: "+10%", immediate: 500,  free: 50,   price: "$4.99"  },
-  { coins: 100,  bonus: null,   immediate: 100,  free: null, price: "$0.99"  },
-  { coins: 3000, bonus: "+50%", immediate: 2000, free: 1000, price: "$19.99" },
-  { coins: 5250, bonus: "+75%", immediate: 3000, free: 2250, price: "$29.99" },
-  { coins: 10000,bonus: "+100%",immediate: 5000, free: 5000, price: "$49.99" },
-];
 
-function LockPopup({ episodeNum, onClose }: { episodeNum: number; onClose: () => void }) {
+function LockPopup({ episodeNum, onClose, onSubscribed }: { episodeNum: number; onClose: () => void; onSubscribed: () => void }) {
+  const { data: plansData, isLoading: loadingPlans } = useGetSubscriptionPlans();
+  const createSubMutation = useCreateSubscription();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch (e) {}
+  }, []);
+
+  const plans = plansData?.data || [];
+
+  const handleSubscribe = async (plan: any) => {
+    if (!user) {
+      alert("Please login first to subscribe.");
+      window.location.href = "/login";
+      return;
+    }
+    try {
+      await createSubMutation.mutateAsync({
+        userId: user.id || user._id,
+        planId: plan.id || plan._id,
+        startDate: new Date(),
+        price: plan.price || plan.totalPrice,
+        totalAmount: plan.totalPrice || plan.price,
+        paymentMethod: 'Credit Card',
+        status: 'active'
+      });
+
+      const updatedUser = {
+        ...user,
+        subscriptionPlan: plan.name,
+        subscriptionStatus: 'active'
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      alert(`Successfully subscribed to ${plan.name}! Content unlocked.`);
+      onSubscribed();
+      onClose();
+    } catch (err: any) {
+      alert("Subscription failed: " + err.message);
+    }
+  };
+
   /* prevent body scroll while open */
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -582,24 +606,14 @@ function LockPopup({ episodeNum, onClose }: { episodeNum: number; onClose: () =>
 
       {/* Modal */}
       <div
-        className="relative z-10 bg-[#111111] w-full sm:max-w-[680px] sm:mx-4 rounded-t-2xl sm:rounded-2xl overflow-hidden"
-        style={{ maxHeight: "90vh", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" } as React.CSSProperties}
+        className="relative z-10 bg-[#111111] w-full sm:max-w-[500px] sm:mx-4 rounded-t-2xl sm:rounded-2xl overflow-hidden border border-zinc-800 animate-in slide-in-from-bottom duration-300"
+        style={{ maxHeight: "90vh", overflowY: "auto" } as React.CSSProperties}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 sticky top-0 bg-[#111111] z-10">
-          <div className="flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1.5">
-              <span className="text-lg leading-none">🪙</span>
-              <span className="text-zinc-400 text-[13px]">Price:</span>
-              <span className="text-white font-bold">9</span>
-            </span>
-            <div className="w-px h-4 bg-zinc-700" />
-            <span className="flex items-center gap-1.5">
-              <span className="text-lg leading-none">🪙</span>
-              <span className="text-zinc-400 text-[13px]">Balance:</span>
-              <span className="text-white font-bold">0</span>
-            </span>
-          </div>
+          <span className="text-white font-extrabold text-sm flex items-center gap-1.5">
+            <Crown className="w-4 h-4 text-amber-500 fill-amber-500" /> Choose Subscription Plan
+          </span>
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
@@ -608,95 +622,50 @@ function LockPopup({ episodeNum, onClose }: { episodeNum: number; onClose: () =>
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-5">
-          {/* VIP plans */}
-          <div>
-            <h3 className="text-white font-bold text-[15px] leading-tight">VIP Unlock all series for free</h3>
-            <p className="text-zinc-500 text-xs mt-0.5 mb-3">Auto renew. Cancel anytime.</p>
-            <div className="grid grid-cols-2 gap-3">
-              {(["Weekly VIP", "Yearly VIP"] as const).map((plan) => (
-                <button
-                  key={plan}
-                  className="text-left bg-gradient-to-br from-[#2a1f00] to-[#1c1400] border border-amber-700/50 hover:border-amber-500/80 rounded-xl p-4 transition-all"
-                >
-                  <p className="text-amber-300 font-semibold text-sm mb-1">{plan}</p>
-                  <p className="text-white font-black text-[26px] leading-none mb-1">
-                    {plan === "Weekly VIP" ? "$5.99" : "$99.99"}
-                  </p>
-                  <p className="text-zinc-500 text-[11px] mb-3">Auto-renew. Cancel anytime.</p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-[12px] text-zinc-300">
-                      <span className="w-4 h-4 rounded-full border border-amber-500/60 flex items-center justify-center flex-shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                      </span>
-                      Unlimited Viewing
+        <div className="p-5 space-y-4">
+          <p className="text-zinc-450 text-xs text-center leading-relaxed">
+            Episode {episodeNum} is locked. Subscribe to one of our premium plans to unlock the entire library!
+          </p>
+
+          {loadingPlans ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {plans.map((plan: any) => {
+                if (plan.name === "free") return null;
+                return (
+                  <div
+                    key={plan.id}
+                    className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 hover:border-amber-500/50 hover:bg-zinc-900/80 transition-all flex flex-col justify-between"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="text-amber-400 font-bold text-sm uppercase tracking-wide">{plan.name}</h4>
+                        <p className="text-zinc-500 text-[11px] mt-0.5">{plan.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-white font-black text-lg">₹{plan.totalPrice || plan.price}</span>
+                        <span className="text-zinc-400 text-[10px] block">/ {plan.duration || 'month'}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-zinc-300">
-                      <span className="w-4 h-4 rounded-sm border border-amber-500/60 flex items-center justify-center flex-shrink-0 text-amber-400 text-[8px] font-black">
-                        HD
-                      </span>
-                      1080p High Quality
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800 text-[11px] text-zinc-400">
+                      <span>Valid: <strong className="text-white">{plan.durationValue} {plan.duration}</strong></span>
+                      {plan.discount > 0 && <span className="text-amber-400 font-bold">{plan.discount}% off</span>}
+                      <button
+                        onClick={() => handleSubscribe(plan)}
+                        disabled={createSubMutation.isPending}
+                        className="px-4 py-1.5 bg-primary hover:bg-primary/90 disabled:bg-zinc-800 text-white font-bold rounded-lg transition-colors text-xs"
+                      >
+                        {createSubMutation.isPending ? "Connecting..." : "Subscribe"}
+                      </button>
                     </div>
                   </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
-          </div>
-
-          {/* Coin packs */}
-          <div>
-            <h3 className="text-white font-bold text-[15px] mb-3">Top up coins</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {COIN_PACKS.map((pack) => (
-                <button
-                  key={pack.coins}
-                  className="relative bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-600 rounded-xl p-3 text-left transition-all"
-                >
-                  {pack.bonus && (
-                    <span className="absolute -top-2 right-2 bg-[#E50914] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full z-10">
-                      {pack.bonus}
-                    </span>
-                  )}
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="text-base leading-none">🪙</span>
-                    <span className="text-white font-black text-base">{pack.coins.toLocaleString()}</span>
-                  </div>
-                  <p className="text-zinc-500 text-[11px] leading-snug">
-                    Immediately: {pack.immediate.toLocaleString()}
-                  </p>
-                  {pack.free != null && (
-                    <p className="text-zinc-500 text-[11px]">Free: {pack.free.toLocaleString()}</p>
-                  )}
-                  <p className="text-white font-bold text-sm mt-1.5">{pack.price}</p>
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-center mt-3">
-              <button className="flex items-center gap-1 text-zinc-400 hover:text-white text-sm transition-colors">
-                More Plan <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Payment methods */}
-          <div className="pb-safe-area-inset-bottom">
-            <h3 className="text-white font-bold text-[15px] mb-3">Payment Methods</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <button className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl py-3 px-2 text-[13px] text-white font-semibold transition-colors flex items-center justify-center gap-1.5">
-                <CreditCard className="w-4 h-4" /> Quick Pay
-              </button>
-              <button className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl py-3 px-2 text-[13px] text-white font-semibold transition-colors flex items-center justify-center gap-1">
-                <span className="font-black text-[#4285F4]">G</span>
-                <span className="font-black text-[#EA4335]">o</span>
-                <span className="font-black text-[#FBBC05]">o</span>
-                <span className="font-black text-[#4285F4]">g</span>
-                <span className="text-zinc-300 font-normal ml-0.5">Pay</span>
-              </button>
-              <button className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl py-3 px-2 text-[13px] font-black text-[#009cde] transition-colors">
-                Pay<span className="text-[#003087]">Pal</span>
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -710,11 +679,64 @@ export default function EpisodeDetailPage() {
   const params = useParams<{ showTitle: string; epNum: string }>();
   const [, navigate] = useLocation();
 
-  const title     = decodeURIComponent(params.showTitle || "Unknown Show");
-  const detail    = buildShowDetail(title);
+  const [user, setUser] = useState<any>(null);
+  const [adDismissed, setAdDismissed] = useState(false);
+  const [playerStarted, setPlayerStarted] = useState(false);
+
+  const { data: adsData } = useGetPublicAds({ placement: "Player" });
+  const activeAds: any[] = adsData?.data || [];
+  const currentAd = !adDismissed && playerStarted && activeAds.length > 0 ? activeAds[0] : null;
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch (e) {}
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    setUser(null);
+    window.location.reload();
+  };
+
+  // params.showTitle is the content ID (drama's _id / id from DB)
+  const contentId = params.showTitle || "";
+
+  const { data: detailData, isLoading } = useGetWebDetail(contentId);
+  const showData = (detailData as any)?.content || detailData;
+  const apiEpisodes: any[] = (detailData as any)?.episodes || [];
+
+  const title = showData?.title || "Drama";
+
+  const totalEps = apiEpisodes.length;
+  const freeEps = apiEpisodes.filter((e: any) => e.isFree === true).length || Math.min(2, totalEps);
+
+  const thumbUrl = showData
+    ? getImageUrl(showData.bannerImage || showData.thumbnail || showData.poster || "")
+    : "";
+
+  const detail = {
+    genre: Array.isArray(showData?.genres) ? showData.genres.join(" · ") : "Drama",
+    tags: Array.isArray(showData?.genres) ? showData.genres as string[] : [] as string[],
+    description: showData?.description || "",
+    likes: showData?.views || 0,
+    favorites: 0,
+    totalEpisodes: totalEps,
+    freeEpisodes: freeEps,
+    thumbnail: thumbUrl,
+    rating: showData?.imdbRating ? String(showData.imdbRating) : "8.5",
+  };
+
+  const handleSubscribed = useCallback(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch (e) {}
+  }, []);
 
   const [currentEp, setCurrentEp]       = useState(() => parseInt(params.epNum || "1", 10));
-  // autoPlay = true when user manually navigated (not initial page load)
   const [autoPlay,  setAutoPlay]        = useState(false);
   const [liked,     setLiked]           = useState(false);
   const [starred,   setStarred]         = useState(false);
@@ -722,46 +744,66 @@ export default function EpisodeDetailPage() {
   const [lockPopupOpen, setLockPopupOpen] = useState(false);
   const [lockedEpNum,   setLockedEpNum]   = useState(0);
 
-  /* navigate to a specific episode */
+  const isSubscribed = user?.subscriptionStatus === 'active' && user?.subscriptionPlan !== 'free';
+
   const goToEpisode = useCallback((ep: number) => {
     if (ep < 0 || ep > detail.totalEpisodes) return;
-    if (ep > detail.freeEpisodes && ep !== 0) return; // locked
+    if (!isSubscribed && ep > detail.freeEpisodes && ep !== 0) {
+      setLockedEpNum(ep);
+      setLockPopupOpen(true);
+      return;
+    }
     setCurrentEp(ep);
     setAutoPlay(true);
-    navigate(`/show/${encodeURIComponent(title)}/episode/${ep}`);
-  }, [title, detail.totalEpisodes, detail.freeEpisodes, navigate]);
+    navigate(`/show/${contentId}/episode/${ep}`);
+  }, [contentId, detail.totalEpisodes, detail.freeEpisodes, navigate, isSubscribed]);
 
-  /* next episode */
   const handleNext = useCallback(() => {
     const next = currentEp + 1;
-    if (next <= detail.freeEpisodes) {
+    if (next <= detail.totalEpisodes) {
       goToEpisode(next);
-    } else if (next <= detail.totalEpisodes) {
-      setLockedEpNum(next);
-      setLockPopupOpen(true);
     }
-  }, [currentEp, detail.freeEpisodes, detail.totalEpisodes, goToEpisode]);
+  }, [currentEp, detail.totalEpisodes, goToEpisode]);
 
-  /* locked episode clicked in grid */
   const handleLocked = useCallback((ep: number) => {
     setLockedEpNum(ep);
     setLockPopupOpen(true);
   }, []);
 
-  const epLabel  = currentEp === 0 ? "Trailer" : `Episode ${currentEp}`;
-  const epTitle  = currentEp === 0 ? `Trailer - ${title}` : `Episode ${currentEp} - ${title} Full Movie`;
+  const epLabel   = currentEp === 0 ? "Trailer" : `Episode ${currentEp}`;
+  const epTitle   = currentEp === 0 ? `Trailer - ${title}` : `Episode ${currentEp} - ${title}`;
   const plotTitle = currentEp === 0 ? "About Trailer" : `Plot of Episode ${currentEp}`;
 
-  /*
-   * key={`${title}-ep-${currentEp}`} forces VideoPlayer to fully remount
-   * when the episode changes, resetting all player state and loading new video.
-   * When API is integrated: getEpisodeVideo() will return the real video URL per episode.
-   */
-  const videoSrc = getEpisodeVideo(title, currentEp);
+  const videoSrc = (() => {
+    if (currentEp === 0) return showData?.trailerUrl || "";
+    const ep = apiEpisodes.find(
+      (e: any) => e.episode === currentEp || e.episodeNumber === currentEp || e.number === currentEp
+    );
+    // Fall back to content-level hlsUrl when episode record doesn't exist yet
+    return ep?.videoUrl || ep?.hlsUrl || (currentEp === 1 ? (showData?.hlsUrl || showData?.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4") : "");
+  })();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-[#E50914] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">
-      <PublicHeader />
+      <PublicHeader
+        activeTab="drama"
+        setActiveTab={(tab) => {
+          if (tab === "home") navigate("/");
+          else if (tab === "tvshows") navigate("/tv-shows-browse");
+          else navigate(`/browse/${tab}`);
+        }}
+        onSignIn={() => navigate("/login")}
+        onSignOut={handleSignOut}
+        user={user}
+      />
 
       <main className="pt-[68px] pb-16">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-5 sm:py-8">
@@ -779,15 +821,17 @@ export default function EpisodeDetailPage() {
               {/* Portrait video wrapper — key changes on episode change → remount */}
               <div
                 key={`${title}-ep-${currentEp}`}
-                className="overflow-hidden rounded-sm shadow-2xl w-full lg:w-auto"
+                className="relative overflow-hidden rounded-sm shadow-2xl w-full lg:w-auto"
                 style={{ height: "min(calc(100vh - 110px), 720px)", aspectRatio: "9 / 16" }}
+                onClick={() => !playerStarted && setPlayerStarted(true)}
               >
                 <VideoPlayer
                   videoSrc={videoSrc}
                   thumbnail={detail.thumbnail}
                   autoPlay={autoPlay}
-                  onNext={handleNext}
+                  onNext={() => { setAdDismissed(false); setPlayerStarted(false); handleNext(); }}
                 />
+                {currentAd && <AdOverlay ad={currentAd} onSkip={() => setAdDismissed(true)} />}
               </div>
             </div>
 
@@ -802,7 +846,7 @@ export default function EpisodeDetailPage() {
                   <Home className="w-3.5 h-3.5" /> Home
                 </button>
                 <ChevronRight className="w-3 h-3 flex-shrink-0" />
-                <button onClick={() => navigate("/")} className="hover:text-white transition-colors truncate max-w-[180px]">
+                <button onClick={() => window.history.back()} className="hover:text-white transition-colors truncate max-w-[180px]">
                   {title}
                 </button>
                 <ChevronRight className="w-3 h-3 flex-shrink-0" />
@@ -822,7 +866,7 @@ export default function EpisodeDetailPage() {
                   {" "}
                   <button
                     onClick={() => setExpanded(e => !e)}
-                    className="text-[#E50914] hover:text-red-400 font-semibold transition-colors"
+                    className="text-[#E50914] hover:text-primary font-semibold transition-colors"
                   >
                     {expanded ? "Less" : "More"}
                   </button>
@@ -869,7 +913,7 @@ export default function EpisodeDetailPage() {
               {/* Episode grid */}
               <EpisodeGrid
                 total={detail.totalEpisodes}
-                freeCount={detail.freeEpisodes}
+                freeCount={isSubscribed ? detail.totalEpisodes : detail.freeEpisodes}
                 currentEp={currentEp}
                 onSelect={goToEpisode}
                 onLocked={handleLocked}
@@ -885,6 +929,7 @@ export default function EpisodeDetailPage() {
         <LockPopup
           episodeNum={lockedEpNum}
           onClose={() => setLockPopupOpen(false)}
+          onSubscribed={handleSubscribed}
         />
       )}
     </div>

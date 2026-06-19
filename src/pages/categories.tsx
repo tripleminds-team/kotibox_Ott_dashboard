@@ -130,7 +130,7 @@ export default function CategoriesPage() {
         <Button
           onClick={handleApply}
           disabled={bulkDeleteMutation.isPending}
-          className="bg-red-700 hover:bg-red-600 text-white h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -143,12 +143,12 @@ export default function CategoriesPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button
           onClick={() => setLocation("/categories/new")}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -163,7 +163,7 @@ export default function CategoriesPage() {
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-muted-foreground font-semibold text-sm">Category</TableHead>
@@ -193,7 +193,7 @@ export default function CategoriesPage() {
                     <Checkbox
                       checked={selectedIds.includes(category.id)}
                       onCheckedChange={() => toggleSelect(category.id)}
-                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
                   <TableCell>
@@ -234,7 +234,7 @@ export default function CategoriesPage() {
                       checked={category.isActive}
                       onCheckedChange={() => handleToggleActive(category)}
                       disabled={updatingId === category.id}
-                      className="data-[state=checked]:bg-red-600"
+                      className="data-[state=checked]:bg-primary"
                     />
                     <span className="text-sm text-foreground">{category.isActive ? "Active" : "Inactive"}</span>
                     </div>
@@ -245,7 +245,7 @@ export default function CategoriesPage() {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setLocation(`/categories/${category.id}/shows`)}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-blue-400 hover:bg-primary/80/30 transition-colors"
                         title="View Shows"
                       >
                         <Film className="h-3.5 w-3.5" />
@@ -259,7 +259,7 @@ export default function CategoriesPage() {
                       <button
                         onClick={() => setConfirmDelete(category)}
                         disabled={deletingId === category.id}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors disabled:opacity-40"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors disabled:opacity-40"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -292,7 +292,7 @@ export default function CategoriesPage() {
                 onClick={() => setCurrentPage(i + 1)}
                 className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                   pagination.page === i + 1
-                    ? "bg-red-600 text-white"
+                    ? "bg-primary text-white"
                     : "bg-muted border border-border text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -322,7 +322,7 @@ export default function CategoriesPage() {
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

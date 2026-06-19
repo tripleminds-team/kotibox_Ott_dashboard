@@ -134,7 +134,7 @@ export default function FaqListPage() {
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -159,13 +159,13 @@ export default function FaqListPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
         <Button
           onClick={() => setLocation("/faq/new")}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -181,7 +181,7 @@ export default function FaqListPage() {
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Question</TableHead>
@@ -204,7 +204,7 @@ export default function FaqListPage() {
                     <Checkbox
                       checked={selectedIds.includes(faq.id)}
                       onCheckedChange={() => toggleSelect(faq.id)}
-                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
                   <TableCell className="text-foreground font-medium max-w-[280px]">
@@ -217,7 +217,7 @@ export default function FaqListPage() {
                     <Switch
                       checked={faq.status}
                       onCheckedChange={() => toggleStatus(faq.id, faq.status)}
-                      className="data-[state=checked]:bg-red-600"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </TableCell>
                   <TableCell>
@@ -230,7 +230,7 @@ export default function FaqListPage() {
                       </button>
                       <button
                         onClick={() => setConfirmDelete(faq)}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -255,7 +255,7 @@ export default function FaqListPage() {
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

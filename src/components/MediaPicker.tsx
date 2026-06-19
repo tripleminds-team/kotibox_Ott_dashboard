@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Image as ImageIcon, X, Loader2 } from "lucide-react";
+import { Upload, Image as ImageIcon, Video, X, Loader2, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useGetAllMediaFiles, uploadMediaFiles, getMediaFolders, createMediaFolder } from "@/lib/api-client";
@@ -10,37 +10,38 @@ interface MediaPickerProps {
   open: boolean;
   onClose: () => void;
   onSelect: (media: { url: string; filePath: string; name: string }) => void;
-  source: string; // e.g., 'banner', 'category', 'genre', etc.
-  accept?: string; // e.g., 'image/*', 'video/*', 'image/*,video/*'
+  source: string;
+  accept?: string;
 }
+
+type FileTypeFilter = "all" | "image" | "video";
 
 export default function MediaPicker({ open, onClose, onSelect, source, accept = "image/*,video/*" }: MediaPickerProps) {
   const { toast } = useToast();
-  const [mode, setMode] = useState<'library' | 'upload'>('library');
+  const [mode, setMode] = useState<"library" | "upload">("library");
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [fileTypeTab, setFileTypeTab] = useState<FileTypeFilter>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Determine file type filter based on accept prop
-  const getFileTypeFilter = () => {
-    if (accept.includes('image/*') && !accept.includes('video/*')) {
-      return 'image';
-    } else if (accept.includes('video/*') && !accept.includes('image/*')) {
-      return 'video';
-    }
-    return undefined; // Show all
-  };
+  // Derive the accept-based default filter
+  const defaultFileType: FileTypeFilter = (() => {
+    if (accept.includes("image/*") && !accept.includes("video/*")) return "image";
+    if (accept.includes("video/*") && !accept.includes("image/*")) return "video";
+    return "all";
+  })();
 
-  const fileType = getFileTypeFilter();
+  // Use the tab selection, but if accept constrains to one type, lock to it
+  const effectiveFileType = defaultFileType !== "all" ? defaultFileType : (fileTypeTab !== "all" ? fileTypeTab : undefined);
 
   const { data: allMediaData, isLoading: mediaLoading, refetch: refetchMedia } = useGetAllMediaFiles({
     page: 1,
-    limit: 50,
+    limit: 100,
     search: searchQuery || undefined,
-    fileType: fileType,
-    source: source,
+    fileType: effectiveFileType,
+    // No source filter — show ALL media from library regardless of where it was uploaded from
   });
 
   const allMedia = allMediaData?.data || [];
@@ -48,245 +49,291 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Create preview
     const url = URL.createObjectURL(file);
     setPreview(url);
-
-    setSelectedMedia({
-      name: file.name,
-      file: file,
-      isLocal: true,
-    });
-  };
-
-  const handleChooseFileClick = () => {
-    fileInputRef.current?.click();
+    setSelectedMedia({ name: file.name, file, isLocal: true });
   };
 
   const handleConfirm = async () => {
-    if (mode === 'library' && selectedMedia) {
+    if (mode === "library" && selectedMedia) {
       onSelect({
-        url: selectedMedia.url,
-        filePath: selectedMedia.filePath,
+        url: getImageUrl(selectedMedia.filePath || selectedMedia.url),
+        filePath: selectedMedia.filePath || selectedMedia.url,
         name: selectedMedia.name,
       });
-    } else if (mode === 'upload' && selectedMedia?.file) {
+      handleClose();
+    } else if (mode === "upload" && selectedMedia?.file) {
       setUploading(true);
       try {
-        // Check if folder with source name exists, if not create it
         const folders = await getMediaFolders();
-        let folderId = folders?.data?.find((f: any) => f.name.toLowerCase() === source.toLowerCase())?._id;
+        let folderId = folders?.data?.find((f: any) =>
+          f.name.toLowerCase() === source.toLowerCase()
+        )?._id;
 
         if (!folderId) {
-          // Create folder with source name
           const newFolder = await createMediaFolder(source);
           folderId = newFolder?.data?._id;
         }
 
-        if (!folderId) {
-          throw new Error('Failed to create or find folder');
-        }
+        if (!folderId) throw new Error("Failed to create or find folder");
 
-        // Upload to the folder with source tracking
         const result = await uploadMediaFiles(folderId, [selectedMedia.file], source);
-
-        console.log('Upload result:', result);
-
-        // Refresh media library
         await refetchMedia();
-
         toast({ title: "File uploaded successfully!" });
 
-        // Get the uploaded file from the response
         const uploadedFile = result?.data?.[0];
         if (uploadedFile) {
           onSelect({
-            url: uploadedFile.url,
-            filePath: uploadedFile.filePath,
+            url: getImageUrl(uploadedFile.filePath || uploadedFile.url),
+            filePath: uploadedFile.filePath || uploadedFile.url,
             name: uploadedFile.name,
           });
         } else {
-          // Fallback to preview URL
-          onSelect({
-            url: preview || '',
-            filePath: '',
-            name: selectedMedia.name,
-          });
+          onSelect({ url: preview || "", filePath: "", name: selectedMedia.name });
         }
+        handleClose();
       } catch (error: any) {
-        console.error('Upload error:', error);
         toast({ title: "Upload failed", description: error.message, variant: "destructive" });
       } finally {
         setUploading(false);
       }
     }
-    handleClose();
   };
 
   const handleClose = () => {
-    setMode('library');
+    setMode("library");
     setSelectedMedia(null);
     setPreview(null);
     setSearchQuery("");
+    setFileTypeTab("all");
     onClose();
   };
 
   const filteredMedia = allMedia.filter((media: any) =>
-    media.name.toLowerCase().includes(searchQuery.toLowerCase())
+    !searchQuery || media.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const showFileTypeTabs = defaultFileType === "all";
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-card border-border text-foreground max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Select Media</DialogTitle>
+      <DialogContent className="bg-card border-border text-foreground max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-0">
+          <DialogTitle className="text-foreground text-lg font-bold">Select Media</DialogTitle>
         </DialogHeader>
 
-        {/* Mode Toggle */}
-        <div className="flex gap-2 mb-4">
-          <Button
-            variant={mode === 'library' ? 'default' : 'outline'}
-            onClick={() => setMode('library')}
-            className={mode === 'library' ? 'bg-red-600 hover:bg-red-700' : ''}
-          >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Media Library
-          </Button>
-          <Button
-            variant={mode === 'upload' ? 'default' : 'outline'}
-            onClick={() => setMode('upload')}
-            className={mode === 'upload' ? 'bg-red-600 hover:bg-red-700' : ''}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Local Upload
-          </Button>
-        </div>
+        <div className="px-6 pt-4 flex flex-col gap-4 flex-1 overflow-hidden min-h-0">
+          {/* Mode tabs */}
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => setMode("library")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                mode === "library"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-muted border border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <ImageIcon className="h-4 w-4" />
+              Media Library
+            </button>
+            <button
+              onClick={() => setMode("upload")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                mode === "upload"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-muted border border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Upload className="h-4 w-4" />
+              Upload New
+            </button>
+          </div>
 
-        {/* Library Mode */}
-        {mode === 'library' && (
-          <div className="space-y-4">
-            <div className="relative">
-              <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search media..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-9 rounded-lg px-3"
-              />
-            </div>
-            {mediaLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+          {/* Library mode */}
+          {mode === "library" && (
+            <div className="flex flex-col gap-3 flex-1 overflow-hidden min-h-0">
+              {/* Search + File type filter */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search media..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 bg-muted border border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-9 rounded-lg text-sm outline-none transition-colors"
+                  />
+                </div>
+                {showFileTypeTabs && (
+                  <div className="flex items-center bg-muted border border-border rounded-lg p-0.5 shrink-0">
+                    {(["all", "image", "video"] as FileTypeFilter[]).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setFileTypeTab(t)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                          fileTypeTab === t
+                            ? "bg-primary text-white"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {t === "image" && <ImageIcon className="h-3.5 w-3.5" />}
+                        {t === "video" && <Video className="h-3.5 w-3.5" />}
+                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : filteredMedia.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
-                <ImageIcon className="h-12 w-12 opacity-30" />
-                <p className="text-sm">
-                  {searchQuery ? "No media files found" : "No media files in library"}
+
+              {/* File count */}
+              {!mediaLoading && (
+                <p className="text-xs text-zinc-500 font-medium shrink-0">
+                  {filteredMedia.length} file{filteredMedia.length !== 1 ? "s" : ""} found
                 </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 max-h-96 overflow-y-auto">
-                {filteredMedia.map((media: any) => (
-                  <div
-                    key={media._id}
-                    onClick={() => setSelectedMedia(media)}
-                    className={`relative rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
-                      selectedMedia?._id === media._id
-                        ? 'border-red-500'
-                        : 'border-border hover:border-red-500/50'
-                    }`}
-                  >
-                    {media.fileType?.startsWith('video') ? (
-                      <video
-                        src={getImageUrl(media.filePath || media.url)}
-                        className="w-full h-24 object-contain bg-gray-800"
-                      />
-                    ) : (
-                      <img
-                        src={getImageUrl(media.filePath || media.url)}
-                        alt={media.name}
-                        className="w-full h-24 object-contain bg-gray-800"
-                        loading="lazy"
-                      />
-                    )}
-                    {selectedMedia?._id === media._id && (
-                      <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                        <div className="bg-red-600 rounded-full p-1">
-                          <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+              )}
+
+              {/* Grid */}
+              <div className="flex-1 overflow-y-auto min-h-0 pr-1" style={{ scrollbarWidth: "none" }}>
+                {mediaLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : filteredMedia.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-zinc-500 gap-3">
+                    <ImageIcon className="h-10 w-10 opacity-30" />
+                    <p className="text-sm font-medium">
+                      {searchQuery ? "No matching files found" : "No files in media library yet"}
+                    </p>
+                    <button
+                      onClick={() => setMode("upload")}
+                      className="text-xs text-primary hover:text-red-300 font-semibold"
+                    >
+                      Upload a file →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                    {filteredMedia.map((media: any) => {
+                      const isSelected = selectedMedia?._id === media._id;
+                      return (
+                        <div
+                          key={media._id}
+                          onClick={() => setSelectedMedia(media)}
+                          className={`relative rounded-lg overflow-hidden border-2 cursor-pointer transition-all aspect-square ${
+                            isSelected
+                              ? "border-primary shadow-lg shadow-red-500/20"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {media.fileType?.startsWith("video") ? (
+                            <video
+                              src={getImageUrl(media.filePath || media.url)}
+                              className="w-full h-full object-cover bg-zinc-800"
+                            />
+                          ) : (
+                            <img
+                              src={getImageUrl(media.filePath || media.url)}
+                              alt={media.name}
+                              className="w-full h-full object-cover bg-zinc-800"
+                              loading="lazy"
+                            />
+                          )}
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                              <div className="bg-primary rounded-full p-1 shadow-lg">
+                                <Check className="h-4 w-4 text-white" />
+                              </div>
+                            </div>
+                          )}
+                          {/* Filename tooltip on hover */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-1 opacity-0 hover:opacity-100 transition-opacity">
+                            <p className="text-[9px] text-white truncate font-medium">{media.name}</p>
+                          </div>
                         </div>
-                      </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected file info */}
+              {selectedMedia && !selectedMedia.isLocal && (
+                <div className="shrink-0 p-3 bg-muted/50 border border-border rounded-lg flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+                    {selectedMedia.fileType?.startsWith("video") ? (
+                      <video src={getImageUrl(selectedMedia.filePath || selectedMedia.url)} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={getImageUrl(selectedMedia.filePath || selectedMedia.url)} alt={selectedMedia.name} className="w-full h-full object-cover" />
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Upload Mode */}
-        {mode === 'upload' && (
-          <div className="space-y-4">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-red-500/50 transition-colors">
-              {preview ? (
-                <div className="space-y-4">
-                  {selectedMedia?.file?.type?.startsWith('video') ? (
-                    <video src={preview} className="max-h-48 mx-auto rounded" controls />
-                  ) : (
-                    <img src={preview} alt="Preview" className="max-h-48 mx-auto rounded" />
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setPreview(null);
-                      setSelectedMedia(null);
-                    }}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Remove
-                  </Button>
-                </div>
-              ) : (
-                <div>
-                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Click to upload or drag and drop
-                  </p>
-                  <Button variant="outline" size="sm" onClick={handleChooseFileClick}>
-                    Choose File
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={accept}
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{selectedMedia.name}</p>
+                    <p className="text-xs text-zinc-500">{selectedMedia.size || selectedMedia.fileType}</p>
+                  </div>
+                  <button onClick={() => setSelectedMedia(null)} className="text-zinc-500 hover:text-primary transition-colors">
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              This file will be uploaded and added to the Media Library with source: <strong>{source}</strong>
-            </p>
-          </div>
-        )}
+          )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          {/* Upload mode */}
+          {mode === "upload" && (
+            <div className="flex flex-col gap-4 flex-1">
+              <div
+                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={() => !preview && fileInputRef.current?.click()}
+              >
+                {preview ? (
+                  <div className="space-y-4">
+                    {selectedMedia?.file?.type?.startsWith("video") ? (
+                      <video src={preview} className="max-h-52 mx-auto rounded-xl" controls />
+                    ) : (
+                      <img src={preview} alt="Preview" className="max-h-52 mx-auto rounded-xl object-contain" />
+                    )}
+                    <p className="text-sm text-zinc-400 font-medium">{selectedMedia?.name}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); setPreview(null); setSelectedMedia(null); }}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="w-16 h-16 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto mb-4">
+                      <Upload className="h-7 w-7 text-zinc-500" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground mb-1">Click to choose a file</p>
+                    <p className="text-xs text-zinc-500">or drag and drop here</p>
+                    <p className="text-xs text-zinc-600 mt-3">
+                      {accept.includes("image") && accept.includes("video") ? "Images & Videos" : accept.includes("image") ? "Images only" : "Videos only"}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept={accept} onChange={handleFileSelect} className="hidden" />
+              <p className="text-xs text-zinc-600">
+                File will be saved to the <strong className="text-zinc-400">{source}</strong> folder in Media Library.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="px-6 py-4 border-t border-border shrink-0">
+          <Button variant="outline" onClick={handleClose} className="border-border">
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={!selectedMedia || uploading}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {uploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Select
+            {mode === "upload" ? (uploading ? "Uploading..." : "Upload & Select") : "Select"}
           </Button>
         </DialogFooter>
       </DialogContent>

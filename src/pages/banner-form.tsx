@@ -589,7 +589,7 @@ export default function BannerForm() {
             </div>
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-600 transition-all duration-300 ease-linear"
+                className="h-full bg-primary transition-all duration-300 ease-linear"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -656,7 +656,7 @@ export default function BannerForm() {
                   </div>
                   <span className={`inline-block px-2 py-1 text-xs rounded-full ${
                     episode.processingStatus === "ready" ? "bg-green-500/15 text-green-500" :
-                    episode.processingStatus === "failed" ? "bg-red-500/15 text-red-500" :
+                    episode.processingStatus === "failed" ? "bg-primary/15 text-primary" :
                     "bg-yellow-500/15 text-yellow-500"
                   }`}>
                     {episode.processingStatus}

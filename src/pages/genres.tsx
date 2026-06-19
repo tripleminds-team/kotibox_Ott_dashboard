@@ -217,7 +217,7 @@ export default function GenresPage() {
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -268,14 +268,14 @@ export default function GenresPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
         {/* New button */}
         <Button
           onClick={() => setLocation("/genres/new")}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -291,7 +291,7 @@ export default function GenresPage() {
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-foreground font-semibold text-sm">
@@ -328,7 +328,7 @@ export default function GenresPage() {
                     <Checkbox
                       checked={selectedIds.includes(genre.id)}
                       onCheckedChange={() => toggleSelect(genre.id)}
-                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
                   <TableCell>
@@ -345,7 +345,7 @@ export default function GenresPage() {
                     <Switch
                       checked={genre.active}
                       onCheckedChange={() => toggleStatus(genre.id, genre.active)}
-                      className="data-[state=checked]:bg-red-600"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </TableCell>
                   <TableCell className="text-right pr-6">
@@ -362,7 +362,7 @@ export default function GenresPage() {
                         size="icon"
                         variant="ghost"
                         onClick={() => handleDelete(genre)}
-                        className="h-8 w-8 rounded-lg bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-600/30"
+                        className="h-8 w-8 rounded-lg bg-primary/20 hover:bg-primary/80/40 text-primary border border-red-600/30"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -398,7 +398,7 @@ export default function GenresPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteAction}
-              className="bg-red-600 hover:bg-red-700 text-foreground border-0"
+              className="bg-primary hover:bg-primary/90 text-foreground border-0"
             >
               Delete
             </AlertDialogAction>

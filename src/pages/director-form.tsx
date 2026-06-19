@@ -20,7 +20,7 @@ type DirectorData = {
   image: string;
 };
 
-const inputCls = "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 h-11 rounded-lg";
+const inputCls = "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary h-11 rounded-lg";
 const labelCls = "text-foreground text-sm font-medium";
 
 export default function DirectorFormPage() {
@@ -108,7 +108,7 @@ export default function DirectorFormPage() {
       {/* Back */}
       <button
         onClick={() => setLocation("/directors")}
-        className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+        className="flex items-center gap-1.5 text-sm text-primary hover:text-red-300 font-medium transition-colors"
       >
         <span className="text-base leading-none">«</span>
         Back
@@ -139,7 +139,7 @@ export default function DirectorFormPage() {
               <button
                 type="button"
                 onClick={() => { setImagePreview(""); set("image", ""); }}
-                className="text-sm text-red-400 hover:text-red-300"
+                className="text-sm text-primary hover:text-red-300"
               >
                 Remove photo
               </button>
@@ -150,13 +150,13 @@ export default function DirectorFormPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Name */}
             <div className="space-y-2">
-              <Label className={labelCls}>Name <span className="text-red-500">*</span></Label>
+              <Label className={labelCls}>Name <span className="text-primary">*</span></Label>
               <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Henry Williams" className={inputCls} />
             </div>
 
             {/* Date Of Birth */}
             <div className="space-y-2">
-              <Label className={labelCls}>Date Of Birth <span className="text-red-500">*</span></Label>
+              <Label className={labelCls}>Date Of Birth <span className="text-primary">*</span></Label>
               <Input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} placeholder="e.g. 1994-07-24" className={inputCls} />
             </div>
 
@@ -171,13 +171,13 @@ export default function DirectorFormPage() {
               <Label className={labelCls}>Status</Label>
               <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card">
                 <span className="text-sm text-foreground font-medium">Active</span>
-                <Switch checked={form.status} onCheckedChange={(v) => set("status", v)} className="data-[state=checked]:bg-red-600" />
+                <Switch checked={form.status} onCheckedChange={(v) => set("status", v)} className="data-[state=checked]:bg-primary" />
               </div>
             </div>
 
             {/* Birth Place */}
             <div className="space-y-2 md:col-span-2">
-              <Label className={labelCls}>Birth Place <span className="text-red-500">*</span></Label>
+              <Label className={labelCls}>Birth Place <span className="text-primary">*</span></Label>
               <Input value={form.birthPlace} onChange={(e) => set("birthPlace", e.target.value)} placeholder="e.g. New York, USA" className={inputCls} />
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function DirectorFormPage() {
 
       {/* Save */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]">
+        <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]">
           {saving ? "Saving..." : "Save"}
         </Button>
       </div>

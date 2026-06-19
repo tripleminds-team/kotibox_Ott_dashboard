@@ -54,7 +54,7 @@ export default function NotificationTemplatesPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
       </div>
@@ -85,14 +85,14 @@ export default function NotificationTemplatesPage() {
               filtered.map((template: NotifTemplate) => (
                 <TableRow key={template.id} className="border-border hover:bg-muted/40">
                   <TableCell>
-                    <span className="text-red-400 font-medium text-sm">{template.type}</span>
+                    <span className="text-primary font-medium text-sm">{template.type}</span>
                   </TableCell>
                   <TableCell>
                     <Switch
                       checked={template.status}
                       onCheckedChange={() => toggleStatus(template.id)}
                       disabled={toggleMutation.isPending}
-                      className="data-[state=checked]:bg-red-600"
+                      className="data-[state=checked]:bg-primary"
                     />
                   </TableCell>
                   <TableCell>

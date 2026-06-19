@@ -41,7 +41,7 @@ export default function GenreFormPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
+    setImage(file.name);
     const reader = new FileReader();
     reader.onload = (ev) => setImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -92,7 +92,7 @@ export default function GenreFormPage() {
       {/* Back */}
       <button
         onClick={() => setLocation("/genres")}
-        className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+        className="flex items-center gap-1.5 text-sm text-primary hover:text-red-300 font-medium transition-colors"
       >
         <span className="text-base leading-none">«</span>
         Back
@@ -130,7 +130,7 @@ export default function GenreFormPage() {
                   setImage("");
                   setImagePreview(null);
                 }}
-                className="text-sm text-red-400 hover:text-red-300"
+                className="text-sm text-primary hover:text-red-300"
               >
                 Remove image
               </button>
@@ -142,14 +142,14 @@ export default function GenreFormPage() {
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="genre-name" className="text-foreground font-medium">
-                Name <span className="text-red-500">*</span>
+                Name <span className="text-primary">*</span>
               </Label>
               <Input
                 id="genre-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Action Movie"
-                className="bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-11 rounded-lg"
+                className="bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-11 rounded-lg"
               />
             </div>
 
@@ -161,7 +161,7 @@ export default function GenreFormPage() {
                 <Switch
                   checked={active}
                   onCheckedChange={setActive}
-                  className="data-[state=checked]:bg-red-600"
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function GenreFormPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-8 rounded-lg font-semibold min-w-[100px]"
+          className="bg-primary hover:bg-primary/90 text-foreground h-11 px-8 rounded-lg font-semibold min-w-[100px]"
         >
           {saving ? "Saving..." : "Save"}
         </Button>

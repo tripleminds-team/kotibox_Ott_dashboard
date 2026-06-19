@@ -203,7 +203,7 @@ export default function CategoryForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-foreground text-sm">
-                Name <span className="text-red-500">*</span>
+                Name <span className="text-primary">*</span>
               </Label>
               <Input
                 id="name"
@@ -218,7 +218,7 @@ export default function CategoryForm() {
                   }
                 }}
                 required
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
 
@@ -231,7 +231,7 @@ export default function CategoryForm() {
                 placeholder="category-slug"
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function CategoryForm() {
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 resize-none"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary resize-none"
             />
           </div>
         </div>
@@ -377,7 +377,7 @@ export default function CategoryForm() {
                 <Input
                   value={formData.color}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="flex-1 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                  className="flex-1 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
                 />
               </div>
             </div>
@@ -389,7 +389,7 @@ export default function CategoryForm() {
                 type="number"
                 value={formData.order}
                 onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
 
@@ -401,7 +401,7 @@ export default function CategoryForm() {
                     id="isActive"
                     checked={formData.isActive}
                     onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                    className="data-[state=checked]:bg-red-600"
+                    className="data-[state=checked]:bg-primary"
                   />
                   <Label htmlFor="isActive" className="text-foreground text-sm cursor-pointer">Active</Label>
                 </div>
@@ -410,7 +410,7 @@ export default function CategoryForm() {
                     id="isFeatured"
                     checked={formData.isFeatured}
                     onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
-                    className="data-[state=checked]:bg-red-600"
+                    className="data-[state=checked]:bg-primary"
                   />
                   <Label htmlFor="isFeatured" className="text-foreground text-sm cursor-pointer">Featured</Label>
                 </div>
@@ -431,7 +431,7 @@ export default function CategoryForm() {
           <Button
             type="submit"
             disabled={createMutation.isPending || updateMutation.isPending}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 h-11 font-semibold"
+            className="bg-primary hover:bg-primary/90 text-white px-6 h-11 font-semibold"
           >
             {isEdit ? "Update Category" : "Create Category"}
           </Button>

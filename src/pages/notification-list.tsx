@@ -103,7 +103,7 @@ export default function NotificationListPage() {
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleApply} className="bg-red-700 hover:bg-red-600 text-foreground h-10 px-5 rounded-lg font-semibold">
+        <Button onClick={handleApply} className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold">
           Apply
         </Button>
 
@@ -128,7 +128,7 @@ export default function NotificationListPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-red-500 h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
           />
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function NotificationListPage() {
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleSelectAll}
-                  className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                  className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Type</TableHead>
@@ -165,11 +165,11 @@ export default function NotificationListPage() {
                     <Checkbox
                       checked={selectedIds.includes(notif.id)}
                       onCheckedChange={() => toggleSelect(notif.id)}
-                      className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
                   <TableCell>
-                    <span className={notif.isHighlight ? "text-red-400 text-sm font-medium" : "text-zinc-300 text-sm"}>
+                    <span className={notif.isHighlight ? "text-primary text-sm font-medium" : "text-zinc-300 text-sm"}>
                       {notif.type}
                     </span>
                   </TableCell>
@@ -192,7 +192,7 @@ export default function NotificationListPage() {
                   <TableCell>
                     <button
                       onClick={() => setConfirmDelete(notif)}
-                      className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors"
+                      className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -214,7 +214,7 @@ export default function NotificationListPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-foreground">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

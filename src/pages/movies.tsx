@@ -48,7 +48,7 @@ type MovieRow = {
 
 const ACCESS_BADGE: Record<string, { label: string; className: string }> = {
   free: { label: "Free", className: "bg-green-500/20 text-green-400" },
-  basic: { label: "Basic", className: "bg-blue-500/20 text-blue-400" },
+  basic: { label: "Basic", className: "bg-primary/20 text-blue-400" },
   standard: { label: "Standard", className: "bg-purple-500/20 text-purple-400" },
   premium: { label: "Premium", className: "bg-amber-500/20 text-amber-400" },
 };
@@ -56,9 +56,9 @@ const ACCESS_BADGE: Record<string, { label: string; className: string }> = {
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   published: { label: "Published", className: "bg-green-500/20 text-green-400" },
   draft: { label: "Draft", className: "bg-zinc-500/20 text-zinc-400" },
-  processing: { label: "Processing", className: "bg-blue-500/20 text-blue-400" },
+  processing: { label: "Processing", className: "bg-primary/20 text-blue-400" },
   moderation: { label: "Moderation", className: "bg-amber-500/20 text-amber-400" },
-  rejected: { label: "Rejected", className: "bg-red-500/20 text-red-400" },
+  rejected: { label: "Rejected", className: "bg-primary/20 text-primary" },
 };
 
 export default function MoviesPage() {
@@ -168,7 +168,7 @@ export default function MoviesPage() {
         </Select>
         <Button
           onClick={handleApplyBulk}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 px-5 rounded-lg font-semibold text-sm"
+          className="bg-primary hover:bg-primary/90 text-white h-10 px-5 rounded-lg font-semibold text-sm"
         >
           Apply
         </Button>
@@ -209,7 +209,7 @@ export default function MoviesPage() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-red-500"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-primary"
           />
         </div>
 
@@ -223,7 +223,7 @@ export default function MoviesPage() {
 
         <Button
           onClick={() => setLocation("/movies/new")}
-          className="bg-red-600 hover:bg-red-700 text-white h-10 gap-2 rounded-lg px-5 font-semibold text-sm"
+          className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold text-sm"
         >
           <Plus className="h-4 w-4" />
           New
@@ -244,7 +244,7 @@ export default function MoviesPage() {
                   <Checkbox
                     checked={allSelected}
                     onCheckedChange={toggleAll}
-                    className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                    className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                   />
                 </TableHead>
                 <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Movie</TableHead>
@@ -275,7 +275,7 @@ export default function MoviesPage() {
                         <Checkbox
                           checked={selectedIds.includes(movie.id)}
                           onCheckedChange={() => toggleOne(movie.id)}
-                          className="border-border data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                         />
                       </TableCell>
                       <TableCell>
@@ -322,14 +322,14 @@ export default function MoviesPage() {
                         <Switch
                           checked={movie.featured}
                           onCheckedChange={() => handleToggleFeatured(movie.id)}
-                          className="data-[state=checked]:bg-red-600"
+                          className="data-[state=checked]:bg-primary"
                         />
                       </TableCell>
                       <TableCell>
                         <Switch
                           checked={movie.trending}
                           onCheckedChange={() => handleToggleTrending(movie.id)}
-                          className="data-[state=checked]:bg-red-600"
+                          className="data-[state=checked]:bg-primary"
                         />
                       </TableCell>
                       <TableCell>
@@ -342,14 +342,14 @@ export default function MoviesPage() {
                             <Edit2 className="h-3.5 w-3.5" />
                           </button>
                           <button
-                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-blue-400 hover:bg-primary/80/30 transition-colors"
                             title="View"
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => setConfirmDelete(movie)}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-600/15 text-red-400 hover:bg-red-600/30 transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -378,7 +378,7 @@ export default function MoviesPage() {
             <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

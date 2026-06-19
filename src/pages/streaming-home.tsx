@@ -1,25 +1,85 @@
-
-import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect, useRef, Fragment } from "react";
+import { Link, useLocation, useSearch } from "wouter";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useTheme } from "next-themes";
+import { getImageUrl } from "@/lib/api-client";
 import {
-  Play, Pause, Search, ChevronLeft, ChevronRight, X, Download, History,
-  ChevronDown, User, Star, Plus, Info, ExternalLink, Film, Tv,
-  TrendingUp, Flame, Sparkles, Smartphone, Maximize, Lock, Crown, Bell,
+  Play, Pause, Search, ChevronLeft, ChevronRight, X,
+  ChevronDown, User, Star, Plus, Info, Film, Tv,
+  TrendingUp, Flame, Sparkles, Smartphone, Lock, Crown, Bell,
+  Loader2, Clock, Check, EyeOff, AlertCircle, ListPlus, Send, Eye, Clapperboard
 } from "lucide-react";
 import {
-  movies, tvShows, heroContent, trendingNow, newReleases, topRated,
-  actionMovies, dramaShows, allGenres, type ContentItem,
-  DEMO_VIDEO_1, DEMO_VIDEO_2, DEMO_VIDEO_3, DEMO_VIDEO_4, DEMO_VIDEO_5,
-} from "@/data/movies";
-import ShortDramaPlayer from "@/components/ShortDramaPlayer";
-import { shortDramas, featuredDramas, newDramas, type ShortDrama } from "@/data/short-dramas";
+  useGetWebHome, useGetWebBrowse, loginClient, registerClient, useGetPages,
+  useGetGenres, useGetPublicNotifications, useGetSubscriptionPlans,
+} from "@/lib/api-client";
+import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
+
+/* ─── TYPES ─── */
+interface ContentItem {
+  id: string;
+  title: string;
+  poster: string;
+  backdrop: string;
+  type: "movie" | "show";
+  year?: string;
+  duration?: string;
+  imdbRating?: string;
+  ageRating?: string;
+  description?: string;
+  language?: string;
+  badge?: "NEW" | "TOP" | "HOT" | "TRENDING" | "EXCLUSIVE";
+  genres?: string[];
+  seasons?: number;
+  contentType?: string;
+  _id?: string;
+  isPremium?: boolean;
+  releaseDate?: string;
+}
+
+interface ShortDrama {
+  id: string;
+  title: string;
+  poster: string;
+  backdrop?: string;
+  rating: string;
+  totalEpisodes: number;
+  freeEpisodes: number;
+  language?: string;
+  badge?: string;
+  _id?: string;
+  contentType?: string;
+}
 
 type Tab = "home" | "movies" | "tvshows" | "drama" | "new";
 
-const HOTSTAR_BLUE = "#1a77ff";
+/* ─── HELPERS ─── */
+const getContinueWatching = () => {
+  try {
+    const data = JSON.parse(localStorage.getItem("continue_watching") || "[]");
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
 
-/* ─── IMDb BADGE ─── */
-function ImdbBadge({ rating }: { rating: string }) {
+const formatRelativeTime = (dateStr?: string) => {
+  if (!dateStr) return "";
+  const ts = new Date(dateStr).getTime();
+  const diff = Date.now() - ts;
+  const mins = Math.round(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+};
+
+/* ─── BADGES ─── */
+function ImdbBadge({ rating }: { rating?: string }) {
+  if (!rating) return null;
   return (
     <span className="flex items-center gap-1 bg-amber-400/15 border border-amber-400/40 text-amber-400 text-[11px] font-bold px-2 py-0.5 rounded">
       <Star className="w-2.5 h-2.5 fill-amber-400" />
@@ -28,7 +88,6 @@ function ImdbBadge({ rating }: { rating: string }) {
   );
 }
 
-/* ─── PREMIUM / FREE BADGE ─── */
 function PremiumBadge() {
   return (
     <span className="flex items-center gap-1 bg-[#f5a623] text-black text-[9px] font-black px-2 py-[2px] rounded-sm uppercase tracking-wide">
@@ -45,14 +104,13 @@ function FreeBadge() {
   );
 }
 
-/* ─── CONTENT BADGE ─── */
-function ContentBadge({ badge }: { badge: ContentItem["badge"] }) {
+function ContentBadge({ badge }: { badge?: ContentItem["badge"] }) {
   if (!badge) return null;
   const map: Record<string, string> = {
     NEW: "bg-emerald-500 text-white",
     TOP: "bg-[#f5a623] text-black",
     HOT: "bg-orange-500 text-white",
-    TRENDING: "bg-[#1a77ff] text-white",
+    TRENDING: "bg-red-600 text-white",
     EXCLUSIVE: "bg-purple-600 text-white",
   };
   return (
@@ -62,77 +120,82 @@ function ContentBadge({ badge }: { badge: ContentItem["badge"] }) {
   );
 }
 
-/* ─── FEATURED CARD (16:9 Landscape — Hotstar style) ─── */
-function FeaturedCard({
-  item,
-  onPlay,
-  size = "md",
-}: {
-  item: ContentItem;
-  onPlay: (item: ContentItem) => void;
-  size?: "sm" | "md" | "lg";
-}) {
-  const widths = {
-    sm: "w-[220px] sm:w-[260px]",
-    md: "w-[260px] sm:w-[300px] lg:w-[320px]",
-    lg: "w-[300px] sm:w-[360px] lg:w-[400px]",
-  };
+function AgeBadge({ rating }: { rating?: string }) {
+  if (!rating) return null;
+  return (
+    <span className="px-1.5 py-[2px] text-[9px] font-black border border-white/10 text-white bg-black/40 backdrop-blur-md rounded">
+      {rating}
+    </span>
+  );
+}
 
-  const isPremium = item.badge === "TOP" || item.badge === "EXCLUSIVE";
+/* ─── SECTION HEADER ─── */
+function SectionHeader({ title, icon, onSeeAll, count }: { title: string; icon?: React.ReactNode; onSeeAll?: () => void; count?: number }) {
+  return (
+    <div className="flex items-center gap-3 mb-4 px-4 sm:px-8 lg:px-12">
+      {icon && <div className="text-red-500">{icon}</div>}
+      <h2 className="text-white font-bold text-lg sm:text-xl tracking-tight">{title}</h2>
+      {count !== undefined && count > 0 && (
+        <span className="text-[10px] font-bold px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-full">
+          {count}
+        </span>
+      )}
+      <div className="flex-1" />
+      {onSeeAll && (
+        <button onClick={onSeeAll} className="text-zinc-400 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 group">
+          See all <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform text-red-500" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ─── FEATURED CARD (16:9 Landscape) ─── */
+function FeaturedCard({ item, onPlay, size = "md" }: { item: ContentItem; onPlay: (item: ContentItem) => void; size?: "sm" | "md" | "lg" }) {
+  const widths = {
+    sm: "w-[200px] sm:w-[240px]",
+    md: "w-[240px] sm:w-[280px] lg:w-[300px]",
+    lg: "w-[280px] sm:w-[340px] lg:w-[380px]",
+  };
+  const isPremium = item.isPremium || item.badge === "TOP" || item.badge === "EXCLUSIVE";
 
   return (
     <div className={`group relative flex-shrink-0 ${widths[size]} cursor-pointer`} onClick={() => onPlay(item)}>
       <div
-        className="relative overflow-hidden rounded-lg bg-[#1a1a2e] transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-[0_8px_32px_rgba(26,119,255,0.3)] group-hover:ring-2 group-hover:ring-[#1a77ff]/60"
+        className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 transition-all duration-300 group-hover:scale-[1.03] group-hover:ring-1 group-hover:ring-red-500/40 shadow-lg"
         style={{ aspectRatio: "16/9" }}
       >
         <img
-          src={item.backdrop}
+          src={item.backdrop || item.poster}
           alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:brightness-110"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
           onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=640&h=360&fit=crop&q=80&sig=${item.id}`;
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=640&h=360&fit=crop&q=80`;
           }}
         />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-
-        {/* Premium / Free badge — top left */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
         <div className="absolute top-2.5 left-2.5 z-10">
           {isPremium ? <PremiumBadge /> : <FreeBadge />}
         </div>
-
-        {/* Age rating — top right */}
-        {item.ageRating && (
-          <span className="absolute top-2.5 right-2.5 z-10 px-1.5 py-[2px] text-[9px] font-bold border border-white/40 text-white/80 rounded-sm bg-black/40">
-            {item.ageRating}
-          </span>
-        )}
-
-        {/* Play button on hover */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+          <ImdbBadge rating={item.imdbRating} />
+          <AgeBadge rating={item.ageRating} />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
+          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/40 hover:scale-110 active:scale-95 transition-all">
             <Play className="w-5 h-5 text-white fill-white ml-0.5" />
           </div>
         </div>
-
-        {/* Bottom info */}
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-white font-bold text-[13px] leading-tight line-clamp-1">{item.title}</p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-zinc-400 text-[11px]">{item.year}</span>
-            <span className="text-zinc-600 text-[10px]">·</span>
-            <span className="flex items-center gap-0.5 text-amber-400 text-[11px]">
-              <Star className="w-2 h-2 fill-amber-400" />{item.imdbRating}
-            </span>
+        <div className="absolute bottom-0 left-0 right-0 p-3.5 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+          <p className="text-white font-bold text-sm leading-tight truncate">{item.title}</p>
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-400">
+            <span>{item.year}</span>
+            {item.duration && <><span>·</span><span>{item.duration}</span></>}
             {item.type === "show" && item.seasons && (
-              <>
-                <span className="text-zinc-600 text-[10px]">·</span>
-                <span className="text-zinc-400 text-[11px]">{item.seasons}S</span>
-              </>
+              <><span>·</span><span className="text-white bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.seasons} Seasons</span></>
             )}
           </div>
         </div>
@@ -142,140 +205,135 @@ function FeaturedCard({
 }
 
 /* ─── PORTRAIT CONTENT CARD (2:3) ─── */
-function ContentCard({
-  item,
-  onPlay,
-  size = "md",
-}: {
-  item: ContentItem;
-  onPlay: (item: ContentItem) => void;
-  size?: "sm" | "md" | "lg";
-}) {
-  const widths = { sm: "w-[130px] sm:w-[150px]", md: "w-[150px] sm:w-[170px] lg:w-[190px]", lg: "w-[180px] sm:w-[210px] lg:w-[230px]" };
+function ContentCard({ item, onPlay, size = "md" }: { item: ContentItem; onPlay: (item: ContentItem) => void; size?: "sm" | "md" | "lg" }) {
+  const widths = {
+    sm: "w-[120px] sm:w-[140px]",
+    md: "w-[140px] sm:w-[160px] lg:w-[180px]",
+    lg: "w-[170px] sm:w-[200px] lg:w-[220px]",
+  };
 
   return (
-    <div className={`group relative flex-shrink-0 ${widths[size]} cursor-pointer`}>
+    <div className={`group relative flex-shrink-0 ${widths[size]} cursor-pointer`} onClick={() => onPlay(item)}>
       <div
-        className="relative overflow-hidden rounded-lg bg-[#1a1a2e] transition-all duration-300 group-hover:ring-2 group-hover:ring-[#1a77ff]/70 group-hover:shadow-[0_8px_32px_rgba(26,119,255,0.25)] group-hover:scale-[1.03]"
+        className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 transition-all duration-300 group-hover:ring-1 group-hover:ring-red-500/40 group-hover:-translate-y-1 shadow-lg"
         style={{ aspectRatio: "2/3" }}
       >
         <img
-          src={item.poster}
+          src={item.poster || item.backdrop}
           alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:brightness-110"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
           onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop&q=80&sig=${item.id}`;
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop&q=80`;
           }}
         />
         <ContentBadge badge={item.badge} />
-
-        {item.ageRating && (
-          <span className="absolute top-2 right-2 z-10 px-1 py-[1px] text-[8px] font-bold border border-white/50 text-white/80 rounded-sm bg-black/40">
-            {item.ageRating}
-          </span>
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute inset-x-0 bottom-0 p-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => onPlay(item)}
-              className="flex items-center justify-center gap-1 flex-1 py-2 bg-white hover:bg-zinc-100 text-black text-[11px] font-black rounded-sm transition-colors"
-            >
-              <Play className="w-3 h-3 fill-black" /> Play
-            </button>
-            <a
-              href={`https://www.imdb.com/title/${item.imdbId}/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center w-8 bg-zinc-800/90 hover:bg-amber-500/20 border border-zinc-700 hover:border-amber-500/50 rounded-sm transition-all"
-            >
-              <ExternalLink className="w-3 h-3 text-amber-400" />
-            </a>
+        <div className="absolute top-2.5 right-2.5 z-10">
+          <ImdbBadge rating={item.imdbRating} />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
+          <div className="w-11 h-11 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/40 hover:scale-105 transition-transform">
+            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
           </div>
         </div>
       </div>
+      <div className="mt-2 px-0.5">
+        <p className="text-white text-[13px] font-semibold leading-tight truncate group-hover:text-red-400 transition-colors">{item.title}</p>
+        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500">
+          <span>{item.year}</span>
+          {item.duration && <><span>·</span><span>{item.duration}</span></>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      <div className="mt-1.5 px-0.5">
-        <p className="text-white text-[12px] sm:text-[13px] font-semibold leading-tight line-clamp-1">{item.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-zinc-500 text-[11px]">{item.year}</span>
-          <span className="flex items-center gap-0.5 text-amber-400 text-[11px] font-medium">
-            <Star className="w-2.5 h-2.5 fill-amber-400" />{item.imdbRating}
+/* ─── SHORT DRAMA CARD (9:16) ─── */
+const DRAMA_BADGE_MAP: Record<string, string> = {
+  NEW: "bg-emerald-500 text-white",
+  HOT: "bg-orange-500 text-white",
+  TRENDING: "bg-red-600 text-white",
+  EXCLUSIVE: "bg-purple-600 text-white",
+};
+
+function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => void }) {
+  return (
+    <div
+      className="group relative flex-shrink-0 cursor-pointer"
+      style={{ width: "clamp(120px, 16vw, 150px)" }}
+      onClick={onClick}
+    >
+      <div
+        className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:ring-2 group-hover:ring-purple-500/60 group-hover:scale-[1.03] shadow-lg"
+        style={{ aspectRatio: "9/16" }}
+      >
+        <img
+          src={drama.poster ? getImageUrl(drama.poster) : drama.backdrop || ""}
+          alt={drama.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.style.display = "none";
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        {drama.badge && (
+          <span className={`absolute top-2 left-2 z-10 text-[9px] font-black px-1.5 py-[2px] rounded-sm uppercase tracking-wider ${DRAMA_BADGE_MAP[drama.badge] || "bg-zinc-700 text-white"}`}>
+            {drama.badge}
           </span>
-          {item.type === "show" && item.seasons && (
-            <span className="text-zinc-600 text-[10px]">{item.seasons}S</span>
-          )}
+        )}
+        {drama.freeEpisodes > 0 && (
+          <span className="absolute top-2 right-2 z-10 text-[9px] font-bold px-1.5 py-[2px] rounded-sm bg-emerald-600/90 text-white">
+            {drama.freeEpisodes} FREE
+          </span>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 p-2">
+          <p className="text-white text-[11px] font-bold leading-tight line-clamp-2">{drama.title}</p>
+          <p className="text-zinc-400 text-[10px] mt-0.5">{drama.totalEpisodes} EPs</p>
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── SECTION HEADER ─── */
-function SectionHeader({ title, icon, count }: { title: string; icon?: React.ReactNode; count?: number }) {
-  return (
-    <div className="flex items-center gap-3 mb-4 px-4 sm:px-8 lg:px-12">
-      <div className="w-1 h-6 bg-[#1a77ff] rounded-full flex-shrink-0" />
-      {icon && <span className="text-[#1a77ff]">{icon}</span>}
-      <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">{title}</h2>
-      {count !== undefined && (
-        <span className="text-zinc-600 text-sm">{count} titles</span>
-      )}
-      <div className="flex-1" />
-      <button className="text-zinc-500 hover:text-[#1a77ff] text-xs transition-colors flex items-center gap-0.5 group/link">
-        See all <ChevronRight className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 transition-transform" />
-      </button>
-    </div>
-  );
+/* ─── HORIZONTAL ROWS ─── */
+function useRowScroll() {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const scroll = (dir: "left" | "right", amount = 800) => {
+    if (!rowRef.current) return;
+    rowRef.current.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+  };
+  return { rowRef, scroll };
 }
 
-/* ─── FEATURED ROW (Landscape 16:9) ─── */
-function FeaturedRow({
-  title,
-  icon,
-  items,
-  onPlay,
-  size = "md",
-}: {
-  title: string;
-  icon?: React.ReactNode;
-  items: ContentItem[];
-  onPlay: (item: ContentItem) => void;
-  size?: "sm" | "md" | "lg";
+function FeaturedRow({ title, icon, items, onPlay, size = "md", onSeeAll }: {
+  title: string; icon?: React.ReactNode; items: ContentItem[]; onPlay: (item: ContentItem) => void; size?: "sm" | "md" | "lg"; onSeeAll?: () => void;
 }) {
-  const rowRef = useRef<HTMLDivElement>(null);
-  const scroll = (dir: "left" | "right") => {
-    if (!rowRef.current) return;
-    rowRef.current.scrollBy({ left: dir === "left" ? -960 : 960, behavior: "smooth" });
-  };
-
+  const { rowRef, scroll } = useRowScroll();
+  if (!items.length) return null;
   return (
     <div className="mb-10">
-      <SectionHeader title={title} icon={icon} count={items.length} />
+      <SectionHeader title={title} icon={icon} onSeeAll={onSeeAll} count={items.length} />
       <div className="relative group/row">
-        <button
-          onClick={() => scroll("left")}
-          className="hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-[#1a77ff] hover:border-[#1a77ff] transition-all shadow-xl"
-        >
+        <button onClick={() => scroll("left", 960)} className="hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => scroll("right")}
-          className="hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-[#1a77ff] hover:border-[#1a77ff] transition-all shadow-xl"
-        >
+        <button onClick={() => scroll("right", 960)} className="hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronRight className="w-4 h-4" />
         </button>
-        <div
-          ref={rowRef}
-          className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-        >
+        <div ref={rowRef} className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
           {items.map((item) => (
-            <FeaturedCard key={item.id} item={item} onPlay={onPlay} size={size} />
+            <FeaturedCard key={item.id || item._id} item={item} onPlay={onPlay} size={size} />
           ))}
         </div>
       </div>
@@ -283,49 +341,24 @@ function FeaturedRow({
   );
 }
 
-/* ─── PORTRAIT CONTENT ROW ─── */
-function ContentRow({
-  title,
-  icon,
-  items,
-  onPlay,
-  size = "md",
-}: {
-  title: string;
-  icon?: React.ReactNode;
-  items: ContentItem[];
-  onPlay: (item: ContentItem) => void;
-  size?: "sm" | "md" | "lg";
+function ContentRow({ title, icon, items, onPlay, size = "md", onSeeAll }: {
+  title: string; icon?: React.ReactNode; items: ContentItem[]; onPlay: (item: ContentItem) => void; size?: "sm" | "md" | "lg"; onSeeAll?: () => void;
 }) {
-  const rowRef = useRef<HTMLDivElement>(null);
-  const scroll = (dir: "left" | "right") => {
-    if (!rowRef.current) return;
-    rowRef.current.scrollBy({ left: dir === "left" ? -720 : 720, behavior: "smooth" });
-  };
-
+  const { rowRef, scroll } = useRowScroll();
+  if (!items.length) return null;
   return (
     <div className="mb-10">
-      <SectionHeader title={title} icon={icon} count={items.length} />
+      <SectionHeader title={title} icon={icon} onSeeAll={onSeeAll} count={items.length} />
       <div className="relative group/row">
-        <button
-          onClick={() => scroll("left")}
-          className="hidden lg:flex absolute left-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-[#1a77ff] hover:border-[#1a77ff] transition-all shadow-xl"
-        >
+        <button onClick={() => scroll("left", 720)} className="hidden lg:flex absolute left-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => scroll("right")}
-          className="hidden lg:flex absolute right-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-[#1a77ff] hover:border-[#1a77ff] transition-all shadow-xl"
-        >
+        <button onClick={() => scroll("right", 720)} className="hidden lg:flex absolute right-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronRight className="w-4 h-4" />
         </button>
-        <div
-          ref={rowRef}
-          className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-        >
+        <div ref={rowRef} className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
           {items.map((item) => (
-            <ContentCard key={item.id} item={item} onPlay={onPlay} size={size} />
+            <ContentCard key={item.id || item._id} item={item} onPlay={onPlay} size={size} />
           ))}
         </div>
       </div>
@@ -333,136 +366,181 @@ function ContentRow({
   );
 }
 
-/* ─── HERO (Hotstar-style) ─── */
-function Hero({ onPlay }: { onPlay: (item: ContentItem) => void }) {
+function ShortDramaRow({ title, icon, items, onSelect }: {
+  title: string; icon?: React.ReactNode; items: ShortDrama[]; onSelect: (d: ShortDrama) => void;
+}) {
+  const { rowRef, scroll } = useRowScroll();
+  if (!items.length) return null;
+  return (
+    <div className="mb-10">
+      <SectionHeader title={title} icon={icon} count={items.length} />
+      <div className="relative group/row">
+        <button onClick={() => scroll("left", 600)} className="hidden lg:flex absolute left-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button onClick={() => scroll("right", 600)} className="hidden lg:flex absolute right-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <div ref={rowRef} className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+          {items.map((d) => (
+            <ShortDramaCard key={d.id || d._id} drama={d} onClick={() => onSelect(d)} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── HERO BANNER ─── */
+function Hero({ onPlay, onSubscribeClick }: { onPlay: (item: ContentItem) => void; onSubscribeClick: () => void }) {
+  const { data: homeData, isLoading } = useGetWebHome();
+  const heroContent = homeData?.heroContent || [];
   const [current, setCurrent] = useState(0);
   const [fading, setFading] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const go = (index: number) => {
+    if (index === current) return;
     setFading(true);
-    setTimeout(() => { setCurrent(index); setFading(false); }, 350);
+    setTimeout(() => { setCurrent(index); setFading(false); }, 400);
   };
 
   useEffect(() => {
-    const timer = setInterval(() => go((current + 1) % heroContent.length), 7000);
+    if (heroContent.length === 0 || isPaused) return;
+    const timer = setInterval(() => go((current + 1) % heroContent.length), 6000);
     return () => clearInterval(timer);
-  }, [current]);
+  }, [current, heroContent.length, isPaused]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center w-full bg-[#030306]" style={{ height: "85vh", minHeight: 480 }}><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
+  }
+  if (!heroContent.length) return null;
 
   const item = heroContent[current];
-  const isPremium = item.badge === "TOP" || item.badge === "EXCLUSIVE";
+  const isPremium = item.isPremium || item.badge === "TOP" || item.badge === "EXCLUSIVE";
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: "88vh", minHeight: 520 }}>
+    <div
+      className="relative w-full overflow-hidden bg-[#030306]"
+      style={{ height: "85vh", minHeight: 480 }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       {/* Backdrop */}
-      <div
-        className={`absolute inset-0 transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}
-        style={{ backgroundImage: `url(${item.backdrop})`, backgroundSize: "cover", backgroundPosition: "center 20%" }}
-      />
+      <div className={`absolute inset-0 transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}>
+        <img
+          src={item.backdrop || item.poster}
+          alt={item.title}
+          className="w-full h-full object-cover object-center"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&h=675&fit=crop&q=80`;
+          }}
+        />
+      </div>
 
       {/* Gradients */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c14]/95 via-[#0c0c14]/50 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#0c0c14] to-transparent" />
-      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-[#0c0c14]/80 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#030306] via-[#030306]/50 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-gradient-to-t from-[#030306] to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[20%] bg-gradient-to-b from-[#030306]/70 to-transparent" />
+      <div className="absolute inset-0 bg-[#030306]/20" />
 
       {/* Content */}
-      <div className="absolute bottom-16 left-0 px-6 sm:px-10 lg:px-14 max-w-3xl w-full">
+      <div className="absolute bottom-14 sm:bottom-16 left-0 px-6 sm:px-10 lg:px-14 max-w-2xl w-full">
         <div className={`transition-all duration-500 ${fading ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
-
-          {/* Type + Badges */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {isPremium ? <PremiumBadge /> : <FreeBadge />}
-            <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${item.type === "movie" ? "bg-[#1a77ff]/20 text-[#1a77ff] border border-[#1a77ff]/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"}`}>
+            <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${item.type === "movie" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"}`}>
               {item.type === "movie" ? <Film className="w-3 h-3" /> : <Tv className="w-3 h-3" />}
               {item.type === "movie" ? "Movie" : "TV Show"}
             </span>
-            {item.genres.slice(0, 2).map((g) => (
-              <span key={g} className="text-zinc-400 text-xs bg-zinc-800/60 border border-zinc-700/40 px-2.5 py-1 rounded-full">{g}</span>
+            {(item.genres || []).slice(0, 2).map((g) => (
+              <span key={g} className="text-zinc-300 text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
             ))}
           </div>
 
-          {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-[62px] font-black text-white leading-none mb-3 tracking-tight drop-shadow-2xl">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-3 tracking-tight drop-shadow-lg">
             {item.title}
           </h1>
 
-          {/* Meta */}
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <ImdbBadge rating={item.imdbRating} />
-            {item.ageRating && (
-              <span className="text-zinc-400 text-xs border border-zinc-600 px-1.5 py-0.5 rounded bg-black/30">{item.ageRating}</span>
-            )}
-            <span className="text-zinc-400 text-xs">{item.duration}</span>
-            <span className="text-zinc-400 text-xs">{item.year}</span>
-            {item.language && <span className="text-zinc-500 text-xs">{item.language}</span>}
+            <AgeBadge rating={item.ageRating} />
+            {item.duration && <span className="text-zinc-400 text-xs font-semibold">{item.duration}</span>}
+            {item.year && <span className="text-zinc-400 text-xs font-semibold">{item.year}</span>}
+            {item.language && <span className="text-zinc-500 text-xs font-semibold">{item.language}</span>}
           </div>
 
-          <p className="text-zinc-300 text-sm sm:text-base leading-relaxed mb-7 max-w-lg line-clamp-3">
+          <p className="text-zinc-300 text-sm sm:text-base leading-relaxed mb-6 max-w-lg line-clamp-3">
             {item.description}
           </p>
 
-          {/* Buttons */}
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={() => onPlay(item)}
-              className="flex items-center gap-2.5 px-8 py-3.5 bg-white hover:bg-zinc-100 text-black font-black rounded text-sm tracking-wide transition-all active:scale-95 shadow-xl"
+              className="flex items-center gap-2.5 px-8 py-3.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-lg text-sm tracking-wide transition-all active:scale-95 shadow-xl"
             >
               <Play className="w-4 h-4 fill-black" />
               {isPremium ? "Watch Now" : "Watch Free"}
             </button>
             {isPremium && (
-              <button className="flex items-center gap-2.5 px-6 py-3.5 bg-[#1a77ff] hover:bg-[#1565d8] text-white font-bold rounded text-sm tracking-wide transition-all active:scale-95 shadow-xl shadow-blue-900/30">
+              <button
+                onClick={onSubscribeClick}
+                className="flex items-center gap-2.5 px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-red-950/30"
+              >
                 <Crown className="w-4 h-4" /> Subscribe
               </button>
             )}
-            <button className="flex items-center gap-2.5 px-5 py-3.5 bg-zinc-800/80 hover:bg-zinc-700 text-white border border-zinc-700/60 font-bold rounded text-sm tracking-wide transition-all backdrop-blur-sm">
-              <Plus className="w-4 h-4" /> Watchlist
+            <button className="flex items-center justify-center w-11 h-11 bg-zinc-900/80 border border-zinc-700/60 text-white rounded-lg transition-all hover:bg-zinc-800 hover:scale-105 active:scale-95">
+              <Plus className="w-5 h-5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Slide Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+      {/* Progress dots */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
         {heroContent.map((_, i) => (
           <button
             key={i}
             onClick={() => go(i)}
-            className={`transition-all duration-300 rounded-full ${i === current ? "w-8 h-[6px] bg-[#1a77ff]" : "w-2 h-2 bg-white/30 hover:bg-white/60"}`}
+            className={`transition-all duration-300 rounded-full ${i === current ? "w-8 h-[5px] bg-red-600" : "w-2 h-2 bg-white/30 hover:bg-white/60"}`}
           />
         ))}
       </div>
 
-      {/* Arrow Controls */}
-      {[
-        { dir: "left", action: () => go((current - 1 + heroContent.length) % heroContent.length) },
-        { dir: "right", action: () => go((current + 1) % heroContent.length) },
-      ].map(({ dir, action }) => (
-        <button
-          key={dir}
-          onClick={action}
-          className={`absolute ${dir === "left" ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/15 hover:border-white/40 transition-all`}
-        >
-          {dir === "left" ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-        </button>
-      ))}
+      {/* Arrow controls */}
+      <button
+        onClick={() => go((current - 1 + heroContent.length) % heroContent.length)}
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-zinc-800 hover:border-zinc-600 transition-all"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <button
+        onClick={() => go((current + 1) % heroContent.length)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80 text-white border border-zinc-800 hover:border-zinc-600 transition-all"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
     </div>
   );
 }
 
 /* ─── GENRE FILTER ─── */
 function GenreFilter({ active, onChange }: { active: string; onChange: (g: string) => void }) {
+  const { data: genresData } = useGetGenres({ limit: 50 });
+  const genres: string[] = ["All", ...((genresData?.data || []).map((g: any) => g.name))];
+
   return (
-    <div
-      className="flex gap-2 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2 mb-6"
-      style={{ scrollbarWidth: "none" } as React.CSSProperties}
-    >
-      {allGenres.map((g) => (
+    <div className="flex gap-2 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2 mb-6" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+      {genres.map((g) => (
         <button
           key={g}
           onClick={() => onChange(g)}
           className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
             active === g
-              ? "bg-[#1a77ff] border-[#1a77ff] text-white"
+              ? "bg-red-600 border-red-600 text-white"
               : "bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
           }`}
         >
@@ -473,36 +551,45 @@ function GenreFilter({ active, onChange }: { active: string; onChange: (g: strin
   );
 }
 
-/* ─── SUBSCRIBE BANNER ─── */
-function SubscribeBanner() {
+/* ─── SUBSCRIBE BANNER (Dynamic from API) ─── */
+function SubscribeBanner({ onSubscribeClick }: { onSubscribeClick: () => void }) {
+  const { data: plansData } = useGetSubscriptionPlans({ limit: 10 });
+  const plans = plansData?.data || [];
+  const cheapest = plans.length > 0
+    ? plans.reduce((a: any, b: any) => (a.price < b.price ? a : b), plans[0])
+    : null;
+
   return (
     <div className="mx-4 sm:mx-8 lg:mx-12 mb-10 rounded-2xl overflow-hidden relative">
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(135deg, #0a1628 0%, #0f2044 50%, #091830 100%)" }}
-      />
-      <div className="absolute inset-0 opacity-20"
-        style={{ backgroundImage: "url(https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=60)", backgroundSize: "cover", backgroundPosition: "center" }}
-      />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0a1628 0%, #0f2044 50%, #091830 100%)" }} />
       <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/95 via-[#0a1628]/70 to-transparent" />
 
       <div className="relative z-10 px-6 sm:px-10 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-md bg-[#1a77ff] flex items-center justify-center">
+            <div className="w-6 h-6 rounded-md bg-red-600 flex items-center justify-center">
               <Crown className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-[#1a77ff] font-black text-sm uppercase tracking-wider">Premium Plan</span>
+            <span className="text-red-500 font-bold text-sm uppercase tracking-wider">Premium Plan</span>
           </div>
-          <h3 className="text-white font-black text-xl sm:text-2xl mb-1">Unlock All Premium Content</h3>
-          <p className="text-zinc-400 text-sm">4K Ultra HD · No Ads · Download & Watch · 5 Screens</p>
+          <h3 className="text-white font-bold text-xl sm:text-2xl mb-1">Unlock All Premium Content</h3>
+          <p className="text-zinc-400 text-sm">4K Ultra HD · No Ads · Download & Watch · Multi-Screen</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-right">
-            <p className="text-zinc-500 text-xs line-through">₹999/mo</p>
-            <p className="text-white font-black text-xl">₹299<span className="text-zinc-400 text-sm font-normal">/mo</span></p>
-          </div>
-          <button className="px-6 py-3 bg-[#1a77ff] hover:bg-[#1565d8] text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-blue-900/40 whitespace-nowrap">
+          {cheapest && (
+            <div className="text-right">
+              {cheapest.originalPrice && cheapest.originalPrice > cheapest.price && (
+                <p className="text-zinc-500 text-xs line-through">{cheapest.currency || "₹"}{cheapest.originalPrice}</p>
+              )}
+              <p className="text-white font-bold text-xl">
+                {cheapest.currency || "₹"}{cheapest.price}<span className="text-zinc-400 text-sm font-normal">/{cheapest.interval || "mo"}</span>
+              </p>
+            </div>
+          )}
+          <button
+            onClick={onSubscribeClick}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-red-900/40 whitespace-nowrap"
+          >
             Subscribe Now
           </button>
         </div>
@@ -514,20 +601,25 @@ function SubscribeBanner() {
 /* ─── MOVIES GRID TAB ─── */
 function MoviesTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
   const [activeGenre, setActiveGenre] = useState("All");
-  const filtered = activeGenre === "All" ? movies : movies.filter(m => m.genres.includes(activeGenre));
+  const { data: browseData, isLoading } = useGetWebBrowse({ type: "movie", genre: activeGenre });
+  const filtered = browseData?.items || [];
 
   return (
-    <div className="pt-6">
+    <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-6">
-        <h2 className="text-white font-black text-2xl">Movies</h2>
-        <p className="text-zinc-500 text-sm mt-1">{filtered.length} movies available</p>
+        <h2 className="text-white font-bold text-2xl tracking-tight">Movies</h2>
+        <p className="text-zinc-500 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} movies available`}</p>
       </div>
       <GenreFilter active={activeGenre} onChange={setActiveGenre} />
-      <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {filtered.map((item) => (
-          <ContentCard key={item.id} item={item} onPlay={onPlay} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>
+      ) : (
+        <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+          {filtered.map((item: any) => (
+            <ContentCard key={item.id || item._id} item={item} onPlay={onPlay} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -535,150 +627,159 @@ function MoviesTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
 /* ─── TV SHOWS GRID TAB ─── */
 function TVShowsTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
   const [activeGenre, setActiveGenre] = useState("All");
-  const filtered = activeGenre === "All" ? tvShows : tvShows.filter(s => s.genres.includes(activeGenre));
+  const { data: browseData, isLoading } = useGetWebBrowse({ type: "show", genre: activeGenre });
+  const filtered = browseData?.items || [];
 
   return (
-    <div className="pt-6">
+    <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-6">
-        <h2 className="text-white font-black text-2xl">TV Shows</h2>
-        <p className="text-zinc-500 text-sm mt-1">{filtered.length} shows available</p>
+        <h2 className="text-white font-bold text-2xl tracking-tight">TV Shows</h2>
+        <p className="text-zinc-500 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} shows available`}</p>
       </div>
       <GenreFilter active={activeGenre} onChange={setActiveGenre} />
-      <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {filtered.map((item) => (
-          <ContentCard key={item.id} item={item} onPlay={onPlay} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>
+      ) : (
+        <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+          {filtered.map((item: any) => (
+            <ContentCard key={item.id || item._id} item={item} onPlay={onPlay} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── NEW & HOT TAB ─── */
-function NewHotTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
+function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void; showToast?: (msg: string) => void }) {
+  const { data: homeData, isLoading } = useGetWebHome();
+  const [reminders, setReminders] = useState<Record<string, boolean>>({});
+
+  const toggleReminder = (id: string, title: string) => {
+    const active = !reminders[id];
+    setReminders((prev) => ({ ...prev, [id]: active }));
+    if (showToast) {
+      showToast(active ? `Reminder set for "${title}"` : `Reminder cancelled for "${title}"`);
+    }
+  };
+
+  if (isLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
+
+  const newReleases = homeData.newReleases || [];
+
   return (
-    <div className="pt-6">
-      <div className="px-4 sm:px-8 lg:px-12 mb-8">
-        <h2 className="text-white font-black text-2xl">New &amp; Hot</h2>
-        <p className="text-zinc-500 text-sm mt-1">Latest releases &amp; trending now</p>
+    <div className="pt-6 max-w-4xl mx-auto px-4 pb-20">
+      <div className="mb-10 text-center sm:text-left">
+        <h2 className="text-white font-bold text-2xl sm:text-3xl tracking-tight">New & Hot</h2>
+        <p className="text-zinc-500 text-xs sm:text-sm mt-1.5 font-medium">Follow the latest upcoming titles and trending releases.</p>
       </div>
-      <FeaturedRow title="New Releases" icon={<Sparkles className="w-4 h-4" />} items={newReleases} onPlay={onPlay} size="lg" />
-      <FeaturedRow title="Trending This Week" icon={<TrendingUp className="w-4 h-4" />} items={trendingNow} onPlay={onPlay} />
+
+      <div className="relative border-l border-zinc-800 ml-4 sm:ml-10 pl-6 sm:pl-10 space-y-12">
+        {newReleases.map((item: ContentItem) => {
+          const id = item.id || item._id || "";
+          const hasReminder = !!reminders[id];
+          const releaseDate = item.releaseDate || item.year;
+          const month = releaseDate ? new Date(releaseDate).toLocaleString("default", { month: "short" }).toUpperCase() : "";
+          const day = releaseDate ? new Date(releaseDate).getDate() : "";
+
+          return (
+            <div key={id} className="relative group/timeline">
+              <div className="absolute -left-[31px] sm:-left-[47px] top-4 w-4 h-4 rounded-full bg-zinc-950 border-2 border-zinc-700 flex items-center justify-center group-hover/timeline:border-red-500 transition-colors">
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 group-hover/timeline:bg-red-500 transition-colors" />
+              </div>
+
+              {month && (
+                <div className="absolute -left-[95px] sm:-left-[125px] top-1 text-center w-16">
+                  <p className="text-zinc-500 text-[10px] font-bold tracking-widest">{month}</p>
+                  <p className="text-white text-xl sm:text-2xl font-bold leading-none mt-0.5">{day}</p>
+                </div>
+              )}
+
+              <div className="rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800/60 flex flex-col md:flex-row gap-5 p-4 sm:p-5 hover:border-zinc-700/60 transition-colors">
+                <div
+                  onClick={() => onPlay(item)}
+                  className="relative md:w-64 w-full flex-shrink-0 rounded-xl overflow-hidden bg-black cursor-pointer group/poster"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  <img src={item.backdrop || item.poster} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover/poster:scale-105" />
+                  <div className="absolute inset-0 bg-black/20 group-hover/poster:bg-black/45 transition-colors flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-red-600 opacity-0 group-hover/poster:opacity-100 scale-90 group-hover/poster:scale-100 transition-all flex items-center justify-center shadow-lg shadow-red-600/40">
+                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-between min-w-0">
+                  <div>
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <h3 onClick={() => onPlay(item)} className="text-white text-base sm:text-lg font-bold hover:text-red-500 transition-colors truncate cursor-pointer">{item.title}</h3>
+                      <button
+                        onClick={() => toggleReminder(id, item.title)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                          hasReminder
+                            ? "bg-emerald-600/15 border-emerald-600/30 text-emerald-400"
+                            : "bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-300"
+                        }`}
+                      >
+                        {hasReminder ? <Check className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+                        {hasReminder ? "Reminder Set" : "Remind Me"}
+                      </button>
+                    </div>
+                    <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4 flex-wrap">
+                    <span className="text-zinc-600 text-[10px] font-bold tracking-wider uppercase">Coming Soon</span>
+                    <span className="text-zinc-800 text-[10px]">·</span>
+                    {(item.genres || []).slice(0, 2).map((g) => (
+                      <span key={g} className="text-[10px] font-bold px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-full uppercase tracking-wider">{g}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-/* ─── VERTICAL PLAYER SECTION ─── */
-const SHORTS = [
-  { title: "Big Buck Bunny", url: DEMO_VIDEO_1, label: "Animation · 9 min" },
-  { title: "Elephant's Dream", url: DEMO_VIDEO_2, label: "Sci-Fi · 10 min" },
-  { title: "Tears of Steel", url: DEMO_VIDEO_3, label: "Action · 12 min" },
-  { title: "Sintel", url: DEMO_VIDEO_4, label: "Fantasy · 14 min" },
-  { title: "Subaru Outback", url: DEMO_VIDEO_5, label: "Adventure · 6 min" },
-];
+/* ─── SHORT DRAMA TAB ─── */
+function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
+  const { data: homeData, isLoading } = useGetWebHome();
+  const allDramas = [...(homeData?.featuredDramas || []), ...(homeData?.newDramas || [])];
 
-function VerticalPlayerSection({ onPlayFull }: { onPlayFull: (item: ContentItem) => void }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.load();
-    if (playing) v.play().catch(() => {});
-    else setPlaying(false);
-  }, [activeIdx]);
-
-  const togglePlay = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) { v.play().catch(() => {}); setPlaying(true); }
-    else { v.pause(); setPlaying(false); }
-  };
-
-  const clip = SHORTS[activeIdx];
+  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
 
   return (
-    <div className="mb-12">
-      <SectionHeader title="Shorts & Reels" icon={<Smartphone className="w-4 h-4" />} />
-      <div className="px-4 sm:px-8 lg:px-12 flex gap-5 items-start overflow-x-auto" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+    <div className="pt-6 pb-20">
+      <div className="px-4 sm:px-8 lg:px-12 mb-8">
+        <h2 className="text-white font-bold text-2xl tracking-tight">Short Drama</h2>
+        <p className="text-zinc-500 text-sm mt-1">{allDramas.length} series · Portrait 9:16 · Episode-based</p>
+      </div>
 
-        {/* Inline portrait video player */}
-        <div
-          className="relative flex-shrink-0 bg-black rounded-2xl overflow-hidden group cursor-pointer shadow-2xl shadow-blue-900/20 ring-1 ring-[#1a77ff]/20"
-          style={{ aspectRatio: "9/16", width: "min(200px, 44vw)" }}
-          onClick={togglePlay}
-        >
-          <video
-            ref={videoRef}
-            src={clip.url}
-            poster={heroContent[activeIdx]?.poster}
-            className="w-full h-full object-cover"
-            loop
-            playsInline
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-          />
+      <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-10">
+        {allDramas.map((d: any) => (
+          <ShortDramaCard key={d.id || d._id} drama={d} onClick={() => onSelect(d)} />
+        ))}
+      </div>
 
-          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
-            <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center border border-white/30">
-              {playing
-                ? <Pause className="w-6 h-6 text-white fill-white" />
-                : <Play className="w-6 h-6 text-white fill-white ml-0.5" />
-              }
-            </div>
-          </div>
-
-          <div className="absolute top-2.5 left-2.5 pointer-events-none">
-            <span className="bg-[#1a77ff]/80 text-white text-[9px] font-black px-2 py-0.5 rounded-full backdrop-blur-sm">Portrait 9:16</span>
-          </div>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); onPlayFull(heroContent[activeIdx] || heroContent[0]); }}
-            className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 border border-white/20 transition-all"
-          >
-            <Maximize className="w-3.5 h-3.5" />
-          </button>
-
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none">
-            <p className="text-white text-xs font-bold leading-tight">{clip.title}</p>
-            <p className="text-[#1a77ff] text-[10px] mt-0.5">{clip.label}</p>
-          </div>
-
-          {playing && (
-            <div className="absolute top-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-[#1a77ff]/80 text-white text-[9px] font-bold px-2 py-0.5 rounded-full pointer-events-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> PLAYING
-            </div>
-          )}
-        </div>
-
-        {/* Clip selector list */}
-        <div className="flex flex-col gap-2 flex-shrink-0 w-[200px] sm:w-[240px]">
-          {SHORTS.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => { setActiveIdx(i); setPlaying(false); }}
-              className={`flex items-center gap-3 p-2.5 rounded-xl transition-all text-left border ${activeIdx === i ? "bg-white/8 border-[#1a77ff]/40 shadow-[0_0_12px_rgba(26,119,255,0.15)]" : "border-transparent hover:bg-white/5"}`}
-            >
-              <div className="relative flex-shrink-0 rounded-lg overflow-hidden bg-zinc-800" style={{ aspectRatio: "9/16", width: 36 }}>
-                <img
-                  src={heroContent[i]?.poster}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=80&h=140&fit=crop&sig=${i}`; }}
-                />
-                {activeIdx === i && playing && (
-                  <div className="absolute inset-0 bg-[#1a77ff]/40 flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                  </div>
-                )}
+      <div className="px-4 sm:px-8 lg:px-12 mb-8">
+        <div className="bg-[#0f1a2e]/80 border border-red-500/10 rounded-2xl p-5 flex flex-wrap gap-6">
+          {[
+            { icon: <Smartphone className="w-5 h-5 text-red-500" />, label: "Portrait 9:16", desc: "Optimized for mobile viewing" },
+            { icon: <Play className="w-5 h-5 text-emerald-400" />, label: "First Episodes Free", desc: "Start watching without subscription" },
+            { icon: <Lock className="w-5 h-5 text-amber-400" />, label: "Premium Episodes", desc: "Subscribe to unlock all episodes" },
+            { icon: <Crown className="w-5 h-5 text-yellow-400" />, label: "VIP Access", desc: "Unlimited streaming for subscribers" },
+          ].map(({ icon, label, desc }) => (
+            <div key={label} className="flex items-start gap-3 min-w-[160px]">
+              <div className="w-9 h-9 rounded-xl bg-zinc-800/80 flex items-center justify-center flex-shrink-0">{icon}</div>
+              <div>
+                <p className="text-white font-bold text-sm">{label}</p>
+                <p className="text-zinc-400 text-xs mt-0.5">{desc}</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-[13px] font-semibold truncate ${activeIdx === i ? "text-white" : "text-zinc-400"}`}>{s.title}</p>
-                <p className="text-[11px] text-zinc-600 mt-0.5 truncate">{s.label}</p>
-              </div>
-              {activeIdx === i && <div className="w-[3px] h-5 bg-[#1a77ff] rounded-full flex-shrink-0" />}
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -687,234 +788,143 @@ function VerticalPlayerSection({ onPlayFull }: { onPlayFull: (item: ContentItem)
 }
 
 /* ─── HOME TAB ─── */
-function HomeTab({
-  onPlay,
-  onSelectDrama,
-}: {
+function HomeTab({ onPlay, onSelectDrama, onSubscribeClick }: {
   onPlay: (item: ContentItem) => void;
   onSelectDrama: (d: ShortDrama) => void;
+  onSubscribeClick: () => void;
 }) {
-  return (
-    <div className="pt-8">
-      {/* Landscape featured rows at top (Hotstar style) */}
-      <FeaturedRow title="Trending Now" icon={<TrendingUp className="w-4 h-4" />} items={trendingNow} onPlay={onPlay} />
-      <FeaturedRow title="New Releases" icon={<Sparkles className="w-4 h-4" />} items={newReleases} onPlay={onPlay} />
+  const [, setLocation] = useLocation();
+  const { data: homeData, isLoading } = useGetWebHome();
+  const [cw, setCw] = useState<any[]>([]);
 
-      {/* Subscribe Banner */}
-      <SubscribeBanner />
+  useEffect(() => {
+    setCw(getContinueWatching());
+  }, []);
 
-      {/* Portrait rows */}
-      <ContentRow title="Top Rated Movies" icon={<Star className="w-4 h-4" />} items={topRated} onPlay={onPlay} size="lg" />
-
-      {/* Short Drama Row */}
-      <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={featuredDramas} onSelect={onSelectDrama} />
-
-      {/* More landscape rows */}
-      <FeaturedRow title="Popular TV Shows" icon={<Tv className="w-4 h-4" />} items={tvShows.slice(0, 10)} onPlay={onPlay} />
-
-      {/* Vertical shorts player */}
-      <VerticalPlayerSection onPlayFull={onPlay} />
-
-      {/* Another short drama row */}
-      <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={newDramas} onSelect={onSelectDrama} />
-
-      {/* More landscape rows */}
-      <FeaturedRow title="Action & Adventure" icon={<Flame className="w-4 h-4" />} items={actionMovies} onPlay={onPlay} />
-      <FeaturedRow title="Drama Series" icon={<Film className="w-4 h-4" />} items={dramaShows} onPlay={onPlay} />
-    </div>
-  );
-}
-
-/* ─── SHORT DRAMA CARD ─── */
-const DRAMA_BADGE: Record<string, string> = {
-  NEW: "bg-emerald-500 text-white",
-  HOT: "bg-orange-500 text-white",
-  TRENDING: "bg-[#1a77ff] text-white",
-  EXCLUSIVE: "bg-purple-600 text-white",
-};
-
-function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => void }) {
-  return (
-    <div
-      className="group relative flex-shrink-0 cursor-pointer"
-      style={{ width: "clamp(130px, 18vw, 175px)" }}
-      onClick={onClick}
-    >
-      <div
-        className="relative overflow-hidden rounded-xl bg-[#1a1a2e] transition-all duration-300 group-hover:ring-2 group-hover:ring-purple-500/70 group-hover:shadow-[0_8px_32px_rgba(168,85,247,0.25)] group-hover:scale-[1.03]"
-        style={{ aspectRatio: "9/16" }}
-      >
-        <img
-          src={drama.poster}
-          alt={drama.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:brightness-110"
-          loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=533&fit=crop&sig=${drama.id}`;
-          }}
-        />
-
-        {drama.badge && (
-          <span className={`absolute top-2 left-2 z-10 text-[9px] font-black px-1.5 py-[2px] rounded-sm uppercase tracking-wider ${DRAMA_BADGE[drama.badge]}`}>
-            {drama.badge}
-          </span>
-        )}
-
-        <span className="absolute top-2 right-2 z-10 text-[9px] font-bold px-1.5 py-[2px] rounded-sm bg-emerald-600/90 text-white">
-          {drama.freeEpisodes} FREE
-        </span>
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute inset-x-0 bottom-0 p-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-          <button className="w-full py-2 bg-white hover:bg-zinc-100 text-black text-[11px] font-black rounded-lg flex items-center justify-center gap-1 transition-colors">
-            <Play className="w-3 h-3 fill-black" /> Watch Now
-          </button>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-zinc-800">
-          <div
-            className="h-full bg-purple-500"
-            style={{ width: `${(drama.freeEpisodes / drama.totalEpisodes) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-1.5 px-0.5">
-        <p className="text-white text-[12px] font-semibold leading-tight line-clamp-1">{drama.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="flex items-center gap-0.5 text-amber-400 text-[11px] font-medium">
-            <Star className="w-2.5 h-2.5 fill-amber-400" />{drama.rating}
-          </span>
-          <span className="text-zinc-500 text-[11px]">{drama.totalEpisodes} EPs</span>
-          <span className="text-zinc-600 text-[10px]">{drama.language}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── SHORT DRAMA ROW ─── */
-function ShortDramaRow({
-  title,
-  icon,
-  items,
-  onSelect,
-}: {
-  title: string;
-  icon?: React.ReactNode;
-  items: ShortDrama[];
-  onSelect: (d: ShortDrama) => void;
-}) {
-  const rowRef = useRef<HTMLDivElement>(null);
-  const scroll = (dir: "left" | "right") => {
-    if (!rowRef.current) return;
-    rowRef.current.scrollBy({ left: dir === "left" ? -600 : 600, behavior: "smooth" });
-  };
+  if (isLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
 
   return (
-    <div className="mb-10">
-      <SectionHeader title={title} icon={icon} count={items.length} />
-      <div className="relative group/row">
-        <button
-          onClick={() => scroll("left")}
-          className="hidden lg:flex absolute left-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => scroll("right")}
-          className="hidden lg:flex absolute right-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <div
-          ref={rowRef}
-          className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-        >
-          {items.map((d) => (
-            <ShortDramaCard key={d.id} drama={d} onClick={() => onSelect(d)} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── SHORT DRAMA TAB ─── */
-function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
-  return (
-    <div className="pt-6">
-      <div className="px-4 sm:px-8 lg:px-12 mb-8">
-        <h2 className="text-white font-black text-2xl">Short Drama</h2>
-        <p className="text-zinc-500 text-sm mt-1">{shortDramas.length} series · Portrait 9:16 · Episode-based</p>
-      </div>
-
-      <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-10">
-        {shortDramas.map((d) => (
-          <ShortDramaCard key={d.id} drama={d} onClick={() => onSelect(d)} />
-        ))}
-      </div>
-
-      <div className="px-4 sm:px-8 lg:px-12 mb-8">
-        <div className="bg-[#0f1a2e]/80 border border-[#1a77ff]/20 rounded-2xl p-5 flex flex-wrap gap-6">
-          {[
-            { icon: <Smartphone className="w-5 h-5 text-[#1a77ff]" />, label: "Portrait 9:16", desc: "Optimized for mobile viewing" },
-            { icon: <Play className="w-5 h-5 text-emerald-400" />, label: "First Episodes Free", desc: "Start watching without subscription" },
-            { icon: <Lock className="w-5 h-5 text-amber-400" />, label: "Premium Episodes", desc: "Subscribe to unlock all episodes" },
-            { icon: <Crown className="w-5 h-5 text-yellow-400" />, label: "VIP Access", desc: "Unlimited streaming for subscribers" },
-          ].map(({ icon, label, desc }) => (
-            <div key={label} className="flex items-start gap-3 min-w-[160px]">
-              <div className="w-9 h-9 rounded-xl bg-zinc-800/80 flex items-center justify-center flex-shrink-0">{icon}</div>
-              <div>
-                <p className="text-white text-sm font-semibold">{label}</p>
-                <p className="text-zinc-600 text-xs mt-0.5">{desc}</p>
+    <div className="px-4 sm:px-8 lg:px-12 pb-20 space-y-12 pt-8">
+      {cw.length > 0 && (
+        <section>
+          <SectionHeader title="Continue Watching" icon={<Clock className="w-4 h-4" />} />
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+            {cw.map((item: any) => (
+              <div
+                key={item.id}
+                className="group relative flex-shrink-0 w-[200px] sm:w-[240px] cursor-pointer"
+                onClick={() => onPlay(item)}
+              >
+                <div
+                  className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:scale-[1.03] shadow-lg"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  <img
+                    src={item.poster || item.backdrop}
+                    alt={item.title}
+                    className="w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
+                    <div className="w-12 h-12 rounded-full bg-red-600/90 backdrop-blur-md flex items-center justify-center shadow-xl shadow-red-600/40">
+                      <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
+                    <div className="h-full bg-red-600" style={{ width: `${item.progress || 0}%` }} />
+                  </div>
+                </div>
+                <p className="mt-2 text-white font-semibold text-sm line-clamp-1 px-0.5">{item.title}</p>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {homeData.trendingNow?.length > 0 && (
+        <FeaturedRow title="Trending Now" icon={<TrendingUp className="w-4 h-4" />} items={homeData.trendingNow} onPlay={onPlay} onSeeAll={() => setLocation("/browse?trending")} />
+      )}
+      {homeData.newReleases?.length > 0 && (
+        <FeaturedRow title="New Releases" icon={<Sparkles className="w-4 h-4" />} items={homeData.newReleases} onPlay={onPlay} onSeeAll={() => setLocation("/browse?new")} />
+      )}
+
+      <SubscribeBanner onSubscribeClick={onSubscribeClick} />
+
+      {homeData.topRated?.length > 0 && (
+        <ContentRow title="Top Rated Movies" icon={<Star className="w-4 h-4" />} items={homeData.topRated} onPlay={onPlay} size="lg" onSeeAll={() => setLocation("/browse?top-rated")} />
+      )}
+      {homeData.featuredDramas?.length > 0 && (
+        <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} />
+      )}
+      {homeData.tvShows?.length > 0 && (
+        <FeaturedRow title="Popular TV Shows" icon={<Tv className="w-4 h-4" />} items={homeData.tvShows.slice(0, 10)} onPlay={onPlay} onSeeAll={() => setLocation("/browse?tv")} />
+      )}
+      {homeData.newDramas?.length > 0 && (
+        <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} />
+      )}
+      {homeData.actionMovies?.length > 0 && (
+        <FeaturedRow title="Action & Adventure" icon={<Flame className="w-4 h-4" />} items={homeData.actionMovies} onPlay={onPlay} onSeeAll={() => setLocation("/browse?action")} />
+      )}
+      {homeData.dramaShows?.length > 0 && (
+        <FeaturedRow title="Drama Series" icon={<Film className="w-4 h-4" />} items={homeData.dramaShows} onPlay={onPlay} onSeeAll={() => setLocation("/browse?drama")} />
+      )}
     </div>
   );
 }
 
 /* ─── USER DROPDOWN ─── */
-function UserDropdown({ onSignIn }: { onSignIn: () => void }) {
+function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onSignOut?: () => void; user?: any }) {
+  const [, setLocation] = useLocation();
+
   return (
-    <div className="absolute top-[calc(100%+8px)] right-0 w-[260px] bg-[#0f1520]/98 border border-[#1a77ff]/20 rounded-2xl shadow-2xl shadow-black/70 overflow-hidden z-50 backdrop-blur-xl">
-      <div className="p-4 flex items-center gap-3">
-        <div className="w-11 h-11 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0">
-          <User className="w-5 h-5 text-zinc-400" />
+    <div className="absolute top-[calc(100%+8px)] right-0 w-[260px] bg-[#0a0a10] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="p-4 flex items-center gap-3 border-b border-zinc-800">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-sm text-white">
+          {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-sm leading-none mb-1">Guest</p>
-          <p className="text-zinc-500 text-[11px]">Sign in for full access</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-white font-bold text-sm truncate leading-none">{user ? user.name || "User" : "Guest User"}</p>
+            {user && <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />}
+          </div>
+          <p className="text-zinc-500 text-[11px] truncate mt-1 leading-none font-medium">
+            {user ? "Premium Member" : "Sign in for full access"}
+          </p>
         </div>
-        <button
-          onClick={onSignIn}
-          className="px-3 py-1.5 border border-[#1a77ff] text-[#1a77ff] hover:bg-[#1a77ff] hover:text-white text-xs font-semibold rounded-lg transition-all flex-shrink-0"
-        >
-          Log in
-        </button>
       </div>
-      <div className="mx-4 h-px bg-zinc-800" />
-      <div className="flex items-stretch px-4 py-4">
-        {[{ emoji: "🪙", val: "0", label: "Coins" }, { emoji: "🎁", val: "0", label: "Bonus" }].map((itm, i) => (
-          <>
-            {i > 0 && <div key="div" className="w-px bg-zinc-800 my-1" />}
-            <div key={itm.label} className="flex-1 flex flex-col items-center gap-1.5">
-              <span className="text-base">{itm.emoji}</span>
-              <span className="text-white font-bold text-base">{itm.val}</span>
-              <span className="text-zinc-500 text-xs">{itm.label}</span>
-            </div>
-          </>
+
+      <div className="p-1.5 space-y-0.5">
+        {[
+          { label: "Account Settings", href: "/account", icon: <User className="w-4 h-4" /> },
+          { label: "My Watchlist", href: "/browse", icon: <ListPlus className="w-4 h-4" /> },
+          { label: "Help & Support", href: "/browse", icon: <AlertCircle className="w-4 h-4" /> },
+        ].map((opt) => (
+          <button
+            key={opt.label}
+            onClick={() => setLocation(opt.href)}
+            className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl text-left text-xs font-semibold transition-all"
+          >
+            {opt.icon}
+            {opt.label}
+          </button>
         ))}
       </div>
-      <div className="px-4 pb-4">
-        <button className="w-full py-2.5 bg-[#1a77ff] hover:bg-[#1565d8] text-white font-bold rounded-xl transition-colors text-sm">
-          Subscribe Now
-        </button>
+
+      <div className="p-3 border-t border-zinc-800 bg-zinc-950/50">
+        {user ? (
+          <button
+            onClick={onSignOut}
+            className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white font-bold rounded-xl text-xs transition-all text-center"
+          >
+            Sign Out
+          </button>
+        ) : (
+          <button
+            onClick={onSignIn}
+            className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-all text-center shadow-md shadow-red-900/20"
+          >
+            Log In / Register
+          </button>
+        )}
       </div>
     </div>
   );
@@ -922,58 +932,149 @@ function UserDropdown({ onSignIn }: { onSignIn: () => void }) {
 
 /* ─── SIGN IN MODAL ─── */
 function SignInModal({ onClose }: { onClose: () => void }) {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { settings } = useSettings();
+  const { resolvedTheme } = useTheme();
+
+  const getLogoUrl = () => {
+    if (resolvedTheme === "dark" && settings.darkLogoUrl) return getImageUrl(settings.darkLogoUrl);
+    if (resolvedTheme === "light" && settings.lightLogoUrl) return getImageUrl(settings.lightLogoUrl);
+    return settings.logoUrl ? getImageUrl(settings.logoUrl) : "";
+  };
+  const logoUrl = getLogoUrl();
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const res = await loginClient({ email, password });
+        localStorage.setItem("accessToken", res.accessToken);
+        localStorage.setItem("user", JSON.stringify({ id: res.userId, name: res.name || email.split("@")[0] }));
+        window.location.reload();
+      } else {
+        const res = await registerClient({ email, password, name });
+        localStorage.setItem("accessToken", res.accessToken);
+        localStorage.setItem("user", JSON.stringify({ id: res.userId, name }));
+        window.location.reload();
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[500px] bg-[#0f1520] rounded-2xl overflow-hidden shadow-2xl flex max-h-[92vh]">
-        <div className="hidden sm:block w-[170px] flex-shrink-0 relative overflow-hidden">
-          <div className="absolute inset-0 grid grid-cols-2 grid-rows-4">
-            {movies.slice(0, 8).map((m) => (
-              <img key={m.id} src={m.poster} alt="" className="w-full h-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=120&h=180&fit=crop"; }} />
-            ))}
-          </div>
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-[#1a77ff] flex items-center justify-center shadow-2xl">
-              <Play className="w-6 h-6 text-white fill-white ml-0.5" />
-            </div>
-            <span className="text-white font-black text-sm tracking-tight">StreamIT</span>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
+
+      <div className="relative z-10 w-full max-w-[520px] bg-[#0c0c14] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex max-h-[92vh]">
+        <div className="hidden sm:flex w-[180px] flex-shrink-0 relative overflow-hidden bg-black flex-col justify-between p-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-600/30 via-black/90 to-[#030306]/95 z-0" />
+          <div className="relative z-10 flex flex-col items-center justify-center h-full gap-3">
+            {logoUrl ? (
+              <img src={logoUrl} alt={settings.platformName || "StreamIT"} className="h-16 w-auto object-contain drop-shadow-2xl" />
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-2xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/50">
+                  <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+                </div>
+                <span className="text-white font-bold text-[15px] tracking-tight mt-2">{settings.platformName || "StreamIT"}</span>
+              </>
+            )}
+            <p className="text-[10px] text-zinc-400 text-center font-medium mt-3 leading-relaxed">Your portal to premium cinematic experiences.</p>
           </div>
         </div>
-        <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-          <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-white hover:bg-white/10 transition-all z-10">
+
+        <div className="flex-1 flex flex-col p-8 overflow-y-auto">
+          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-all z-10">
             <X className="w-4 h-4" />
           </button>
-          <h2 className="text-white font-bold text-xl mb-5 pr-6">Sign in to StreamIT</h2>
-          <div className="grid grid-cols-2 gap-2 mb-5">
-            {[
-              { label: "Google", icon: <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> },
-              { label: "Facebook", icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
-            ].map(({ label, icon }) => (
-              <button key={label} className="flex items-center justify-center gap-2 py-2.5 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-white text-sm font-medium transition-all">
-                {icon} {label}
+
+          <h2 className="text-white font-bold text-xl sm:text-2xl tracking-tight mb-1 pr-6">{isLogin ? "Welcome Back" : "Create Account"}</h2>
+          <p className="text-zinc-500 text-xs sm:text-sm mb-6 font-medium">
+            {isLogin ? "New to the platform? " : "Already have an account? "}
+            <button onClick={() => setIsLogin(!isLogin)} className="text-red-500 hover:underline font-bold transition-all">
+              {isLogin ? "Sign Up Free" : "Log In"}
+            </button>
+          </p>
+
+          {error && <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-semibold leading-snug">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+            {!isLogin && (
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full Name"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+              />
+            )}
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email Address"
+              className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
-            ))}
+            </div>
+            <button disabled={loading} type="submit" className="w-full mt-2 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all text-xs flex justify-center items-center h-[44px] shadow-lg shadow-red-900/20 hover:-translate-y-0.5 active:translate-y-0">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? "Log In" : "Register")}
+            </button>
+          </form>
+
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center gap-3 text-zinc-600 text-[10px] font-bold uppercase tracking-widest">
+              <div className="flex-1 h-px bg-zinc-800" />
+              <span>Or connect with</span>
+              <div className="flex-1 h-px bg-zinc-800" />
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
+                Google
+              </button>
+              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
+                Apple
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-zinc-500 text-sm">or</span>
-            <div className="flex-1 h-px bg-zinc-800" />
-          </div>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email address"
-            className="w-full bg-zinc-800 border border-zinc-700 focus:border-[#1a77ff] text-white placeholder:text-zinc-500 px-4 py-3 rounded-xl text-sm focus:outline-none transition-colors mb-3" />
-          <button className="w-full py-3 bg-[#1a77ff] hover:bg-[#1565d8] text-white font-bold rounded-xl transition-colors text-sm mb-4">Continue</button>
-          <p className="text-zinc-600 text-[11px] text-center leading-relaxed mt-auto">
-            By continuing, I agree to the{" "}
-            <a href="#" className="text-zinc-400 hover:text-white underline underline-offset-2">Terms</a> &amp;{" "}
-            <a href="#" className="text-zinc-400 hover:text-white underline underline-offset-2">Privacy Policy</a>.
+
+          <p className="text-zinc-600 text-[10px] text-center leading-relaxed mt-6 font-medium">
+            By continuing, you accept our <a href="#" className="text-zinc-400 hover:underline">Terms of Service</a> & <a href="#" className="text-zinc-400 hover:underline">Privacy Policy</a>.
           </p>
         </div>
       </div>
@@ -990,13 +1091,36 @@ const NAV_TABS: { label: string; tab: Tab; icon: React.ReactNode }[] = [
   { label: "New & Hot", tab: "new", icon: <Flame className="w-3.5 h-3.5" /> },
 ];
 
-export function PublicHeader({ activeTab = "home", setActiveTab = () => {} }: { activeTab?: Tab; setActiveTab?: (t: Tab) => void }) {
+export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, user, onSubscribeClick }: {
+  activeTab: Tab; setActiveTab: (t: Tab) => void; onSignIn: () => void; onSignOut?: () => void; user?: any; onSubscribeClick?: () => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [, setLocation] = useLocation();
+  const searchString = useSearch();
+
+  const currentQuery = new URLSearchParams(searchString).get("q") || "";
+  const [searchTerm, setSearchTerm] = useState(currentQuery);
+  const isBrowsePage = typeof window !== "undefined" && window.location.pathname.startsWith("/browse");
+  const [searchOpen, setSearchOpen] = useState(() => !!currentQuery || isBrowsePage);
+
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [signInModalOpen, setSignInModalOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
+  const { data: notifData } = useGetPublicNotifications();
+
   const avatarRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+
+  const { settings } = useSettings();
+  const { resolvedTheme } = useTheme();
+
+  const getLogoUrl = () => {
+    if (resolvedTheme === "dark" && settings.darkLogoUrl) return getImageUrl(settings.darkLogoUrl);
+    if (resolvedTheme === "light" && settings.lightLogoUrl) return getImageUrl(settings.lightLogoUrl);
+    return settings.logoUrl ? getImageUrl(settings.logoUrl) : "";
+  };
+  const logoUrl = getLogoUrl();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -1005,26 +1129,73 @@ export function PublicHeader({ activeTab = "home", setActiveTab = () => {} }: { 
   }, []);
 
   useEffect(() => {
+    setSearchTerm(currentQuery);
+    if (currentQuery || isBrowsePage) setSearchOpen(true);
+  }, [currentQuery, isBrowsePage]);
+
+  useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
       if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setUserDropdownOpen(false);
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) setNotificationsOpen(false);
+      const searchContainer = document.getElementById("public-search-container");
+      if (searchContainer && !searchContainer.contains(e.target as Node) && !searchTerm.trim() && !isBrowsePage) {
+        setSearchOpen(false);
+      }
     };
-    if (userDropdownOpen) document.addEventListener("mousedown", handleOutside);
+    if (userDropdownOpen || searchOpen || notificationsOpen) document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
-  }, [userDropdownOpen]);
+  }, [userDropdownOpen, searchOpen, notificationsOpen, searchTerm, isBrowsePage]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchTerm(val);
+    setLocation(`/browse?q=${encodeURIComponent(val)}`, { replace: true });
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (searchTerm.trim()) {
+        setLocation(`/browse?q=${encodeURIComponent(searchTerm.trim())}`);
+      } else {
+        setLocation("/browse");
+      }
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    if (!isBrowsePage) setSearchOpen(false);
+    setLocation("/browse");
+  };
+
+  const notifications: any[] = notifData?.data || [];
+  const unreadCount = notifications.filter((n: any) => !readNotifications.has(n._id || n.id)).length;
+
+  const handleToggleNotifications = () => {
+    setNotificationsOpen((o) => !o);
+    if (!notificationsOpen) {
+      const allIds = new Set(notifications.map((n: any) => n._id || n.id));
+      setReadNotifications(allIds);
+    }
+  };
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "bg-[#0c0c14]/97 backdrop-blur-xl shadow-[0_2px_20px_rgba(0,0,0,0.8)]" : "bg-gradient-to-b from-[#0c0c14]/90 via-[#0c0c14]/40 to-transparent"}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "bg-[#0a0a10]/95 backdrop-blur-md shadow-[0_2px_24px_rgba(0,0,0,0.85)] border-b border-white/5" : "bg-gradient-to-b from-[#030306]/95 via-[#030306]/40 to-transparent"}`}>
         <div className="px-4 sm:px-6 lg:px-10 xl:px-14">
           <div className="flex items-center justify-between h-[60px] lg:h-[68px]">
-
-            {/* Left: Logo + Nav */}
             <div className="flex items-center gap-6 lg:gap-8">
               <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-                <div className="w-8 h-8 rounded-lg bg-[#1a77ff] flex items-center justify-center shadow-lg shadow-blue-900/50 group-hover:scale-105 transition-transform">
-                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                </div>
-                <span className="text-white font-black text-xl tracking-tight hidden sm:block">StreamIT</span>
+                {logoUrl ? (
+                  <img src={logoUrl} alt={settings.platformName || "StreamIT"} className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/50 group-hover:scale-105 transition-transform">
+                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                    </div>
+                    <span className="text-white font-bold text-xl tracking-tight hidden sm:block">{settings.platformName || "StreamIT"}</span>
+                  </>
+                )}
               </Link>
 
               <nav className="hidden lg:flex items-center gap-1">
@@ -1032,43 +1203,104 @@ export function PublicHeader({ activeTab = "home", setActiveTab = () => {} }: { 
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative flex items-center gap-1.5 px-3.5 py-2 text-[13.5px] font-medium rounded-lg transition-all duration-200 ${activeTab === tab ? "text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                    className={`relative flex items-center gap-1.5 px-3.5 py-2 text-[13.5px] font-bold rounded-lg transition-all duration-200 ${activeTab === tab ? "text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
                   >
                     {icon}
                     {label}
                     {activeTab === tab && (
-                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-[#1a77ff] rounded-full" />
+                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-red-600 rounded-full" />
                     )}
                   </button>
                 ))}
               </nav>
             </div>
 
-            {/* Right: Actions */}
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              {/* Search */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5" id="public-search-container">
               <div className="relative flex items-center">
-                <div className={`flex items-center overflow-hidden transition-all duration-300 rounded-full border ${searchOpen ? "w-44 sm:w-52 bg-black/80 border-zinc-600" : "w-9 h-9 border-transparent"}`}>
+                <div className={`flex items-center overflow-hidden transition-all duration-300 rounded-full border ${searchOpen ? "w-44 sm:w-52 bg-black/80 border-zinc-800" : "w-9 h-9 border-transparent"}`}>
                   {searchOpen && <Search className="absolute left-3 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />}
                   {searchOpen ? (
-                    <input autoFocus placeholder="Search titles..." className="w-full bg-transparent text-white text-sm pl-8 pr-7 py-2 focus:outline-none placeholder:text-zinc-600" onBlur={() => setSearchOpen(false)} />
+                    <input
+                      autoFocus
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      onKeyDown={handleSearchKeyDown}
+                      placeholder="Search titles..."
+                      className="w-full bg-transparent text-white text-xs pl-8 pr-7 py-2 focus:outline-none placeholder:text-zinc-500"
+                    />
                   ) : (
-                    <button onClick={() => setSearchOpen(true)} className="w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white transition-colors rounded-full hover:bg-white/10">
-                      <Search className="w-[18px] h-[18px]" />
+                    <button onClick={() => { setSearchOpen(true); setLocation("/browse"); }} className="w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white transition-colors rounded-full hover:bg-white/5">
+                      <Search className="w-[17px] h-[17px]" />
                     </button>
                   )}
-                  {searchOpen && <button onMouseDown={() => setSearchOpen(false)} className="absolute right-2.5 text-zinc-500 hover:text-white"><X className="w-3 h-3" /></button>}
+                  {searchOpen && <button onMouseDown={handleClearSearch} className="absolute right-2.5 text-zinc-500 hover:text-white"><X className="w-3 h-3" /></button>}
                 </div>
               </div>
 
-              <button className="hidden sm:flex w-9 h-9 items-center justify-center text-zinc-300 hover:text-white rounded-full hover:bg-white/10 transition-all">
-                <Bell className="w-[17px] h-[17px]" />
-              </button>
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  onClick={handleToggleNotifications}
+                  className="relative w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white rounded-full hover:bg-white/5 transition-all"
+                >
+                  <Bell className="w-[17px] h-[17px]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] bg-red-600 rounded-full border border-black flex items-center justify-center text-[8px] font-bold text-white px-0.5">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-[#0a0a10] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-3.5 border-b border-zinc-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-bold text-sm">Notifications</span>
+                        {unreadCount > 0 && <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            const allIds = new Set(notifications.map((n: any) => n._id || n.id));
+                            setReadNotifications(allIds);
+                          }}
+                          className="text-zinc-500 hover:text-white text-[10px] font-medium px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                          Mark all as read
+                        </button>
+                        <button onClick={() => setNotificationsOpen(false)} className="text-zinc-500 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto divide-y divide-zinc-800/60">
+                      {notifications.length === 0 ? (
+                        <div className="p-6 text-center">
+                          <Bell className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
+                          <p className="text-zinc-500 text-xs font-medium">No notifications yet</p>
+                        </div>
+                      ) : (
+                        notifications.map((n: any) => {
+                          const nid = n._id || n.id;
+                          const isRead = readNotifications.has(nid);
+                          const timeStr = formatRelativeTime(n.createdAt);
+                          return (
+                            <div key={nid} className={`p-3.5 transition-colors cursor-pointer ${isRead ? "hover:bg-zinc-900/30" : "bg-red-500/5 hover:bg-red-500/10"}`} onClick={() => setNotificationsOpen(false)}>
+                              {!isRead && <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full mr-1.5 mb-0.5 align-middle" />}
+                              <p className="text-white text-xs font-bold leading-tight inline">{n.title}</p>
+                              {n.text && <p className="text-zinc-400 text-[11px] mt-1 leading-relaxed line-clamp-2">{n.text}</p>}
+                              {timeStr && <p className="text-zinc-600 text-[10px] mt-1.5 font-medium">{timeStr}</p>}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              <div className="hidden sm:block w-px h-5 bg-zinc-700/60 mx-0.5" />
+              <div className="hidden sm:block w-px h-5 bg-zinc-800 mx-0.5" />
 
-              {/* Subscribe button — prominent Hotstar style */}
-              <button className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-[#1a77ff] hover:bg-[#1565d8] text-white font-bold rounded-lg text-[13px] transition-all shadow-md shadow-blue-900/30">
+              <button
+                onClick={onSubscribeClick || (() => setLocation("/browse"))}
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition-all shadow-md shadow-red-900/20 hover:-translate-y-0.5 active:translate-y-0"
+              >
                 <Crown className="w-3.5 h-3.5" />
                 Subscribe
               </button>
@@ -1076,17 +1308,17 @@ export function PublicHeader({ activeTab = "home", setActiveTab = () => {} }: { 
               <div className="relative" ref={avatarRef}>
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-full hover:bg-white/10 transition-all ml-1"
+                  className="flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-full hover:bg-white/5 transition-all ml-1"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1a77ff] to-blue-800 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-xs text-white">
+                    {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
                   </div>
                   <ChevronDown className={`w-3 h-3 text-zinc-400 hidden sm:block transition-transform duration-200 ${userDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
-                {userDropdownOpen && <UserDropdown onSignIn={() => { setUserDropdownOpen(false); setSignInModalOpen(true); }} />}
+                {userDropdownOpen && <UserDropdown onSignIn={onSignIn} onSignOut={onSignOut} user={user} />}
               </div>
 
-              <button className="lg:hidden ml-0.5 w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white rounded-full hover:bg-white/10 transition-all" onClick={() => setMobileOpen(!mobileOpen)}>
+              <button className="lg:hidden ml-0.5 w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white rounded-full hover:bg-white/5 transition-all" onClick={() => setMobileOpen(!mobileOpen)}>
                 <div className="flex flex-col gap-[5px] w-5">
                   <span className={`block h-[1.5px] bg-current rounded-full transition-all duration-300 ${mobileOpen ? "rotate-45 translate-y-[6.5px]" : ""}`} />
                   <span className={`block h-[1.5px] bg-current rounded-full transition-all duration-300 ${mobileOpen ? "opacity-0 scale-x-0" : ""}`} />
@@ -1097,80 +1329,154 @@ export function PublicHeader({ activeTab = "home", setActiveTab = () => {} }: { 
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <div className={`lg:hidden overflow-hidden transition-all duration-300 ${mobileOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}>
-          <div className="bg-[#0c0c14]/97 backdrop-blur-xl border-t border-white/5 px-4 py-4">
+          <div className="bg-[#0a0a10] border-t border-zinc-800 px-4 py-4 space-y-2">
             {NAV_TABS.map(({ label, tab, icon }) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setMobileOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all mb-0.5 ${activeTab === tab ? "bg-[#1a77ff]/15 text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? "bg-red-600/15 text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
               >
-                {activeTab === tab && <span className="w-1.5 h-1.5 rounded-full bg-[#1a77ff] flex-shrink-0" />}
+                {activeTab === tab && <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />}
                 {icon}
                 {label}
               </button>
             ))}
-            <button className="w-full mt-2 py-3 bg-[#1a77ff] hover:bg-[#1565d8] text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+            <button
+              onClick={onSubscribeClick || (() => { setLocation("/browse"); setMobileOpen(false); })}
+              className="w-full mt-2 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+            >
               <Crown className="w-4 h-4" /> Subscribe Now
             </button>
           </div>
         </div>
       </header>
-
-      {signInModalOpen && <SignInModal onClose={() => setSignInModalOpen(false)} />}
     </>
   );
 }
 
 /* ─── FOOTER ─── */
 export function PublicFooter() {
+  const { settings } = useSettings();
+  const { resolvedTheme } = useTheme();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [, setLocation] = useLocation();
+
+  const { data: pagesData } = useGetPages({ limit: 50 });
+  const pages: any[] = (pagesData?.data || []).filter((p: any) => p.status === "published" || !p.status);
+
+  const getLogoUrl = () => {
+    if (resolvedTheme === "dark" && settings.darkLogoUrl) return getImageUrl(settings.darkLogoUrl);
+    if (resolvedTheme === "light" && settings.lightLogoUrl) return getImageUrl(settings.lightLogoUrl);
+    return settings.logoUrl ? getImageUrl(settings.logoUrl) : "";
+  };
+  const logoUrl = getLogoUrl();
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 4000);
+    }
+  };
+
   const socialLinks = [
     { label: "Facebook", d: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" },
     { label: "YouTube", d: "M22.54 6.42a2.78 2.78 0 0 0-1.95-1.97C18.88 4 12 4 12 4s-6.88 0-8.59.47A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.97C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.97A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" },
-    { label: "Instagram", d: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2z" },
+    { label: "Instagram", d: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01M7.5 2h9A5.5 5.5 0 0 1 2 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2z" },
   ];
 
   return (
-    <footer className="bg-[#070710] border-t border-white/5 mt-4 pt-12 pb-8">
-      <div className="px-6 sm:px-10 lg:px-14">
-        <div className="flex flex-col lg:flex-row gap-12 justify-between mb-10">
-          <div className="lg:w-52">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-[#1a77ff] flex items-center justify-center">
-                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-              </div>
-              <span className="text-white font-black text-2xl tracking-tight">StreamIT</span>
+    <footer className="bg-[#040407] border-t border-zinc-900 mt-20 pt-16 pb-10">
+      <div className="px-6 sm:px-10 lg:px-14 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center gap-2.5">
+              {logoUrl ? (
+                <img src={logoUrl} alt={settings.platformName || "StreamIT"} className="h-9 w-auto object-contain" />
+              ) : (
+                <>
+                  <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/40">
+                    <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                  </div>
+                  <span className="text-white font-bold text-xl tracking-tight">{settings.platformName || "StreamIT"}</span>
+                </>
+              )}
             </div>
-            <p className="text-zinc-600 text-xs leading-relaxed mb-5">Your premium OTT destination for movies, TV shows, &amp; exclusive content.</p>
-            <div className="flex items-center gap-2">
+            <p className="text-zinc-500 text-xs leading-relaxed max-w-xs">{settings.siteDescription || "Your premium OTT destination for movies, TV shows, and exclusive short dramas."}</p>
+            <div className="flex items-center gap-2 pt-2">
               {socialLinks.map((s) => (
-                <a key={s.label} href="#" aria-label={s.label} className="w-9 h-9 flex items-center justify-center rounded-full border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-500 transition-all">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <a key={s.label} href="#" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-500 hover:text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                     <path d={s.d} />
                   </svg>
                 </a>
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-14">
-            {[
-              { title: "Browse", items: ["Movies", "TV Shows", "New & Hot", "Trending"] },
-              { title: "Company", items: ["About Us", "Careers", "Press", "Contact"] },
-              { title: "Support", items: ["Help Center", "FAQ", "Privacy", "Terms"] },
-            ].map(({ title, items }) => (
-              <div key={title}>
-                <h4 className="text-white font-semibold text-xs mb-4 uppercase tracking-widest">{title}</h4>
-                <ul className="space-y-3">
-                  {items.map((l) => <li key={l}><a href="#" className="text-zinc-600 hover:text-white text-sm transition-colors">{l}</a></li>)}
-                </ul>
-              </div>
-            ))}
+
+          <div className="space-y-4">
+            <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Browse Catalog</h4>
+            <ul className="space-y-2.5">
+              {[
+                { label: "Movies", href: "/browse" },
+                { label: "TV Shows", href: "/browse" },
+                { label: "Short Dramas", href: "/browse" },
+                { label: "New & Hot", href: "/browse" },
+              ].map((itm) => (
+                <li key={itm.label}>
+                  <button onClick={() => setLocation(itm.href)} className="text-zinc-500 hover:text-white text-xs font-semibold transition-colors text-left">{itm.label}</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Help & Info</h4>
+            <ul className="space-y-2.5">
+              {pages.length > 0 ? pages.map((p: any) => (
+                <li key={p.slug || p.id}>
+                  <button onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-500 hover:text-white text-xs font-semibold transition-colors text-left">
+                    {p.title}
+                  </button>
+                </li>
+              )) : (
+                <li className="text-zinc-600 text-xs">No pages available</li>
+              )}
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Subscribe to Newsletter</h4>
+            <p className="text-zinc-500 text-xs leading-normal">Stay updated with our latest releases and exclusive content.</p>
+            <form onSubmit={handleSubscribe} className="relative flex items-center mt-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email"
+                className="w-full bg-zinc-900 border border-zinc-800 focus:border-red-600 text-white text-xs px-3 py-2.5 rounded-xl focus:outline-none pr-10"
+              />
+              <button type="submit" className="absolute right-1 w-8 h-8 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors">
+                {subscribed ? <Check className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+              </button>
+            </form>
+            {subscribed && <p className="text-[10px] text-emerald-400 font-bold">Successfully subscribed!</p>}
           </div>
         </div>
-        <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-zinc-700 text-xs">© 2026 StreamIT. All Rights Reserved.</p>
-          <p className="text-zinc-700 text-xs">Data sourced from IMDb · Powered by TMDB</p>
+
+        <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-zinc-700 text-xs font-medium">{settings.copyrightText || "2025 StreamIT. All Rights Reserved."}</p>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2">
+            {pages.map((p: any) => (
+              <button key={p.slug || p.id} onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-600 hover:text-zinc-400 text-[11px] font-bold transition-colors whitespace-nowrap">
+                {p.title}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
@@ -1179,23 +1485,68 @@ export function PublicFooter() {
 
 /* ─── MAIN PAGE ─── */
 export default function StreamingHomePage() {
-  const [activeTab, setActiveTab] = useState<Tab>("home");
-  const [playingDrama, setPlayingDrama] = useState<ShortDrama | null>(null);
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [toastMsg, setToastMsg] = useState("");
+  const [plansModalOpen, setPlansModalOpen] = useState(false);
 
-  const handlePlay = (item: ContentItem) => setLocation(`/movie/${item.id}`);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(""), 3500);
+  };
+
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
+        else setUser(null);
+      } catch (e) { /* ignore */ }
+    };
+    loadUser();
+    window.addEventListener("user-updated", loadUser);
+    return () => window.removeEventListener("user-updated", loadUser);
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    setUser(null);
+    window.location.reload();
+  };
+
+  const handlePlay = (item: any) => {
+    if (item.contentType === "drama" || item.type === "drama") {
+      setLocation(`/show/${item.id || item._id}/episode/1`);
+    } else {
+      setLocation(`/movie/${item.id || item._id}`);
+    }
+  };
+
+  const handleSelectDrama = (drama: any) => {
+    setLocation(`/show/${drama.id || drama._id}/episode/1`);
+  };
 
   return (
-    <div className="min-h-screen text-white" style={{ background: "#0c0c14" }}>
-      <PublicHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen bg-[#030306] font-sans selection:bg-red-600/30 text-white pb-20 sm:pb-0">
+      <PublicHeader
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onSignIn={() => setShowSignIn(true)}
+        onSignOut={handleSignOut}
+        user={user}
+        onSubscribeClick={() => setPlansModalOpen(true)}
+      />
 
       <main>
         {(activeTab === "home" || activeTab === "new") && (
-          <Hero onPlay={handlePlay} />
+          <Hero onPlay={handlePlay} onSubscribeClick={() => setPlansModalOpen(true)} />
         )}
 
         {activeTab === "home" && (
-          <HomeTab onPlay={handlePlay} onSelectDrama={setPlayingDrama} />
+          <HomeTab onPlay={handlePlay} onSelectDrama={handleSelectDrama} onSubscribeClick={() => setPlansModalOpen(true)} />
         )}
         {activeTab === "movies" && (
           <div className="pt-24">
@@ -1209,27 +1560,33 @@ export default function StreamingHomePage() {
         )}
         {activeTab === "drama" && (
           <div className="pt-24">
-            <ShortDramaTab onSelect={setPlayingDrama} />
+            <ShortDramaTab onSelect={handleSelectDrama} />
           </div>
         )}
-        {activeTab === "new" && <NewHotTab onPlay={handlePlay} />}
+        {activeTab === "new" && <NewHotTab onPlay={handlePlay} showToast={showToast} />}
       </main>
 
       <PublicFooter />
 
-      {/* Short Drama Player — portrait + episode grid (intact) */}
-      {playingDrama && (
-        <ShortDramaPlayer
-          drama={playingDrama}
-          onClose={() => setPlayingDrama(null)}
-        />
+      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+
+      <SubscriptionPlansModal
+        isOpen={plansModalOpen}
+        onClose={() => setPlansModalOpen(false)}
+      />
+
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-[300] bg-[#0c0c14]/95 border border-red-600/40 px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+          <span className="text-white text-xs font-bold">{toastMsg}</span>
+        </div>
       )}
 
       <style>{`
         html { scroll-behavior: smooth; }
         * { scrollbar-width: none; }
         *::-webkit-scrollbar { display: none; }
-        body { background: #0c0c14; }
+        body { background: #030306; }
       `}</style>
     </div>
   );

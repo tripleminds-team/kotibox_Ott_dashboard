@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -55,7 +57,7 @@
   --chart-4: 210 16% 60%;
   --chart-5: 210 16% 50%;
 
-  --app-font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --app-font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   
@@ -128,7 +130,7 @@
   --chart-4: 0 0% 60%;
   --chart-5: 0 0% 80%;
 
-  --app-font-sans: 'Inter', sans-serif;
+  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   
@@ -177,12 +179,12 @@
   p { margin: 0 0 1rem 0; color: hsl(var(--muted-foreground)); }
 
   .gradient-text {
-    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--sidebar-primary)));
+    background: linear-gradient(90deg, #e50914, #ff4d5a);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
-  .app-title { font-weight:800; letter-spacing: .06em; }
+  .app-title { font-family: 'Outfit', sans-serif; font-weight:900; letter-spacing: .02em; }
 }
 
 @layer utilities {
@@ -254,4 +256,73 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* Cinematic Product Styles */
+  .cinematic-bg {
+    background: radial-gradient(circle at 10% 10%, rgba(229, 9, 20, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 45%),
+                #030306;
+  }
+  .glass-panel {
+    background: rgba(10, 10, 18, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .glass-input {
+    background: rgba(20, 20, 30, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glass-input:focus {
+    background: rgba(20, 20, 30, 0.85);
+    border-color: rgba(229, 9, 20, 0.5);
+    box-shadow: 0 0 12px rgba(229, 9, 20, 0.15);
+  }
+  .hover-glow-red {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .hover-glow-red:hover {
+    box-shadow: 0 8px 30px rgba(229, 9, 20, 0.2);
+    border-color: rgba(229, 9, 20, 0.4);
+  }
+  .text-neon {
+    text-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
+  }
+}
+
+
+/* Global Dynamic Settings Styles */
+body.card-style-glass .bg-card {
+  background-color: rgba(var(--card), 0.5) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+}
+.dark body.card-style-glass .bg-card {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.card-style-transparent .bg-card {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+
+/* Menu Style Boxed */
+body.menu-style-boxed aside {
+  margin: 1rem;
+  height: calc(100vh - 2rem);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+
+/* Menu Style Soft */
+body.menu-style-soft aside {
+  background-color: transparent !important;
+  border-right: none !important;
 }

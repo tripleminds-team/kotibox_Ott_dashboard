@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,229 +6,203 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  useGetSubscriptionPlans,
   useGetSubscriptionPlanById,
   useCreateSubscriptionPlan,
   useUpdateSubscriptionPlan,
   useGetPlanLimits,
-  useGetPlanLimitById,
   useCreatePlanLimit,
   useUpdatePlanLimit,
 } from "@/lib/api-client";
 
 const DURATION_OPTIONS = ["Day", "Week", "Month", "Year"];
+const DEVICE_OPTIONS = ["mobile", "tablet", "tv", "desktop"];
 
 const inputCls =
-  "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 h-11 rounded-lg";
+  "bg-muted border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-11 rounded-lg text-sm";
 const labelCls = "text-foreground text-sm font-medium";
 
 export default function PlanFormPage() {
   const [, setLocation] = useLocation();
-  const params = useParams<{ id?: string }>();
+  const { id } = useParams<{ id?: string }>();
   const { toast } = useToast();
 
-  const isEdit = !!params.id && params.id !== "new";
+  const isEdit = !!id && id !== "new";
 
-  // Hooks
-  const { data: plansData } = useGetSubscriptionPlans();
-  const { data: existingPlanData } = useGetSubscriptionPlanById(params.id || "");
-  const { data: planLimitsData } = useGetPlanLimits({ planId: params.id || "" });
-  const existingLimit = planLimitsData?.data?.[0] || null;
-  const { data: existingLimitData } = useGetPlanLimitById(existingLimit?.id || "");
+  const { data: planData } = useGetSubscriptionPlanById(isEdit ? id! : "");
+  // Use list endpoint by planId — returns all limit fields, no need for a second fetch by limit ID
+  const { data: planLimitsData } = useGetPlanLimits(isEdit ? { planId: id! } : undefined);
 
-  const createSubscriptionPlan = useCreateSubscriptionPlan();
-  const updateSubscriptionPlan = useUpdateSubscriptionPlan();
-  const createPlanLimit = useCreatePlanLimit();
-  const updatePlanLimit = useUpdatePlanLimit();
+  const createPlan = useCreateSubscriptionPlan();
+  const updatePlan = useUpdateSubscriptionPlan();
+  const createLimit = useCreatePlanLimit();
+  const updateLimit = useUpdatePlanLimit();
 
-  const [form, setForm] = useState({
-    name: "",
-    duration: "Month",
-    durationValue: "1",
-    price: "",
-    discount: "0",
-    status: true,
-    description: "",
-    level: "1",
-    // Plan limits
-    videoCast: false,
-    ads: false,
-    deviceLimit: false,
-    deviceLimitCount: "1",
-    downloadStatus: false,
-    supportedDeviceType: false,
-    supportedDevices: [] as string[],
-    profileLimit: false,
-    profileLimitCount: "1",
-    q480p: false,
-    q720p: false,
-    q1080p: false,
-    q1440p: false,
-    q2k: false,
-    q4k: false,
-  });
+  // ─── Plan fields ────────────────────────────────────────────────────────────
+  const [name, setName] = useState("");
+  const [duration, setDuration] = useState("Month");
+  const [durationValue, setDurationValue] = useState("1");
+  const [price, setPrice] = useState("");
+  const [discount, setDiscount] = useState("0"); // percentage 0-100
+  const [status, setStatus] = useState(true);
+  const [description, setDescription] = useState("");
+  const [level, setLevel] = useState("1");
+
+  // ─── Limit fields ───────────────────────────────────────────────────────────
+  const [videoCast, setVideoCast] = useState(false);
+  const [ads, setAds] = useState(false);
+  const [deviceLimit, setDeviceLimit] = useState(false);
+  const [deviceLimitCount, setDeviceLimitCount] = useState("1");
+  const [downloadStatus, setDownloadStatus] = useState(false);
+  const [supportedDeviceType, setSupportedDeviceType] = useState(false);
+  const [supportedDevices, setSupportedDevices] = useState<string[]>([]);
+  const [profileLimit, setProfileLimit] = useState(false);
+  const [profileLimitCount, setProfileLimitCount] = useState("1");
+  const [q480p, setQ480p] = useState(false);
+  const [q720p, setQ720p] = useState(false);
+  const [q1080p, setQ1080p] = useState(false);
+  const [q1440p, setQ1440p] = useState(false);
+  const [q2k, setQ2k] = useState(false);
+  const [q4k, setQ4k] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
-  // Populate form when editing
+  // Live totalPrice: price * (1 - discount% / 100)
+  const totalPrice = useMemo(() => {
+    const p = parseFloat(price) || 0;
+    const d = Math.max(0, Math.min(100, parseFloat(discount) || 0));
+    return Math.round(p * (1 - d / 100) * 100) / 100;
+  }, [price, discount]);
+
+  // ─── Populate on edit ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (isEdit && existingPlanData?.data) {
-      const plan = existingPlanData.data;
-      setForm((prev) => ({
-        ...prev,
-        name: plan.name,
-        duration: plan.duration,
-        durationValue: String(plan.durationValue),
-        price: String(plan.price),
-        discount: String(plan.discount),
-        status: plan.status,
-        description: plan.description,
-        level: String(plan.level),
-      }));
+    if (!isEdit || !planData?.data) return;
+    const p = planData.data;
+    setName(p.name || "");
+    setDuration(p.duration || "Month");
+    setDurationValue(String(p.durationValue ?? 1));
+    setPrice(p.price != null ? String(p.price) : "");
+    setDiscount(p.discount != null ? String(p.discount) : "0");
+    setStatus(p.status !== false);
+    setDescription(p.description || "");
+    setLevel(String(p.level ?? 1));
+  }, [isEdit, planData]);
 
-      if (existingLimitData?.data) {
-        const limit = existingLimitData.data;
-        setForm((prev) => ({
-          ...prev,
-          videoCast: limit.videoCast,
-          ads: limit.ads,
-          deviceLimit: limit.deviceLimit,
-          deviceLimitCount: String(limit.deviceLimitCount),
-          downloadStatus: limit.downloadStatus,
-          supportedDeviceType: limit.supportedDeviceType,
-          supportedDevices: limit.supportedDevices,
-          profileLimit: limit.profileLimit,
-          profileLimitCount: String(limit.profileLimitCount),
-          q480p: limit.q480p,
-          q720p: limit.q720p,
-          q1080p: limit.q1080p,
-          q1440p: limit.q1440p,
-          q2k: limit.q2k,
-          q4k: limit.q4k,
-        }));
-      }
-    }
-  }, [isEdit, existingPlanData, existingLimitData]);
+  useEffect(() => {
+    if (!isEdit) return;
+    const lim = planLimitsData?.data?.[0];
+    if (!lim) return;
+    setVideoCast(!!lim.videoCast);
+    setAds(!!lim.ads);
+    setDeviceLimit(!!lim.deviceLimit);
+    setDeviceLimitCount(String(lim.deviceLimitCount ?? 1));
+    setDownloadStatus(!!lim.downloadStatus);
+    setSupportedDeviceType(!!lim.supportedDeviceType);
+    setSupportedDevices(Array.isArray(lim.supportedDevices) ? lim.supportedDevices : []);
+    setProfileLimit(!!lim.profileLimit);
+    setProfileLimitCount(String(lim.profileLimitCount ?? 1));
+    setQ480p(!!lim.q480p);
+    setQ720p(!!lim.q720p);
+    setQ1080p(!!lim.q1080p);
+    setQ1440p(!!lim.q1440p);
+    setQ2k(!!lim.q2k);
+    setQ4k(!!lim.q4k);
+  }, [isEdit, planLimitsData]);
 
-  const set = (key: string, value: any) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
-
-  const toggleDevice = (device: string) => {
-    if (form.supportedDevices.includes(device)) {
-      set("supportedDevices", form.supportedDevices.filter((d) => d !== device));
-    } else {
-      set("supportedDevices", [...form.supportedDevices, device]);
-    }
-  };
+  const toggleDevice = (device: string) =>
+    setSupportedDevices((prev) =>
+      prev.includes(device) ? prev.filter((d) => d !== device) : [...prev, device]
+    );
 
   const handleSave = async () => {
-    if (!form.name.trim()) {
+    if (!name.trim()) {
       toast({ title: "Plan name is required", variant: "destructive" });
       return;
     }
-    if (!form.duration) {
-      toast({ title: "Duration is required", variant: "destructive" });
+    if (!price || parseFloat(price) < 0) {
+      toast({ title: "Valid price is required", variant: "destructive" });
       return;
     }
-    if (!form.price) {
-      toast({ title: "Price is required", variant: "destructive" });
+    const discountNum = parseFloat(discount) || 0;
+    if (discountNum < 0 || discountNum > 100) {
+      toast({ title: "Discount must be between 0 and 100%", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     try {
-      let planId = params.id;
-      const totalPrice = Number(form.price) - Number(form.discount);
-
-      // Save plan
-      if (isEdit && planId) {
-        await updateSubscriptionPlan.mutateAsync({
-          id: planId,
-          data: {
-            name: form.name,
-            duration: form.duration,
-            durationValue: Number(form.durationValue),
-            price: Number(form.price),
-            discount: Number(form.discount),
-            totalPrice: totalPrice,
-            status: form.status,
-            description: form.description,
-            level: Number(form.level),
-          },
-        });
-      } else {
-        const newPlan = await createSubscriptionPlan.mutateAsync({
-          name: form.name,
-          duration: form.duration,
-          durationValue: Number(form.durationValue),
-          price: Number(form.price),
-          discount: Number(form.discount),
-          totalPrice: totalPrice,
-          status: form.status,
-          description: form.description,
-          level: Number(form.level),
-        });
-        planId = newPlan.data.id;
-      }
-
-      // Save plan limit
-      const limitData = {
-        planId: planId!,
-        videoCast: form.videoCast,
-        ads: form.ads,
-        deviceLimit: form.deviceLimit,
-        deviceLimitCount: Number(form.deviceLimitCount),
-        downloadStatus: form.downloadStatus,
-        supportedDeviceType: form.supportedDeviceType,
-        supportedDevices: form.supportedDevices,
-        profileLimit: form.profileLimit,
-        profileLimitCount: Number(form.profileLimitCount),
-        q480p: form.q480p,
-        q720p: form.q720p,
-        q1080p: form.q1080p,
-        q1440p: form.q1440p,
-        q2k: form.q2k,
-        q4k: form.q4k,
+      let planId = id;
+      const planPayload = {
+        name: name.trim(),
+        duration,
+        durationValue: parseInt(durationValue) || 1,
+        price: parseFloat(price),
+        discount: discountNum,   // percentage — backend recalculates totalPrice
+        status,
+        description: description.trim(),
+        level: parseInt(level) || 1,
       };
 
-      if (isEdit && existingLimit?.id) {
-        await updatePlanLimit.mutateAsync({
-          id: existingLimit.id,
-          data: limitData,
-        });
+      if (isEdit && planId) {
+        await updatePlan.mutateAsync({ id: planId, data: planPayload });
       } else {
-        await createPlanLimit.mutateAsync(limitData);
+        const res = await createPlan.mutateAsync(planPayload);
+        planId = res?.data?.id;
+      }
+
+      if (!planId) throw new Error("Failed to get plan ID");
+
+      const limitPayload = {
+        planId,
+        videoCast,
+        ads,
+        deviceLimit,
+        deviceLimitCount: parseInt(deviceLimitCount) || 1,
+        downloadStatus,
+        supportedDeviceType,
+        supportedDevices,
+        profileLimit,
+        profileLimitCount: parseInt(profileLimitCount) || 1,
+        q480p, q720p, q1080p, q1440p, q2k, q4k,
+      };
+
+      const existingLimit = planLimitsData?.data?.[0];
+      if (isEdit && existingLimit?.id) {
+        await updateLimit.mutateAsync({ id: existingLimit.id, data: limitPayload });
+      } else if (!isEdit) {
+        // Only create limit for new plans; update handled above
+        await createLimit.mutateAsync(limitPayload);
+      } else {
+        // Edit but no limit exists yet — create one
+        await createLimit.mutateAsync(limitPayload);
       }
 
       toast({ title: isEdit ? "Plan updated successfully!" : "Plan created successfully!" });
       setLocation("/plans");
-    } catch (error) {
-      toast({ title: `Failed to ${isEdit ? "update" : "create"} plan`, variant: "destructive" });
+    } catch (err: any) {
+      toast({
+        title: err?.message || `Failed to ${isEdit ? "update" : "create"} plan`,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+        <button onClick={() => setLocation("/plans")} className="hover:text-foreground transition-colors">
+          Dashboard
+        </button>
         <span>/</span>
-        <span
-          className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-          onClick={() => setLocation("/plans")}
-        >
+        <button onClick={() => setLocation("/plans")} className="hover:text-foreground transition-colors">
           Plans
-        </span>
+        </button>
         <span>/</span>
         <span className="text-foreground font-medium">{isEdit ? "Edit Plan" : "New Plan"}</span>
       </div>
@@ -237,253 +210,209 @@ export default function PlanFormPage() {
       {/* Back */}
       <button
         onClick={() => setLocation("/plans")}
-        className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+        className="flex items-center gap-1.5 text-sm text-primary hover:text-red-300 font-medium transition-colors"
       >
-        <span className="text-base leading-none">«</span>
-        Back
+        <span className="text-base leading-none">«</span> Back
       </button>
 
-      {/* Main Form Card */}
-      <div className="rounded-xl border border-border bg-card/50 p-6 space-y-6">
-        {/* Row 1: Name, Duration, Duration Value, Price */}
+      {/* ─── Plan Details ─── */}
+      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <p className="text-base font-semibold text-foreground">Plan Details</p>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="space-y-2">
+          {/* Name */}
+          <div className="space-y-1.5">
             <Label className={labelCls}>
-              Plan Name <span className="text-red-500">*</span>
+              Plan Name <span className="text-primary">*</span>
             </Label>
-            <Input
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              placeholder="e.g. Premium Plan"
-              className={inputCls}
-            />
+            <Input value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Premium Plan" className={inputCls} />
           </div>
-          <div className="space-y-2">
+          {/* Duration */}
+          <div className="space-y-1.5">
             <Label className={labelCls}>
-              Duration <span className="text-red-500">*</span>
+              Duration Type <span className="text-primary">*</span>
             </Label>
-            <Select value={form.duration} onValueChange={(v) => set("duration", v)}>
-              <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg">
+            <Select value={duration} onValueChange={setDuration}>
+              <SelectTrigger className="bg-muted border-border text-foreground h-11 rounded-lg text-sm">
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
-              <SelectContent className="bg-muted border-border text-foreground">
+              <SelectContent className="bg-popover border-border text-foreground">
                 {DURATION_OPTIONS.map((d) => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
+          {/* Duration Value */}
+          <div className="space-y-1.5">
             <Label className={labelCls}>
-              Duration Value <span className="text-red-500">*</span>
+              Duration Value <span className="text-primary">*</span>
             </Label>
-            <Input
-              type="number"
-              min="1"
-              value={form.durationValue}
-              onChange={(e) => set("durationValue", e.target.value)}
-              placeholder="1"
-              className={inputCls}
-            />
+            <Input type="number" min="1" value={durationValue}
+              onChange={(e) => setDurationValue(e.target.value)}
+              placeholder="1" className={inputCls} />
           </div>
-          <div className="space-y-2">
-            <Label className={labelCls}>
-              Price ($) <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.price}
-              onChange={(e) => set("price", e.target.value)}
-              placeholder="0.00"
-              className={inputCls}
-            />
+          {/* Level */}
+          <div className="space-y-1.5">
+            <Label className={labelCls}>Level</Label>
+            <Input type="number" min="1" value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              placeholder="1" className={inputCls} />
           </div>
         </div>
 
-        {/* Row 2: Discount, Status, Level */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="space-y-2">
-            <Label className={labelCls}>Discount ($)</Label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.discount}
-              onChange={(e) => set("discount", e.target.value)}
-              placeholder="0.00"
-              className={inputCls}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
+          {/* Price */}
+          <div className="space-y-1.5">
+            <Label className={labelCls}>
+              Price ($) <span className="text-primary">*</span>
+            </Label>
+            <Input type="number" min="0" step="0.01" value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="0.00" className={inputCls} />
           </div>
-          <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card">
-            <span className={labelCls}>Status</span>
-            <Switch
-              checked={form.status}
-              onCheckedChange={(v) => set("status", v)}
-              className="data-[state=checked]:bg-red-600"
-            />
+          {/* Discount */}
+          <div className="space-y-1.5">
+            <Label className={labelCls}>Discount (%)</Label>
+            <Input type="number" min="0" max="100" step="0.01" value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              placeholder="0" className={inputCls} />
+            <p className="text-xs text-muted-foreground">Enter 0–100 (percentage)</p>
           </div>
-          <div className="space-y-2">
-            <Label className={labelCls}>Level</Label>
-            <Input
-              type="number"
-              min="1"
-              value={form.level}
-              onChange={(e) => set("level", e.target.value)}
-              placeholder="1"
-              className={inputCls}
-            />
+          {/* Total Price — computed, read-only */}
+          <div className="space-y-1.5">
+            <Label className={labelCls}>Total Price (after discount)</Label>
+            <div className="h-11 px-4 rounded-lg border border-border bg-muted/50 flex items-center">
+              <span className="text-foreground font-semibold text-base">
+                ${totalPrice.toFixed(2)}
+              </span>
+              {parseFloat(discount) > 0 && (
+                <span className="ml-2 text-xs text-green-400 font-medium">
+                  ({discount}% off)
+                </span>
+              )}
+            </div>
+          </div>
+          {/* Status */}
+          <div className="space-y-1.5">
+            <Label className={labelCls}>Status</Label>
+            <div className="h-11 px-4 rounded-lg border border-border bg-muted flex items-center justify-between">
+              <span className="text-sm text-foreground font-medium">
+                {status ? "Active" : "Inactive"}
+              </span>
+              <Switch checked={status} onCheckedChange={setStatus}
+                className="data-[state=checked]:bg-primary" />
+            </div>
           </div>
         </div>
 
         {/* Description */}
-        <div className="space-y-2">
-          <Label className={labelCls}>
-            Description <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            value={form.description}
-            onChange={(e) => set("description", e.target.value)}
+        <div className="space-y-1.5">
+          <Label className={labelCls}>Description</Label>
+          <Textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Write a description for this plan..."
-            className="bg-card border-border text-foreground placeholder:text-gray-600 focus:border-red-500 rounded-lg resize-none"
-            rows={4}
-          />
+            className="bg-muted border-border text-foreground placeholder:text-zinc-500 focus:border-primary rounded-lg resize-none text-sm"
+            rows={3} />
         </div>
       </div>
 
-      {/* Plan Limits */}
-      <div className="rounded-xl border border-border bg-card/50 p-6">
-        <h3 className="text-base font-semibold text-foreground mb-5">Plan Limits</h3>
+      {/* ─── Plan Limits ─── */}
+      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <p className="text-base font-semibold text-foreground">Plan Limits</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
           {/* Video Cast */}
-          <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-            <span className="text-sm text-foreground font-medium">Video Cast</span>
-            <Switch
-              checked={form.videoCast}
-              onCheckedChange={(v) => set("videoCast", v)}
-              className="data-[state=checked]:bg-red-600"
-            />
-          </div>
+          <LimitToggle label="Video Cast" description="Allow video casting to other devices"
+            checked={videoCast} onChange={setVideoCast} />
 
           {/* Ads */}
-          <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-            <span className="text-sm text-foreground font-medium">Ads</span>
-            <Switch
-              checked={form.ads}
-              onCheckedChange={(v) => set("ads", v)}
-              className="data-[state=checked]:bg-red-600"
-            />
-          </div>
+          <LimitToggle label="Ads" description="Show advertisements to users on this plan"
+            checked={ads} onChange={setAds} />
 
-          {/* Device Limit with count */}
+          {/* Download Status */}
+          <LimitToggle label="Download Allowed" description="Allow offline downloads"
+            checked={downloadStatus} onChange={setDownloadStatus} />
+
+          {/* Device Limit */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-foreground font-medium">Device Limit</span>
-              <Switch
-                checked={form.deviceLimit}
-                onCheckedChange={(v) => set("deviceLimit", v)}
-                className="data-[state=checked]:bg-red-600"
-              />
-            </div>
-            {form.deviceLimit && (
-              <Input
-                type="number"
-                min="1"
-                value={form.deviceLimitCount}
-                onChange={(e) => set("deviceLimitCount", e.target.value)}
-                placeholder="Number of devices"
-                className="bg-card border-border text-foreground focus:border-red-500 h-10 rounded-lg text-sm"
-              />
+            <LimitToggle label="Device Limit" description="Limit simultaneous device logins"
+              checked={deviceLimit} onChange={setDeviceLimit} />
+            {deviceLimit && (
+              <div className="flex items-center gap-3 pl-4">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Max devices:</Label>
+                <Input type="number" min="1" value={deviceLimitCount}
+                  onChange={(e) => setDeviceLimitCount(e.target.value)}
+                  className="w-24 bg-muted border-border text-foreground h-9 rounded-lg text-sm" />
+              </div>
             )}
           </div>
 
-          {/* Download Status */}
-          <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-            <span className="text-sm text-foreground font-medium">Download Status</span>
-            <Switch
-              checked={form.downloadStatus}
-              onCheckedChange={(v) => set("downloadStatus", v)}
-              className="data-[state=checked]:bg-red-600"
-            />
+          {/* Profile Limit */}
+          <div className="space-y-2">
+            <LimitToggle label="Profile Limit" description="Limit sub-profiles per account"
+              checked={profileLimit} onChange={setProfileLimit} />
+            {profileLimit && (
+              <div className="flex items-center gap-3 pl-4">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Max profiles:</Label>
+                <Input type="number" min="1" value={profileLimitCount}
+                  onChange={(e) => setProfileLimitCount(e.target.value)}
+                  className="w-24 bg-muted border-border text-foreground h-9 rounded-lg text-sm" />
+              </div>
+            )}
           </div>
 
-          {/* Supported Device Type with options */}
+          {/* Supported Device Type */}
           <div className="space-y-2 md:col-span-2">
-            <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-foreground font-medium">Supported Device Type</span>
-              <Switch
-                checked={form.supportedDeviceType}
-                onCheckedChange={(v) => set("supportedDeviceType", v)}
-                className="data-[state=checked]:bg-red-600"
-              />
-            </div>
-            {form.supportedDeviceType && (
-              <div className="flex flex-wrap gap-2 p-3 bg-zinc-950 rounded-lg border border-border">
-                {["mobile", "tablet", "tv", "desktop"].map((device) => (
-                  <button
-                    key={device}
-                    type="button"
-                    onClick={() => toggleDevice(device)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
-                      form.supportedDevices.includes(device)
-                        ? "border-red-500/60 bg-red-600/20 text-red-300"
-                        : "border-border bg-card text-muted-foreground hover:border-border"
-                    }`}
-                  >
+            <LimitToggle label="Supported Device Types" description="Restrict which devices can access this plan"
+              checked={supportedDeviceType} onChange={setSupportedDeviceType} />
+            {supportedDeviceType && (
+              <div className="flex flex-wrap gap-2 p-3 bg-muted/40 rounded-lg border border-border">
+                {DEVICE_OPTIONS.map((device) => (
+                  <button key={device} type="button" onClick={() => toggleDevice(device)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all capitalize ${
+                      supportedDevices.includes(device)
+                        ? "border-primary/70 bg-primary/25 text-red-300"
+                        : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                    }`}>
                     {device}
                   </button>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Profile Limit with count */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-foreground font-medium">Profile Limit</span>
-              <Switch
-                checked={form.profileLimit}
-                onCheckedChange={(v) => set("profileLimit", v)}
-                className="data-[state=checked]:bg-red-600"
-              />
-            </div>
-            {form.profileLimit && (
-              <Input
-                type="number"
-                min="1"
-                value={form.profileLimitCount}
-                onChange={(e) => set("profileLimitCount", e.target.value)}
-                placeholder="Number of profiles"
-                className="bg-card border-border text-foreground focus:border-red-500 h-10 rounded-lg text-sm"
-              />
-            )}
-          </div>
         </div>
       </div>
 
-      {/* Download Quality Options */}
-      <div className="rounded-xl border border-border bg-card/50 p-6">
-        <h3 className="text-base font-semibold text-foreground mb-5">Download Quality Option</h3>
+      {/* ─── Download Quality Options ─── */}
+      <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div>
+          <p className="text-base font-semibold text-foreground">Download Quality Options</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Select which video qualities subscribers on this plan can download.
+          </p>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            { key: "q480p" as const, label: "480p" },
-            { key: "q720p" as const, label: "720p" },
-            { key: "q1080p" as const, label: "1080p" },
-            { key: "q1440p" as const, label: "1440p" },
-            { key: "q2k" as const, label: "2K" },
-            { key: "q4k" as const, label: "4K" },
-          ].map(({ key, label }) => (
-            <div
-              key={key}
-              className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card"
-            >
-              <span className="text-sm text-foreground font-medium">{label}</span>
-              <Switch
-                checked={form[key]}
-                onCheckedChange={(v) => set(key, v)}
-                className="data-[state=checked]:bg-red-600"
-              />
+          {([
+            { state: q480p, setter: setQ480p, label: "480p" },
+            { state: q720p, setter: setQ720p, label: "720p" },
+            { state: q1080p, setter: setQ1080p, label: "1080p" },
+            { state: q1440p, setter: setQ1440p, label: "1440p" },
+            { state: q2k, setter: setQ2k, label: "2K" },
+            { state: q4k, setter: setQ4k, label: "4K" },
+          ] as const).map(({ state, setter, label }) => (
+            <div key={label}
+              className={`flex items-center justify-between h-12 px-4 rounded-lg border transition-colors cursor-pointer ${
+                state
+                  ? "border-primary/50 bg-primary/10"
+                  : "border-border bg-card hover:border-primary/30"
+              }`}
+              onClick={() => setter(!state)}>
+              <span className={`text-sm font-semibold ${state ? "text-red-300" : "text-foreground"}`}>
+                {label}
+              </span>
+              <Switch checked={state} onCheckedChange={setter}
+                className="data-[state=checked]:bg-primary" />
             </div>
           ))}
         </div>
@@ -491,14 +420,34 @@ export default function PlanFormPage() {
 
       {/* Save */}
       <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[120px]"
-        >
-          {saving ? "Saving..." : "Save"}
+        <Button onClick={handleSave} disabled={saving}
+          className="bg-primary hover:bg-primary/90 text-white h-11 px-10 rounded-lg font-semibold text-sm min-w-[140px]">
+          {saving ? "Saving..." : isEdit ? "Update Plan" : "Create Plan"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function LimitToggle({
+  label, description, checked, onChange,
+}: {
+  label: string; description?: string; checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-colors cursor-pointer ${
+        checked ? "border-primary/40 bg-primary/8" : "border-border bg-card hover:border-primary/25"
+      }`}
+      onClick={() => onChange(!checked)}
+    >
+      <div>
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange}
+        className="data-[state=checked]:bg-primary" />
     </div>
   );
 }

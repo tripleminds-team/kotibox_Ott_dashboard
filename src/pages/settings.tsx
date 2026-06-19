@@ -14,6 +14,7 @@ import {
   ImageIcon,
   X,
   UserX,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,9 +40,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useDeleteAccount, useUpdateSettings, useUploadSettingsLogos, getImageUrl } from "@/lib/api-client";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useDeleteAccount, useUpdateSettings, useUploadSettingsLogos, useGetEmailStatus, useTestEmail, getImageUrl } from "@/lib/api-client";
+import { useSettings, applyColorTheme, applyBodyClasses } from "@/contexts/SettingsContext";
 import { useTheme } from "next-themes";
+import MediaPicker from "@/components/MediaPicker";
 
 const SECTIONS = [
   { id: "business", label: "Business Settings", icon: Building2 },
@@ -49,6 +51,7 @@ const SECTIONS = [
   { id: "customization", label: "Customization", icon: Paintbrush },
   { id: "mail", label: "Mail Settings", icon: Mail },
   { id: "currency", label: "Currency Settings", icon: DollarSign },
+  { id: "payment", label: "Payment Settings", icon: CreditCard },
   { id: "storage", label: "Storage Settings", icon: HardDrive },
   { id: "seo", label: "SEO Settings", icon: Search },
 ] as const;
@@ -64,13 +67,13 @@ const COLOR_THEMES = [
 ];
 
 const inputCls =
-  "bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 h-11 rounded-lg";
+  "bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11 rounded-lg";
 const labelCls = "text-foreground text-sm font-medium";
 
 function SectionTitle({ icon: Icon, label }: { icon: any; label: string }) {
   return (
     <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-6">
-      <Icon className="h-5 w-5 text-red-400" />
+      <Icon className="h-5 w-5 text-primary" />
       {label}
     </h2>
   );
@@ -82,7 +85,7 @@ function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) 
       <Button
         onClick={onClick}
         disabled={saving}
-        className="bg-red-600 hover:bg-red-700 text-foreground h-11 px-10 rounded-lg font-semibold"
+        className="bg-primary hover:bg-primary/90 text-foreground h-11 px-10 rounded-lg font-semibold"
       >
         {saving ? "Saving..." : "Save"}
       </Button>
@@ -97,6 +100,8 @@ export default function Settings() {
   const { settings: ctxSettings, updateSettings: updateCtx, refreshSettings } = useSettings();
   const updateSettingsMutation = useUpdateSettings();
   const uploadLogosMutation = useUploadSettingsLogos();
+  const { data: emailStatus, refetch: refetchEmailStatus } = useGetEmailStatus();
+  const testEmailMutation = useTestEmail();
   const { resolvedTheme, setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState<SectionId>("business");
   const [saving, setSaving] = useState(false);
@@ -157,54 +162,26 @@ export default function Settings() {
   const [lightLogoPreview, setLightLogoPreview] = useState<string>(ctxSettings.lightLogoUrl || "");
   const [darkLogoPreview, setDarkLogoPreview] = useState<string>(ctxSettings.darkLogoUrl || "");
   const [faviconPreview, setFaviconPreview] = useState<string>(ctxSettings.faviconUrl || "");
-  const [lightLogoFile, setLightLogoFile] = useState<File | null>(null);
-  const [darkLogoFile, setDarkLogoFile] = useState<File | null>(null);
-  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+
+  type LogoType = "lightLogo" | "darkLogo" | "favicon" | null;
+  const [mediaPickerType, setMediaPickerType] = useState<LogoType>(null);
 
   useEffect(() => {
-    if (!lightLogoFile) setLightLogoPreview(ctxSettings.lightLogoUrl || "");
-  }, [ctxSettings.lightLogoUrl, lightLogoFile]);
+    setLightLogoPreview(ctxSettings.lightLogoUrl || "");
+  }, [ctxSettings.lightLogoUrl]);
 
   useEffect(() => {
-    if (!darkLogoFile) setDarkLogoPreview(ctxSettings.darkLogoUrl || "");
-  }, [ctxSettings.darkLogoUrl, darkLogoFile]);
+    setDarkLogoPreview(ctxSettings.darkLogoUrl || "");
+  }, [ctxSettings.darkLogoUrl]);
 
   useEffect(() => {
-    if (!faviconFile) setFaviconPreview(ctxSettings.faviconUrl || "");
-  }, [ctxSettings.faviconUrl, faviconFile]);
-
-  const handleLogoSelect = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setPreview: (v: string) => void,
-    setFile: (f: File | null) => void
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFile(file);
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-  };
+    setFaviconPreview(ctxSettings.faviconUrl || "");
+  }, [ctxSettings.faviconUrl]);
 
   const handleSaveBusiness = async () => {
     setSaving(true);
     try {
-      // 1. Upload logo files if any are selected
-      if (lightLogoFile || darkLogoFile || faviconFile) {
-        const fd = new FormData();
-        if (lightLogoFile) fd.append("lightLogo", lightLogoFile);
-        if (darkLogoFile) fd.append("darkLogo", darkLogoFile);
-        if (faviconFile) fd.append("favicon", faviconFile);
-        const logoResult = await uploadLogosMutation.mutateAsync(fd);
-        updateCtx({
-          lightLogoUrl: logoResult.lightLogoUrl ? getImageUrl(logoResult.lightLogoUrl) : ctxSettings.lightLogoUrl,
-          darkLogoUrl: logoResult.darkLogoUrl ? getImageUrl(logoResult.darkLogoUrl) : ctxSettings.darkLogoUrl,
-          faviconUrl: logoResult.faviconUrl ? getImageUrl(logoResult.faviconUrl) : ctxSettings.faviconUrl,
-        });
-        setLightLogoFile(null);
-        setDarkLogoFile(null);
-        setFaviconFile(null);
-      }
-      // 2. Save text fields
+      // 1. Save text fields and URLs
       await updateSettingsMutation.mutateAsync({
         platformName: business.platformName,
         contactNo: business.contactNo,
@@ -216,6 +193,9 @@ export default function Settings() {
         instagramUrl: business.instagramUrl,
         youtubeUrl: business.youtubeUrl,
         logoStyle: business.logoStyle,
+        lightLogoUrl: lightLogoPreview !== ctxSettings.lightLogoUrl ? lightLogoPreview : undefined,
+        darkLogoUrl: darkLogoPreview !== ctxSettings.darkLogoUrl ? darkLogoPreview : undefined,
+        faviconUrl: faviconPreview !== ctxSettings.faviconUrl ? faviconPreview : undefined,
       });
       updateCtx({ ...business });
       await refreshSettings();
@@ -313,10 +293,21 @@ export default function Settings() {
     ctxSettings.footerStyle,
   ]);
 
+  // Live Preview Effect
+  useEffect(() => {
+    applyColorTheme(custom.colorTheme);
+    applyBodyClasses(custom.cardStyle.toLowerCase(), custom.menuStyle.toLowerCase());
+    
+    return () => {
+      // Cleanup to revert to saved settings if unmounted without saving
+      applyColorTheme(ctxSettings.colorTheme || "blue-green");
+      applyBodyClasses((ctxSettings.cardStyle || "default").toLowerCase(), (ctxSettings.menuStyle || "mini").toLowerCase());
+    };
+  }, [custom.colorTheme, custom.cardStyle, custom.menuStyle, ctxSettings]);
+
   const handleSaveCustomization = async () => {
     setSaving(true);
     try {
-      // Temporarily not hitting API - save to context and local storage only
       const customSettings = {
         colorTheme: custom.colorTheme,
         navbarStyle: custom.navbarStyle.toLowerCase() as any,
@@ -326,16 +317,10 @@ export default function Settings() {
         activeMenuStyle: custom.activeMenuStyle.toLowerCase(),
         footerStyle: custom.footerStyle,
       };
-      updateCtx(customSettings);
       
-      // Also save to local storage for persistence
-      const currentStorage = localStorage.getItem("tripleMindesSettings");
-      if (currentStorage) {
-        const existing = JSON.parse(currentStorage);
-        localStorage.setItem("tripleMindesSettings", JSON.stringify({ ...existing, ...customSettings }));
-      } else {
-        localStorage.setItem("tripleMindesSettings", JSON.stringify(customSettings));
-      }
+      await updateSettingsMutation.mutateAsync(customSettings);
+      updateCtx(customSettings);
+      await refreshSettings();
       
       toast({ title: "Customization settings saved!" });
     } catch (err: any) {
@@ -384,17 +369,21 @@ export default function Settings() {
   const handleSaveMail = async () => {
     setSaving(true);
     try {
-      await updateSettingsMutation.mutateAsync({
+      const mailPayload: Record<string, any> = {
         mailEmail: mail.email,
         mailDriver: mail.mailDriver,
         mailHost: mail.mailHost,
         mailPort: mail.mailPort,
         mailEncryption: mail.mailEncryption,
         mailUsername: mail.mailUsername,
-        mailPassword: mail.password,
         mailFrom: mail.mailFrom,
         mailFromName: mail.fromName,
-      });
+      };
+      // Only update password if user typed a new one — empty means "keep existing"
+      if (mail.password.trim()) {
+        mailPayload.mailPassword = mail.password;
+      }
+      await updateSettingsMutation.mutateAsync(mailPayload);
       updateCtx({
         mailEmail: mail.email,
         mailDriver: mail.mailDriver,
@@ -402,7 +391,7 @@ export default function Settings() {
         mailPort: mail.mailPort,
         mailEncryption: mail.mailEncryption,
         mailUsername: mail.mailUsername,
-        mailPassword: mail.password,
+        ...(mail.password.trim() ? { mailPassword: mail.password } : {}),
         mailFrom: mail.mailFrom,
         mailFromName: mail.fromName,
       });
@@ -582,30 +571,67 @@ export default function Settings() {
     }
   };
 
+  // ── Payment Settings ───────────────────────────────────────────────────
+  const [payment, setPayment] = useState({
+    razorpayEnabled: ctxSettings.razorpayEnabled ?? false,
+    razorpayKeyId: ctxSettings.razorpayKeyId || "",
+    razorpayKeySecret: ctxSettings.razorpayKeySecret || "",
+  });
+
+  useEffect(() => {
+    setPayment({
+      razorpayEnabled: ctxSettings.razorpayEnabled ?? false,
+      razorpayKeyId: ctxSettings.razorpayKeyId || "",
+      razorpayKeySecret: ctxSettings.razorpayKeySecret || "",
+    });
+  }, [
+    ctxSettings.razorpayEnabled,
+    ctxSettings.razorpayKeyId,
+    ctxSettings.razorpayKeySecret,
+  ]);
+
+  const handleSavePayment = async () => {
+    setSaving(true);
+    try {
+      await updateSettingsMutation.mutateAsync({
+        razorpayEnabled: payment.razorpayEnabled,
+        razorpayKeyId: payment.razorpayKeyId,
+        razorpayKeySecret: payment.razorpayKeySecret,
+      });
+      updateCtx({
+        razorpayEnabled: payment.razorpayEnabled,
+        razorpayKeyId: payment.razorpayKeyId,
+        razorpayKeySecret: payment.razorpayKeySecret,
+      });
+      await refreshSettings();
+      toast({ title: "Payment settings saved!" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Save failed", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── Section renderers ──────────────────────────────────────────────────
 
   const LogoUploadBox = ({
     label,
     preview,
-    onSelect,
-    inputRef,
-    accept = "image/*",
+    onClick,
   }: {
     label: string;
     preview: string;
-    onSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    inputRef: React.RefObject<HTMLInputElement>;
-    accept?: string;
+    onClick: () => void;
   }) => (
     <div className="space-y-2">
       <Label className={labelCls}>{label}</Label>
       <div
-        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-gray-800 cursor-pointer hover:border-red-500/60 transition-colors overflow-hidden"
-        onClick={() => inputRef.current?.click()}
+        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-gray-800 cursor-pointer hover:border-primary/60 transition-colors overflow-hidden"
+        onClick={onClick}
       >
         {preview ? (
           <>
-            <img src={preview.startsWith('blob:') ? preview : getImageUrl(preview)} alt={label} className="h-full w-full object-contain p-2" />
+            <img src={getImageUrl(preview)} alt={label} className="h-full w-full object-contain p-2" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
               <Upload className="h-5 w-5 text-foreground" />
             </div>
@@ -616,7 +642,6 @@ export default function Settings() {
             <p className="text-xs text-muted-foreground">Click to upload</p>
           </>
         )}
-        <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={onSelect} />
       </div>
     </div>
   );
@@ -632,24 +657,32 @@ export default function Settings() {
           <LogoUploadBox
             label="Light Theme Logo"
             preview={lightLogoPreview}
-            onSelect={(e) => handleLogoSelect(e, setLightLogoPreview, setLightLogoFile)}
-            inputRef={lightLogoRef as React.RefObject<HTMLInputElement>}
+            onClick={() => setMediaPickerType("lightLogo")}
           />
           <LogoUploadBox
             label="Dark Theme Logo"
             preview={darkLogoPreview}
-            onSelect={(e) => handleLogoSelect(e, setDarkLogoPreview, setDarkLogoFile)}
-            inputRef={darkLogoRef as React.RefObject<HTMLInputElement>}
+            onClick={() => setMediaPickerType("darkLogo")}
           />
           <LogoUploadBox
             label="Favicon"
             preview={faviconPreview}
-            onSelect={(e) => handleLogoSelect(e, setFaviconPreview, setFaviconFile)}
-            inputRef={faviconRef as React.RefObject<HTMLInputElement>}
-            accept="image/png,image/x-icon,image/svg+xml,image/webp"
+            onClick={() => setMediaPickerType("favicon")}
           />
         </div>
       </div>
+
+      <MediaPicker
+        open={mediaPickerType !== null}
+        onClose={() => setMediaPickerType(null)}
+        onSelect={(url) => {
+          if (mediaPickerType === "lightLogo") setLightLogoPreview(url);
+          else if (mediaPickerType === "darkLogo") setDarkLogoPreview(url);
+          else if (mediaPickerType === "favicon") setFaviconPreview(url);
+          setMediaPickerType(null);
+        }}
+        type="image"
+      />
 
       {/* Theme toggle */}
       <div className="mb-6 flex items-center justify-between p-4 rounded-lg border border-border bg-card">
@@ -667,7 +700,7 @@ export default function Settings() {
         <Switch
           checked={resolvedTheme === "dark"}
           onCheckedChange={(v) => setTheme(v ? "dark" : "light")}
-          className="data-[state=checked]:bg-red-600"
+          className="data-[state=checked]:bg-primary"
         />
       </div>
 
@@ -681,7 +714,7 @@ export default function Settings() {
         ].map(({ key, label, placeholder, req }) => (
           <div key={key} className="space-y-2">
             <Label className={labelCls}>
-              {label} {req && <span className="text-red-500">*</span>}
+              {label} {req && <span className="text-primary">*</span>}
             </Label>
             <Input
               value={business[key as keyof typeof business]}
@@ -692,12 +725,12 @@ export default function Settings() {
           </div>
         ))}
         <div className="space-y-2 md:col-span-2">
-          <Label className={labelCls}>Site Description <span className="text-red-500">*</span></Label>
+          <Label className={labelCls}>Site Description <span className="text-primary">*</span></Label>
           <Textarea
             value={business.siteDescription}
             onChange={(e) => setBusiness({ ...business, siteDescription: e.target.value })}
             placeholder="StreamVault: Your Ultimate Destination for Unlimited Movies and Shows!"
-            className="bg-input border-border text-foreground focus:border-red-500 rounded-lg resize-none"
+            className="bg-input border-border text-foreground focus:border-primary rounded-lg resize-none"
             rows={3}
           />
         </div>
@@ -758,7 +791,7 @@ export default function Settings() {
             <Switch
               checked={misc[key]}
               onCheckedChange={(v) => setMisc({ ...misc, [key]: v })}
-              className="data-[state=checked]:bg-red-600"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         ))}
@@ -775,7 +808,15 @@ export default function Settings() {
       <div className="space-y-3 mb-7">
         <div className="flex items-center justify-between">
           <Label className="text-foreground font-medium">Color Customizer</Label>
-          <button className="text-sm text-red-400 hover:text-red-300 font-medium">Custom ↺</button>
+          <label className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer flex items-center gap-2">
+            Custom ✨
+            <input 
+              type="color" 
+              className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
+              value={custom.colorTheme?.startsWith('#') ? custom.colorTheme : '#ff0000'}
+              onChange={(e) => setCustom({ ...custom, colorTheme: e.target.value })}
+            />
+          </label>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {COLOR_THEMES.map((t) => (
@@ -783,7 +824,7 @@ export default function Settings() {
               key={t.id}
               onClick={() => setCustom({ ...custom, colorTheme: t.id })}
               className={`h-14 w-24 rounded-lg border-2 overflow-hidden relative transition-all ${
-                custom.colorTheme === t.id ? "border-red-500 shadow-lg shadow-red-500/20" : "border-border hover:border-red-500"
+                custom.colorTheme === t.id ? "border-primary shadow-lg shadow-primary/20" : "border-border hover:border-primary"
               }`}
             >
               <div className="absolute inset-0 flex">
@@ -809,8 +850,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, navbarStyle: s })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.navbarStyle === s
-                  ? "bg-red-600 border-red-600 text-foreground"
-                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
+                  ? "bg-primary border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -825,7 +866,7 @@ export default function Settings() {
         <Switch
           checked={custom.navbarHide}
           onCheckedChange={(v) => setCustom({ ...custom, navbarHide: v })}
-          className="data-[state=checked]:bg-red-600"
+          className="data-[state=checked]:bg-primary"
         />
       </div>
 
@@ -839,8 +880,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, cardStyle: s })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.cardStyle === s
-                  ? "bg-red-600 border-red-600 text-foreground"
-                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
+                  ? "bg-primary border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -859,8 +900,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, menuStyle: s })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.menuStyle === s
-                  ? "bg-red-600 border-red-600 text-foreground"
-                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
+                  ? "bg-primary border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -879,8 +920,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, activeMenuStyle: s })}
               className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.activeMenuStyle === s
-                  ? "bg-red-600 border-red-600 text-foreground"
-                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
+                  ? "bg-primary border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -899,8 +940,8 @@ export default function Settings() {
               onClick={() => setCustom({ ...custom, footerStyle: s.toLowerCase() as any })}
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.footerStyle === s.toLowerCase()
-                  ? "bg-red-600 border-red-600 text-foreground"
-                  : "border-border text-foreground hover:border-red-500 hover:text-foreground bg-card"
+                  ? "bg-primary border-red-600 text-foreground"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -916,11 +957,28 @@ export default function Settings() {
   const renderMail = () => (
     <div>
       <SectionTitle icon={Mail} label="Mail Settings" />
+
+      {/* Email Status */}
+      <div className="mb-6 p-4 rounded-lg border border-border bg-card">
+        <p className="text-sm font-semibold text-foreground mb-3">Email Configuration Status</p>
+        <div className="flex items-center gap-3">
+          <div className={`h-3 w-3 rounded-full ${emailStatus?.data?.configured ? 'bg-green-500' : 'bg-primary'}`} />
+          <span className="text-sm text-foreground">
+            {emailStatus?.data?.configured ? 'Email is configured' : 'Email is NOT configured — credentials will not be sent via email'}
+          </span>
+        </div>
+        {!emailStatus?.data?.configured && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Set <strong>Mail Username</strong> and <strong>Password</strong> below, then click Save.
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Mail Driver Selector */}
         <div className="space-y-2 md:col-span-2">
           <Label className={labelCls}>
-            Mail Driver <span className="text-red-500">*</span>
+            Mail Driver <span className="text-primary">*</span>
           </Label>
           <Select
             value={mail.mailDriver}
@@ -942,7 +1000,7 @@ export default function Settings() {
           <>
             <div className="space-y-2">
               <Label className={labelCls}>
-                Mail Host <span className="text-red-500">*</span>
+                Mail Host <span className="text-primary">*</span>
               </Label>
               <Input
                 value={mail.mailHost}
@@ -953,7 +1011,7 @@ export default function Settings() {
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>
-                Mail Port <span className="text-red-500">*</span>
+                Mail Port <span className="text-primary">*</span>
               </Label>
               <Input
                 value={mail.mailPort}
@@ -964,7 +1022,7 @@ export default function Settings() {
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>
-                Mail Encryption <span className="text-red-500">*</span>
+                Mail Encryption <span className="text-primary">*</span>
               </Label>
               <Select
                 value={mail.mailEncryption}
@@ -982,7 +1040,7 @@ export default function Settings() {
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>
-                Mail Username <span className="text-red-500">*</span>
+                Mail Username <span className="text-primary">*</span>
               </Label>
               <Input
                 value={mail.mailUsername}
@@ -993,13 +1051,13 @@ export default function Settings() {
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>
-                Password <span className="text-red-500">*</span>
+                Password <span className="text-primary">*</span>
               </Label>
               <Input
                 type="password"
                 value={mail.password}
                 onChange={(e) => setMail({ ...mail, password: e.target.value })}
-                placeholder="Password"
+                placeholder={ctxSettings.mailPassword ? "••••••••  (saved — leave blank to keep)" : "Enter SMTP password"}
                 className={inputCls}
               />
             </div>
@@ -1009,7 +1067,7 @@ export default function Settings() {
         {/* Common Mail fields */}
         <div className="space-y-2">
           <Label className={labelCls}>
-            From Email <span className="text-red-500">*</span>
+            From Email <span className="text-primary">*</span>
           </Label>
           <Input
             value={mail.email}
@@ -1020,7 +1078,7 @@ export default function Settings() {
         </div>
         <div className="space-y-2">
           <Label className={labelCls}>
-            From Name <span className="text-red-500">*</span>
+            From Name <span className="text-primary">*</span>
           </Label>
           <Input
             value={mail.fromName}
@@ -1030,6 +1088,38 @@ export default function Settings() {
           />
         </div>
       </div>
+
+      {/* Test Email */}
+      <div className="mt-6 p-4 rounded-lg border border-border bg-muted/20">
+        <p className="text-sm font-semibold text-foreground mb-3">Test Email Configuration</p>
+        <div className="flex gap-3">
+          <Input
+            value={mail.email}
+            placeholder="Enter test email address"
+            className={inputCls}
+            onChange={(e) => setMail({ ...mail, email: e.target.value })}
+          />
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                const result = await testEmailMutation.mutateAsync(mail.email);
+                toast({ title: result.message || "Test email sent!" });
+              } catch (error: any) {
+                toast({ title: error?.message || "Test email failed", variant: "destructive" });
+              }
+            }}
+            disabled={testEmailMutation.isPending || !mail.email}
+            className="border-border text-foreground hover:bg-muted whitespace-nowrap"
+          >
+            {testEmailMutation.isPending ? "Sending..." : "Send Test Email"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Sends a test email to verify your SMTP configuration is working.
+        </p>
+      </div>
+
       <SaveBtn saving={saving} onClick={handleSaveMail} />
     </div>
   );
@@ -1042,7 +1132,7 @@ export default function Settings() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-2">
           <Label className={labelCls}>
-            Currency <span className="text-red-500">*</span>
+            Currency <span className="text-primary">*</span>
           </Label>
           <Select
             value={currency.currency}
@@ -1065,7 +1155,7 @@ export default function Settings() {
         </div>
         <div className="space-y-2">
           <Label className={labelCls}>
-            Currency Symbol <span className="text-red-500">*</span>
+            Currency Symbol <span className="text-primary">*</span>
           </Label>
           <Input
             value={currency.currencySymbol}
@@ -1131,7 +1221,7 @@ export default function Settings() {
                   s3Storage: key === "s3Storage" ? v : false,
                 });
               }}
-              className="data-[state=checked]:bg-red-600"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         ))}
@@ -1148,7 +1238,7 @@ export default function Settings() {
           ).map(({ key, label }) => (
             <div key={key} className="space-y-2">
               <Label className={labelCls}>
-                {label} <span className="text-red-500">*</span>
+                {label} <span className="text-primary">*</span>
               </Label>
               <Input
                 value={storage[key]}
@@ -1159,7 +1249,7 @@ export default function Settings() {
           ))}
           <div className="space-y-2">
             <Label className={labelCls}>
-              AWS Use Path Style Endpoint <span className="text-red-500">*</span>
+              AWS Use Path Style Endpoint <span className="text-primary">*</span>
             </Label>
             <Input
               value={storage.awsPathStyle ? "True" : "False"}
@@ -1179,7 +1269,7 @@ export default function Settings() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <div className="space-y-2">
           <Label className={labelCls}>
-            Meta Title <span className="text-red-500">*</span>
+            Meta Title <span className="text-primary">*</span>
           </Label>
           <div className="flex items-center justify-between">
             <Input
@@ -1194,7 +1284,7 @@ export default function Settings() {
 
         <div className="space-y-2">
           <Label className={labelCls}>
-            Meta Keywords <span className="text-red-500">*</span>
+            Meta Keywords <span className="text-primary">*</span>
           </Label>
           <Input
             value={seo.metaKeywords}
@@ -1206,7 +1296,7 @@ export default function Settings() {
 
         <div className="space-y-2">
           <Label className={labelCls}>
-            Google Site Verification <span className="text-red-500">*</span>
+            Google Site Verification <span className="text-primary">*</span>
           </Label>
           <Input
             value={seo.googleVerification}
@@ -1218,7 +1308,7 @@ export default function Settings() {
 
         <div className="space-y-2">
           <Label className={labelCls}>
-            Global Canonical URL <span className="text-red-500">*</span>
+            Global Canonical URL <span className="text-primary">*</span>
           </Label>
           <Input
             value={seo.canonicalUrl}
@@ -1233,7 +1323,7 @@ export default function Settings() {
       <div className="space-y-2 mb-5">
         <div className="flex items-center justify-between">
           <Label className={labelCls}>
-            Site Meta Description <span className="text-red-500">*</span>
+            Site Meta Description <span className="text-primary">*</span>
           </Label>
           <span className="text-xs text-muted-foreground">{seo.metaDescription.length}/200</span>
         </div>
@@ -1241,7 +1331,7 @@ export default function Settings() {
           value={seo.metaDescription}
           onChange={(e) => setSeo({ ...seo, metaDescription: e.target.value.slice(0, 200) })}
           placeholder="Enter Meta Description"
-          className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-red-500 rounded-lg resize-none"
+          className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary rounded-lg resize-none"
           rows={4}
         />
       </div>
@@ -1249,11 +1339,11 @@ export default function Settings() {
       {/* SEO Image */}
       <div className="space-y-2">
         <Label className={labelCls}>
-          SEO Image <span className="text-red-500">*</span>
+          SEO Image <span className="text-primary">*</span>
         </Label>
         <div
           onClick={() => seoImageRef.current?.click()}
-          className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-card hover:border-red-500/60 cursor-pointer transition-all overflow-hidden"
+          className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-card hover:border-primary/60 cursor-pointer transition-all overflow-hidden"
           style={{ minHeight: "168px" }}
         >
           {seo.seoImage ? (
@@ -1265,7 +1355,7 @@ export default function Settings() {
                   e.stopPropagation();
                   setSeo({ ...seo, seoImage: null });
                 }}
-                className="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center z-10"
+                className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center z-10"
               >
                 <X className="h-3.5 w-3.5 text-foreground" />
               </button>
@@ -1296,6 +1386,56 @@ export default function Settings() {
     </div>
   );
 
+  const renderPayment = () => (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <SectionTitle icon={CreditCard} label="Payment Settings (Razorpay)" />
+
+      <div className="grid grid-cols-1 gap-6">
+        <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-background/50">
+          <div className="space-y-0.5">
+            <Label className="text-base text-foreground font-semibold">Enable Razorpay</Label>
+            <p className="text-sm text-muted-foreground">
+              Turn on to allow users to pay using Razorpay gateway.
+            </p>
+          </div>
+          <Switch
+            checked={payment.razorpayEnabled}
+            onCheckedChange={(c) => setPayment({ ...payment, razorpayEnabled: c })}
+            className="data-[state=checked]:bg-primary"
+          />
+        </div>
+
+        {payment.razorpayEnabled && (
+          <div className="space-y-4 p-4 border border-border rounded-lg bg-background/50 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="space-y-2">
+              <Label className={labelCls}>Razorpay Key ID</Label>
+              <Input
+                value={payment.razorpayKeyId}
+                onChange={(e) => setPayment({ ...payment, razorpayKeyId: e.target.value })}
+                placeholder="rzp_test_..."
+                className={inputCls}
+              />
+              <p className="text-xs text-muted-foreground">Public key ID from your Razorpay Dashboard</p>
+            </div>
+            <div className="space-y-2">
+              <Label className={labelCls}>Razorpay Key Secret</Label>
+              <Input
+                type="password"
+                value={payment.razorpayKeySecret}
+                onChange={(e) => setPayment({ ...payment, razorpayKeySecret: e.target.value })}
+                placeholder="Enter Key Secret"
+                className={inputCls}
+              />
+              <p className="text-xs text-muted-foreground">Keep this secure. Do not share it publicly.</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <SaveBtn saving={saving} onClick={handleSavePayment} />
+    </div>
+  );
+
   const renderSection = () => {
     switch (activeSection) {
       case "business": return renderBusiness();
@@ -1303,6 +1443,7 @@ export default function Settings() {
       case "customization": return renderCustomization();
       case "mail": return renderMail();
       case "currency": return renderCurrency();
+      case "payment": return renderPayment();
       case "storage": return renderStorage();
       case "seo": return renderSeo();
     }
@@ -1339,7 +1480,7 @@ export default function Settings() {
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all border-b border-border last:border-b-0 text-left ${
                     isActive
-                      ? "bg-red-600 text-foreground"
+                      ? "bg-primary text-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
@@ -1353,7 +1494,7 @@ export default function Settings() {
             <div className="border-t border-border mt-1 pt-1">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-red-400 hover:bg-red-600/10 hover:text-red-300 transition-all text-left">
+                  <button className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-primary hover:bg-primary/10 hover:text-primary/80 transition-all text-left">
                     <UserX className="h-4 w-4 flex-shrink-0" />
                     Deactivate Account
                   </button>
@@ -1380,7 +1521,7 @@ export default function Settings() {
                         }
                       }}
                       disabled={deleteAccountMutation.isPending}
-                      className="bg-red-600 hover:bg-red-700 text-foreground border-0"
+                      className="bg-primary hover:bg-primary/90 text-foreground border-0"
                     >
                       {deleteAccountMutation.isPending ? "Deactivating..." : "Yes, Deactivate"}
                     </AlertDialogAction>

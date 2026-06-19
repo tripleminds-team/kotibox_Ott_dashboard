@@ -1,376 +1,391 @@
-import { useState } from "react";
-import { Link, useParams } from "wouter";
-import { Play, ChevronRight, ChevronDown, Eye, Heart } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useSearch, useLocation, useParams } from "wouter";
+import {
+  Play, Search, X, Loader2, Film, Tv, Smartphone, Star, Crown, Flame,
+  SlidersHorizontal, ChevronLeft, ChevronRight, TrendingUp, Sparkles,
+} from "lucide-react";
 import { PublicHeader, PublicFooter } from "./streaming-home";
+import { useGetWebBrowse, useGetGenres, getImageUrl } from "@/lib/api-client";
+import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
 
-const TABS = ["Actors", "Actresses", "Identities", "Story Beats"] as const;
-type TabKey = (typeof TABS)[number];
+type ContentType = "movie" | "show" | "drama";
 
-interface MovieItem {
-  id: number;
-  title: string;
-  desc: string;
-  views: string;
-  likes: string;
-  thumbnail: string;
-  badge?: string;
-}
+const CONTENT_TYPES: { key: ContentType; label: string; icon: React.ReactNode }[] = [
+  { key: "movie", label: "Movies", icon: <Film className="w-4 h-4" /> },
+  { key: "show", label: "TV Shows", icon: <Tv className="w-4 h-4" /> },
+  { key: "drama", label: "Short Drama", icon: <Smartphone className="w-4 h-4" /> },
+];
 
-const CATEGORY_DATA: Record<TabKey, { tags: string[]; movies: MovieItem[] }> = {
-  Actors: {
-    tags: [
-      "Cameron Saffle", "Thomas William King", "Roman Chsherbakov", "Ian Schutzman",
-      "J.J. Michaels", "Aaron Oberst", "Adam Daniel", "James Oblak", "David James",
-      "Samuel O Morgan", "Tim Stein", "Griffin Blazi", "Ben Armstrong", "Tristan Rewald",
-      "Andrew Fultz", "Harrison Harber", "Samuel Irwin Hill", "Justin Daniel Price",
-      "Ali Badalov", "Carter Sirianni", "Evan Adams", "Adam Huss", "Evan Wick",
-    ],
-    movies: [
-      {
-        id: 1, title: "Son in Law's Revenge",
-        desc: "After being mistreated by his wife's family for years, Leo discovers that he is the heir to a vast fortune. Now it's time — for revenge!",
-        views: "14.6M", likes: "161.5K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 2, title: "The CEO's Contract Wife",
-        desc: "Jasper Tate needed a wife urgently, while Chloe Adams needed money urgently. Seeking help from the same source leads the two needy people together.",
-        views: "117.3M", likes: "1.1M", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 3, title: "Do Me Over",
-        desc: "Sarah Loren is a widow with a teenage son. Ethan Cole is a big shot CEO who wants to acquire her company. He is arrogant, brilliant, and unnecessarily good looking.",
-        views: "89.2M", likes: "678K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 4, title: "The Boss Affair",
-        desc: "Lucy Harris and Luke Walker had an affair, but that was before she found out who her boss really was. The truth changes everything.",
-        views: "56.7M", likes: "432K",
-        thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 5, title: "The Dark CEO",
-        desc: "A ruthless billionaire. A woman who refuses to bow. When two worlds collide, only one heart survives.",
-        views: "67.3M", likes: "723K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 6, title: "Alpha's Claim",
-        desc: "The most feared Alpha claims the one woman who refuses to be owned. A battle of will and want begins.",
-        views: "91.2M", likes: "1.2M",
-        thumbnail: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=240&h=340&fit=crop&q=80",
-      },
-    ],
-  },
-  Actresses: {
-    tags: [
-      "Jennifer Mills", "Sofia Rodriguez", "Emma Chen", "Lily Thompson", "Grace Williams",
-      "Mia Johnson", "Aria Davis", "Chloe Brown", "Zoe Martinez", "Isabella Wilson",
-      "Olivia Taylor", "Ava Anderson", "Sophia Thomas", "Charlotte Jackson", "Amelia White",
-      "Harper Lee", "Evelyn Harris", "Abigail Martin",
-    ],
-    movies: [
-      {
-        id: 7, title: "Her Secret Billionaire",
-        desc: "A young woman discovers her new boss is the man she vowed to hate forever. Secrets unravel one meeting at a time.",
-        views: "23.4M", likes: "345K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 8, title: "Forbidden Love",
-        desc: "Two hearts torn between duty and desire in a world where their love is considered impossible by everyone around them.",
-        views: "45.8M", likes: "512K",
-        thumbnail: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 9, title: "The Alpha's Omega",
-        desc: "She never believed in mates until destiny placed her in the arms of the most powerful Alpha in the region.",
-        views: "78.1M", likes: "891K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 10, title: "Royal Deception",
-        desc: "A commoner must pretend to be royalty, but falls for the real prince along the way. Love was never part of the plan.",
-        views: "34.6M", likes: "267K",
-        thumbnail: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 11, title: "Broken Vows",
-        desc: "She thought she was marrying the love of her life. She didn't know he was already promised to another.",
-        views: "52.3M", likes: "489K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 12, title: "The Midnight Heir",
-        desc: "By day she's a struggling artist. By night, she's heir to an empire she never knew existed.",
-        views: "41.9M", likes: "367K",
-        thumbnail: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=240&h=340&fit=crop&q=80",
-      },
-    ],
-  },
-  Identities: {
-    tags: [
-      "Billionaire", "CEO", "Alpha", "Werewolf", "Royalty", "Secret Heir",
-      "Mafia Boss", "Bad Boy", "Sweet Girl", "Omega", "Prince", "Princess",
-      "Villain", "Hacker", "Vampire", "Shifter", "Doctor", "Soldier",
-    ],
-    movies: [
-      {
-        id: 13, title: "Heir to Everything",
-        desc: "He was raised in poverty, not knowing he was heir to a billion-dollar empire. The truth changes who he is.",
-        views: "44.5M", likes: "389K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 14, title: "Mafia's Obsession",
-        desc: "She stumbled into the wrong world. Now the most dangerous man alive won't let her leave. Ever.",
-        views: "103.7M", likes: "1.5M", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 15, title: "The Vampire King",
-        desc: "Immortality was his curse until she walked in. Now he'd burn the world down just to keep her close.",
-        views: "86.4M", likes: "1.0M",
-        thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 16, title: "Bad Boy Redeemed",
-        desc: "Everyone gave up on him. She refused to. Sometimes love is the only thing that can save a broken soul.",
-        views: "59.1M", likes: "641K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 17, title: "Doctor's Secret",
-        desc: "He's her doctor, she's his patient. The rules are clear. Their hearts didn't get the memo.",
-        views: "37.8M", likes: "312K",
-        thumbnail: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 18, title: "The Royal Soldier",
-        desc: "He guards her with his life. She rules with her heart. In war, love is the greatest weapon.",
-        views: "48.2M", likes: "427K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=340&fit=crop&q=80",
-      },
-    ],
-  },
-  "Story Beats": {
-    tags: [
-      "Revenge", "Forbidden Love", "Enemies to Lovers", "Fake Dating", "Second Chance",
-      "Arranged Marriage", "Hidden Identity", "Kidnapping", "Betrayal", "Redemption",
-      "Found Family", "Love Triangle", "One Night Stand", "Forced Proximity",
-      "Boss & Employee", "Age Gap", "Slow Burn",
-    ],
-    movies: [
-      {
-        id: 19, title: "Fake Bride, Real Love",
-        desc: "They agreed to fake their engagement. Nobody warned them about falling for real. Some games are impossible to win.",
-        views: "55.9M", likes: "634K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 20, title: "Enemy's Kiss",
-        desc: "Their families have been rivals for decades. One stolen kiss changes everything neither of them expected.",
-        views: "38.4M", likes: "441K",
-        thumbnail: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 21, title: "Second Chance Romance",
-        desc: "She left without a word. Ten years later, he's her new boss and the wounds are just as fresh.",
-        views: "72.6M", likes: "867K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 22, title: "The Arranged Marriage",
-        desc: "Their parents arranged it. Their hearts complicated it. Neither expected to fall, but here they are.",
-        views: "81.3M", likes: "945K",
-        thumbnail: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 23, title: "Slow Burn Billionaire",
-        desc: "She worked for him for two years. He noticed her on day one. Patience is its own kind of desire.",
-        views: "64.7M", likes: "758K", badge: "Original",
-        thumbnail: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&h=340&fit=crop&q=80",
-      },
-      {
-        id: 24, title: "Betrayal & Beyond",
-        desc: "He was her best friend, her first love, and the man who broke her. Can trust be rebuilt from ash?",
-        views: "43.5M", likes: "398K",
-        thumbnail: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&h=340&fit=crop&q=80",
-      },
-    ],
-  },
-};
+function ContentCard({ item, onClick }: { item: any; onClick: () => void }) {
+  const isPremium = item.badge === "TOP" || item.badge === "EXCLUSIVE";
+  const isDrama = item.type === "drama" || (item.seasons === undefined && item.totalEpisodes !== undefined);
 
-function urlToTab(slug: string): TabKey {
-  return TABS.find((t) => t.toLowerCase().replace(/ /g, "-") === slug) ?? "Actors";
-}
+  if (isDrama) {
+    return (
+      <div
+        className="group relative flex-shrink-0 cursor-pointer"
+        onClick={onClick}
+      >
+        <div
+          className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:ring-2 group-hover:ring-purple-500/70 group-hover:scale-[1.03] max-h-[400px] mx-auto w-full max-w-[220px]"
+          style={{ aspectRatio: "9/16" }}
+        >
+          <img
+            src={item.poster ? getImageUrl(item.poster) : ''}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.style.backgroundColor = '#111'; }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          {item.badge && (
+            <span className="absolute top-1.5 left-1.5 text-[9px] font-black px-1.5 py-[2px] rounded-sm uppercase bg-primary text-white">{item.badge}</span>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 p-2">
+            <p className="text-white text-[11px] font-bold leading-tight line-clamp-2">{item.title}</p>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-function MovieCard({ movie }: { movie: MovieItem }) {
   return (
-    <Link
-      href={`/show/${encodeURIComponent(movie.title)}/episode/1`}
-      className="flex gap-3 sm:gap-4 bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/60 hover:border-zinc-700 rounded-xl overflow-hidden transition-all duration-200 group cursor-pointer"
-      style={{ textDecoration: "none" }}
-    >
-      {/* Poster */}
-      <div className="relative flex-shrink-0 w-[110px] sm:w-[130px]">
+    <div className="group relative flex-shrink-0 cursor-pointer" onClick={onClick}>
+      <div
+        className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-[0_12px_32px_rgba(229,9,20,0.25)] group-hover:ring-1 group-hover:ring-primary/40"
+        style={{ aspectRatio: "16/9" }}
+      >
         <img
-          src={movie.thumbnail}
-          alt={movie.title}
-          className="w-full h-full object-contain"
-          style={{ aspectRatio: "2/3", minHeight: "165px" }}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=240&h=340&fit=crop&q=80";
-          }}
+          src={item.backdrop ? getImageUrl(item.backdrop) : (item.poster ? getImageUrl(item.poster) : '')}
+          alt={item.title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.style.backgroundColor = '#111'; }}
         />
-        {movie.badge && (
-          <span className="absolute top-2 left-0 bg-[#E50914] text-white text-[9px] font-black px-2 py-0.5 uppercase tracking-wider">
-            {movie.badge}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#030306] via-[#030306]/30 to-transparent" />
+        {isPremium ? (
+          <span className="absolute top-2 left-2 flex items-center gap-1 bg-[#f5a623] text-black text-[9px] font-black px-2 py-[2px] rounded-sm uppercase">
+            <Crown className="w-2.5 h-2.5" /> Premium
+          </span>
+        ) : item.badge ? (
+          <span className="absolute top-2 left-2 text-[9px] font-black px-1.5 py-[2px] rounded-sm uppercase bg-primary text-white">{item.badge}</span>
+        ) : null}
+        {item.imdbRating && (
+          <span className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold bg-amber-400/90 text-black px-1.5 py-[2px] rounded">
+            <Star className="w-2.5 h-2.5 fill-black" />{item.imdbRating}
           </span>
         )}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
-      </div>
-
-      {/* Content */}
-      <div className="flex flex-col justify-between py-3 pr-3 sm:pr-4 flex-1 min-w-0">
-        <div>
-          <h3 className="text-white font-bold text-sm sm:text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-[#E50914] transition-colors">
-            {movie.title}
-          </h3>
-          <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed line-clamp-3">
-            {movie.desc}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-3 text-zinc-600 text-xs">
-            <span className="flex items-center gap-1">
-              <Eye className="w-3 h-3" /> {movie.views}
-            </span>
-            <span className="flex items-center gap-1">
-              <Heart className="w-3 h-3" /> {movie.likes}
-            </span>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
+            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
           </div>
-          <span className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-600 group-hover:border-[#E50914] group-hover:bg-[#E50914]/10 text-zinc-300 group-hover:text-white text-xs font-semibold rounded-lg transition-all duration-200">
-            <Play className="w-3 h-3 fill-current" /> Play
-          </span>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <p className="text-white font-bold text-sm leading-tight truncate">{item.title}</p>
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-400">
+            {item.year && <span>{item.year}</span>}
+            {item.duration && <><span>·</span><span>{item.duration}</span></>}
+            {item.seasons && <><span>·</span><span className="text-white bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.seasons}S</span></>}
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
-export default function CategoriesBrowsePage() {
-  const params = useParams<{ tab: string }>();
-  const activeTab = urlToTab(params.tab ?? "actors");
-  const data = CATEGORY_DATA[activeTab];
+const TAB_TO_TYPE: Record<string, ContentType> = {
+  drama: "drama",
+  show: "show",
+  tvshows: "show",
+  movie: "movie",
+  movies: "movie",
+  new: "movie",
+  trending: "movie",
+  "top-rated": "movie",
+  action: "movie",
+};
 
-  const [showAllTags, setShowAllTags] = useState(false);
-  const visibleTags = showAllTags ? data.tags : data.tags.slice(0, 14);
+export default function CategoriesBrowsePage() {
+  const searchString = useSearch();
+  const [, setLocation] = useLocation();
+  const params = useParams<{ tab?: string }>();
+  const [activeTab, setActiveTab] = useState<"home" | "movies" | "tvshows" | "drama" | "new">("home");
+  const [plansModalOpen, setPlansModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  const initialQ = new URLSearchParams(searchString).get("q") || "";
+  const [searchInput, setSearchInput] = useState(initialQ);
+  const [debouncedQ, setDebouncedQ] = useState(initialQ);
+
+  const initialType: ContentType = (params as any)?.tab ? (TAB_TO_TYPE[(params as any).tab] || "movie") : "movie";
+  const [contentType, setContentType] = useState<ContentType>(initialType);
+  const [activeGenre, setActiveGenre] = useState("All");
+  const [page, setPage] = useState(1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) try { setUser(JSON.parse(stored)); } catch {}
+  }, []);
+
+  // Sync search query from URL
+  useEffect(() => {
+    const q = new URLSearchParams(searchString).get("q") || "";
+    setSearchInput(q);
+    setDebouncedQ(q);
+    setPage(1);
+  }, [searchString]);
+
+  const handleSearchChange = (val: string) => {
+    setSearchInput(val);
+    setPage(1);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQ(val);
+      setLocation(`/browse?q=${encodeURIComponent(val)}`, { replace: true });
+    }, 350);
+  };
+
+  const { data: genresData } = useGetGenres({ limit: 50 });
+  const genres: string[] = ["All", ...((genresData?.data || []).map((g: any) => g.name))];
+
+  const browseOptions = {
+    type: debouncedQ ? contentType : contentType,
+    genre: activeGenre,
+    page,
+    search: debouncedQ || undefined,
+    limit: 24,
+  };
+
+  const { data: browseData, isLoading, isFetching } = useGetWebBrowse(browseOptions);
+  const items: any[] = browseData?.items || [];
+  const pagination = browseData?.pagination;
+
+  const handlePlay = (item: any) => {
+    const isDrama = item.contentType === "drama";
+    if (isDrama) setLocation(`/show/${item.id || item._id}/episode/1`);
+    else setLocation(`/movie/${item.id || item._id}`);
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    setUser(null);
+    window.location.reload();
+  };
 
   return (
-    <div className="min-h-screen bg-black">
-      <PublicHeader />
+    <div className="min-h-screen bg-[#030306] text-white">
+      <PublicHeader
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          if (tab === "tvshows") setLocation("/tv-shows-browse");
+          else { setActiveTab(tab); setLocation("/"); }
+        }}
+        onSignIn={() => setLocation("/login")}
+        onSignOut={handleSignOut}
+        user={user}
+        onSubscribeClick={() => setPlansModalOpen(true)}
+      />
 
-      <div className="pt-[70px]">
-        {/* Hero Banner */}
-        <div className="relative bg-gradient-to-r from-zinc-950 via-zinc-900 to-black border-b border-zinc-800/60 px-4 sm:px-8 lg:px-14 py-10">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(229,9,20,0.08),transparent_60%)]" />
-          <div className="relative">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-600 mb-4">
-              <Link href="/" className="hover:text-zinc-400 transition-colors">Home</Link>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-zinc-400">Categories</span>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-white font-medium">{activeTab}</span>
-            </div>
-            <h1 className="text-white text-2xl sm:text-3xl font-black tracking-tight">
-              Browse by{" "}
-              <span className="text-[#E50914]">{activeTab}</span>
-            </h1>
-            <p className="text-zinc-500 text-sm mt-1.5">
-              Discover shows featuring your favourite {activeTab.toLowerCase()}
-            </p>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="bg-zinc-950 border-b border-zinc-800/60 sticky top-[70px] z-30">
-          <div className="px-4 sm:px-8 lg:px-14">
-            <div className="flex items-center overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-              {TABS.map((tab) => (
-                <Link
-                  key={tab}
-                  href={`/browse/${tab.toLowerCase().replace(/ /g, "-")}`}
-                  className={`relative flex-shrink-0 px-4 sm:px-5 py-4 text-sm font-semibold transition-all duration-150 whitespace-nowrap ${
-                    tab === activeTab
-                      ? "text-white"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
+      <div className="pt-20 pb-20 min-h-screen">
+        {/* Search Hero */}
+        <div className="px-4 sm:px-8 lg:px-14 pt-8 pb-6">
+          <div className="max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+              <input
+                ref={inputRef}
+                autoFocus={!!initialQ}
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search movies, TV shows, short dramas..."
+                className="w-full bg-zinc-900/80 border border-zinc-800 focus:border-primary focus:ring-1 focus:ring-primary/30 text-white text-base placeholder:text-zinc-500 pl-12 pr-12 py-3.5 rounded-2xl transition-all outline-none"
+              />
+              {searchInput && (
+                <button
+                  onClick={() => { handleSearchChange(""); inputRef.current?.focus(); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
                 >
-                  {tab}
-                  {tab === activeTab && (
-                    <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#E50914] rounded-full" />
-                  )}
-                </Link>
-              ))}
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Tags Section */}
-        <div className="px-4 sm:px-8 lg:px-14 py-6 border-b border-zinc-900">
-          <div className="flex flex-wrap gap-2 items-center">
-            {visibleTags.map((tag) => (
+        {/* Content Type Tabs */}
+        <div className="px-4 sm:px-8 lg:px-14 mb-5">
+          <div className="flex items-center gap-2 flex-wrap">
+            {CONTENT_TYPES.map(({ key, label, icon }) => (
               <button
-                key={tag}
-                className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-zinc-200 hover:text-white text-xs sm:text-sm rounded-lg transition-all duration-150 font-medium"
+                key={key}
+                onClick={() => { setContentType(key); setActiveGenre("All"); setPage(1); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                  contentType === key
+                    ? "bg-primary border-primary text-white shadow-lg shadow-red-900/30"
+                    : "border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600"
+                }`}
               >
-                {tag}
+                {icon} {label}
               </button>
             ))}
-            {data.tags.length > 14 && (
-              <button
-                onClick={() => setShowAllTags(!showAllTags)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 hover:text-white text-xs rounded-lg transition-all duration-150"
-              >
-                {showAllTags ? "Less" : `+${data.tags.length - 14} more`}
-                <ChevronDown className={`w-3 h-3 transition-transform ${showAllTags ? "rotate-180" : ""}`} />
-              </button>
+
+            <div className="flex-1" />
+
+            {debouncedQ && (
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <span>Results for</span>
+                <span className="text-white font-bold">"{debouncedQ}"</span>
+                <span>· {pagination?.total ?? 0} found</span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Movies Grid */}
-        <div className="px-4 sm:px-8 lg:px-14 py-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-[3px] h-5 bg-[#E50914] rounded-full flex-shrink-0" />
-            <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">
-              Movies of All {activeTab}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            {data.movies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+        {/* Genre Filter (hide during search) */}
+        {!debouncedQ && (
+          <div
+            className="flex gap-2 overflow-x-auto px-4 sm:px-8 lg:px-14 pb-2 mb-6"
+            style={{ scrollbarWidth: "none" } as React.CSSProperties}
+          >
+            {genres.map((g) => (
+              <button
+                key={g}
+                onClick={() => { setActiveGenre(g); setPage(1); }}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                  activeGenre === g
+                    ? "bg-primary border-primary text-white"
+                    : "bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
+                }`}
+              >
+                {g}
+              </button>
             ))}
           </div>
+        )}
 
-          {/* Load More */}
-          <div className="flex justify-center mt-10">
-            <button className="flex items-center gap-2 px-8 py-3 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white text-sm font-medium rounded-xl transition-all duration-200 hover:bg-white/5">
-              Load More
-              <ChevronDown className="w-4 h-4" />
-            </button>
+        {/* Results Header */}
+        <div className="px-4 sm:px-8 lg:px-14 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {!debouncedQ && (
+              <>
+                {activeGenre === "All" ? (
+                  <span className="flex items-center gap-1.5 text-white font-bold text-lg">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    {CONTENT_TYPES.find(t => t.key === contentType)?.label}
+                  </span>
+                ) : (
+                  <span className="text-white font-bold text-lg">{activeGenre}</span>
+                )}
+                {pagination?.total !== undefined && (
+                  <span className="text-zinc-500 text-sm">{pagination.total} titles</span>
+                )}
+              </>
+            )}
           </div>
         </div>
+
+        {/* Content Grid */}
+        <div className="px-4 sm:px-8 lg:px-14">
+          {isLoading || isFetching ? (
+            <div className="flex items-center justify-center py-24">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <Search className="w-12 h-12 text-zinc-700 mb-4" />
+              <p className="text-white font-bold text-xl mb-2">
+                {debouncedQ ? `No results for "${debouncedQ}"` : "No content found"}
+              </p>
+              <p className="text-zinc-500 text-sm">
+                {debouncedQ ? "Try different keywords or change the content type" : "Try a different genre or category"}
+              </p>
+              {debouncedQ && (
+                <button
+                  onClick={() => handleSearchChange("")}
+                  className="mt-6 px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`grid gap-3 sm:gap-4 ${
+                contentType === "drama"
+                  ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8"
+                  : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+              }`}
+            >
+              {items.map((item: any) => (
+                <ContentCard key={item.id || item._id} item={item} onClick={() => handlePlay(item)} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-10 px-4">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="w-10 h-10 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let p = i + 1;
+                if (pagination.totalPages > 5) {
+                  const half = Math.floor(5 / 2);
+                  p = Math.max(1, Math.min(page - half + i, pagination.totalPages - 4 + i));
+                }
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${
+                      page === p
+                        ? "bg-primary text-white border border-primary"
+                        : "border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={page >= pagination.totalPages}
+              className="w-10 h-10 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <PublicFooter />
+
+      <SubscriptionPlansModal
+        isOpen={plansModalOpen}
+        onClose={() => setPlansModalOpen(false)}
+      />
+
+      <style>{`
+        * { scrollbar-width: none; }
+        *::-webkit-scrollbar { display: none; }
+        body { background: #030306; }
+      `}</style>
     </div>
   );
 }

@@ -1,10 +1,17 @@
-
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   SkipBack, SkipForward, Settings, X, Smartphone, Monitor,
-  RotateCcw, RotateCw, ChevronRight,
+  RotateCcw, RotateCw, ChevronRight, FastForward, Circle,
 } from "lucide-react";
+import Hls from "hls.js";
+import { useAdPlayback } from "@/hooks/useAdPlayback";
+import AdOverlay from "@/components/AdOverlay";
+
+export interface VideoQuality {
+  label: string;
+  src: string;
+}
 
 interface VideoPlayerProps {
   src: string;
@@ -13,6 +20,12 @@ interface VideoPlayerProps {
   subtitle?: string;
   onClose?: () => void;
   defaultOrientation?: "landscape" | "portrait";
+  contentId?: string;
+  videoQualities?: VideoQuality[];
+  isTvShow?: boolean;
+  nextEpisodeTitle?: string;
+  nextEpisodePoster?: string;
+  onNextEpisode?: () => void;
 }
 
 function formatTime(sec: number): string {
@@ -25,6 +38,7 @@ function formatTime(sec: number): string {
 }
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const PROGRESS_KEY = (id: string) => `xoto-watch-progress-${id}`;
 
 export default function VideoPlayer({
   src,
@@ -33,11 +47,18 @@ export default function VideoPlayer({
   subtitle,
   onClose,
   defaultOrientation = "landscape",
+  contentId,
+  videoQualities,
+  isTvShow,
+  nextEpisodeTitle,
+  nextEpisodePoster,
+  onNextEpisode,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const seekRef = useRef<HTMLInputElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const progressSaveTimer = useRef<ReturnType<typeof setInterval>>();
 
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -48,10 +69,73 @@ export default function VideoPlayer({
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [loading, setLoading] = useState(true);
   const [orientation, setOrientation] = useState<"landscape" | "portrait">(defaultOrientation);
   const [showSkipAnim, setShowSkipAnim] = useState<"left" | "right" | null>(null);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  useEffect(() => {
+    setCurrentSrc(src);
+  }, [src]);
+
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [resumeTime, setResumeTime] = useState(0);
+  const [showNextUp, setShowNextUp] = useState(false);
+
+  const handleAdComplete = useCallback(() => {
+    const v = videoRef.current;
+    if (v) {
+      v.play().catch(() => {});
+      setPlaying(true);
+    }
+  }, []);
+
+  const {
+    phase: adPhase,
+    timer: adTimer,
+    canSkip: adCanSkip,
+    startAd,
+    skipAd,
+    reset: resetAd,
+    isActive: adIsActive,
+  } = useAdPlayback({
+    onAdComplete: handleAdComplete,
+  });
+
+  // Initialize: check resume and start pre-roll
+  useEffect(() => {
+    if (contentId) {
+      try {
+        const saved = localStorage.getItem(PROGRESS_KEY(contentId));
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.currentTime && parsed.duration && parsed.duration > 10) {
+            const timeLeft = parsed.duration - parsed.currentTime;
+            if (timeLeft > 5) {
+              setResumeTime(parsed.currentTime);
+              setShowResumePrompt(true);
+              return; // don't start ad yet
+            }
+          }
+        }
+      } catch {}
+    }
+    // Start pre-roll ad if no resume prompt
+    startAd('preroll');
+  }, [contentId, startAd]);
+
+  const handleResume = (resume: boolean) => {
+    setShowResumePrompt(false);
+    const v = videoRef.current;
+    if (v && resume) {
+      v.currentTime = resumeTime;
+      setCurrentTime(resumeTime);
+      setProgress(duration ? (resumeTime / duration) * 100 : 0);
+    }
+    startAd('preroll');
+  };
 
   const resetHideTimer = useCallback(() => {
     clearTimeout(hideTimer.current);
@@ -63,22 +147,55 @@ export default function VideoPlayer({
 
   useEffect(() => () => clearTimeout(hideTimer.current), []);
 
+  // HLS / MP4 setup
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !currentSrc) return;
+
+    let hls: Hls | null = null;
+    const isM3u8 = currentSrc.includes('.m3u8');
+
+    setLoading(true);
+
+    if (isM3u8 && Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(currentSrc);
+      hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setLoading(false);
+      });
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        console.error('HLS error', data);
+      });
+    } else {
+      v.src = currentSrc;
+      v.load();
+      setLoading(false);
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [currentSrc]);
+
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || adIsActive) return;
     if (v.paused) { v.play(); setPlaying(true); }
     else { v.pause(); setPlaying(false); }
     resetHideTimer();
-  }, [resetHideTimer]);
+  }, [resetHideTimer, adIsActive]);
 
   const skip = useCallback((sec: number) => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || adIsActive) return;
     v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + sec));
     setShowSkipAnim(sec > 0 ? "right" : "left");
     setTimeout(() => setShowSkipAnim(null), 700);
     resetHideTimer();
-  }, [resetHideTimer]);
+  }, [resetHideTimer, adIsActive]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -148,8 +265,61 @@ export default function VideoPlayer({
     setShowSettings(false);
   };
 
+  const changeQuality = (quality: VideoQuality) => {
+    const v = videoRef.current;
+    if (!v) return;
+    const current = v.currentTime;
+    const wasPlaying = !v.paused;
+    setCurrentSrc(quality.src);
+    // after src change, restore time and play state
+    setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = current;
+        if (wasPlaying) videoRef.current.play().catch(() => {});
+      }
+    }, 100);
+    setShowQualityMenu(false);
+    setShowSettings(false);
+  };
+
+  // Save watch progress every 5 seconds
+  useEffect(() => {
+    if (!contentId || adIsActive) return;
+    progressSaveTimer.current = setInterval(() => {
+      const v = videoRef.current;
+      if (v && v.currentTime && v.duration) {
+        localStorage.setItem(PROGRESS_KEY(contentId), JSON.stringify({
+          currentTime: v.currentTime,
+          duration: v.duration,
+          updatedAt: new Date().toISOString(),
+        }));
+      }
+    }, 5000);
+    return () => {
+      if (progressSaveTimer.current) clearInterval(progressSaveTimer.current);
+    };
+  }, [contentId, adIsActive]);
+
+  // Next Up preview in last 30 seconds
+  useEffect(() => {
+    if (!isTvShow || !onNextEpisode) return;
+    if (duration > 0 && duration - currentTime <= 30 && currentTime > 0 && currentTime < duration - 1) {
+      if (!showNextUp) {
+        setShowNextUp(true);
+      }
+    } else if (currentTime < duration - 30 || currentTime >= duration - 1) {
+      if (showNextUp) {
+        setShowNextUp(false);
+      }
+    }
+  }, [currentTime, duration, isTvShow, onNextEpisode, showNextUp]);
+
+  const cancelNextUp = () => setShowNextUp(false);
+
   const aspectRatio = orientation === "landscape" ? "16/9" : "9/16";
   const maxWidth = orientation === "landscape" ? "min(100vw, 960px)" : "min(100vw, 360px)";
+  const allQualities = videoQualities?.length ? videoQualities : [{ label: 'Auto', src }];
+  const currentQualityLabel = allQualities.find(q => q.src === currentSrc)?.label || 'Auto';
 
   return (
     <div
@@ -166,11 +336,12 @@ export default function VideoPlayer({
         {/* Video */}
         <video
           ref={videoRef}
-          src={src}
           poster={poster}
           className="w-full h-full object-contain"
           onLoadedMetadata={() => {
-            setDuration(videoRef.current?.duration || 0);
+            const v = videoRef.current;
+            if (!v) return;
+            setDuration(v.duration || 0);
             setLoading(false);
           }}
           onTimeUpdate={() => {
@@ -181,14 +352,79 @@ export default function VideoPlayer({
           }}
           onWaiting={() => setLoading(true)}
           onCanPlay={() => setLoading(false)}
-          onEnded={() => setPlaying(false)}
+          onEnded={() => {
+            setPlaying(false);
+          }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onClick={togglePlay}
         />
 
+        {/* Ad Overlay */}
+        {adIsActive && (
+          <AdOverlay
+            timer={adTimer}
+            canSkip={adCanSkip}
+            onSkip={skipAd}
+            label="Advertisement"
+          />
+        )}
+
+        {/* Resume Prompt */}
+        {showResumePrompt && (
+          <div className="absolute inset-0 z-[350] bg-black/80 flex items-center justify-center">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
+              <p className="text-white font-bold text-lg mb-1">Resume Watching?</p>
+              <p className="text-zinc-400 text-sm mb-5">
+                You left off at {formatTime(resumeTime)}. Continue from there?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleResume(true)}
+                  className="flex-1 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all"
+                >
+                  Resume
+                </button>
+                <button
+                  onClick={() => handleResume(false)}
+                  className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-sm transition-all"
+                >
+                  Start Over
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Next Up Preview */}
+        {showNextUp && isTvShow && onNextEpisode && (
+          <div className="absolute inset-0 z-[350] bg-black/60 flex items-end justify-end p-6">
+            <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-700 rounded-2xl p-4 max-w-xs w-full shadow-2xl">
+              <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-bold mb-2">Next Up</p>
+              {nextEpisodePoster && (
+                <img src={nextEpisodePoster} alt="" className="w-full rounded-lg mb-3 object-cover" style={{ aspectRatio: '16/9' }} />
+              )}
+              <p className="text-white font-bold text-sm truncate">{nextEpisodeTitle || 'Next Episode'}</p>
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={() => { setShowNextUp(false); onNextEpisode(); }}
+                  className="flex-1 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg text-xs transition-all"
+                >
+                  Play Next
+                </button>
+                <button
+                  onClick={() => setShowNextUp(false)}
+                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-lg text-xs transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Loading Spinner */}
-        {loading && (
+        {loading && !adIsActive && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-14 h-14 rounded-full border-4 border-white/20 border-t-white animate-spin" />
           </div>
@@ -335,7 +571,7 @@ export default function VideoPlayer({
                 {/* Speed */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowSettings(!showSettings)}
+                    onClick={() => { setShowSettings(!showSettings); setShowQualityMenu(false); }}
                     className="text-white/80 hover:text-white transition-colors p-1 text-xs font-bold"
                   >
                     {speed}x
@@ -347,7 +583,7 @@ export default function VideoPlayer({
                         <button
                           key={s}
                           onClick={() => changeSpeed(s)}
-                          className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${speed === s ? "text-red-400 font-bold" : "text-white"}`}
+                          className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${speed === s ? "text-primary font-bold" : "text-white"}`}
                         >
                           {s === 1 ? "Normal" : `${s}x`}
                         </button>
@@ -356,12 +592,49 @@ export default function VideoPlayer({
                   )}
                 </div>
 
+                {/* Quality Selector */}
+                {allQualities.length > 1 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => { setShowQualityMenu(!showQualityMenu); setShowSettings(false); }}
+                      className="text-white/80 hover:text-white transition-colors p-1 text-xs font-bold"
+                    >
+                      {currentQualityLabel}
+                    </button>
+                    {showQualityMenu && (
+                      <div className="absolute bottom-8 right-0 bg-zinc-900/95 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl min-w-[120px]">
+                        <p className="text-zinc-500 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Quality</p>
+                        {allQualities.map((q) => (
+                          <button
+                            key={q.label}
+                            onClick={() => changeQuality(q)}
+                            className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${currentQualityLabel === q.label ? "text-primary font-bold" : "text-white"}`}
+                          >
+                            {q.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Next Episode */}
+                {isTvShow && onNextEpisode && (
+                  <button
+                    onClick={() => { if (!adIsActive) onNextEpisode(); }}
+                    className="text-white/80 hover:text-white transition-colors p-1 hidden sm:block"
+                    title="Next Episode"
+                  >
+                    <FastForward className="w-4 h-4" />
+                  </button>
+                )}
+
                 <button
                   onClick={() => { document.pictureInPictureElement ? document.exitPictureInPicture() : videoRef.current?.requestPictureInPicture?.().catch(() => {}); }}
                   className="text-white/80 hover:text-white transition-colors p-1 hidden sm:block"
                   title="Picture in Picture"
                 >
-                  <Settings className="w-4 h-4" />
+                  <Circle className="w-4 h-4" />
                 </button>
 
                 <button
