@@ -83,12 +83,11 @@ export default function Login() {
 
       <div className="z-10 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-20 bg-muted border border-border rounded-3xl flex items-center justify-center mb-6 shadow-2xl"
-               style={{ width: hasAppName ? 'auto' : '5rem' }}>
+          <div className="h-24 min-w-[6rem] max-w-full bg-muted border border-border rounded-3xl flex items-center justify-center mb-6 shadow-2xl px-6 py-3">
             {getLogoUrl() ? (
-              <img src={getLogoUrl()} alt="Logo" className={hasAppName ? "h-12 w-auto object-contain" : "h-12 w-12 object-cover"} />
+              <img src={getLogoUrl()} alt="Logo" className="h-full w-auto max-w-full object-contain" />
             ) : (
-              <Film className="h-10 w-10 text-primary" />
+              <Film className="h-12 w-12 text-primary" />
             )}
           </div>
           {settings.platformName && (

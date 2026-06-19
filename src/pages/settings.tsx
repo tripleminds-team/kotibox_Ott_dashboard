@@ -675,10 +675,10 @@ export default function Settings() {
       <MediaPicker
         open={mediaPickerType !== null}
         onClose={() => setMediaPickerType(null)}
-        onSelect={(url) => {
-          if (mediaPickerType === "lightLogo") setLightLogoPreview(url);
-          else if (mediaPickerType === "darkLogo") setDarkLogoPreview(url);
-          else if (mediaPickerType === "favicon") setFaviconPreview(url);
+        onSelect={(media) => {
+          if (mediaPickerType === "lightLogo") setLightLogoPreview(media.url);
+          else if (mediaPickerType === "darkLogo") setDarkLogoPreview(media.url);
+          else if (mediaPickerType === "favicon") setFaviconPreview(media.url);
           setMediaPickerType(null);
         }}
         type="image"

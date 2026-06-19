@@ -809,7 +809,7 @@ export default function UserProfilePage() {
       <MediaPicker
         open={mediaPickerOpen}
         onClose={() => setMediaPickerOpen(false)}
-        onSelect={handleAvatarSelect}
+        onSelect={(media) => handleAvatarSelect(media.url)}
         type="image"
       />
 
