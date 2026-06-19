@@ -14,6 +14,7 @@ import {
   useGetSubscriptionPlans,
   useGetUsersList,
 } from "@/lib/api-client";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const inputCls =
   "bg-muted border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-11 rounded-lg text-sm";
@@ -35,6 +36,7 @@ export default function SubscriptionFormPage() {
   const { id } = useParams<{ id?: string }>();
   const isEdit = !!id;
   const { toast } = useToast();
+  const { settings } = useSettings();
 
   const { data: usersData } = useGetUsersList({ limit: 200 });
   const { data: plansData } = useGetSubscriptionPlans({ limit: 100 });

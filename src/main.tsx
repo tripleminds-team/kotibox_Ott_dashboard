@@ -7,7 +7,7 @@ import {
   setBaseUrl,
 } from "./lib/api-client";
 
-setBaseUrl("http://localhost:3000");
+setBaseUrl("http://3.110.55.185:3000");
 
 setAuthTokenGetter(() =>
   localStorage.getItem("accessToken")
