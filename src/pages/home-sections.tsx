@@ -178,7 +178,8 @@ export default function HomeSections() {
     filterKey: 'none',
     filterValue: '',
     sortKey: 'views',
-    sortDir: -1
+    sortDir: -1,
+    contentSelection: 'dynamic',
   });
 
   const [confirmDelete, setConfirmDelete] = useState<any>(null);
@@ -231,7 +232,8 @@ export default function HomeSections() {
       filterKey: 'trending',
       filterValue: 'true',
       sortKey: 'views',
-      sortDir: -1
+      sortDir: -1,
+      contentSelection: 'dynamic'
     });
     setModalOpen(true);
   };
@@ -240,12 +242,11 @@ export default function HomeSections() {
     setEditingSection(section);
     let fKey = 'none';
     let fVal = '';
-    let selected: string[] = [];
+    let selected: string[] = section.manualContentIds || [];
 
     if (section.filter && Object.keys(section.filter).length > 0) {
       if (section.filter._id && section.filter._id.$in) {
-        fKey = 'specific';
-        selected = section.filter._id.$in;
+        if (selected.length === 0) selected = section.filter._id.$in;
       } else {
         fKey = Object.keys(section.filter)[0];
         fVal = section.filter[fKey]?.toString() || 'true';
@@ -273,7 +274,8 @@ export default function HomeSections() {
       filterKey: fKey,
       filterValue: fVal,
       sortKey: sKey,
-      sortDir: sDir
+      sortDir: sDir,
+      contentSelection: section.contentSelection || (selected.length > 0 ? 'manual' : 'dynamic'),
     });
     setModalOpen(true);
   };
@@ -291,11 +293,11 @@ export default function HomeSections() {
       limit: Number(formData.limit) || 10,
       isActive: formData.isActive,
       showViewAll: formData.showViewAll,
+      contentSelection: formData.contentSelection,
+      manualContentIds: selectedItems,
     };
 
-    if (formData.filterKey === 'specific') {
-      payload.filter = { _id: { $in: selectedItems } };
-    } else if (formData.filterKey && formData.filterKey !== 'none') {
+    if (formData.filterKey && formData.filterKey !== 'none' && formData.filterKey !== 'specific') {
       let val: any = formData.filterValue;
       if (val === 'true') val = true;
       if (val === 'false') val = false;
@@ -465,70 +467,84 @@ export default function HomeSections() {
             </div>
 
             <div className="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4 mt-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Data Source (API Query)</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label className="text-xs">Content Selection Mode</Label>
+                <Select value={formData.contentSelection} onValueChange={(v) => setFormData({ ...formData, contentSelection: v })}>
+                  <SelectTrigger className="bg-muted border-border">
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dynamic">Dynamic (Auto-populate via Filters)</SelectItem>
+                    <SelectItem value="manual">Manual (Only hand-picked items)</SelectItem>
+                    <SelectItem value="mixed">Mixed (Filters + Hand-picked items)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.contentSelection !== 'manual' && (
+                <>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mt-4 mb-2">Dynamic Data Source</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label className="text-xs">Filter By (Field)</Label>
+                      <Select value={formData.filterKey} onValueChange={(v) => setFormData({ ...formData, filterKey: v })}>
+                        <SelectTrigger className="bg-muted border-border">
+                          <SelectValue placeholder="No filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No Filter (All content)</SelectItem>
+                          <SelectItem value="trending">Trending Status</SelectItem>
+                          <SelectItem value="featured">Featured Status</SelectItem>
+                          <SelectItem value="isNewContent">New Release</SelectItem>
+                          <SelectItem value="genres">Genre Match</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label className="text-xs">Filter Value</Label>
+                      <Input
+                        placeholder="e.g. true, false, or Action"
+                        value={formData.filterValue}
+                        onChange={(e) => setFormData({ ...formData, filterValue: e.target.value })}
+                        className="bg-muted border-border"
+                        disabled={formData.filterKey === 'none'}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="grid gap-2">
-                  <Label className="text-xs">Filter By (Field)</Label>
-                  <Select value={formData.filterKey} onValueChange={(v) => setFormData({ ...formData, filterKey: v })}>
+                  <Label className="text-xs">Sort By</Label>
+                  <Select value={formData.sortKey} onValueChange={(v) => setFormData({ ...formData, sortKey: v })}>
                     <SelectTrigger className="bg-muted border-border">
-                      <SelectValue placeholder="No filter" />
+                      <SelectValue placeholder="Sort field" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">No Filter (All content)</SelectItem>
-                      <SelectItem value="trending">Trending Status</SelectItem>
-                      <SelectItem value="featured">Featured Status</SelectItem>
-                      <SelectItem value="isNewContent">New Release</SelectItem>
-                      <SelectItem value="genres">Genre Match</SelectItem>
-                      <SelectItem value="specific">Curated (Select specific items)</SelectItem>
+                      <SelectItem value="createdAt">Date Added</SelectItem>
+                      <SelectItem value="views">Total Views</SelectItem>
+                      <SelectItem value="rating">Rating</SelectItem>
+                      <SelectItem value="title">Alphabetical</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs">Filter Value</Label>
-                  <Input
-                    placeholder="e.g. true, false, or Action"
-                    value={formData.filterValue}
-                    onChange={(e) => setFormData({ ...formData, filterValue: e.target.value })}
-                    className="bg-muted border-border"
-                    disabled={formData.filterKey === 'none' || formData.filterKey === 'specific'}
-                  />
+                  <Label className="text-xs">Sort Direction</Label>
+                  <Select value={formData.sortDir.toString()} onValueChange={(v) => setFormData({ ...formData, sortDir: parseInt(v) })}>
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue placeholder="Direction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="-1">Descending (Highest/Newest first)</SelectItem>
+                      <SelectItem value="1">Ascending (Lowest/Oldest first)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              {formData.filterKey !== 'specific' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label className="text-xs">Sort By</Label>
-                    <Select value={formData.sortKey} onValueChange={(v) => setFormData({ ...formData, sortKey: v })}>
-                      <SelectTrigger className="bg-muted border-border">
-                        <SelectValue placeholder="Sort field" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="createdAt">Date Added</SelectItem>
-                        <SelectItem value="views">Total Views</SelectItem>
-                        <SelectItem value="rating">Rating</SelectItem>
-                        <SelectItem value="title">Alphabetical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label className="text-xs">Sort Direction</Label>
-                    <Select value={formData.sortDir.toString()} onValueChange={(v) => setFormData({ ...formData, sortDir: parseInt(v) })}>
-                      <SelectTrigger className="bg-muted border-border">
-                        <SelectValue placeholder="Direction" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="-1">Descending (Highest/Newest first)</SelectItem>
-                        <SelectItem value="1">Ascending (Lowest/Oldest first)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              {formData.filterKey === 'specific' && (
-                <div className="col-span-2 space-y-3 pt-2">
+              {(formData.contentSelection === 'manual' || formData.contentSelection === 'mixed') && (
+                <div className="col-span-2 space-y-3 pt-4 border-t border-white/5 mt-2">
                   <Label className="text-xs">Select Specific Items ({selectedItems.length} selected)</Label>
                   
                   <Select onValueChange={(v) => {

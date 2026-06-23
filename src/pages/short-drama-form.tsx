@@ -17,7 +17,7 @@ import {
   useGetContentById, useCreateContent, useUpdateContent, getImageUrl,
   createEpisode, updateEpisode,
   useGetGenres, useGetLanguagesList, useGetActors, useGetDirectors,
-  useGetCountries, useGetCrews,
+  useGetCountries, useGetCrews, useGetSections,
 } from "@/lib/api-client";
 
 type Tab = "Short Drama" | "Basic Info" | "Quality Info" | "Subtitle Info" | "SEO Settings";
@@ -201,6 +201,7 @@ export default function ShortDramaForm() {
   const { data: directorsData } = useGetDirectors({ limit: 100 });
   const { data: countriesData } = useGetCountries({ limit: 300 });
   const { data: crewsData } = useGetCrews({ limit: 100 });
+  const { data: sectionsData } = useGetSections({ contentType: "drama", activeOnly: true });
 
   const genreOptions: string[] = genresData?.data?.map((g: any) => g.name) || [];
   const languageOptions: string[] = languagesData?.data?.map((l: any) => l.name) || [];
@@ -208,6 +209,7 @@ export default function ShortDramaForm() {
   const directorOptions: string[] = directorsData?.data?.map((d: any) => d.name) || [];
   const countryOptions: string[] = countriesData?.data?.map((c: any) => c.name) || [];
   const crewOptions: string[] = crewsData?.data?.map((c: any) => c.name) || [];
+  const sectionOptions = sectionsData?.data?.map((s: any) => ({ id: s.id || s._id, title: s.title })) || [];
 
   // getContentById returns { content, episodes }
   const content = (existingData as any)?.content;
@@ -224,6 +226,7 @@ export default function ShortDramaForm() {
   const [shortDescription, setShortDescription] = useState("");
   const [planRequired, setPlanRequired] = useState<"free" | "basic" | "standard" | "premium">("free");
   const [status, setStatus] = useState<"published" | "draft" | "processing" | "moderation" | "rejected">("draft");
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
 
   /* ---- Basic Info state ---- */
   const [genres, setGenres] = useState<string[]>([]);
@@ -319,6 +322,7 @@ export default function ShortDramaForm() {
     setLanguages(Array.isArray(content.languages) ? content.languages : []);
     setAudioLanguages(Array.isArray(content.audioLanguages) ? content.audioLanguages : []);
     setSubtitleLanguages(Array.isArray(content.subtitleLanguages) ? content.subtitleLanguages : []);
+    setSelectedSections(Array.isArray(content.sections) ? content.sections : []);
 
     if (Array.isArray(content.cast)) {
       setCastRows(
@@ -341,19 +345,37 @@ export default function ShortDramaForm() {
     }
 
     if (content.hlsUrl) {
-      setVideoUploadType("url");
-      setVideoUrl(content.hlsUrl);
+      const isS3Url = content.hlsUrl.includes("tripleminds-ott-admin.s3");
+      const isHttp = content.hlsUrl.startsWith("http://") || content.hlsUrl.startsWith("https://");
+      if (content.hlsUrl.endsWith(".m3u8") && isHttp) {
+        setVideoUploadType("hls");
+        setVideoUrl(content.hlsUrl);
+      } else if (isHttp && !isS3Url) {
+        setVideoUploadType("url");
+        setVideoUrl(content.hlsUrl);
+      } else {
+        setVideoUploadType("local");
+        let relPath = content.hlsUrl;
+        if (isS3Url) {
+          const match = content.hlsUrl.match(/amazonaws\.com\/(.+)$/);
+          if (match) relPath = match[1];
+        }
+        setVideoFilePath(relPath);
+      }
     }
     if (Array.isArray(content.videoQualities) && content.videoQualities.length > 0) {
       setQualityEnabled(true);
       setQualityRows(
-        content.videoQualities.map((q: any, i: number) => ({
-          id: String(i + 1),
-          type: "url",
-          quality: q.quality || "480p",
-          filePath: "",
-          url: q.url || "",
-        }))
+        content.videoQualities.map((q: any, i: number) => {
+          const isUrl = q.url && (q.url.startsWith("http://") || q.url.startsWith("https://"));
+          return {
+            id: String(i + 1),
+            type: isUrl ? "url" : "local",
+            quality: q.quality || "480p",
+            filePath: isUrl ? "" : (q.url || ""),
+            url: isUrl ? q.url : "",
+          };
+        })
       );
     }
 
@@ -444,6 +466,7 @@ export default function ShortDramaForm() {
         isExclusive,
         maturityContent,
         tags,
+        sections: selectedSections,
         cast: castRows
           .filter((r) => r.name.trim())
           .map((r) => ({ name: r.name.trim(), character: r.character, role: r.role })),
@@ -646,10 +669,12 @@ export default function ShortDramaForm() {
                   <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
                   <div
                     onClick={() => setTrailerPickerOpen(true)}
-                    className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
+                    className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                   >
                     {trailerFilePath ? (
-                      <span className="text-sm text-foreground truncate px-3">{trailerFilePath}</span>
+                      <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
+                        {getImageUrl(trailerFilePath)}
+                      </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">Click to select from media library</span>
                     )}
@@ -732,6 +757,32 @@ export default function ShortDramaForm() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Home Sections */}
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-sm font-medium">Home Categories (Sections)</Label>
+              {sectionOptions.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {sectionOptions.map((sec: any) => (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={() => setSelectedSections(p => p.includes(sec.id) ? p.filter(id => id !== sec.id) : [...p, sec.id])}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        selectedSections.includes(sec.id)
+                          ? 'bg-primary text-primary-foreground border border-primary'
+                          : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-foreground'
+                      }`}
+                    >
+                      {sec.title}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border">No home sections available. Create some in Home Layout Builder.</p>
+              )}
+              <p className="text-xs text-muted-foreground pt-1">Select the categories where this drama should be manually displayed.</p>
             </div>
           </div>
         )}
@@ -1010,9 +1061,11 @@ export default function ShortDramaForm() {
                   <Label className="text-foreground text-sm font-medium">Video</Label>
                   {videoUploadType === "local" ? (
                     <div onClick={() => setVideoPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors">
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
                       {videoFilePath ? (
-                        <span className="text-sm text-foreground truncate px-3">{videoFilePath}</span>
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
+                          {getImageUrl(videoFilePath)}
+                        </span>
                       ) : (
                         <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
@@ -1067,14 +1120,16 @@ export default function ShortDramaForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1 space-y-1.5">
+                      <div className="flex gap-2 items-end min-w-0">
+                        <div className="flex-1 space-y-1.5 min-w-0">
                           <Label className="text-foreground text-sm font-medium">Video File / URL</Label>
                           {row.type === "local" ? (
                             <div onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors">
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
                               {row.filePath ? (
-                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                                <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
+                                  {getImageUrl(row.filePath)}
+                                </span>
                               ) : (
                                 <span className="text-sm text-muted-foreground">Click to select</span>
                               )}

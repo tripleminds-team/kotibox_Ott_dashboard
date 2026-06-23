@@ -16,7 +16,7 @@ import MediaPicker from "@/components/MediaPicker";
 import {
   useGetDirectors, useGetActors, useCreateMovie, useUpdateMovie,
   useGetGenres, useGetLanguagesList, useGetMovieById, useGetCategoriesList,
-  getImageUrl,
+  useGetSections, getImageUrl,
 } from "@/lib/api-client";
 
 type Tab = "Movie Details" | "Basic Info" | "Quality Info" | "Subtitle Info" | "SEO Settings";
@@ -95,6 +95,8 @@ export default function MovieForm() {
   const languagesList = (languagesData as any)?.data || [];
   const { data: categoriesData } = useGetCategoriesList({ limit: 100 });
   const categoriesList = (categoriesData as any)?.data || [];
+  const { data: sectionsData } = useGetSections({ contentType: "movie", activeOnly: true });
+  const sectionOptions = sectionsData?.data?.map((s: any) => ({ id: s.id || s._id, title: s.title })) || [];
 
   const createMovieMutation = useCreateMovie();
   const updateMovieMutation = useUpdateMovie();
@@ -115,6 +117,7 @@ export default function MovieForm() {
   const [shortDescription, setShortDescription] = useState("");
   const [planRequired, setPlanRequired] = useState<"free" | "basic" | "standard" | "premium">("free");
   const [status, setStatus] = useState<"published" | "draft" | "processing" | "moderation" | "rejected">("draft");
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
 
   /* ---- Basic Info ---- */
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -182,12 +185,12 @@ export default function MovieForm() {
       setBanner({ filePath: movie.bannerImage, preview: getImageUrl(movie.bannerImage) });
 
     if (movie.trailerUrl) {
-      if (movie.trailerUrl.startsWith("/uploads/") || movie.trailerUrl.startsWith("/images/")) {
-        setTrailerUrlType("local");
-        setTrailerFilePath(movie.trailerUrl);
-      } else {
+      if (movie.trailerUrl.startsWith("http://") || movie.trailerUrl.startsWith("https://")) {
         setTrailerUrlType("url");
         setTrailerUrl(movie.trailerUrl);
+      } else {
+        setTrailerUrlType("local");
+        setTrailerFilePath(movie.trailerUrl);
       }
     }
 
@@ -208,6 +211,7 @@ export default function MovieForm() {
     setIsNewContent(movie.isNewContent !== false);
     setIsExclusive(!!movie.isExclusive);
     setMaturityContent(Array.isArray(movie.maturityContent) ? movie.maturityContent : []);
+    setTags(Array.isArray(movie.tags) ? movie.tags : []);
 
     if (Array.isArray(movie.genres))
       setSelectedGenres(movie.genres.map(getId).filter(Boolean));
@@ -219,6 +223,8 @@ export default function MovieForm() {
       setSelectedAudioLanguages(movie.audioLanguages.map(getId).filter(Boolean));
     if (Array.isArray(movie.subtitleLanguages))
       setSelectedSubtitleLanguages(movie.subtitleLanguages.map(getId).filter(Boolean));
+    if (Array.isArray(movie.sections))
+      setSelectedSections(movie.sections.map(getId).filter(Boolean));
 
     if (Array.isArray(movie.cast)) {
       setCastItems(
@@ -241,24 +247,37 @@ export default function MovieForm() {
     }
 
     if (movie.hlsUrl) {
-      if (movie.hlsUrl.startsWith("/uploads/") || movie.hlsUrl.startsWith("/images/")) {
-        setVideoUploadType("local");
-        setVideoFilePath(movie.hlsUrl);
-      } else {
+      const isS3Url = movie.hlsUrl.includes("tripleminds-ott-admin.s3");
+      const isHttp = movie.hlsUrl.startsWith("http://") || movie.hlsUrl.startsWith("https://");
+      if (movie.hlsUrl.endsWith(".m3u8") && isHttp) {
+        setVideoUploadType("hls");
+        setVideoUrl(movie.hlsUrl);
+      } else if (isHttp && !isS3Url) {
         setVideoUploadType("url");
         setVideoUrl(movie.hlsUrl);
+      } else {
+        setVideoUploadType("local");
+        let relPath = movie.hlsUrl;
+        if (isS3Url) {
+          const match = movie.hlsUrl.match(/amazonaws\.com\/(.+)$/);
+          if (match) relPath = match[1];
+        }
+        setVideoFilePath(relPath);
       }
     }
     if (Array.isArray(movie.videoQualities) && movie.videoQualities.length > 0) {
       setQualityEnabled(true);
       setQualityRows(
-        movie.videoQualities.map((q: any, i: number) => ({
-          id: String(i + 1),
-          type: "url",
-          quality: q.quality || "480p",
-          filePath: "",
-          url: q.url || "",
-        }))
+        movie.videoQualities.map((q: any, i: number) => {
+          const isUrl = q.url && (q.url.startsWith("http://") || q.url.startsWith("https://"));
+          return {
+            id: String(i + 1),
+            type: isUrl ? "url" : "local",
+            quality: q.quality || "480p",
+            filePath: isUrl ? "" : (q.url || ""),
+            url: isUrl ? q.url : "",
+          };
+        })
       );
     }
 
@@ -355,6 +374,7 @@ export default function MovieForm() {
         isExclusive,
         maturityContent,
         tags,
+        sections: selectedSections,
         cast: castItems
           .filter((c) => c.actorId)
           .map((c) => ({ actor: c.actorId, character: c.character, role: c.role })),
@@ -545,10 +565,12 @@ export default function MovieForm() {
                     <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
                     <div
                       onClick={() => setTrailerPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                     >
                       {trailerFilePath ? (
-                        <span className="text-sm text-foreground truncate px-3">{trailerFilePath}</span>
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
+                          {getImageUrl(trailerFilePath)}
+                        </span>
                       ) : (
                         <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
@@ -633,6 +655,32 @@ export default function MovieForm() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Home Sections */}
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-sm font-medium">Home Categories (Sections)</Label>
+              {sectionOptions.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {sectionOptions.map((sec: any) => (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={() => setSelectedSections(p => p.includes(sec.id) ? p.filter(id => id !== sec.id) : [...p, sec.id])}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        selectedSections.includes(sec.id)
+                          ? 'bg-primary text-primary-foreground border border-primary'
+                          : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-foreground'
+                      }`}
+                    >
+                      {sec.title}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border">No home sections available. Create some in Home Layout Builder.</p>
+              )}
+              <p className="text-xs text-muted-foreground pt-1">Select the categories where this movie should be manually displayed.</p>
             </div>
           </div>
         )}
@@ -970,10 +1018,12 @@ export default function MovieForm() {
                   {videoUploadType === "local" ? (
                     <div
                       onClick={() => setVideoPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                     >
                       {videoFilePath ? (
-                        <span className="text-sm text-foreground truncate px-3">{videoFilePath}</span>
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
+                          {getImageUrl(videoFilePath)}
+                        </span>
                       ) : (
                         <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
@@ -1030,16 +1080,18 @@ export default function MovieForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1 space-y-1.5">
+                      <div className="flex gap-2 items-end min-w-0">
+                        <div className="flex-1 space-y-1.5 min-w-0">
                           <Label className="text-foreground text-sm font-medium">Video File / URL</Label>
                           {row.type === "local" ? (
                             <div
                               onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                             >
                               {row.filePath ? (
-                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                                <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
+                                  {getImageUrl(row.filePath)}
+                                </span>
                               ) : (
                                 <span className="text-sm text-muted-foreground">Click to select</span>
                               )}
@@ -1119,15 +1171,17 @@ export default function MovieForm() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="flex gap-3 items-end">
-                      <div className="flex-1 space-y-1.5">
+                    <div className="flex gap-3 items-end min-w-0">
+                      <div className="flex-1 space-y-1.5 min-w-0">
                         <Label className="text-foreground text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
                         <div
                           onClick={() => { setCurrentSubtitleRowId(row.id); setSubtitlePickerOpen(true); }}
-                          className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
+                          className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                         >
                           {row.filePath ? (
-                            <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                            <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
+                              {getImageUrl(row.filePath)}
+                            </span>
                           ) : (
                             <span className="text-sm text-muted-foreground">Click to select subtitle file</span>
                           )}

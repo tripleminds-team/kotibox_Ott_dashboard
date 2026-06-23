@@ -220,19 +220,37 @@ export default function TvShowForm() {
     }
 
     if (content.hlsUrl) {
-      setVideoUploadType("hls");
-      setVideoUrl(content.hlsUrl);
+      const isS3Url = content.hlsUrl.includes("tripleminds-ott-admin.s3");
+      const isHttp = content.hlsUrl.startsWith("http://") || content.hlsUrl.startsWith("https://");
+      if (content.hlsUrl.endsWith(".m3u8") && isHttp) {
+        setVideoUploadType("hls");
+        setVideoUrl(content.hlsUrl);
+      } else if (isHttp && !isS3Url) {
+        setVideoUploadType("url");
+        setVideoUrl(content.hlsUrl);
+      } else {
+        setVideoUploadType("local");
+        let relPath = content.hlsUrl;
+        if (isS3Url) {
+          const match = content.hlsUrl.match(/amazonaws\.com\/(.+)$/);
+          if (match) relPath = match[1];
+        }
+        setVideoFilePath(relPath);
+      }
     }
     if (Array.isArray(content.videoQualities) && content.videoQualities.length > 0) {
       setQualityEnabled(true);
       setQualityRows(
-        content.videoQualities.map((q: any, i: number) => ({
-          id: String(i + 1),
-          type: "url",
-          quality: q.quality || "480p",
-          filePath: "",
-          url: q.url || "",
-        }))
+        content.videoQualities.map((q: any, i: number) => {
+          const isUrl = q.url && (q.url.startsWith("http://") || q.url.startsWith("https://"));
+          return {
+            id: String(i + 1),
+            type: isUrl ? "url" : "local",
+            quality: q.quality || "480p",
+            filePath: isUrl ? "" : (q.url || ""),
+            url: isUrl ? q.url : "",
+          };
+        })
       );
     }
 
@@ -512,16 +530,18 @@ export default function TvShowForm() {
               {trailerUrlType === "local" ? (
                 <>
                   <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
-                  <div
-                    onClick={() => setTrailerPickerOpen(true)}
-                    className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors"
-                  >
-                    {trailerFilePath ? (
-                      <span className="text-sm text-foreground truncate px-3">{trailerFilePath}</span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Click to select from media library</span>
-                    )}
-                  </div>
+                    <div
+                      onClick={() => setTrailerPickerOpen(true)}
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
+                    >
+                      {trailerFilePath ? (
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
+                          {getImageUrl(trailerFilePath)}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
+                      )}
+                    </div>
                 </>
               ) : (
                 <>
@@ -874,9 +894,11 @@ export default function TvShowForm() {
                   <Label className="text-foreground text-sm font-medium">Video</Label>
                   {videoUploadType === "local" ? (
                     <div onClick={() => setVideoPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors">
+                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
                       {videoFilePath ? (
-                        <span className="text-sm text-foreground truncate px-3">{videoFilePath}</span>
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
+                          {getImageUrl(videoFilePath)}
+                        </span>
                       ) : (
                         <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
@@ -931,14 +953,16 @@ export default function TvShowForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1 space-y-1.5">
+                      <div className="flex gap-2 items-end min-w-0">
+                        <div className="flex-1 space-y-1.5 min-w-0">
                           <Label className="text-foreground text-sm font-medium">Video File / URL</Label>
                           {row.type === "local" ? (
                             <div onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors">
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
                               {row.filePath ? (
-                                <span className="text-sm text-foreground truncate px-3">{row.filePath}</span>
+                                <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
+                                  {getImageUrl(row.filePath)}
+                                </span>
                               ) : (
                                 <span className="text-sm text-muted-foreground">Click to select</span>
                               )}

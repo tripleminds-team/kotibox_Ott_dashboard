@@ -118,12 +118,27 @@ export default function InfluencersPage() {
 
   const handleEditInfluencer = (influencer: Influencer) => {
     setSelectedInfluencer(influencer);
+
+    // Safely merge module permissions to ensure all keys exist
+    const mergedPermissions = { ...defaultModulePermissions };
+    if (influencer.modulePermissions) {
+      Object.keys(defaultModulePermissions).forEach((key) => {
+        const moduleKey = key as keyof typeof defaultModulePermissions;
+        if (influencer.modulePermissions[moduleKey as keyof typeof influencer.modulePermissions]) {
+          mergedPermissions[moduleKey] = {
+            ...defaultModulePermissions[moduleKey],
+            ...(influencer.modulePermissions[moduleKey as keyof typeof influencer.modulePermissions] as any)
+          } as any;
+        }
+      });
+    }
+
     setEditForm({
       name: influencer.name,
       email: influencer.email,
       phone: influencer.phone || "",
       role: influencer.role,
-      modulePermissions: influencer.modulePermissions || { ...defaultModulePermissions },
+      modulePermissions: mergedPermissions,
     });
     setIsEditModalOpen(true);
   };

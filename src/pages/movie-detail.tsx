@@ -669,9 +669,9 @@ export default function MovieDetailPage() {
               id={item.id}
               title={item.title}
               src={
-                currentVideoSrc ??
-                item.hlsUrl ??
-                item.videoUrl ??
+                (currentVideoSrc ? getImageUrl(currentVideoSrc) : null) ??
+                (item.hlsUrl ? getImageUrl(item.hlsUrl) : null) ??
+                (item.videoUrl ? getImageUrl(item.videoUrl) : null) ??
                 "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
               }
               poster={item.backdrop || item.poster}
