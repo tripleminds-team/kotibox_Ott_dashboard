@@ -226,10 +226,16 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                           }`}
                         >
                           {media.fileType?.startsWith("video") ? (
-                            <video
-                              src={getImageUrl(media.filePath || media.url)}
-                              className="w-full h-full object-cover bg-zinc-800"
-                            />
+                            <div className="w-full h-full relative">
+                              <video
+                                src={getImageUrl(media.filePath || media.url) + "#t=0.5"}
+                                preload="metadata"
+                                className="w-full h-full object-cover bg-zinc-800"
+                              />
+                              <div className="absolute top-1 right-1 bg-black/60 rounded p-0.5">
+                                <Video className="h-3 w-3 text-white" />
+                              </div>
+                            </div>
                           ) : (
                             <img
                               src={getImageUrl(media.filePath || media.url)}
@@ -245,9 +251,9 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                               </div>
                             </div>
                           )}
-                          {/* Filename tooltip on hover */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-1 opacity-0 hover:opacity-100 transition-opacity">
-                            <p className="text-[9px] text-white truncate font-medium">{media.name}</p>
+                          {/* Filename banner */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/65 px-1.5 py-0.5">
+                            <p className="text-[9px] text-white truncate font-medium text-center">{media.name}</p>
                           </div>
                         </div>
                       );
@@ -261,7 +267,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                 <div className="shrink-0 p-3 bg-muted/50 border border-border rounded-lg flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
                     {selectedMedia.fileType?.startsWith("video") ? (
-                      <video src={getImageUrl(selectedMedia.filePath || selectedMedia.url)} className="w-full h-full object-cover" />
+                      <video src={getImageUrl(selectedMedia.filePath || selectedMedia.url) + "#t=0.5"} preload="metadata" className="w-full h-full object-cover" />
                     ) : (
                       <img src={getImageUrl(selectedMedia.filePath || selectedMedia.url)} alt={selectedMedia.name} className="w-full h-full object-cover" />
                     )}

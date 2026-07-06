@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Edit2, Trash2, Globe } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Globe, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGetLanguagesList, useCreateLanguage, useUpdateLanguage, useDeleteLanguage, getImageUrl } from "../lib/api-client";
+import MediaPicker from "@/components/MediaPicker";
 
 export default function LanguagesList() {
   const { t } = useLanguage();
@@ -21,9 +22,8 @@ export default function LanguagesList() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState<any>(null);
   const [formData, setFormData] = useState({ name: "", code: "", image: "" });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -41,14 +41,12 @@ export default function LanguagesList() {
   const openCreate = () => {
     setEditingLanguage(null);
     setFormData({ name: "", code: "", image: "" });
-    setSelectedFile(null);
     setDialogOpen(true);
   };
 
   const openEdit = (lang: any) => {
     setEditingLanguage(lang);
     setFormData({ name: lang.name, code: lang.code, image: lang.image || "" });
-    setSelectedFile(null);
     setDialogOpen(true);
   };
 
@@ -56,14 +54,13 @@ export default function LanguagesList() {
     setDialogOpen(false);
     setEditingLanguage(null);
     setFormData({ name: "", code: "", image: "" });
-    setSelectedFile(null);
   };
 
   const handleSave = () => {
     const fd = new FormData();
     fd.append("name", formData.name);
     fd.append("code", formData.code);
-    if (selectedFile) fd.append("image", selectedFile);
+    if (formData.image) fd.append("image", formData.image);
 
     if (editingLanguage) {
       updateMutation.mutate(
@@ -78,7 +75,7 @@ export default function LanguagesList() {
         }
       );
     } else {
-      createMutation.mutate(fd, {
+      createMutation.mutate({ data: fd }, {
         onSuccess: () => {
           toast({ title: "Language created successfully" });
           closeDialog();
@@ -241,23 +238,33 @@ export default function LanguagesList() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-zinc-400 text-sm">Image</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={(e) => e.target.files?.[0] && setSelectedFile(e.target.files[0])}
-                className="bg-muted border-border text-foreground file:text-zinc-400 file:bg-transparent file:border-0 h-11 cursor-pointer"
-              />
-              {selectedFile && (
-                <p className="text-zinc-500 text-xs">Selected: {selectedFile.name}</p>
-              )}
-              {!selectedFile && formData.image && (
-                <img
-                  src={getImageUrl(formData.image)}
-                  alt="Current"
-                  className="h-16 w-16 object-contain rounded-lg border border-border bg-gray-800"
-                />
-              )}
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMediaPickerOpen(true)}
+                  className="bg-muted border-border text-foreground hover:bg-muted h-11 px-4 rounded-lg font-semibold text-sm gap-2"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  Select from Media Library
+                </Button>
+                {formData.image && (
+                  <div className="relative h-11 w-11 rounded-lg overflow-hidden border border-border bg-gray-800 shrink-0">
+                    <img
+                      src={getImageUrl(formData.image)}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image: "" })}
+                      className="absolute top-0.5 right-0.5 bg-black/60 hover:bg-black/80 text-white rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter className="gap-2">
@@ -298,6 +305,18 @@ export default function LanguagesList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Media Picker */}
+      <MediaPicker
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(media) => {
+          setFormData({ ...formData, image: media.filePath });
+          setMediaPickerOpen(false);
+        }}
+        source="language"
+        accept="image/*"
+      />
     </div>
   );
 }

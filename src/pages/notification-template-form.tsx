@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useGetNotificationTemplateById, useCreateNotificationTemplate, useUpdateNotificationTemplate } from "../lib/api-client";
+import { useSettings } from "@/contexts/SettingsContext";
 
 // ── Variable replacement (same logic as backend) ──────────────────────────
 const replacePreviewVariables = (template: string, vars: Record<string, string>): string =>
@@ -26,7 +27,7 @@ const replacePreviewVariables = (template: string, vars: Record<string, string>)
     return vars[k] ?? vars[key.trim()] ?? `<span style="background:#fef3c7;padding:0 4px;border-radius:3px;color:#92400e;">[[ ${key.trim()} ]]</span>`;
   });
 
-const wrapPreviewEmail = (body: string, platformName = 'StreamVault'): string => {
+const wrapPreviewEmail = (body: string, platformName = 'Triple Minds'): string => {
   if (/^<!DOCTYPE|^<html/i.test(body.trim())) return body;
   const inner = /<[a-z][\s\S]*>/i.test(body) ? body : body.replace(/\n/g, '<br>');
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -51,10 +52,10 @@ const EMAIL_PRESETS: Preset[] = [
     type: "Registration",
     notifSubject: "Welcome! Your account is ready",
     notifTemplate: "Hello [[ user_name ]], welcome! Your account has been created successfully.",
-    emailSubject: "Welcome to StreamVault 🎬",
+    emailSubject: "Welcome to [[ platform_name ]] 🎬",
     emailTemplate:
       `<p style="margin:0 0 16px;">Hello <strong>[[ user_name ]]</strong>,</p>` +
-      `<p style="margin:0 0 16px;">Welcome to <strong>StreamVault</strong>! Your account has been created successfully.</p>` +
+      `<p style="margin:0 0 16px;">Welcome to <strong>[[ platform_name ]]</strong>! Your account has been created successfully.</p>` +
       `<p style="margin:0 0 24px;color:#6b7280;">You can now sign in and start exploring thousands of movies, TV shows, and more.</p>` +
       `<div style="text-align:center;margin:28px 0;"><a href="[[ site_url ]]" style="background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:#fff;padding:13px 36px;text-decoration:none;border-radius:6px;font-weight:700;font-size:15px;display:inline-block;">Start Watching</a></div>` +
       `<p style="color:#9ca3af;font-size:12px;margin-top:24px;">If you didn't create this account, please ignore this email.</p>`,
@@ -238,7 +239,7 @@ const SAMPLE_VARS: Record<string, string> = {
 
 // ── Params ─────────────────────────────────────────────────────────────────
 const NOTIFICATION_PARAMS = [
-  "ID", "User Name", "Description / Note", "Your Name", "Your Position",
+  "ID", "User Name", "Platform Name", "Description / Note", "Your Name", "Your Position",
   "User' ID", "User Password", "Site URL", "Episode Name", "Movie Name",
   "Season Name", "TV Show Name", "End Date", "Start Date", "Plan Name",
   "Content Type", "OTP Code", "Payment Method", "Price", "Discount",
@@ -309,6 +310,7 @@ export default function NotificationTemplateFormPage() {
   const { data: existingData, isLoading: isLoadingExisting } = useGetNotificationTemplateById(params.id);
   const createMutation = useCreateNotificationTemplate();
   const updateMutation = useUpdateNotificationTemplate();
+  const { settings } = useSettings();
 
   const existing = existingData?.data;
   const isEdit = !!params.id;
@@ -383,16 +385,21 @@ export default function NotificationTemplateFormPage() {
   };
 
   // Build preview HTML
+  const sampleVars = {
+    ...SAMPLE_VARS,
+    platform_name: settings?.platformName || "StreamVault",
+  };
+
   const previewHtml =
     previewTarget === "email"
-      ? wrapPreviewEmail(replacePreviewVariables(form.emailTemplate || "<p>No email template set.</p>", SAMPLE_VARS), "StreamVault")
+      ? wrapPreviewEmail(replacePreviewVariables(form.emailTemplate || "<p>No email template set.</p>", sampleVars), settings?.platformName || "Triple Minds")
       : `<div style="font-family:Arial,sans-serif;max-width:500px;margin:30px auto;background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;">
           <div style="background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);padding:16px 20px;">
             <p style="color:#fff;font-size:12px;margin:0;opacity:0.8;text-transform:uppercase;letter-spacing:1px;">In-App Notification</p>
           </div>
           <div style="padding:20px;">
-            <p style="margin:0 0 8px;color:#111827;font-weight:700;font-size:16px;">${replacePreviewVariables(form.notifSubject || "Notification Subject", SAMPLE_VARS)}</p>
-            <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.6;">${replacePreviewVariables(form.notifTemplate || "Notification body...", SAMPLE_VARS)}</p>
+            <p style="margin:0 0 8px;color:#111827;font-weight:700;font-size:16px;">${replacePreviewVariables(form.notifSubject || "Notification Subject", sampleVars)}</p>
+            <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.6;">${replacePreviewVariables(form.notifTemplate || "Notification body...", sampleVars)}</p>
           </div>
         </div>`;
 
@@ -558,7 +565,7 @@ export default function NotificationTemplateFormPage() {
             <div className="space-y-2">
               <Label className={labelCls}>Subject</Label>
               <Input value={form.notifSubject} onChange={(e) => set("notifSubject", e.target.value)}
-                placeholder="e.g. Welcome to StreamVault" className={inputCls} />
+                placeholder={`e.g. Welcome to ${settings?.platformName || "Triple Minds"}`} className={inputCls} />
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Message Body</Label>
@@ -575,7 +582,7 @@ export default function NotificationTemplateFormPage() {
             <div className="space-y-2">
               <Label className={labelCls}>Subject</Label>
               <Input value={form.emailSubject} onChange={(e) => set("emailSubject", e.target.value)}
-                placeholder="e.g. Welcome to StreamVault 🎬" className={inputCls} />
+                placeholder={`e.g. Welcome to ${settings?.platformName || "Triple Minds"} 🎬`} className={inputCls} />
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Body (HTML)</Label>

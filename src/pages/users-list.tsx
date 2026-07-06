@@ -30,7 +30,7 @@ export default function UsersList() {
   const { data, isLoading } = useGetUsersList(params);
 
   const handleBan = (userId: string) => {
-    banMutation.mutate(userId, {
+    banMutation.mutate({ id: userId, reason: "Admin action" }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["users-list"] });
         toast({ title: "User suspended successfully" });
@@ -146,10 +146,10 @@ export default function UsersList() {
                         user.subscriptionPlan === "premium"
                           ? "bg-primary/15 text-primary"
                           : user.subscriptionPlan === "standard"
-                          ? "bg-primary/15 text-blue-400"
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                           : user.subscriptionPlan === "basic"
-                          ? "bg-muted/50 text-zinc-300"
-                          : "bg-muted text-zinc-400"
+                          ? "bg-muted text-zinc-600 dark:text-zinc-300"
+                          : "bg-muted text-zinc-600 dark:text-zinc-400"
                       }`}
                     >
                       {user.subscriptionPlan || "Free"}

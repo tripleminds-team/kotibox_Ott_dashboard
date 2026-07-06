@@ -57,7 +57,17 @@ export default function ShortDramaPlayer({
   onNextEpisode,
   onPrevEpisode,
 }: ShortDramaPlayerProps) {
-  const firstFreeIndex = episodes.findIndex((e) => !e.isLocked);
+  const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) setUser(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const isSubscribed = user?.subscriptionStatus === "active" && user?.subscriptionPlan !== "free";
+
+  const firstFreeIndex = episodes.findIndex((e) => !e.isLocked || isSubscribed);
   const startIndex = firstFreeIndex >= 0 ? firstFreeIndex : 0;
   const [currentEpIndex, setCurrentEpIndex] = useState(startIndex);
   const currentEp = episodes[currentEpIndex];
@@ -78,7 +88,7 @@ export default function ShortDramaPlayer({
   const doSwitchEpisode = useCallback((index: number) => {
     if (index < 0 || index >= episodes.length) return;
     const ep = episodes[index];
-    if (ep.isLocked) {
+    if (ep.isLocked && !isSubscribed) {
       setLockedEpNum(ep.number);
       setShowLockModal(true);
       return;
@@ -120,14 +130,19 @@ export default function ShortDramaPlayer({
   // Load episode video
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !currentEp?.videoUrl) return;
-
-    let hls: Hls | null = null;
-    const isM3u8 = currentEp.videoUrl.includes('.m3u8');
+    if (!v) return;
 
     setEpisodeProgress(0);
     setEpDuration(0);
     setPlaying(false);
+
+    if (!currentEp?.videoUrl || (currentEp.isLocked && !isSubscribed)) {
+      v.src = "";
+      return;
+    }
+
+    let hls: Hls | null = null;
+    const isM3u8 = currentEp.videoUrl.includes('.m3u8');
 
     if (isM3u8 && Hls.isSupported()) {
       hls = new Hls();
@@ -169,7 +184,7 @@ export default function ShortDramaPlayer({
   };
 
   const handleEpClick = (ep: EpisodeProp) => {
-    if (ep.isLocked) {
+    if (ep.isLocked && !isSubscribed) {
       setLockedEpNum(ep.number);
       setShowLockModal(true);
       return;
@@ -188,7 +203,7 @@ export default function ShortDramaPlayer({
     if (currentEpIndex < episodes.length - 1) {
       const nextIdx = currentEpIndex + 1;
       const nextEp = episodes[nextIdx];
-      if (nextEp.isLocked) {
+      if (nextEp.isLocked && !isSubscribed) {
         setLockedEpNum(nextEp.number);
         setShowLockModal(true);
         return;
@@ -204,7 +219,7 @@ export default function ShortDramaPlayer({
     if (currentEpIndex > 0) {
       const prevIdx = currentEpIndex - 1;
       const prevEp = episodes[prevIdx];
-      if (prevEp.isLocked) {
+      if (prevEp.isLocked && !isSubscribed) {
         setLockedEpNum(prevEp.number);
         setShowLockModal(true);
         return;
@@ -474,7 +489,7 @@ export default function ShortDramaPlayer({
                     className={`relative flex items-center justify-center rounded-lg font-bold transition-all border select-none ${
                       active
                         ? "bg-zinc-600 border-zinc-400 text-white shadow-md"
-                        : ep.isLocked
+                        : ep.isLocked && !isSubscribed
                           ? "bg-zinc-900 border-zinc-800 text-zinc-600 hover:border-zinc-700 cursor-pointer"
                           : "bg-zinc-800/80 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-500 cursor-pointer"
                     }`}
@@ -487,7 +502,7 @@ export default function ShortDramaPlayer({
                     )}
 
                     {/* Lock badge */}
-                    {ep.isLocked && (
+                    {ep.isLocked && !isSubscribed && (
                       <span className="absolute top-0.5 right-0.5 w-[14px] h-[14px] bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                         <Lock className="w-[7px] h-[7px] text-white" />
                       </span>

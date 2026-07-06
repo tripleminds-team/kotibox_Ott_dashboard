@@ -28,6 +28,7 @@ interface Influencer {
     mediaLibrary: { canView: boolean; canUpload: boolean; canDelete: boolean };
     banners: { canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean };
     promotions: { canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean };
+    reviews: { canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean };
   };
   createdAt: string;
   createdBy?: { name: string; email: string };
@@ -55,6 +56,7 @@ const defaultModulePermissions = {
   notifications: { canView: true, canCreate: false, canEdit: false, canDelete: false },
   notificationTemplates: { canView: true, canCreate: false, canEdit: false, canDelete: false },
   settings: { canView: true, canCreate: false, canEdit: false, canDelete: false },
+  reviews: { canView: true, canCreate: false, canEdit: false, canDelete: false },
 };
 
 export default function InfluencersPage() {
@@ -151,11 +153,11 @@ export default function InfluencersPage() {
         id: selectedInfluencer.id,
         data: editForm
       });
-      toast({ title: "Influencer updated successfully" });
+      toast({ title: "User updated successfully" });
       setIsEditModalOpen(false);
       await refetch();
     } catch (error: any) {
-      toast({ title: error?.message || "Failed to update influencer", variant: "destructive" });
+      toast({ title: error?.message || "Failed to update user", variant: "destructive" });
     }
   };
 
@@ -193,10 +195,10 @@ export default function InfluencersPage() {
     if (confirm(`Are you sure you want to delete ${influencer.name}?`)) {
       try {
         await deleteMutation.mutateAsync(influencer.id);
-        toast({ title: "Influencer deleted successfully" });
+        toast({ title: "User deleted successfully" });
         await refetch();
       } catch (error: any) {
-        toast({ title: error?.message || "Failed to delete influencer", variant: "destructive" });
+        toast({ title: error?.message || "Failed to delete user", variant: "destructive" });
       }
     }
   };
@@ -223,7 +225,7 @@ export default function InfluencersPage() {
       } else {
         const emailSent = result?.data?.emailSent;
         toast({
-          title: "Influencer Created Successfully",
+          title: "User Created Successfully",
           description: emailSent
             ? "Credentials sent via email"
             : "Email not sent — credentials shown below. Go to Settings → Mail to configure email.",
@@ -233,7 +235,7 @@ export default function InfluencersPage() {
       await refetch();
     } catch (error: any) {
       toast({
-        title: "Failed to Create Influencer",
+        title: "Failed to Create User",
         description: error?.message || "An error occurred",
         variant: "destructive"
       });
@@ -280,7 +282,7 @@ export default function InfluencersPage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Influencers</h1>
+              <h1 className="text-2xl font-bold text-foreground">Role-Based Access</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage team members and their permissions</p>
             </div>
             <Button
@@ -288,7 +290,7 @@ export default function InfluencersPage() {
               className="bg-primary hover:bg-primary/90 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Influencer
+              Add User
             </Button>
           </div>
         </div>
@@ -339,7 +341,7 @@ export default function InfluencersPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Influencer
+                    User
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Role
@@ -365,7 +367,7 @@ export default function InfluencersPage() {
                 ) : influencers.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                      No influencers found
+                      No users found
                     </td>
                   </tr>
                 ) : (
@@ -464,7 +466,7 @@ export default function InfluencersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border">
-              <h2 className="text-xl font-semibold text-foreground">Add New Influencer</h2>
+              <h2 className="text-xl font-semibold text-foreground">Add New User</h2>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -680,7 +682,7 @@ export default function InfluencersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border">
-              <h2 className="text-xl font-semibold text-foreground">Edit Influencer</h2>
+              <h2 className="text-xl font-semibold text-foreground">Edit User</h2>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">

@@ -41,6 +41,10 @@ export interface AppSettings {
   socialLogin: boolean;
   twoFactorAuth: boolean;
   emailVerification: boolean;
+  googleClientId: string;
+  appleClientId: string;
+  appleTeamId: string;
+  appleKeyId: string;
   primaryColor: string;
   colorTheme: string;
   navbarStyle: 'glass' | 'sticky' | 'transparent' | 'default';
@@ -98,6 +102,21 @@ export interface AppSettings {
   seoImage: string;
   googleVerification: string;
   canonicalUrl: string;
+  // Ad Networks
+  adNetworkEnabled: boolean;
+  adMobPublisherId: string;
+  adMobAppIdAndroid: string;
+  adMobAppIdIos: string;
+  adMobBannerAndroid: string;
+  adMobBannerIos: string;
+  adMobInterstitialAndroid: string;
+  adMobInterstitialIos: string;
+  vastPrerollUrl: string;
+  vastMidrollUrl: string;
+  // Payments
+  razorpayEnabled: boolean;
+  razorpayKeyId: string;
+  razorpayKeySecret: string;
 }
 
 const DEFAULT: AppSettings = {
@@ -106,11 +125,11 @@ const DEFAULT: AppSettings = {
   lightLogoUrl: "https://i.imgur.com/45cG5Kc.png",
   faviconUrl: "",
   logoStyle: "fill",
-  platformName: "Kotibox",
+  platformName: "Triple Minds",
   contactNo: "",
   inquiryEmail: "",
   siteDescription: "",
-  copyrightText: "© 2026 Kotibox. All Rights Reserved.",
+  copyrightText: "© 2026 Triple Minds. All Rights Reserved.",
   facebookUrl: "",
   twitterUrl: "",
   instagramUrl: "",
@@ -139,6 +158,10 @@ const DEFAULT: AppSettings = {
   socialLogin: true,
   twoFactorAuth: false,
   emailVerification: true,
+  googleClientId: '',
+  appleClientId: '',
+  appleTeamId: '',
+  appleKeyId: '',
   primaryColor: "#e50914",
   colorTheme: "blue-green",
   navbarStyle: 'default',
@@ -148,15 +171,15 @@ const DEFAULT: AppSettings = {
   activeMenuStyle: 'left-bordered',
   footerStyle: 'default',
   // Mail
-  mailEmail: "info@kotibox.com",
+  mailEmail: "info@tripleminds.com",
   mailDriver: "smtp",
   mailHost: "smtp.gmail.com",
   mailPort: "587",
   mailEncryption: "tls",
   mailUsername: "",
   mailPassword: "",
-  mailFrom: "info@kotibox.com",
-  mailFromName: "Kotibox",
+  mailFrom: "info@tripleminds.com",
+  mailFromName: "Triple Minds",
   // Notifications
   fcmServerKey: "",
   fcmSenderId: "",
@@ -196,6 +219,21 @@ const DEFAULT: AppSettings = {
   seoImage: "",
   googleVerification: "",
   canonicalUrl: "",
+  // Ad Networks
+  adNetworkEnabled: false,
+  adMobPublisherId: "",
+  adMobAppIdAndroid: "",
+  adMobAppIdIos: "",
+  adMobBannerAndroid: "",
+  adMobBannerIos: "",
+  adMobInterstitialAndroid: "",
+  adMobInterstitialIos: "",
+  vastPrerollUrl: "",
+  vastMidrollUrl: "",
+  // Payments
+  razorpayEnabled: false,
+  razorpayKeyId: "",
+  razorpayKeySecret: "",
 };
 
 const STORAGE_KEY = "tripleMindesSettings";
@@ -241,6 +279,10 @@ function mapApiData(api: any): AppSettings {
     socialLogin: api.socialLogin ?? DEFAULT.socialLogin,
     twoFactorAuth: api.twoFactorAuth ?? DEFAULT.twoFactorAuth,
     emailVerification: api.emailVerification ?? DEFAULT.emailVerification,
+    googleClientId: api.googleClientId || '',
+    appleClientId: api.appleClientId || '',
+    appleTeamId: api.appleTeamId || '',
+    appleKeyId: api.appleKeyId || '',
     primaryColor: api.primaryColor || DEFAULT.primaryColor,
     colorTheme: api.colorTheme || DEFAULT.colorTheme,
     navbarStyle: api.navbarStyle || DEFAULT.navbarStyle,
@@ -298,6 +340,21 @@ function mapApiData(api: any): AppSettings {
     seoImage: img(api.seoImage),
     googleVerification: api.googleVerification || "",
     canonicalUrl: api.canonicalUrl || "",
+    // Ad Networks
+    adNetworkEnabled: api.adNetworkEnabled ?? DEFAULT.adNetworkEnabled,
+    adMobPublisherId: api.adMobPublisherId || "",
+    adMobAppIdAndroid: api.adMobAppIdAndroid || "",
+    adMobAppIdIos: api.adMobAppIdIos || "",
+    adMobBannerAndroid: api.adMobBannerAndroid || "",
+    adMobBannerIos: api.adMobBannerIos || "",
+    adMobInterstitialAndroid: api.adMobInterstitialAndroid || "",
+    adMobInterstitialIos: api.adMobInterstitialIos || "",
+    vastPrerollUrl: api.vastPrerollUrl || "",
+    vastMidrollUrl: api.vastMidrollUrl || "",
+    // Payments
+    razorpayEnabled: api.razorpayEnabled ?? DEFAULT.razorpayEnabled,
+    razorpayKeyId: api.razorpayKeyId || "",
+    razorpayKeySecret: api.razorpayKeySecret || "",
   };
 }
 

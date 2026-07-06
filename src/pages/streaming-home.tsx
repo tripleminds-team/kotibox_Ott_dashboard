@@ -11,8 +11,11 @@ import {
 } from "lucide-react";
 import {
   useGetWebHome, useGetWebBrowse, loginClient, registerClient, useGetPages,
-  useGetGenres, useGetPublicNotifications, useGetSubscriptionPlans,
+  useGetGenres, useGetPublicNotifications, useGetWebSubscriptionPlans,
 } from "@/lib/api-client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { WebsiteReviews } from "@/components/WebsiteReviews";
+import { PortraitCard, LandscapeCard } from "@/components/ContentCard";
 import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
 
 /* ─── TYPES ─── */
@@ -150,105 +153,14 @@ function SectionHeader({ title, icon, onSeeAll, count }: { title: string; icon?:
   );
 }
 
-/* ─── FEATURED CARD (16:9 Landscape) ─── */
+/* ─── FEATURED CARD wrapper (delegates to LandscapeCard) ─── */
 function FeaturedCard({ item, onPlay, size = "md" }: { item: ContentItem; onPlay: (item: ContentItem) => void; size?: "sm" | "md" | "lg" }) {
-  const widths = {
-    sm: "w-[200px] sm:w-[240px]",
-    md: "w-[240px] sm:w-[280px] lg:w-[300px]",
-    lg: "w-[280px] sm:w-[340px] lg:w-[380px]",
-  };
-  const isPremium = item.isPremium || item.badge === "TOP" || item.badge === "EXCLUSIVE";
-
-  return (
-    <div className={`group relative flex-shrink-0 ${widths[size]} cursor-pointer`} onClick={() => onPlay(item)}>
-      <div
-        className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 transition-all duration-300 group-hover:scale-[1.03] group-hover:ring-1 group-hover:ring-red-500/40 shadow-lg"
-        style={{ aspectRatio: "16/9" }}
-      >
-        <img
-          src={item.backdrop || item.poster}
-          alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            target.src = `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=640&h=360&fit=crop&q=80`;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-        <div className="absolute top-2.5 left-2.5 z-10">
-          {isPremium ? <PremiumBadge /> : <FreeBadge />}
-        </div>
-        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
-          <ImdbBadge rating={item.imdbRating} />
-          <AgeBadge rating={item.ageRating} />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
-          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/40 hover:scale-110 active:scale-95 transition-all">
-            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-3.5 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-          <p className="text-white font-bold text-sm leading-tight truncate">{item.title}</p>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-400">
-            <span>{item.year}</span>
-            {item.duration && <><span>·</span><span>{item.duration}</span></>}
-            {item.type === "show" && item.seasons && (
-              <><span>·</span><span className="text-white bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.seasons} Seasons</span></>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <LandscapeCard item={item} onClick={() => onPlay(item)} size={size} />;
 }
 
-/* ─── PORTRAIT CONTENT CARD (2:3) ─── */
+/* ─── PORTRAIT CONTENT CARD wrapper (delegates to PortraitCard) ─── */
 function ContentCard({ item, onPlay, size = "md" }: { item: ContentItem; onPlay: (item: ContentItem) => void; size?: "sm" | "md" | "lg" }) {
-  const widths = {
-    sm: "w-[120px] sm:w-[140px]",
-    md: "w-[140px] sm:w-[160px] lg:w-[180px]",
-    lg: "w-[170px] sm:w-[200px] lg:w-[220px]",
-  };
-
-  return (
-    <div className={`group relative flex-shrink-0 ${widths[size]} cursor-pointer`} onClick={() => onPlay(item)}>
-      <div
-        className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 transition-all duration-300 group-hover:ring-1 group-hover:ring-red-500/40 group-hover:-translate-y-1 shadow-lg"
-        style={{ aspectRatio: "2/3" }}
-      >
-        <img
-          src={item.poster || item.backdrop}
-          alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            target.src = `https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop&q=80`;
-          }}
-        />
-        <ContentBadge badge={item.badge} />
-        <div className="absolute top-2.5 right-2.5 z-10">
-          <ImdbBadge rating={item.imdbRating} />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
-          <div className="w-11 h-11 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/40 hover:scale-105 transition-transform">
-            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-          </div>
-        </div>
-      </div>
-      <div className="mt-2 px-0.5">
-        <p className="text-white text-[13px] font-semibold leading-tight truncate group-hover:text-red-400 transition-colors">{item.title}</p>
-        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-500">
-          <span>{item.year}</span>
-          {item.duration && <><span>·</span><span>{item.duration}</span></>}
-        </div>
-      </div>
-    </div>
-  );
+  return <PortraitCard item={item} onClick={() => onPlay(item)} size={size} />;
 }
 
 /* ─── SHORT DRAMA CARD (9:16) ─── */
@@ -263,7 +175,7 @@ function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => 
   return (
     <div
       className="group relative flex-shrink-0 cursor-pointer"
-      style={{ width: "clamp(120px, 16vw, 150px)" }}
+      style={{ width: "clamp(160px, 20vw, 200px)" }}
       onClick={onClick}
     >
       <div
@@ -292,9 +204,10 @@ function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => 
             {drama.freeEpisodes} FREE
           </span>
         )}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+        {/* Play button — bottom-right corner */}
+        <div className="absolute bottom-10 right-2 z-10 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
+          <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+            <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-2">
@@ -325,13 +238,13 @@ function FeaturedRow({ title, icon, items, onPlay, size = "md", onSeeAll }: {
     <div className="mb-10">
       <SectionHeader title={title} icon={icon} onSeeAll={onSeeAll} count={items.length} />
       <div className="relative group/row">
-        <button onClick={() => scroll("left", 960)} className="hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
+        <button onClick={() => scroll("left", 1200)} className="hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <button onClick={() => scroll("right", 960)} className="hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
+        <button onClick={() => scroll("right", 1200)} className="hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronRight className="w-4 h-4" />
         </button>
-        <div ref={rowRef} className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+        <div ref={rowRef} className="flex gap-4 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
           {items.map((item) => (
             <FeaturedCard key={item.id || item._id} item={item} onPlay={onPlay} size={size} />
           ))}
@@ -350,13 +263,13 @@ function ContentRow({ title, icon, items, onPlay, size = "md", onSeeAll }: {
     <div className="mb-10">
       <SectionHeader title={title} icon={icon} onSeeAll={onSeeAll} count={items.length} />
       <div className="relative group/row">
-        <button onClick={() => scroll("left", 720)} className="hidden lg:flex absolute left-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
+        <button onClick={() => scroll("left", 900)} className="hidden lg:flex absolute left-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <button onClick={() => scroll("right", 720)} className="hidden lg:flex absolute right-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
+        <button onClick={() => scroll("right", 900)} className="hidden lg:flex absolute right-2 top-[38%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-red-600 hover:border-red-600 transition-all shadow-xl">
           <ChevronRight className="w-4 h-4" />
         </button>
-        <div ref={rowRef} className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+        <div ref={rowRef} className="flex gap-4 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
           {items.map((item) => (
             <ContentCard key={item.id || item._id} item={item} onPlay={onPlay} size={size} />
           ))}
@@ -366,22 +279,22 @@ function ContentRow({ title, icon, items, onPlay, size = "md", onSeeAll }: {
   );
 }
 
-function ShortDramaRow({ title, icon, items, onSelect }: {
-  title: string; icon?: React.ReactNode; items: ShortDrama[]; onSelect: (d: ShortDrama) => void;
+function ShortDramaRow({ title, icon, items, onSelect, onSeeAll }: {
+  title: string; icon?: React.ReactNode; items: ShortDrama[]; onSelect: (d: ShortDrama) => void; onSeeAll?: () => void;
 }) {
   const { rowRef, scroll } = useRowScroll();
   if (!items.length) return null;
   return (
     <div className="mb-10">
-      <SectionHeader title={title} icon={icon} count={items.length} />
+      <SectionHeader title={title} icon={icon} count={items.length} onSeeAll={onSeeAll} />
       <div className="relative group/row">
-        <button onClick={() => scroll("left", 600)} className="hidden lg:flex absolute left-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl">
+        <button onClick={() => scroll("left", 800)} className="hidden lg:flex absolute left-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl">
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <button onClick={() => scroll("right", 600)} className="hidden lg:flex absolute right-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl">
+        <button onClick={() => scroll("right", 800)} className="hidden lg:flex absolute right-2 top-[40%] -translate-y-1/2 z-10 w-9 h-9 items-center justify-center rounded-full bg-black/80 border border-zinc-700/60 text-white opacity-0 group-hover/row:opacity-100 hover:bg-purple-700 hover:border-purple-600 transition-all shadow-xl">
           <ChevronRight className="w-4 h-4" />
         </button>
-        <div ref={rowRef} className="flex gap-3 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+        <div ref={rowRef} className="flex gap-4 overflow-x-auto px-4 sm:px-8 lg:px-12 pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
           {items.map((d) => (
             <ShortDramaCard key={d.id || d._id} drama={d} onClick={() => onSelect(d)} />
           ))}
@@ -392,7 +305,7 @@ function ShortDramaRow({ title, icon, items, onSelect }: {
 }
 
 /* ─── HERO BANNER ─── */
-function Hero({ onPlay, onSubscribeClick }: { onPlay: (item: ContentItem) => void; onSubscribeClick: () => void }) {
+function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: ContentItem) => void; onSubscribeClick: () => void; isSubscribed?: boolean }) {
   const { data: homeData, isLoading } = useGetWebHome();
   const heroContent = homeData?.heroContent || [];
   const [current, setCurrent] = useState(0);
@@ -484,7 +397,7 @@ function Hero({ onPlay, onSubscribeClick }: { onPlay: (item: ContentItem) => voi
               <Play className="w-4 h-4 fill-black" />
               {isPremium ? "Watch Now" : "Watch Free"}
             </button>
-            {isPremium && (
+            {isPremium && !isSubscribed && (
               <button
                 onClick={onSubscribeClick}
                 className="flex items-center gap-2.5 px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm tracking-wide transition-all active:scale-95 shadow-lg shadow-red-950/30"
@@ -553,11 +466,19 @@ function GenreFilter({ active, onChange }: { active: string; onChange: (g: strin
 
 /* ─── SUBSCRIBE BANNER (Dynamic from API) ─── */
 function SubscribeBanner({ onSubscribeClick }: { onSubscribeClick: () => void }) {
-  const { data: plansData } = useGetSubscriptionPlans({ limit: 10 });
+  const { settings } = useSettings();
+  const { data: plansData } = useGetWebSubscriptionPlans();
   const plans = plansData?.data || [];
   const cheapest = plans.length > 0
     ? plans.reduce((a: any, b: any) => (a.price < b.price ? a : b), plans[0])
     : null;
+
+  const formatCurrency = (val: number | string) => {
+    const num = Number(val && typeof val === "string" ? val.replace(/[^0-9.-]+/g,"") : val) || 0;
+    return settings?.currencyPosition === "before" 
+      ? `${settings?.currencySymbol || '₹'}${num.toFixed(settings?.decimalPlaces ?? 2)}` 
+      : `${num.toFixed(settings?.decimalPlaces ?? 2)} ${settings?.currencySymbol || '₹'}`;
+  };
 
   return (
     <div className="mx-4 sm:mx-8 lg:mx-12 mb-10 rounded-2xl overflow-hidden relative">
@@ -579,10 +500,10 @@ function SubscribeBanner({ onSubscribeClick }: { onSubscribeClick: () => void })
           {cheapest && (
             <div className="text-right">
               {cheapest.originalPrice && cheapest.originalPrice > cheapest.price && (
-                <p className="text-zinc-500 text-xs line-through">{cheapest.currency || "₹"}{cheapest.originalPrice}</p>
+                <p className="text-zinc-500 text-xs line-through">{formatCurrency(cheapest.originalPrice)}</p>
               )}
               <p className="text-white font-bold text-xl">
-                {cheapest.currency || "₹"}{cheapest.price}<span className="text-zinc-400 text-sm font-normal">/{cheapest.interval || "mo"}</span>
+                {formatCurrency(cheapest.price)}<span className="text-zinc-400 text-sm font-normal">/{cheapest.interval || "mo"}</span>
               </p>
             </div>
           )}
@@ -614,7 +535,7 @@ function MoviesTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>
       ) : (
-        <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+        <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {filtered.map((item: any) => (
             <ContentCard key={item.id || item._id} item={item} onPlay={onPlay} />
           ))}
@@ -640,7 +561,7 @@ function TVShowsTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>
       ) : (
-        <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+        <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {filtered.map((item: any) => (
             <ContentCard key={item.id || item._id} item={item} onPlay={onPlay} />
           ))}
@@ -788,10 +709,11 @@ function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
 }
 
 /* ─── HOME TAB ─── */
-function HomeTab({ onPlay, onSelectDrama, onSubscribeClick }: {
+function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
   onPlay: (item: ContentItem) => void;
   onSelectDrama: (d: ShortDrama) => void;
   onSubscribeClick: () => void;
+  isSubscribed?: boolean;
 }) {
   const [, setLocation] = useLocation();
   const { data: homeData, isLoading } = useGetWebHome();
@@ -808,32 +730,41 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick }: {
       {cw.length > 0 && (
         <section>
           <SectionHeader title="Continue Watching" icon={<Clock className="w-4 h-4" />} />
-          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-4 overflow-x-auto pb-3" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
             {cw.map((item: any) => (
               <div
                 key={item.id}
-                className="group relative flex-shrink-0 w-[200px] sm:w-[240px] cursor-pointer"
+                className="group relative flex-shrink-0 w-[260px] sm:w-[300px] cursor-pointer"
                 onClick={() => onPlay(item)}
               >
-                <div
-                  className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:scale-[1.03] shadow-lg"
-                  style={{ aspectRatio: "16/9" }}
-                >
+                {/* Card */}
+                <div className="relative rounded-xl overflow-hidden bg-zinc-900 shadow-lg" style={{ aspectRatio: "16/9" }}>
                   <img
-                    src={item.poster || item.backdrop}
-                    alt={item.title}
-                    className="w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
+                    src={getImageUrl(item.backdrop || item.poster || item.posterImage || item.thumbnail) || ""}
+                    alt={item.title || ""}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = "#111"; }}
                   />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
-                    <div className="w-12 h-12 rounded-full bg-red-600/90 backdrop-blur-md flex items-center justify-center shadow-xl shadow-red-600/40">
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  {/* Play button */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="w-12 h-12 rounded-full bg-red-600/95 flex items-center justify-center shadow-xl scale-90 group-hover:scale-100 transition-transform duration-200">
                       <Play className="w-5 h-5 text-white fill-white ml-0.5" />
                     </div>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
-                    <div className="h-full bg-red-600" style={{ width: `${item.progress || 0}%` }} />
+                  {/* Title */}
+                  <div className="absolute bottom-0 left-0 right-0 px-3 pb-4 pt-8">
+                    <p className="text-white font-bold text-sm truncate leading-tight">{item.title}</p>
+                    {item.episodeTitle && (
+                      <p className="text-zinc-400 text-[11px] truncate mt-0.5">{item.episodeTitle}</p>
+                    )}
+                  </div>
+                  {/* Progress bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-zinc-700/80">
+                    <div className="h-full bg-red-600 transition-all rounded-r-full" style={{ width: `${item.progress || 0}%` }} />
                   </div>
                 </div>
-                <p className="mt-2 text-white font-semibold text-sm line-clamp-1 px-0.5">{item.title}</p>
               </div>
             ))}
           </div>
@@ -847,25 +778,25 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick }: {
         <FeaturedRow title="New Releases" icon={<Sparkles className="w-4 h-4" />} items={homeData.newReleases} onPlay={onPlay} onSeeAll={() => setLocation("/browse?new")} />
       )}
 
-      <SubscribeBanner onSubscribeClick={onSubscribeClick} />
+      {!isSubscribed && <SubscribeBanner onSubscribeClick={onSubscribeClick} />}
 
       {homeData.topRated?.length > 0 && (
         <ContentRow title="Top Rated Movies" icon={<Star className="w-4 h-4" />} items={homeData.topRated} onPlay={onPlay} size="lg" onSeeAll={() => setLocation("/browse?top-rated")} />
       )}
       {homeData.featuredDramas?.length > 0 && (
-        <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} />
+        <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
       )}
       {homeData.tvShows?.length > 0 && (
         <FeaturedRow title="Popular TV Shows" icon={<Tv className="w-4 h-4" />} items={homeData.tvShows.slice(0, 10)} onPlay={onPlay} onSeeAll={() => setLocation("/browse?tv")} />
       )}
       {homeData.newDramas?.length > 0 && (
-        <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} />
+        <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
       )}
       {homeData.actionMovies?.length > 0 && (
         <FeaturedRow title="Action & Adventure" icon={<Flame className="w-4 h-4" />} items={homeData.actionMovies} onPlay={onPlay} onSeeAll={() => setLocation("/browse?action")} />
       )}
       {homeData.dramaShows?.length > 0 && (
-        <FeaturedRow title="Drama Series" icon={<Film className="w-4 h-4" />} items={homeData.dramaShows} onPlay={onPlay} onSeeAll={() => setLocation("/browse?drama")} />
+        <FeaturedRow title="Drama Series" icon={<Film className="w-4 h-4" />} items={homeData.dramaShows} onPlay={onPlay} onSeeAll={() => setLocation("/browse?drama-series")} />
       )}
     </div>
   );
@@ -937,6 +868,8 @@ function SignInModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [usePhone, setUsePhone] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -961,12 +894,14 @@ function SignInModal({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       if (isLogin) {
-        const res = await loginClient({ email, password });
+        // Phone login: pass phone number as the email field — server handles phone vs email
+        const loginIdentifier = usePhone ? phone : email;
+        const res = await loginClient({ email: loginIdentifier, password });
         localStorage.setItem("accessToken", res.accessToken);
         localStorage.setItem("user", JSON.stringify({ id: res.userId, name: res.name || email.split("@")[0] }));
         window.location.reload();
       } else {
-        const res = await registerClient({ email, password, name });
+        const res = await registerClient({ email, password, name, phone: phone || undefined });
         localStorage.setItem("accessToken", res.accessToken);
         localStorage.setItem("user", JSON.stringify({ id: res.userId, name }));
         window.location.reload();
@@ -1015,6 +950,22 @@ function SignInModal({ onClose }: { onClose: () => void }) {
 
           {error && <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-semibold leading-snug">{error}</div>}
 
+          {/* Phone / Email toggle for login */}
+          {isLogin && (
+            <div className="flex gap-1 mb-1 bg-zinc-900/60 rounded-xl p-1">
+              <button
+                type="button"
+                onClick={() => setUsePhone(false)}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!usePhone ? "bg-red-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              >Email</button>
+              <button
+                type="button"
+                onClick={() => setUsePhone(true)}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${usePhone ? "bg-red-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              >Phone</button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
             {!isLogin && (
               <input
@@ -1026,14 +977,31 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email Address"
-              className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
-            />
+
+            {/* Email field — shown in register, or in login when not using phone */}
+            {(!isLogin || !usePhone) && (
+              <input
+                type={isLogin ? "text" : "email"}
+                required={!usePhone}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email Address"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+              />
+            )}
+
+            {/* Phone field — always shown in register (optional), or in login when phone tab active */}
+            {(usePhone || !isLogin) && (
+              <input
+                type="tel"
+                required={usePhone && isLogin}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={isLogin ? "Phone Number" : "Phone Number (optional — links app account)"}
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+              />
+            )}
+
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -1095,6 +1063,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
   activeTab: Tab; setActiveTab: (t: Tab) => void; onSignIn: () => void; onSignOut?: () => void; user?: any; onSubscribeClick?: () => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
+  const isSubscribed = user?.subscriptionStatus === "active" && user?.subscriptionPlan !== "free";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [, setLocation] = useLocation();
   const searchString = useSearch();
@@ -1297,13 +1266,15 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
 
               <div className="hidden sm:block w-px h-5 bg-zinc-800 mx-0.5" />
 
-              <button
-                onClick={onSubscribeClick || (() => setLocation("/browse"))}
-                className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition-all shadow-md shadow-red-900/20 hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <Crown className="w-3.5 h-3.5" />
-                Subscribe
-              </button>
+              {!isSubscribed && (
+                <button
+                  onClick={onSubscribeClick || (() => setLocation("/browse"))}
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition-all shadow-md shadow-red-900/20 hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  Subscribe
+                </button>
+              )}
 
               <div className="relative" ref={avatarRef}>
                 <button
@@ -1342,12 +1313,14 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                 {label}
               </button>
             ))}
-            <button
-              onClick={onSubscribeClick || (() => { setLocation("/browse"); setMobileOpen(false); })}
-              className="w-full mt-2 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-            >
-              <Crown className="w-4 h-4" /> Subscribe Now
-            </button>
+            {!isSubscribed && (
+              <button
+                onClick={onSubscribeClick || (() => { setLocation("/browse"); setMobileOpen(false); })}
+                className="w-full mt-2 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+              >
+                <Crown className="w-4 h-4" /> Subscribe Now
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -1517,16 +1490,26 @@ export default function StreamingHomePage() {
     window.location.reload();
   };
 
+  const isSubscribed = user?.subscriptionStatus === "active" && user?.subscriptionPlan !== "free";
+
   const handlePlay = (item: any) => {
-    if (item.contentType === "drama" || item.type === "drama") {
-      setLocation(`/show/${item.id || item._id}/episode/1`);
+    const id = item.id || item._id;
+    const isDrama = item.contentType === "drama" || item.type === "drama";
+    const isShow = item.contentType === "show" || item.contentType === "series" || item.type === "show" || item.type === "series";
+    const isMovie = item.type === "movie" || item.contentType === "movie";
+    if (isDrama) {
+      setLocation(`/drama/${id}/episode/1`);
+    } else if (isShow) {
+      setLocation(`/show/${id}`);
+    } else if (isMovie) {
+      setLocation(`/movie/${id}`);
     } else {
-      setLocation(`/movie/${item.id || item._id}`);
+      setLocation(`/movie/${id}`);
     }
   };
 
   const handleSelectDrama = (drama: any) => {
-    setLocation(`/show/${drama.id || drama._id}/episode/1`);
+    setLocation(`/drama/${drama.id || drama._id}/episode/1`);
   };
 
   return (
@@ -1542,11 +1525,11 @@ export default function StreamingHomePage() {
 
       <main>
         {(activeTab === "home" || activeTab === "new") && (
-          <Hero onPlay={handlePlay} onSubscribeClick={() => setPlansModalOpen(true)} />
+          <Hero onPlay={handlePlay} onSubscribeClick={() => setPlansModalOpen(true)} isSubscribed={isSubscribed} />
         )}
 
         {activeTab === "home" && (
-          <HomeTab onPlay={handlePlay} onSelectDrama={handleSelectDrama} onSubscribeClick={() => setPlansModalOpen(true)} />
+          <HomeTab onPlay={handlePlay} onSelectDrama={handleSelectDrama} onSubscribeClick={() => setPlansModalOpen(true)} isSubscribed={isSubscribed} />
         )}
         {activeTab === "movies" && (
           <div className="pt-24">
@@ -1564,6 +1547,13 @@ export default function StreamingHomePage() {
           </div>
         )}
         {activeTab === "new" && <NewHotTab onPlay={handlePlay} showToast={showToast} />}
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pb-20">
+          <WebsiteReviews 
+            user={user} 
+            onSignInRequired={() => setShowSignIn(true)} 
+          />
+        </div>
       </main>
 
       <PublicFooter />

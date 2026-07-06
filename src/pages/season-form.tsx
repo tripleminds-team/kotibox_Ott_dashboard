@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,22 +16,30 @@ import MediaPicker from "@/components/MediaPicker";
 export default function SeasonForm() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const search = useSearch();
+  const searchParams = new URLSearchParams(search);
+  const queryContentId = searchParams.get("contentId") || "";
 
-  const [showId, setShowId] = useState("");
+  const isShortDrama = window.location.pathname.startsWith("/short-drama-seasons");
+
+  const [showId, setShowId] = useState(queryContentId);
   const [seasonNumber, setSeasonNumber] = useState("1");
   const [description, setDescription] = useState("");
   const [posterUrl, setPosterUrl] = useState("");
   const [posterPickerOpen, setPosterPickerOpen] = useState(false);
   const [isFree, setIsFree] = useState(false);
 
-  const { data: showsData, isLoading: loadingShows } = useGetContentList({ contentType: "series", limit: 100 });
+  const { data: showsData, isLoading: loadingShows } = useGetContentList({
+    contentType: isShortDrama ? "drama" : "series",
+    limit: 100
+  });
   const createEpisodeMutation = useCreateEpisode();
 
   const tvShows: any[] = showsData?.data || [];
 
   const handleSave = async () => {
     if (!showId) {
-      toast({ title: "Please select a TV Show", variant: "destructive" });
+      toast({ title: isShortDrama ? "Please select a Short Drama" : "Please select a TV Show", variant: "destructive" });
       return;
     }
     if (!seasonNumber || parseInt(seasonNumber) < 1) {
@@ -52,7 +60,7 @@ export default function SeasonForm() {
         isLocked: !isFree,
       });
       toast({ title: `Season ${seasonNumber} created! Add more episodes from the Episodes section.` });
-      setLocation("/seasons");
+      setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons");
     } catch (error: any) {
       toast({ title: "Failed to create season", description: error?.message, variant: "destructive" });
     }
@@ -63,11 +71,15 @@ export default function SeasonForm() {
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <button onClick={() => setLocation("/dashboard")} className="hover:text-foreground transition-colors">Dashboard</button>
         <span>/</span>
+        <button onClick={() => setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons")} className="hover:text-foreground transition-colors">
+          {isShortDrama ? "Short Drama Seasons" : "Seasons"}
+        </button>
+        <span>/</span>
         <span className="text-foreground font-medium">New Season</span>
       </div>
 
       <button
-        onClick={() => setLocation("/seasons")}
+        onClick={() => setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons")}
         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
       >
         «&nbsp;Back
@@ -79,15 +91,17 @@ export default function SeasonForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <Label className="text-foreground text-sm font-medium">
-              TV Show <span className="text-primary">*</span>
+              {isShortDrama ? "Short Drama" : "TV Show"} <span className="text-primary">*</span>
             </Label>
             <Select value={showId} onValueChange={setShowId} disabled={loadingShows}>
               <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                <SelectValue placeholder={loadingShows ? "Loading shows…" : "Select a TV Show"} />
+                <SelectValue placeholder={loadingShows ? "Loading shows…" : (isShortDrama ? "Select a Short Drama" : "Select a TV Show")} />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border text-foreground">
                 {tvShows.length === 0 ? (
-                  <SelectItem value="_none" disabled>No TV shows found. Create one first.</SelectItem>
+                  <SelectItem value="_none" disabled>
+                    {isShortDrama ? "No short dramas found. Create one first." : "No TV shows found. Create one first."}
+                  </SelectItem>
                 ) : (
                   tvShows.map((show) => (
                     <SelectItem key={show._id} value={show._id}>{show.title}</SelectItem>
@@ -140,7 +154,7 @@ export default function SeasonForm() {
             open={posterPickerOpen}
             onClose={() => setPosterPickerOpen(false)}
             onSelect={(media) => { setPosterUrl(media.filePath || media.url); setPosterPickerOpen(false); }}
-            source="tv-show"
+            source={isShortDrama ? "short-drama" : "tv-show"}
             accept="image/*"
           />
         </div>
@@ -159,13 +173,13 @@ export default function SeasonForm() {
       </p>
 
       <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={() => setLocation("/seasons")} className="border-border">Cancel</Button>
+        <Button variant="outline" onClick={() => setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons")} className="border-border">Cancel</Button>
         <Button
           onClick={handleSave}
           disabled={createEpisodeMutation.isPending || !showId}
           className="bg-primary hover:bg-primary/90 text-white h-11 px-10 rounded-lg font-semibold text-sm gap-2"
         >
-          {createEpisodeMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+          {createEpisodeMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Create Season
         </Button>
       </div>

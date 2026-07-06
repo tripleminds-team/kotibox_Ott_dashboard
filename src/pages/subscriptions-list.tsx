@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { Plus, Trash2, Download, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -68,6 +69,7 @@ export default function SubscriptionsListPage() {
   const bulkDeleteSubscriptions = useBulkDeleteSubscriptions();
   const { data: plansData } = useGetSubscriptionPlans();
   const { data: subscriptionsData } = useGetSubscriptions();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("");
   const [planFilter, setPlanFilter] = useState("All Plans");
   const [dateFrom, setDateFrom] = useState("");
@@ -92,24 +94,29 @@ export default function SubscriptionsListPage() {
     return matchPlan && matchSearch && matchFrom && matchTo;
   });
 
+  const allSelected = filtered.length > 0 && filtered.every((n) => selectedIds.includes(n.id));
+
+  const toggleSelectAll = () => setSelectedIds(allSelected ? [] : filtered.map((n) => n.id));
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+
   const handleApply = async () => {
-    if (!bulkAction) {
-      toast({ title: "Please select an action", variant: "destructive" });
+    if (!bulkAction || selectedIds.length === 0) {
+      toast({ title: "Select items and an action first", variant: "destructive" });
       return;
     }
 
     if (bulkAction === "delete") {
-      const ids = filtered.map((item) => item.id);
-      if (ids.length === 0) {
-        toast({ title: "No subscriptions found for bulk delete", variant: "destructive" });
-        return;
-      }
-
-      const confirmed = window.confirm("Delete all filtered subscriptions?");
+      const confirmed = window.confirm(`Delete ${selectedIds.length} selected subscription(s)?`);
       if (!confirmed) return;
 
-      await bulkDeleteSubscriptions.mutateAsync(ids);
-      toast({ title: `${ids.length} subscription(s) deleted successfully` });
+      try {
+        await bulkDeleteSubscriptions.mutateAsync(selectedIds);
+        setSelectedIds([]);
+        toast({ title: `${selectedIds.length} subscription(s) deleted successfully` });
+      } catch {
+        toast({ title: "Bulk delete failed", variant: "destructive" });
+      }
       setBulkAction("");
     }
   };
@@ -244,6 +251,13 @@ export default function SubscriptionsListPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-border bg-card hover:bg-card">
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={toggleSelectAll}
+                    className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
+                  />
+                </TableHead>
                 <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">User</TableHead>
                 <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Plan</TableHead>
                 <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Duration</TableHead>
@@ -262,13 +276,20 @@ export default function SubscriptionsListPage() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center text-zinc-500 py-10">
+                  <TableCell colSpan={14} className="text-center text-zinc-500 py-10">
                     No subscriptions found
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((sub) => (
                   <TableRow key={sub.id} className="border-border hover:bg-muted/40">
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(sub.id)}
+                        onCheckedChange={() => toggleSelect(sub.id)}
+                        className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
+                      />
+                    </TableCell>
                     <TableCell className="text-foreground font-medium whitespace-nowrap">{sub.userName || sub.userEmail}</TableCell>
                     <TableCell className="text-foreground font-medium whitespace-nowrap">{sub.plan}</TableCell>
                     <TableCell className="text-zinc-300 whitespace-nowrap">{sub.durationLabel}</TableCell>

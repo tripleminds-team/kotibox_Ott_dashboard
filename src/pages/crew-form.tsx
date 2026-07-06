@@ -160,6 +160,7 @@ export default function CrewFormPage() {
           setImage(media.filePath);
           setImagePreview(getImageUrl(media.filePath));
         }}
+        source="crew"
         accept="image/*"
       />
     </div>

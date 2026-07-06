@@ -48,8 +48,8 @@ export default function CountryFormPage() {
         toast({ title: "Country created successfully!" });
       }
       setLocation("/countries");
-    } catch {
-      toast({ title: "Failed to save country", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Failed to save country", variant: "destructive" });
     } finally {
       setSaving(false);
     }

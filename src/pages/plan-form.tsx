@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +29,14 @@ const labelCls = "text-foreground text-sm font-medium";
 export default function PlanFormPage() {
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id?: string }>();
+  const { settings } = useSettings();
+
+  const formatCurrency = (val: number | string) => {
+    const num = Number(val && typeof val === "string" ? val.replace(/[^0-9.-]+/g,"") : val) || 0;
+    return settings?.currencyPosition === "before" 
+      ? `${settings?.currencySymbol || '₹'}${num.toFixed(settings?.decimalPlaces ?? 2)}` 
+      : `${num.toFixed(settings?.decimalPlaces ?? 2)} ${settings?.currencySymbol || '₹'}`;
+  };
   const { toast } = useToast();
 
   const isEdit = !!id && id !== "new";
@@ -266,7 +275,7 @@ export default function PlanFormPage() {
           {/* Price */}
           <div className="space-y-1.5">
             <Label className={labelCls}>
-              Price ($) <span className="text-primary">*</span>
+              Price ({settings?.currencySymbol || '₹'}) <span className="text-primary">*</span>
             </Label>
             <Input type="number" min="0" step="0.01" value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -285,7 +294,7 @@ export default function PlanFormPage() {
             <Label className={labelCls}>Total Price (after discount)</Label>
             <div className="h-11 px-4 rounded-lg border border-border bg-muted/50 flex items-center">
               <span className="text-foreground font-semibold text-base">
-                ${totalPrice.toFixed(2)}
+                {formatCurrency(totalPrice)}
               </span>
               {parseFloat(discount) > 0 && (
                 <span className="ml-2 text-xs text-green-400 font-medium">

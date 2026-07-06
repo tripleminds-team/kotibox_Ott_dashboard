@@ -62,14 +62,14 @@ export default function GoogleAdsPage() {
   };
 
   return (
-    <div className="space-y-6 text-foreground bg-[#0f1115] min-h-screen p-6 -m-6">
+    <div className="space-y-6 text-foreground bg-background min-h-screen p-6 -m-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-zinc-400">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Dashboard</span>
           <span>/</span>
           <span>Ads</span>
           <span>/</span>
-          <span className="text-white font-medium">Ad Networks</span>
+          <span className="text-foreground font-medium">Ad Networks</span>
         </div>
         <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white" disabled={updateSettingsMutation.isPending}>
           <Save className="mr-2 h-4 w-4" />
@@ -79,7 +79,7 @@ export default function GoogleAdsPage() {
 
       <div className="max-w-4xl space-y-8">
         {/* Global Master Switch */}
-        <div className="bg-[#1a1d24] border border-zinc-800 rounded-xl p-6">
+        <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -94,77 +94,77 @@ export default function GoogleAdsPage() {
 
         {/* Google AdMob Settings */}
         <div className={`space-y-6 transition-opacity duration-200 ${!formData.adNetworkEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-          <div className="bg-[#1a1d24] border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-6">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2 mb-6">
               <Smartphone className="h-5 w-5 text-emerald-500" />
               Google AdMob (Mobile Apps)
             </h3>
             
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-zinc-300">Publisher ID</Label>
+                <Label className="text-muted-foreground">Publisher ID</Label>
                 <Input 
                   name="adMobPublisherId" 
                   value={formData.adMobPublisherId} 
                   onChange={handleChange} 
                   placeholder="pub-xxxxxxxxxxxxxxxx" 
-                  className="bg-[#0f1115] border-zinc-800 text-white" 
+                  className="bg-background border-border text-foreground" 
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-zinc-300">Android App ID</Label>
-                  <Input name="adMobAppIdAndroid" value={formData.adMobAppIdAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-[#0f1115] border-zinc-800 text-white" />
+                  <Label className="text-muted-foreground">Android App ID</Label>
+                  <Input name="adMobAppIdAndroid" value={formData.adMobAppIdAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-background border-border text-foreground" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-300">iOS App ID</Label>
-                  <Input name="adMobAppIdIos" value={formData.adMobAppIdIos} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-[#0f1115] border-zinc-800 text-white" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">Android Banner Ad Unit</Label>
-                  <Input name="adMobBannerAndroid" value={formData.adMobBannerAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-[#0f1115] border-zinc-800 text-white" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-zinc-300">iOS Banner Ad Unit</Label>
-                  <Input name="adMobBannerIos" value={formData.adMobBannerIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-[#0f1115] border-zinc-800 text-white" />
+                  <Label className="text-muted-foreground">iOS App ID</Label>
+                  <Input name="adMobAppIdIos" value={formData.adMobAppIdIos} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-background border-border text-foreground" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-zinc-300">Android Interstitial Ad Unit</Label>
-                  <Input name="adMobInterstitialAndroid" value={formData.adMobInterstitialAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-[#0f1115] border-zinc-800 text-white" />
+                  <Label className="text-muted-foreground">Android Banner Ad Unit</Label>
+                  <Input name="adMobBannerAndroid" value={formData.adMobBannerAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-300">iOS Interstitial Ad Unit</Label>
-                  <Input name="adMobInterstitialIos" value={formData.adMobInterstitialIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-[#0f1115] border-zinc-800 text-white" />
+                  <Label className="text-muted-foreground">iOS Banner Ad Unit</Label>
+                  <Input name="adMobBannerIos" value={formData.adMobBannerIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Android Interstitial Ad Unit</Label>
+                  <Input name="adMobInterstitialAndroid" value={formData.adMobInterstitialAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">iOS Interstitial Ad Unit</Label>
+                  <Input name="adMobInterstitialIos" value={formData.adMobInterstitialIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* VAST Settings */}
-          <div className="bg-[#1a1d24] border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-6">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2 mb-6">
               <MonitorPlay className="h-5 w-5 text-purple-500" />
               VAST Video Player Ads
             </h3>
             
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-zinc-300">Pre-roll VAST URL</Label>
-                <Input name="vastPrerollUrl" value={formData.vastPrerollUrl} onChange={handleChange} placeholder="https://pubads.g.doubleclick.net/gampad/ads?..." className="bg-[#0f1115] border-zinc-800 text-white" />
-                <p className="text-xs text-zinc-500">Video ad shown before the main content begins.</p>
+                <Label className="text-muted-foreground">Pre-roll VAST URL</Label>
+                <Input name="vastPrerollUrl" value={formData.vastPrerollUrl} onChange={handleChange} placeholder="https://pubads.g.doubleclick.net/gampad/ads?..." className="bg-background border-border text-foreground" />
+                <p className="text-xs text-muted-foreground">Video ad shown before the main content begins.</p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-zinc-300">Mid-roll VAST URL</Label>
-                <Input name="vastMidrollUrl" value={formData.vastMidrollUrl} onChange={handleChange} placeholder="https://pubads.g.doubleclick.net/gampad/ads?..." className="bg-[#0f1115] border-zinc-800 text-white" />
-                <p className="text-xs text-zinc-500">Video ad shown during the content (if supported by player).</p>
+                <Label className="text-muted-foreground">Mid-roll VAST URL</Label>
+                <Input name="vastMidrollUrl" value={formData.vastMidrollUrl} onChange={handleChange} placeholder="https://pubads.g.doubleclick.net/gampad/ads?..." className="bg-background border-border text-foreground" />
+                <p className="text-xs text-muted-foreground">Video ad shown during the content (if supported by player).</p>
               </div>
             </div>
           </div>

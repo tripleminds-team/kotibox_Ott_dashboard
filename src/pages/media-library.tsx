@@ -315,8 +315,8 @@ export default function MediaLibraryPage() {
             onClick={() => setCreateFolderOpen(true)}
             className="group flex flex-col items-center justify-center gap-3 p-5 bg-muted/20 border-2 border-dashed border-border rounded-xl hover:border-primary/40 hover:bg-muted/30 transition-all duration-200 cursor-pointer"
           >
-            <FolderPlus className="h-10 w-10 text-zinc-600 group-hover:text-primary transition-colors" />
-            <span className="text-xs font-semibold text-zinc-500 group-hover:text-zinc-300 transition-colors">New Folder</span>
+            <FolderPlus className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">New Folder</span>
           </button>
 
           {folders.map((folder: any) => (
@@ -326,10 +326,10 @@ export default function MediaLibraryPage() {
               className="group flex flex-col items-center justify-center gap-3 p-5 bg-card border border-border rounded-xl hover:border-primary/50 hover:bg-muted transition-all duration-200 cursor-pointer"
             >
               <Folder className="h-11 w-11 text-primary fill-red-500/20 group-hover:fill-red-500/40 transition-all duration-200" />
-              <span className="text-sm font-medium text-gray-200 group-hover:text-foreground text-center leading-tight">
+              <span className="text-sm font-medium text-foreground group-hover:text-primary transition-all duration-200 text-center leading-tight">
                 {folder.name}
               </span>
-              <span className="text-xs text-gray-500">{folder.count || 0} files</span>
+              <span className="text-xs text-muted-foreground">{folder.count || 0} files</span>
             </button>
           ))}
         </div>
@@ -426,7 +426,7 @@ export default function MediaLibraryPage() {
 
           {/* Empty state */}
           {currentFiles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-gray-500 gap-4">
+            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
               <ImageIcon className="h-12 w-12 opacity-20" />
               <p className="text-sm font-medium">
                 {searchQuery || sourceFilter || fileTypeFilter
@@ -438,7 +438,7 @@ export default function MediaLibraryPage() {
               {(searchQuery || sourceFilter || fileTypeFilter) && (
                 <button
                   onClick={() => { setSearchQuery(""); setSourceFilter(""); setFileTypeFilter(""); }}
-                  className="text-xs text-primary hover:text-red-300 font-semibold"
+                  className="text-xs text-primary hover:text-primary/80 font-semibold"
                 >
                   Clear filters
                 </button>
@@ -452,7 +452,8 @@ export default function MediaLibraryPage() {
                   <div className="relative rounded-xl overflow-hidden bg-muted border border-border aspect-[4/3] hover:border-primary/50 transition-all duration-200">
                     {file.fileType?.startsWith("video") ? (
                       <video
-                        src={getImageUrl(file.filePath || file.url)}
+                        src={`${getImageUrl(file.filePath || file.url)}#t=0.5`}
+                        preload="metadata"
                         className="w-full h-full object-contain bg-zinc-800"
                       />
                     ) : (
@@ -494,9 +495,9 @@ export default function MediaLibraryPage() {
                       {file.name}
                     </p>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-gray-600">{file.size}</p>
+                      <p className="text-xs text-muted-foreground">{file.size}</p>
                       {file.source && (
-                        <span className="text-[10px] text-gray-500 bg-muted px-1.5 py-0.5 rounded capitalize">
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
                           {file.source}
                         </span>
                       )}
@@ -525,7 +526,7 @@ export default function MediaLibraryPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
                             {file.fileType?.startsWith("video") ? (
-                              <video src={getImageUrl(file.filePath || file.url)} className="w-full h-full object-cover" />
+                              <video src={`${getImageUrl(file.filePath || file.url)}#t=0.5`} preload="metadata" className="w-full h-full object-cover" />
                             ) : (
                               <img src={getImageUrl(file.filePath || file.url)} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                             )}
@@ -652,7 +653,7 @@ export default function MediaLibraryPage() {
             {duplicateFiles.map(({ existing, new: newFile }, i) => (
               <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 {existing.fileType?.startsWith("video") ? (
-                  <video src={getImageUrl(existing.filePath || existing.url)} className="h-11 w-11 rounded object-contain bg-zinc-800" />
+                  <video src={`${getImageUrl(existing.filePath || existing.url)}#t=0.5`} preload="metadata" className="h-11 w-11 rounded object-contain bg-zinc-800" />
                 ) : (
                   <img src={getImageUrl(existing.filePath || existing.url)} alt={existing.name} className="h-11 w-11 rounded object-contain bg-zinc-800" />
                 )}

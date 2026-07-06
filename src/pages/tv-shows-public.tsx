@@ -2,14 +2,15 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
-  Play, Star, ChevronRight, Tv, Loader2, Crown, Search, X,
-  Filter, SlidersHorizontal, ChevronDown, Layers, Clock,
-  TrendingUp, Flame, Sparkles, ArrowLeft, Eye, Heart,
+  Play, Star, ChevronRight, Tv, Loader2, Search, X,
+  SlidersHorizontal, ChevronDown, Layers, Clock,
+  TrendingUp, Flame, Sparkles, ArrowLeft, Eye,
 } from "lucide-react";
 import { useGetWebBrowse, useGetWebHome, getImageUrl } from "@/lib/api-client";
 import { PublicHeader, PublicFooter } from "@/pages/streaming-home";
 import { useSettings } from "@/contexts/SettingsContext";
 import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
+import { PortraitCard } from "@/components/ContentCard";
 
 type Tab = "home" | "movies" | "tvshows" | "drama" | "new";
 
@@ -22,87 +23,11 @@ const SORT_OPTIONS = [
 ];
 
 function ShowCard({ item, onPlay }: { item: any; onPlay: (item: any) => void }) {
-  const [liked, setLiked] = useState(false);
-
-  return (
-    <div
-      className="group relative cursor-pointer"
-      onClick={() => onPlay(item)}
-    >
-      <div className="relative overflow-hidden rounded-2xl bg-[#0a0a10] border border-white/5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-black/60 group-hover:border-primary/20"
-        style={{ aspectRatio: "2/3" }}
-      >
-        <img
-          src={item.poster ? getImageUrl(item.poster) : (item.backdrop ? getImageUrl(item.backdrop) : '')}
-          alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          loading="lazy"
-          onError={(e) => {
-            const t = e.target as HTMLImageElement;
-            t.onerror = null;
-            t.style.backgroundColor = '#111';
-          }}
-        />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030306] via-[#030306]/30 to-transparent opacity-90 group-hover:opacity-100" />
-
-        {/* Top badges */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
-          {item.badge === "TOP" || item.badge === "EXCLUSIVE" ? (
-            <span className="flex items-center gap-1 bg-[#f5a623] text-black text-[8.5px] font-black px-2 py-[2.5px] rounded-md uppercase tracking-wide">
-              <Crown className="w-2 h-2" /> Premium
-            </span>
-          ) : (
-            <span className="bg-[#00c2a8] text-black text-[8.5px] font-black px-2 py-[2.5px] rounded-md uppercase tracking-wide">
-              Free
-            </span>
-          )}
-          <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg">
-            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
-            <span className="text-amber-400 text-[10px] font-extrabold">{item.imdbRating || "N/A"}</span>
-          </div>
-        </div>
-
-        {/* Play button on hover */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="w-12 h-12 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-xl shadow-primary/50 scale-90 group-hover:scale-100 transition-transform">
-            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-          </div>
-        </div>
-
-        {/* Like button */}
-        <button
-          onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-          className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/20 hover:border hover:border-primary/30"
-        >
-          <Heart className={`w-3.5 h-3.5 transition-colors ${liked ? "fill-primary text-primary" : "text-white"}`} />
-        </button>
-
-        {/* Bottom info */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-          <p className="text-white font-extrabold text-[13px] leading-snug truncate">{item.title}</p>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            {item.seasons && (
-              <span className="text-[9.5px] font-black px-1.5 py-0.5 bg-zinc-800/90 text-zinc-300 rounded-md">
-                {item.seasons} S
-              </span>
-            )}
-            <span className="text-zinc-500 text-[10px] font-semibold">{item.year}</span>
-            {item.genres?.[0] && (
-              <>
-                <span className="text-zinc-700">·</span>
-                <span className="text-zinc-500 text-[10px] font-semibold truncate">{item.genres[0]}</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <PortraitCard item={item} onClick={() => onPlay(item)} />;
 }
 
 function FeaturedShowBanner({ item, onPlay }: { item: any; onPlay: (item: any) => void }) {
+  const [, setLocation] = useLocation();
   if (!item) return null;
 
   return (
@@ -145,7 +70,10 @@ function FeaturedShowBanner({ item, onPlay }: { item: any; onPlay: (item: any) =
           >
             <Play className="w-4 h-4 fill-white" /> Watch Now
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 backdrop-blur-sm text-white font-bold rounded-xl text-sm border border-white/10 transition-all">
+          <button
+            onClick={() => setLocation(`/show/${item.id || item._id}`)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 backdrop-blur-sm text-white font-bold rounded-xl text-sm border border-white/10 transition-all"
+          >
             <Eye className="w-4 h-4" /> More Info
           </button>
         </div>
@@ -177,10 +105,15 @@ export default function TvShowsPublicPage() {
   }, []);
 
   const handlePlay = (item: any) => {
-    if (item.contentType === "drama") {
-      setLocation(`/show/${item.id || item._id}/episode/1`);
+    const id = item.id || item._id;
+    const isDrama = item.contentType === "drama" || item.type === "drama";
+    const isShow = item.contentType === "show" || item.contentType === "series" || item.type === "show" || item.type === "series";
+    if (isDrama) {
+      setLocation(`/drama/${id}/episode/1`);
+    } else if (isShow) {
+      setLocation(`/show/${id}`);
     } else {
-      setLocation(`/movie/${item.id || item._id}`);
+      setLocation(`/movie/${id}`);
     }
   };
 

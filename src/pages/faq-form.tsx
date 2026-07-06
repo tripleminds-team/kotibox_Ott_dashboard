@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,10 +20,26 @@ export default function FaqFormPage() {
   const createFAQ = useCreateFAQ();
   const updateFAQ = useUpdateFAQ();
 
-  const [question, setQuestion] = useState(faqData?.data?.question ?? "");
-  const [answer, setAnswer] = useState(faqData?.data?.answer ?? "");
-  const [status, setStatus] = useState(faqData?.data?.status ?? true);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [status, setStatus] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (faqData?.data) {
+      setQuestion(faqData.data.question || "");
+      setAnswer(faqData.data.answer || "");
+      setStatus(faqData.data.status ?? true);
+    }
+  }, [faqData]);
+
+  if (isEdit && isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-zinc-500">Loading FAQ details...</p>
+      </div>
+    );
+  }
 
   const handleSave = async () => {
     if (!question.trim()) {

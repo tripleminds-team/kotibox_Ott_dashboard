@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, Crown, Check, Loader2, Sparkles, Flame, Play } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useGetSubscriptionPlans, useCreateSubscription } from "@/lib/api-client";
+import { useGetWebSubscriptionPlans, useCreateSubscription } from "@/lib/api-client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubscriptionPlansModalProps {
   isOpen: boolean;
@@ -11,7 +12,8 @@ interface SubscriptionPlansModalProps {
 
 export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }: SubscriptionPlansModalProps) {
   const { settings } = useSettings();
-  const { data: plansData, isLoading: loadingPlans } = useGetSubscriptionPlans();
+  const { toast } = useToast();
+  const { data: plansData, isLoading: loadingPlans } = useGetWebSubscriptionPlans();
   const createSubMutation = useCreateSubscription();
   const [user, setUser] = useState<any>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -41,7 +43,11 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
 
   const handleSubscribe = async (plan: any) => {
     if (!user) {
-      alert("Please login first to subscribe.");
+      toast({
+        title: "Authentication Required",
+        description: "Please login first to subscribe.",
+        variant: "destructive",
+      });
       window.location.href = "/login";
       return;
     }
@@ -68,13 +74,20 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
       // Notify components about user update
       window.dispatchEvent(new Event("user-updated"));
 
-      alert(`Successfully subscribed to ${plan.name}! Full library unlocked.`);
+      toast({
+        title: "Subscription Successful",
+        description: `Successfully subscribed to ${plan.name}! Full library unlocked.`,
+      });
       if (onSubscribed) {
         onSubscribed();
       }
       onClose();
     } catch (err: any) {
-      alert("Subscription failed: " + err.message);
+      toast({
+        title: "Subscription Failed",
+        description: err?.message || "An error occurred during subscription.",
+        variant: "destructive",
+      });
     } finally {
       setSelectedPlanId(null);
     }

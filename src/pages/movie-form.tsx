@@ -16,7 +16,7 @@ import MediaPicker from "@/components/MediaPicker";
 import {
   useGetDirectors, useGetActors, useCreateMovie, useUpdateMovie,
   useGetGenres, useGetLanguagesList, useGetMovieById, useGetCategoriesList,
-  useGetSections, getImageUrl,
+  useGetSections, getImageUrl, useGetCountries,
 } from "@/lib/api-client";
 
 type Tab = "Movie Details" | "Basic Info" | "Quality Info" | "Subtitle Info" | "SEO Settings";
@@ -97,6 +97,8 @@ export default function MovieForm() {
   const categoriesList = (categoriesData as any)?.data || [];
   const { data: sectionsData } = useGetSections({ contentType: "movie", activeOnly: true });
   const sectionOptions = sectionsData?.data?.map((s: any) => ({ id: s.id || s._id, title: s.title })) || [];
+  const { data: countriesData } = useGetCountries({ limit: 100 });
+  const countries = countriesData?.data || [];
 
   const createMovieMutation = useCreateMovie();
   const updateMovieMutation = useUpdateMovie();
@@ -166,6 +168,29 @@ export default function MovieForm() {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const handleVideoSelect = (media: { url: string; filePath: string; name: string }) => {
+    setVideoFilePath(media.filePath);
+    setVideoPickerOpen(false);
+
+    // Auto-fill title if empty
+    if (!title && media.name) {
+      const titleWithoutExt = media.name.replace(/\.[^/.]+$/, "");
+      setTitle(titleWithoutExt);
+    }
+
+    // Auto-calculate duration
+    const videoUrl = media.url || media.filePath;
+    if (videoUrl) {
+      const video = document.createElement("video");
+      video.src = getImageUrl(videoUrl);
+      video.onloadedmetadata = () => {
+        const durationSecs = Math.round(video.duration);
+        setDuration(secsToDuration(durationSecs));
+      };
+      video.onerror = () => console.warn("Could not load video metadata for duration calculation");
+    }
+  };
+
   /* ---- Populate form on edit ---- */
   useEffect(() => {
     if (!isEdit || !movie) return;
@@ -183,6 +208,8 @@ export default function MovieForm() {
       setPoster({ filePath: movie.posterImage, preview: getImageUrl(movie.posterImage) });
     if (movie.bannerImage)
       setBanner({ filePath: movie.bannerImage, preview: getImageUrl(movie.bannerImage) });
+    if (movie.seoImage)
+      setSeoImage({ filePath: movie.seoImage, preview: getImageUrl(movie.seoImage) });
 
     if (movie.trailerUrl) {
       if (movie.trailerUrl.startsWith("http://") || movie.trailerUrl.startsWith("https://")) {
@@ -281,10 +308,19 @@ export default function MovieForm() {
       );
     }
 
+    if (Array.isArray(movie.subtitles) && movie.subtitles.length > 0) {
+      setSubtitleRows(
+        movie.subtitles.map((s: any, i: number) => ({
+          id: String(i),
+          language: getId(s.language),
+          filePath: s.filePath || "",
+        }))
+      );
+    }
+
     setSlug(movie.slug || "");
     setMetaTitle(movie.metaTitle || "");
     setMetaDescription(movie.metaDescription || "");
-    setTags(Array.isArray(movie.tags) ? movie.tags : []);
   }, [isEdit, movie]);
 
   /* ---- Helpers ---- */
@@ -352,6 +388,8 @@ export default function MovieForm() {
         bannerImage: banner.filePath,
         trailerUrl: effectiveTrailerUrl,
         planRequired,
+        isFree: planRequired === "free",
+        isLocked: planRequired !== "free",
         status,
         genres: selectedGenres,
         categories: selectedCategories,
@@ -391,9 +429,13 @@ export default function MovieForm() {
               size: 0,
             })),
         }),
+        subtitles: subtitleRows
+          .filter((r) => r.filePath && r.language)
+          .map((r) => ({ language: r.language, filePath: r.filePath })),
         slug: slug.trim(),
         metaTitle: metaTitle.trim(),
         metaDescription: metaDescription.trim(),
+        seoImage: seoImage.filePath,
       };
 
       if (isEdit) {
@@ -726,12 +768,24 @@ export default function MovieForm() {
                 />
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">Country</Label>
-                  <Input
-                    placeholder="e.g. United States"
+                  <Select
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                  />
+                    onValueChange={setCountry}
+                  >
+                    <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border text-foreground max-h-60 overflow-y-auto">
+                      {(country && !countries.some((c: any) => c.name === country)
+                        ? [{ id: "temp-saved", name: country }, ...countries]
+                        : countries
+                      ).map((c: any) => (
+                        <SelectItem key={c.id || c.name} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">Year</Label>
@@ -1309,7 +1363,7 @@ export default function MovieForm() {
       <MediaPicker open={trailerPickerOpen} onClose={() => setTrailerPickerOpen(false)}
         onSelect={(m) => setTrailerFilePath(m.filePath)} source="movie" accept="video/*" />
       <MediaPicker open={videoPickerOpen} onClose={() => setVideoPickerOpen(false)}
-        onSelect={(m) => setVideoFilePath(m.filePath)} source="movie" accept="video/*" />
+        onSelect={handleVideoSelect} source="movie" accept="video/*" />
       <MediaPicker
         open={qualityPickerOpen}
         onClose={() => { setQualityPickerOpen(false); setCurrentQualityRowId(null); }}

@@ -1,25 +1,55 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import {
   User, Mail, Lock, Eye, EyeOff, LogOut, Crown, Clock,
   Heart, Shield, Trash2, ChevronRight, Play, Check,
   Loader2, Bell, ArrowLeft, Star, Edit3, Camera, AlertTriangle,
   Bookmark, Settings, CreditCard, Film, Tv, X, Download, BookmarkX,
+  Plus, UserCircle2, Wifi, Smartphone,
 } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTheme } from "next-themes";
 import {
-  getImageUrl, updateProfile, updatePassword, deleteAccount,
+  getImageUrl, updateAppProfile, uploadProfileAvatar, updatePassword, deleteAccount,
   useGetWishlist, useToggleWishlist,
-  useGetDownloads, useRemoveDownload,
+  useGetDownloads, useRemoveDownload, getOfflineVideoUrl, removeOfflineVideo,
 } from "@/lib/api-client";
 import { PublicFooter } from "@/pages/streaming-home";
-import MediaPicker from "@/components/MediaPicker";
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type ProfileTab = "overview" | "settings" | "security" | "watchlist" | "downloads";
 
-function AvatarCircle({ name, avatarUrl, size = "lg" }: { name?: string; avatarUrl?: string; size?: "sm" | "md" | "lg" | "xl" }) {
+interface OttProfile {
+  id: string;
+  name: string;
+  color: string;
+  isMain: boolean;
+}
+
+const PROFILE_COLORS = [
+  "bg-red-500",
+  "bg-blue-500",
+  "bg-purple-500",
+  "bg-emerald-500",
+  "bg-amber-500",
+  "bg-pink-500",
+];
+
+const COLOR_LABELS = ["Red", "Blue", "Purple", "Emerald", "Amber", "Pink"];
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
+
+function AvatarCircle({
+  name,
+  avatarUrl,
+  size = "lg",
+}: {
+  name?: string;
+  avatarUrl?: string;
+  size?: "sm" | "md" | "lg" | "xl";
+}) {
   const sizeMap = {
     sm: "w-8 h-8 text-xs",
     md: "w-10 h-10 text-sm",
@@ -28,13 +58,21 @@ function AvatarCircle({ name, avatarUrl, size = "lg" }: { name?: string; avatarU
   };
   if (avatarUrl) {
     return (
-      <div className={`${sizeMap[size]} rounded-full overflow-hidden flex-shrink-0 shadow-xl shadow-primary/40 bg-zinc-900 border border-white/10`}>
-        <img src={getImageUrl(avatarUrl)} alt={name || "Avatar"} className="w-full h-full object-cover" />
+      <div
+        className={`${sizeMap[size]} rounded-full overflow-hidden flex-shrink-0 shadow-xl shadow-primary/40 bg-zinc-900 border border-white/10`}
+      >
+        <img
+          src={getImageUrl(avatarUrl)}
+          alt={name || "Avatar"}
+          className="w-full h-full object-cover"
+        />
       </div>
     );
   }
   return (
-    <div className={`${sizeMap[size]} rounded-full bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center font-black text-white flex-shrink-0 shadow-xl shadow-primary/40`}>
+    <div
+      className={`${sizeMap[size]} rounded-full bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center font-black text-white flex-shrink-0 shadow-xl shadow-primary/40`}
+    >
       {name ? name[0].toUpperCase() : <User className="w-1/2 h-1/2" />}
     </div>
   );
@@ -58,6 +96,199 @@ function ToastAlert({ msg, onClose }: { msg: string; onClose: () => void }) {
   );
 }
 
+// ─── Profile color circle ──────────────────────────────────────────────────────
+
+function ProfileColorCircle({
+  profile,
+  size = "lg",
+  onClick,
+}: {
+  profile: OttProfile;
+  size?: "sm" | "lg";
+  onClick?: () => void;
+}) {
+  const sizeClass = size === "lg" ? "w-24 h-24 text-3xl" : "w-10 h-10 text-sm";
+  return (
+    <button
+      onClick={onClick}
+      className={`${sizeClass} ${profile.color} rounded-full flex items-center justify-center font-black text-white shadow-lg hover:scale-105 active:scale-95 transition-transform duration-200 flex-shrink-0`}
+    >
+      {profile.name[0]?.toUpperCase() ?? "?"}
+    </button>
+  );
+}
+
+// ─── Multi-profile selector screen ─────────────────────────────────────────────
+
+function ProfileSelectScreen({
+  mainUserName,
+  onSelect,
+}: {
+  mainUserName: string;
+  onSelect: (profile: OttProfile) => void;
+}) {
+  const [profiles, setProfiles] = useState<OttProfile[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
+  const [newProfileColor, setNewProfileColor] = useState(PROFILE_COLORS[1]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("ott_profiles");
+      if (stored) {
+        const parsed: OttProfile[] = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProfiles(parsed);
+          return;
+        }
+      }
+    } catch {}
+    const main: OttProfile = {
+      id: "main",
+      name: mainUserName || "Me",
+      color: PROFILE_COLORS[0],
+      isMain: true,
+    };
+    localStorage.setItem("ott_profiles", JSON.stringify([main]));
+    setProfiles([main]);
+  }, [mainUserName]);
+
+  const saveProfiles = (updated: OttProfile[]) => {
+    localStorage.setItem("ott_profiles", JSON.stringify(updated));
+    setProfiles(updated);
+  };
+
+  const handleAddProfile = () => {
+    if (!newProfileName.trim()) return;
+    if (profiles.length >= 4) return;
+    const newP: OttProfile = {
+      id: `profile_${Date.now()}`,
+      name: newProfileName.trim(),
+      color: newProfileColor,
+      isMain: false,
+    };
+    saveProfiles([...profiles, newP]);
+    setNewProfileName("");
+    setShowAddModal(false);
+  };
+
+  const handleDeleteProfile = (id: string) => {
+    saveProfiles(profiles.filter((p) => p.id !== id));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#030306] flex flex-col items-center justify-center px-6 py-12 font-sans">
+      <h1 className="text-white font-black text-3xl sm:text-4xl mb-2 text-center tracking-tight">
+        Who's watching?
+      </h1>
+      <p className="text-zinc-500 text-sm mb-12 text-center">Select a profile to continue</p>
+
+      <div className="flex flex-wrap justify-center gap-8 mb-12">
+        {profiles.map((profile) => (
+          <div key={profile.id} className="flex flex-col items-center gap-3 group">
+            <div className="relative">
+              <ProfileColorCircle
+                profile={profile}
+                size="lg"
+                onClick={() => {
+                  localStorage.setItem("ott_active_profile", JSON.stringify(profile));
+                  onSelect(profile);
+                }}
+              />
+              {!profile.isMain && (
+                <button
+                  onClick={() => handleDeleteProfile(profile.id)}
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <span className="text-white text-sm font-bold text-center max-w-[96px] truncate">
+              {profile.name}
+            </span>
+          </div>
+        ))}
+
+        {profiles.length < 4 && (
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="w-24 h-24 rounded-full bg-zinc-900 border-2 border-dashed border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-500 hover:text-white transition-all hover:scale-105 active:scale-95"
+            >
+              <Plus className="w-8 h-8" />
+            </button>
+            <span className="text-zinc-500 text-sm font-bold">Add Profile</span>
+          </div>
+        )}
+      </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-[#0c0c14] border border-white/10 rounded-2xl p-6 shadow-2xl">
+            <h2 className="text-white font-black text-lg mb-5">New Profile</h2>
+
+            <div className="mb-4">
+              <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                Name
+              </label>
+              <input
+                type="text"
+                value={newProfileName}
+                onChange={(e) => setNewProfileName(e.target.value)}
+                placeholder="Profile name"
+                maxLength={20}
+                className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                Color
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {PROFILE_COLORS.map((color, idx) => (
+                  <button
+                    key={color}
+                    onClick={() => setNewProfileColor(color)}
+                    className={`w-8 h-8 rounded-full ${color} transition-all ${
+                      newProfileColor === color
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-[#0c0c14] scale-110"
+                        : "hover:scale-105"
+                    }`}
+                    title={COLOR_LABELS[idx]}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleAddProfile}
+                disabled={!newProfileName.trim()}
+                className="flex-1 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Profile
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setNewProfileName("");
+                }}
+                className="flex-1 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-sm font-bold transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main page ─────────────────────────────────────────────────────────────────
+
 export default function UserProfilePage() {
   const [, setLocation] = useLocation();
   const { settings } = useSettings();
@@ -67,11 +298,16 @@ export default function UserProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [toast, setToast] = useState("");
 
+  // Active OTT profile (null = show selector screen)
+  const [activeProfile, setActiveProfile] = useState<OttProfile | null>(null);
+
   // Edit profile state
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [editSaving, setEditSaving] = useState(false);
-  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -103,26 +339,64 @@ export default function UserProfilePage() {
         setUser(u);
         setEditName(u.name || "");
         setEditEmail(u.email || "");
+        setEditPhone(u.phone || "");
       }
-      const cw = JSON.parse(localStorage.getItem("continue_watching") || "[]");
+      const pid = (() => { try { const p = localStorage.getItem('ott_active_profile'); return p ? JSON.parse(p).id : 'default'; } catch { return 'default'; } })();
+      const cw = JSON.parse(localStorage.getItem(`continue_watching_${pid}`) || localStorage.getItem("continue_watching") || "[]");
       setContinueWatching(Array.isArray(cw) ? cw : []);
+
+      const savedProfile = localStorage.getItem("ott_active_profile");
+      if (savedProfile) {
+        setActiveProfile(JSON.parse(savedProfile));
+      }
     } catch {}
   }, []);
 
   // Wishlist API
-  const { data: wishlistData, isLoading: wishlistLoading, refetch: refetchWishlist } = useGetWishlist({ limit: 50 });
+  const { data: wishlistData, isLoading: wishlistLoading, refetch: refetchWishlist } =
+    useGetWishlist({ limit: 50 });
   const wishlistItems: any[] = wishlistData?.items || [];
   const toggleWishlistMutation = useToggleWishlist();
 
   // Downloads API
-  const { data: downloadsData, isLoading: downloadsLoading, refetch: refetchDownloads } = useGetDownloads({ limit: 50 });
-  const downloadItems: any[] = downloadsData?.items || [];
+  const { data: downloadsData, isLoading: downloadsLoading, refetch: refetchDownloads } =
+    useGetDownloads({ limit: 50 });
+  const downloadItems: any[] = Array.isArray(downloadsData) ? downloadsData : [];
   const removeDownloadMutation = useRemoveDownload();
+
+  // Refetch wishlist and downloads when profile changes
+  useEffect(() => {
+    const handleProfileChanged = () => {
+      refetchWishlist();
+      refetchDownloads();
+    };
+    window.addEventListener('profile-changed', handleProfileChanged);
+    return () => window.removeEventListener('profile-changed', handleProfileChanged);
+  }, [refetchWishlist, refetchDownloads]);
+
+  const [offlineCached, setOfflineCached] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (downloadItems.length === 0) return;
+    const checkCache = async () => {
+      if (!('caches' in window)) return;
+      const cache = await caches.open('video-offline-cache');
+      const results: Record<string, boolean> = {};
+      for (const item of downloadItems) {
+        const key = item.episodeId ? `episode-${item.episodeId}` : `movie-${item.contentId}`;
+        const match = await cache.match(key);
+        results[item.id] = !!match;
+      }
+      setOfflineCached(results);
+    };
+    checkCache();
+  }, [downloadItems.length]);
 
   const handleSignOut = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("ott_active_profile");
     setLocation("/");
     window.location.reload();
   };
@@ -131,8 +405,8 @@ export default function UserProfilePage() {
     if (!editName.trim()) return;
     setEditSaving(true);
     try {
-      await updateProfile({ name: editName, email: editEmail });
-      const updated = { ...user, name: editName, email: editEmail };
+      await updateAppProfile({ name: editName, email: editEmail, phone: editPhone });
+      const updated = { ...user, name: editName, email: editEmail, phone: editPhone };
       localStorage.setItem("user", JSON.stringify(updated));
       setUser(updated);
       setToast("Profile updated successfully");
@@ -144,18 +418,32 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleAvatarSelect = async (url: string) => {
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setToast("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setToast("Image must be under 5MB");
+      return;
+    }
+    setAvatarUploading(true);
     try {
-      await updateProfile({ avatar: url });
-      const updated = { ...user, avatar: url };
+      const { avatarUrl } = await uploadProfileAvatar(file);
+      await updateAppProfile({ avatar: avatarUrl });
+      const updated = { ...user, avatar: avatarUrl };
       localStorage.setItem("user", JSON.stringify(updated));
       setUser(updated);
-      setToast("Profile photo updated successfully");
+      setToast("Profile photo updated");
       window.dispatchEvent(new Event("user-updated"));
-    } catch (e: any) {
-      setToast("Failed to update profile photo");
+    } catch {
+      setToast("Failed to upload photo");
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
-    setMediaPickerOpen(false);
   };
 
   const handleChangePassword = async () => {
@@ -201,7 +489,10 @@ export default function UserProfilePage() {
 
   const handleRemoveWishlist = async (item: any) => {
     try {
-      await toggleWishlistMutation.mutateAsync({ contentId: item.id, contentType: item.type });
+      await toggleWishlistMutation.mutateAsync({
+        contentId: item.id,
+        contentType: item.type,
+      });
       setToast("Removed from wishlist");
       refetchWishlist();
     } catch {
@@ -209,9 +500,10 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleRemoveDownload = async (id: string) => {
+  const handleRemoveDownload = async (item: any) => {
     try {
-      await removeDownloadMutation.mutateAsync(id);
+      await removeDownloadMutation.mutateAsync({ id: item.id, contentId: item.contentId, episodeId: item.episodeId || undefined });
+      await removeOfflineVideo(item.contentId, item.episodeId || undefined);
       setToast("Download removed");
       refetchDownloads();
     } catch {
@@ -219,16 +511,30 @@ export default function UserProfilePage() {
     }
   };
 
+  const handlePlayDownload = async (item: any) => {
+    // Try to get the cached blob URL — if found, put it in sessionStorage so the player uses it immediately
+    const blobUrl = await getOfflineVideoUrl(item.contentId, item.episodeId || undefined);
+    if (blobUrl) {
+      sessionStorage.setItem(`offline_url_${item.contentId}_${item.episodeId || ''}`, blobUrl);
+    }
+    handlePlayItem(item);
+  };
+
   const handlePlayItem = (item: any) => {
-    // Downloads: item.id = log _id, item.contentId = real content id
-    // Wishlist:  item.id = content _id (no contentId field)
     const navId = item.contentId || item.id;
-    if (item.type === "drama" || item.contentType === "drama") {
-      setLocation(`/show/${navId}/episode/1`);
+    const isDrama = item.type === "drama" || item.contentType === "drama";
+    const isShow =
+      item.type === "show" || item.type === "series" || item.contentType === "series";
+    if (isDrama) {
+      setLocation(`/drama/${navId}/episode/1`);
+    } else if (isShow) {
+      setLocation(`/show/${navId}`);
     } else {
       setLocation(`/movie/${navId}`);
     }
   };
+
+  // ── Not signed in ────────────────────────────────────────────────────────────
 
   if (!user) {
     return (
@@ -238,12 +544,20 @@ export default function UserProfilePage() {
         </div>
         <div className="text-center">
           <h2 className="text-white font-black text-xl mb-2">You're not signed in</h2>
-          <p className="text-zinc-500 text-sm mb-6">Please log in to view your profile and account settings.</p>
+          <p className="text-zinc-500 text-sm mb-6">
+            Please log in to view your profile and account settings.
+          </p>
           <div className="flex items-center gap-3 justify-center">
-            <Link href="/" className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 text-zinc-300 hover:text-white font-bold rounded-xl text-sm transition-all">
+            <Link
+              href="/"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 text-zinc-300 hover:text-white font-bold rounded-xl text-sm transition-all"
+            >
               <ArrowLeft className="w-4 h-4" /> Back Home
             </Link>
-            <Link href="/login" className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary/30">
+            <Link
+              href="/login"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary/30"
+            >
               Sign In
             </Link>
           </div>
@@ -252,7 +566,24 @@ export default function UserProfilePage() {
     );
   }
 
-  const isSubscribed = user.subscriptionStatus === "active" && user.subscriptionPlan !== "free";
+  // ── Profile selector screen ───────────────────────────────────────────────────
+
+  if (!activeProfile) {
+    return (
+      <ProfileSelectScreen
+        mainUserName={user.name}
+        onSelect={(profile) => {
+          setActiveProfile(profile);
+          window.dispatchEvent(new Event('profile-changed'));
+        }}
+      />
+    );
+  }
+
+  // ── Active profile view ───────────────────────────────────────────────────────
+
+  const isSubscribed =
+    user.subscriptionStatus === "active" && user.subscriptionPlan !== "free";
 
   const TABS: { id: ProfileTab; label: string; icon: React.ReactNode }[] = [
     { id: "overview", label: "Overview", icon: <User className="w-4 h-4" /> },
@@ -265,109 +596,173 @@ export default function UserProfilePage() {
   return (
     <div className="min-h-screen bg-[#030306] font-sans text-white selection:bg-primary/30">
 
-      {/* Header */}
+      {/* ── Top bar ── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#030306]/95 backdrop-blur-md border-b border-white/5 px-4 sm:px-8 lg:px-14">
-        <div className="flex items-center justify-between h-[60px]">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-all text-sm font-bold">
+        <div className="flex items-center justify-between h-[60px] gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-zinc-400 hover:text-white transition-all text-sm font-bold flex-shrink-0"
+            >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:block">Back to Home</span>
+              <span className="hidden sm:block">Home</span>
             </Link>
-            <div className="w-px h-5 bg-zinc-800" />
+            <div className="w-px h-5 bg-zinc-800 flex-shrink-0" />
             {getLogoUrl() ? (
-              <img src={getLogoUrl()} alt={settings.platformName || "StreamIT"} className="h-7 w-auto object-contain" />
+              <img
+                src={getLogoUrl()}
+                alt={settings.platformName || "StreamIT"}
+                className="h-7 w-auto object-contain"
+              />
             ) : (
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
                   <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
                 </div>
-                <span className="text-white font-black text-base hidden sm:block">{settings.platformName || "StreamIT"}</span>
+                <span className="text-white font-black text-base hidden sm:block">
+                  {settings.platformName || "StreamIT"}
+                </span>
               </div>
             )}
           </div>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:block">Sign Out</span>
-          </button>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                localStorage.removeItem("ott_active_profile");
+                setActiveProfile(null);
+              }}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
+            >
+              <UserCircle2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:block">Switch Profile</span>
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:block">Sign Out</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Hero Banner */}
+      {/* ── Content below header ── */}
       <div className="pt-[60px]">
-        <div className="relative overflow-hidden">
-          <div className="h-40 sm:h-52 bg-gradient-to-br from-primary/20 via-[#030306] to-[#0a0a10]">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(229,9,20,0.25),transparent_60%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.12),transparent_60%)]" />
-            <div className="absolute inset-0 opacity-[0.03]"
-              style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,1) 40px,rgba(255,255,255,1) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,1) 40px,rgba(255,255,255,1) 41px)" }}
-            />
-          </div>
 
-          {/* Avatar overlapping the banner */}
-          <div className="absolute bottom-0 translate-y-1/2 left-6 sm:left-14">
-            <div className="relative">
+        {/* ── Profile card (no banner) ── */}
+        <div className="px-4 sm:px-8 lg:px-14 pt-8 pb-4">
+          <div className="flex items-center gap-5 p-5 sm:p-6 bg-white/[0.03] border border-white/[0.08] rounded-2xl flex-wrap sm:flex-nowrap">
+            {/* Avatar with camera button */}
+            <div className="relative flex-shrink-0">
               <AvatarCircle name={user.name} avatarUrl={user.avatar} size="xl" />
-              <button onClick={() => setMediaPickerOpen(true)} className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-zinc-800 border-2 border-[#030306] flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all">
-                <Camera className="w-3 h-3" />
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-zinc-800 border-2 border-[#030306] flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all disabled:opacity-50"
+              >
+                {avatarUploading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Camera className="w-3 h-3" />
+                )}
               </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+              />
             </div>
+
+            {/* Name + email + badge */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-white font-black text-xl sm:text-2xl tracking-tight truncate">
+                {user.name}
+              </h1>
+              <p className="text-zinc-500 text-sm mt-0.5 font-medium truncate">
+                {user.email || "Member"}
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {isSubscribed ? (
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-400/10 border border-amber-400/20 text-amber-400 rounded-lg text-[11px] font-black">
+                    <Crown className="w-3 h-3" /> {user.subscriptionPlan || "Premium"} Member
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg text-[11px] font-black">
+                    Free Member
+                  </span>
+                )}
+                {isSubscribed && (
+                  <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[11px] font-black">
+                    <Check className="w-3 h-3" /> Active
+                  </span>
+                )}
+                <span className="flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/10 text-zinc-400 rounded-lg text-[11px] font-black">
+                  {activeProfile.name}
+                </span>
+              </div>
+            </div>
+
+            {/* Edit button */}
+            <button
+              onClick={() => setActiveTab("settings")}
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition-all flex-shrink-0"
+            >
+              <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+            </button>
           </div>
         </div>
 
-        {/* User info below banner */}
-        <div className="px-6 sm:px-14 pt-16 pb-6 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-white font-black text-2xl sm:text-3xl tracking-tight">{user.name}</h1>
-            <p className="text-zinc-500 text-sm mt-0.5 font-medium">{user.email || "Member"}</p>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {isSubscribed ? (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-400/10 border border-amber-400/20 text-amber-400 rounded-lg text-[11px] font-black">
-                  <Crown className="w-3 h-3" /> {user.subscriptionPlan || 'Premium'} Member
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg text-[11px] font-black">
-                  Free Member
-                </span>
-              )}
-              {isSubscribed && (
-                <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[11px] font-black">
-                  <Check className="w-3 h-3" /> Active
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={() => setActiveTab("settings")}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition-all"
-          >
-            <Edit3 className="w-3.5 h-3.5" /> Edit Profile
-          </button>
-        </div>
-
-        {/* Stats Row */}
-        <div className="px-6 sm:px-14 pb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* ── Stats row ── */}
+        <div className="px-4 sm:px-8 lg:px-14 pb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { icon: <Film className="w-4 h-4" />, label: "Continue Watching", value: continueWatching.length },
-            { icon: <Bookmark className="w-4 h-4" />, label: "Wishlist", value: wishlistItems.length },
-            { icon: <Download className="w-4 h-4" />, label: "Downloads", value: downloadItems.length },
-            { icon: <Crown className="w-4 h-4" />, label: "Plan Level", value: isSubscribed ? (user.subscriptionPlan || 'Premium') : 'Free' },
+            {
+              icon: <Film className="w-4 h-4 text-rose-500" />,
+              label: "Continue Watching",
+              value: continueWatching.length,
+            },
+            {
+              icon: <Bookmark className="w-4 h-4 text-violet-500" />,
+              label: "Wishlist",
+              value: wishlistItems.length,
+            },
+            {
+              icon: <Download className="w-4 h-4 text-emerald-500" />,
+              label: "Downloads",
+              value: downloadItems.length,
+            },
+            {
+              icon: <Crown className="w-4 h-4 text-amber-500" />,
+              label: "Plan Level",
+              value: isSubscribed ? user.subscriptionPlan || "Premium" : "Free",
+            },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white/3 border border-white/5 rounded-2xl p-4 hover:bg-white/5 transition-colors">
-              <div className="flex items-center gap-2 text-zinc-500 mb-2">
-                {stat.icon}
-                <span className="text-[11px] font-bold uppercase tracking-wide">{stat.label}</span>
+            <div
+              key={stat.label}
+              className="relative overflow-hidden bg-gradient-to-br from-white/[0.03] to-transparent hover:from-white/[0.07] hover:to-white/[0.01] border border-white/10 rounded-2xl p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-white/20 group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 group-hover:text-zinc-300 transition-colors">
+                  {stat.label}
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  {stat.icon}
+                </div>
               </div>
               <p className="text-white font-black text-2xl tracking-tight">{stat.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="sticky top-[60px] z-30 bg-[#030306]/95 backdrop-blur-md border-b border-white/5 px-6 sm:px-14">
-          <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        {/* ── Sticky tab bar ── */}
+        <div className="sticky top-[60px] z-30 bg-[#030306]/95 backdrop-blur-md border-b border-white/5 px-4 sm:px-8 lg:px-14">
+          <div
+            className="flex items-center gap-1 overflow-x-auto"
+            style={{ scrollbarWidth: "none" }}
+          >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -385,8 +780,8 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        {/* Tab Content */}
-        <div className="px-6 sm:px-14 py-8 max-w-4xl">
+        {/* ── Tab content ── */}
+        <div className="px-4 sm:px-8 lg:px-14 py-8 max-w-4xl">
 
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && (
@@ -398,18 +793,22 @@ export default function UserProfilePage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Crown className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400 font-black text-sm capitalize">{user.subscriptionPlan || 'Free'} Plan</span>
+                      <span className="text-amber-400 font-black text-sm capitalize">
+                        {user.subscriptionPlan || "Free"} Plan
+                      </span>
                     </div>
                     <h3 className="text-white font-black text-xl mb-1">
-                      {isSubscribed ? 'All-Access Subscription' : 'Free Account'}
+                      {isSubscribed ? "All-Access Subscription" : "Free Account"}
                     </h3>
                     <p className="text-zinc-400 text-sm">
-                      {isSubscribed ? 'Unlimited streaming · HD & 4K · All devices' : 'Upgrade to unlock all premium content'}
+                      {isSubscribed
+                        ? "Unlimited streaming · HD & 4K · All devices"
+                        : "Upgrade to unlock all premium content"}
                     </p>
                     {!isSubscribed && (
                       <div className="mt-4">
                         <button
-                          onClick={() => setLocation('/')}
+                          onClick={() => setLocation("/")}
                           className="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary/30"
                         >
                           Upgrade Now
@@ -434,23 +833,38 @@ export default function UserProfilePage() {
                   <div className="text-center py-10 border border-white/5 rounded-2xl bg-white/2">
                     <Clock className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
                     <p className="text-zinc-500 text-sm">Nothing to show yet. Start watching!</p>
-                    <Link href="/" className="inline-flex items-center gap-2 mt-4 px-5 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl transition-all">
+                    <Link
+                      href="/"
+                      className="inline-flex items-center gap-2 mt-4 px-5 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl transition-all"
+                    >
                       Browse Content
                     </Link>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {continueWatching.slice(0, 8).map((item: any) => (
-                      <div key={item.id} onClick={() => handlePlayItem(item)} className="group cursor-pointer">
-                        <div className="relative rounded-xl overflow-hidden bg-zinc-900 mb-2" style={{ aspectRatio: "16/9" }}>
+                      <div
+                        key={item.id}
+                        onClick={() => handlePlayItem(item)}
+                        className="group cursor-pointer"
+                      >
+                        <div
+                          className="relative rounded-xl overflow-hidden bg-zinc-900 mb-2"
+                          style={{ aspectRatio: "16/9" }}
+                        >
                           <img
-                            src={item.poster ? getImageUrl(item.poster) : ''}
+                            src={item.poster ? getImageUrl(item.poster) : ""}
                             alt={item.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#111'; }}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.backgroundColor = "#111";
+                            }}
                           />
                           <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
-                            <div className="h-full bg-primary rounded-full" style={{ width: `${item.progress || 25}%` }} />
+                            <div
+                              className="h-full bg-primary rounded-full"
+                              style={{ width: `${item.progress || 25}%` }}
+                            />
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center">
@@ -459,30 +873,13 @@ export default function UserProfilePage() {
                           </div>
                         </div>
                         <p className="text-white text-xs font-bold truncate">{item.title}</p>
-                        <p className="text-zinc-600 text-[10px] mt-0.5">{item.progress || 25}% complete</p>
+                        <p className="text-zinc-600 text-[10px] mt-0.5">
+                          {item.progress || 25}% complete
+                        </p>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Quick actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { icon: <Bookmark className="w-4 h-4" />, label: "My Wishlist", desc: `${wishlistItems.length} saved titles`, tab: "watchlist" as ProfileTab },
-                  { icon: <Download className="w-4 h-4" />, label: "My Downloads", desc: `${downloadItems.length} downloaded items`, tab: "downloads" as ProfileTab },
-                ].map((action) => (
-                  <button key={action.label} onClick={() => setActiveTab(action.tab)} className="flex items-center gap-4 p-4 bg-white/3 border border-white/5 rounded-2xl hover:bg-white/6 hover:border-white/10 transition-all text-left group">
-                    <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white group-hover:bg-primary/10 group-hover:text-primary transition-all flex-shrink-0">
-                      {action.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-bold">{action.label}</p>
-                      <p className="text-zinc-600 text-xs mt-0.5">{action.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 transition-colors" />
-                  </button>
-                ))}
               </div>
             </div>
           )}
@@ -494,10 +891,15 @@ export default function UserProfilePage() {
                 <h2 className="text-white font-black text-lg flex items-center gap-2">
                   <Bookmark className="w-5 h-5 text-primary" /> My Wishlist
                   {wishlistItems.length > 0 && (
-                    <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">{wishlistItems.length}</span>
+                    <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">
+                      {wishlistItems.length}
+                    </span>
                   )}
                 </h2>
-                <Link href="/browse" className="text-zinc-500 hover:text-primary text-xs font-bold transition-colors">
+                <Link
+                  href="/browse"
+                  className="text-zinc-500 hover:text-primary text-xs font-bold transition-colors"
+                >
                   Browse More +
                 </Link>
               </div>
@@ -512,48 +914,68 @@ export default function UserProfilePage() {
                     <Bookmark className="w-8 h-8 text-zinc-600" />
                   </div>
                   <p className="text-white font-bold">Your wishlist is empty</p>
-                  <p className="text-zinc-500 text-sm">Click the Watchlist button on any movie or show to save it here</p>
-                  <Link href="/browse" className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all">
+                  <p className="text-zinc-500 text-sm">
+                    Click the Watchlist button on any movie or show to save it here
+                  </p>
+                  <Link
+                    href="/browse"
+                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all"
+                  >
                     Browse Content
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
                   {wishlistItems.map((item: any) => (
-                    <div key={item.id} className="group flex items-center gap-4 p-4 bg-white/3 border border-white/5 hover:bg-white/6 hover:border-white/10 rounded-2xl transition-all">
-                      <div
-                        className="relative flex-shrink-0 w-24 rounded-xl overflow-hidden cursor-pointer bg-zinc-900"
-                        style={{ aspectRatio: item.type === "drama" ? "9/16" : "16/9" }}
-                        onClick={() => handlePlayItem(item)}
-                      >
-                        <img
-                          src={item.poster ? getImageUrl(item.poster) : (item.backdrop ? getImageUrl(item.backdrop) : '')}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#111'; }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                          <Play className="w-6 h-6 text-white fill-white" />
+                    <div
+                      key={item.id}
+                      className="group relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-all duration-300 shadow-md aspect-[2/3] cursor-pointer"
+                      onClick={() => handlePlayItem(item)}
+                    >
+                      <img
+                        src={
+                          item.poster
+                            ? getImageUrl(item.poster)
+                            : item.backdrop
+                            ? getImageUrl(item.backdrop)
+                            : ""
+                        }
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.backgroundColor = "#111";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-10 h-10 rounded-full bg-primary/95 flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-bold text-sm truncate">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-1 text-zinc-500 text-xs">
-                          <span className="capitalize">{item.type === 'show' ? 'TV Show' : item.type}</span>
-                          {item.year && <><span>·</span><span>{item.year}</span></>}
-                          {item.imdbRating && <><span>·</span><Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" /><span className="text-amber-400">{item.imdbRating}</span></>}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 z-10 pointer-events-none">
+                        <p className="text-white font-bold text-xs line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                          {item.title}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-zinc-400">
+                          <span className="capitalize">
+                            {item.type === "show" ? "TV Show" : item.type}
+                          </span>
+                          {item.year && <span>· {item.year}</span>}
+                          {item.imdbRating && (
+                            <span className="flex items-center gap-0.5 text-amber-400 font-bold ml-auto">
+                              <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                              {item.imdbRating}
+                            </span>
+                          )}
                         </div>
-                        <button
-                          onClick={() => handlePlayItem(item)}
-                          className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-bold transition-colors"
-                        >
-                          <Play className="w-3 h-3 fill-current" /> Watch Now
-                        </button>
                       </div>
                       <button
-                        onClick={() => handleRemoveWishlist(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveWishlist(item);
+                        }}
                         disabled={toggleWishlistMutation.isPending}
-                        className="flex-shrink-0 w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-primary/10 hover:border-primary/30 hover:text-primary text-zinc-500 flex items-center justify-center transition-all disabled:opacity-50"
+                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-primary/90 border border-white/10 hover:border-primary/50 text-zinc-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 duration-200 disabled:opacity-50"
                         title="Remove from wishlist"
                       >
                         <BookmarkX className="w-4 h-4" />
@@ -572,7 +994,9 @@ export default function UserProfilePage() {
                 <h2 className="text-white font-black text-lg flex items-center gap-2">
                   <Download className="w-5 h-5 text-primary" /> My Downloads
                   {downloadItems.length > 0 && (
-                    <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">{downloadItems.length}</span>
+                    <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">
+                      {downloadItems.length}
+                    </span>
                   )}
                 </h2>
               </div>
@@ -587,49 +1011,81 @@ export default function UserProfilePage() {
                     <Download className="w-8 h-8 text-zinc-600" />
                   </div>
                   <p className="text-white font-bold">No downloads yet</p>
-                  <p className="text-zinc-500 text-sm">Download movies and episodes to watch offline</p>
-                  <Link href="/browse" className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all">
+                  <p className="text-zinc-500 text-sm">
+                    Download movies and episodes to watch offline
+                  </p>
+                  <Link
+                    href="/browse"
+                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all"
+                  >
                     Browse Content
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
                   {downloadItems.map((item: any) => (
-                    <div key={item.id} className="group flex items-center gap-4 p-4 bg-white/3 border border-white/5 hover:bg-white/6 hover:border-white/10 rounded-2xl transition-all">
-                      <div
-                        className="relative flex-shrink-0 w-28 rounded-xl overflow-hidden cursor-pointer bg-zinc-900"
-                        style={{ aspectRatio: "16/9" }}
-                        onClick={() => handlePlayItem(item)}
-                      >
-                        <img
-                          src={item.thumbnail ? getImageUrl(item.thumbnail) : ''}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#111'; }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                          <Play className="w-6 h-6 text-white fill-white" />
+                    <div
+                      key={item.id}
+                      className="group relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 hover:border-white/20 transition-all duration-300 shadow-md aspect-[2/3] cursor-pointer"
+                      onClick={() => handlePlayDownload(item)}
+                    >
+                      <img
+                        src={
+                          item.poster
+                            ? getImageUrl(item.poster)
+                            : item.thumbnail
+                            ? getImageUrl(item.thumbnail)
+                            : ""
+                        }
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.backgroundColor = "#111";
+                        }}
+                      />
+                      {offlineCached[item.id] && (
+                        <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600/90 text-[9px] font-bold text-white">
+                          <Wifi className="w-2.5 h-2.5" /> Offline
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-10 h-10 rounded-full bg-primary/95 flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="absolute bottom-0 left-0 right-0 p-3 z-10 pointer-events-none">
                         {item.parentTitle && (
-                          <p className="text-zinc-400 text-xs font-semibold mb-0.5 truncate">{item.parentTitle}</p>
+                          <p className="text-zinc-400 text-[10px] font-semibold mb-0.5 truncate leading-tight">
+                            {item.parentTitle}
+                          </p>
                         )}
-                        <p className="text-white font-bold text-sm truncate">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-1 text-zinc-500 text-xs">
-                          <span className="capitalize">{item.type}</span>
-                          {item.episodeNumber && <><span>·</span><span>S{item.season} E{item.episodeNumber}</span></>}
-                          {item.duration && <><span>·</span><span>{item.duration}m</span></>}
-                          {item.year && <><span>·</span><span>{item.year}</span></>}
-                        </div>
-                        <p className="text-zinc-600 text-[10px] mt-1">
-                          Downloaded {new Date(item.downloadedAt).toLocaleDateString()}
+                        <p className="text-white font-bold text-xs line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                          {item.title}
                         </p>
+                        <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-zinc-400">
+                          <div className="flex items-center gap-1">
+                            <span className="capitalize">{item.type}</span>
+                            {item.episodeNumber && (
+                              <span>
+                                · S{item.season} E{item.episodeNumber}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-zinc-500 text-[9px]">
+                            {item.duration && <span>{item.duration}m</span>}
+                            {item.duration && item.year && <span>·</span>}
+                            {item.year && <span>{item.year}</span>}
+                          </div>
+                        </div>
                       </div>
                       <button
-                        onClick={() => handleRemoveDownload(item.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveDownload(item);
+                        }}
                         disabled={removeDownloadMutation.isPending}
-                        className="flex-shrink-0 w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-primary/10 hover:border-primary/30 hover:text-primary text-zinc-500 flex items-center justify-center transition-all disabled:opacity-50"
+                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-primary/90 border border-white/10 hover:border-primary/50 text-zinc-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 duration-200 disabled:opacity-50"
                         title="Remove download"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -652,8 +1108,17 @@ export default function UserProfilePage() {
                 <div>
                   <p className="text-white font-bold text-sm">{user.name}</p>
                   <p className="text-zinc-500 text-xs mb-3">{user.email || "Member"}</p>
-                  <button onClick={() => setMediaPickerOpen(true)} className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all">
-                    <Camera className="w-3 h-3" /> Change Photo
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                  >
+                    {avatarUploading ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Camera className="w-3 h-3" />
+                    )}
+                    {avatarUploading ? "Uploading..." : "Change Photo"}
                   </button>
                 </div>
               </div>
@@ -661,7 +1126,9 @@ export default function UserProfilePage() {
               {/* Form */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">Display Name</label>
+                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                    Display Name
+                  </label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                     <input
@@ -674,7 +1141,9 @@ export default function UserProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">Email Address</label>
+                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                     <input
@@ -683,6 +1152,21 @@ export default function UserProfilePage() {
                       onChange={(e) => setEditEmail(e.target.value)}
                       className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
                       placeholder="your@email.com"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                    Mobile Number
+                  </label>
+                  <div className="relative">
+                    <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                    <input
+                      type="tel"
+                      value={editPhone}
+                      onChange={e => setEditPhone(e.target.value)}
+                      placeholder="e.g. 9876543210"
+                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
                     />
                   </div>
                 </div>
@@ -721,12 +1205,32 @@ export default function UserProfilePage() {
                 )}
 
                 {[
-                  { label: "Current Password", value: currentPassword, setter: setCurrentPassword, show: showCurrent, toggleShow: () => setShowCurrent(!showCurrent) },
-                  { label: "New Password", value: newPassword, setter: setNewPassword, show: showNew, toggleShow: () => setShowNew(!showNew) },
-                  { label: "Confirm New Password", value: confirmPassword, setter: setConfirmPassword, show: showNew, toggleShow: () => setShowNew(!showNew) },
+                  {
+                    label: "Current Password",
+                    value: currentPassword,
+                    setter: setCurrentPassword,
+                    show: showCurrent,
+                    toggleShow: () => setShowCurrent(!showCurrent),
+                  },
+                  {
+                    label: "New Password",
+                    value: newPassword,
+                    setter: setNewPassword,
+                    show: showNew,
+                    toggleShow: () => setShowNew(!showNew),
+                  },
+                  {
+                    label: "Confirm New Password",
+                    value: confirmPassword,
+                    setter: setConfirmPassword,
+                    show: showNew,
+                    toggleShow: () => setShowNew(!showNew),
+                  },
                 ].map((field) => (
                   <div key={field.label}>
-                    <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider mb-2">{field.label}</label>
+                    <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider mb-2">
+                      {field.label}
+                    </label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                       <input
@@ -752,7 +1256,11 @@ export default function UserProfilePage() {
                   disabled={passwordSaving}
                   className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
                 >
-                  {passwordSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                  {passwordSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Shield className="w-4 h-4" />
+                  )}
                   {passwordSaving ? "Updating..." : "Update Password"}
                 </button>
               </div>
@@ -764,7 +1272,8 @@ export default function UserProfilePage() {
                   <h3 className="text-primary font-black text-sm">Danger Zone</h3>
                 </div>
                 <p className="text-zinc-500 text-xs mb-5 leading-relaxed">
-                  Permanently delete your account and all associated data. This action cannot be undone.
+                  Permanently delete your account and all associated data. This action cannot be
+                  undone.
                 </p>
 
                 {!deleteConfirm ? (
@@ -776,14 +1285,20 @@ export default function UserProfilePage() {
                   </button>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-primary text-xs font-bold">Are you absolutely sure? This cannot be undone.</p>
+                    <p className="text-primary text-xs font-bold">
+                      Are you absolutely sure? This cannot be undone.
+                    </p>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleting}
                         className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-60"
                       >
-                        {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        {deleting ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
                         {deleting ? "Deleting..." : "Yes, Delete Forever"}
                       </button>
                       <button
@@ -805,13 +1320,6 @@ export default function UserProfilePage() {
       <PublicFooter />
 
       {toast && <ToastAlert msg={toast} onClose={() => setToast("")} />}
-
-      <MediaPicker
-        open={mediaPickerOpen}
-        onClose={() => setMediaPickerOpen(false)}
-        onSelect={(media) => handleAvatarSelect(media.url)}
-        type="image"
-      />
 
       <style>{`
         html { scroll-behavior: smooth; }

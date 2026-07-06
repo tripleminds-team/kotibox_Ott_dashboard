@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Search, Loader2, Film, Tv, Smartphone, Play } from 'lucide-react';
-import { useGetWebBrowse, getImageUrl } from '@/lib/api-client';
+import { Search, Loader2, Film, Tv, Smartphone } from 'lucide-react';
+import { useGetWebBrowse } from '@/lib/api-client';
+import { PortraitCard } from '@/components/ContentCard';
 
 interface SearchResultsProps {
   query: string;
@@ -67,40 +68,15 @@ export default function SearchResults({ query, type = 'movie', onItemClick }: Se
       )}
 
       {!isLoading && items.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {items.map((item: any) => (
-            <button
+            <PortraitCard
               key={item.id || item._id}
+              item={item}
               onClick={() => onItemClick?.(item)}
-              className="group relative text-left cursor-pointer"
-            >
-              <div
-                className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-xl"
-                style={{ aspectRatio: item.type === 'drama' || item.totalEpisodes ? '9/16' : '16/9' }}
-              >
-                <img
-                  src={item.poster ? getImageUrl(item.poster) : (item.backdrop ? getImageUrl(item.backdrop) : '')}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.style.backgroundColor = '#111'; }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
-                    <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                  </div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white font-bold text-sm leading-tight truncate">{item.title}</p>
-                  <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-400">
-                    {item.year && <span>{item.year}</span>}
-                    {item.duration && <><span>·</span><span>{item.duration}</span></>}
-                    {item.seasons && <><span>·</span><span className="text-white bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.seasons}S</span></>}
-                  </div>
-                </div>
-              </div>
-            </button>
+              size="md"
+              fullWidth
+            />
           ))}
         </div>
       )}

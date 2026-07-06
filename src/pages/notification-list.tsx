@@ -115,10 +115,11 @@ export default function NotificationListPage() {
           </SelectTrigger>
           <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
-            <SelectItem value="Expiry Plan">Expiry Plan</SelectItem>
-            <SelectItem value="Continue Watch">Continue Watch</SelectItem>
-            <SelectItem value="New Subscription">New Subscription</SelectItem>
-            <SelectItem value="Episode Add">Episode Add</SelectItem>
+            <SelectItem value="user_registered">User Registered</SelectItem>
+            <SelectItem value="content_created">Created</SelectItem>
+            <SelectItem value="content_updated">Updated</SelectItem>
+            <SelectItem value="content_deleted">Deleted</SelectItem>
+            <SelectItem value="system">System</SelectItem>
           </SelectContent>
         </Select>
 
@@ -146,7 +147,7 @@ export default function NotificationListPage() {
               </TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Type</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Text</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">User</TableHead>
+              <TableHead className="text-zinc-400 font-semibold text-sm">Target</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Updated At</TableHead>
               <TableHead className="text-zinc-400 font-semibold text-sm">Action</TableHead>
             </TableRow>
@@ -188,7 +189,9 @@ export default function NotificationListPage() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{notif.updatedAt}</TableCell>
+                  <TableCell className="text-zinc-300 text-sm whitespace-nowrap">
+                    {notif.updatedAt ? new Date(notif.updatedAt).toLocaleString() : "Just now"}
+                  </TableCell>
                   <TableCell>
                     <button
                       onClick={() => setConfirmDelete(notif)}

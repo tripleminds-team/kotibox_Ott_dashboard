@@ -14,6 +14,18 @@
   --background: 210 12% 97%;
   --foreground: 220 10% 12%;
 
+  --zinc-50: 240 4.8% 95.9%;
+  --zinc-100: 240 5.9% 90%;
+  --zinc-200: 240 5.9% 80%;
+  --zinc-300: 240 4.8% 52%;
+  --zinc-400: 240 5.2% 40%;
+  --zinc-500: 240 3.8% 30%;
+  --zinc-600: 240 5.2% 20%;
+  --zinc-700: 240 5.2% 15%;
+  --zinc-800: 240 3.7% 10%;
+  --zinc-900: 240 5.9% 5%;
+  --zinc-950: 240 10% 3.9%;
+
   --border: 210 14% 88%;
   
   --card: 0 0% 100%;
@@ -85,6 +97,18 @@
   /* Deep Black #0a0a0a */
   --background: 0 0% 4%;
   --foreground: 0 0% 98%;
+
+  --zinc-50: 0 0% 98%;
+  --zinc-100: 240 4.8% 95.9%;
+  --zinc-200: 240 5.9% 90%;
+  --zinc-300: 240 4.8% 83.9%;
+  --zinc-400: 240 5% 64.9%;
+  --zinc-500: 240 3.8% 46.1%;
+  --zinc-600: 240 5.2% 33.9%;
+  --zinc-700: 240 5.2% 26.1%;
+  --zinc-800: 240 3.7% 15.9%;
+  --zinc-900: 240 5.9% 10%;
+  --zinc-950: 240 10% 3.9%;
 
   --border: 0 0% 15%;
   
@@ -294,15 +318,16 @@
 
 /* Global Dynamic Settings Styles */
 body.card-style-glass .bg-card {
-  background-color: rgba(var(--card), 0.5) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+  background-color: hsl(var(--card) / 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-color: hsl(var(--border) / 0.5) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03) !important;
 }
 .dark body.card-style-glass .bg-card {
-  background-color: rgba(0, 0, 0, 0.4) !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: hsl(var(--card) / 0.4) !important;
+  border-color: hsl(var(--border) / 0.3) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
 }
 
 body.card-style-transparent .bg-card {
@@ -325,4 +350,20 @@ body.menu-style-boxed aside {
 body.menu-style-soft aside {
   background-color: transparent !important;
   border-right: none !important;
+}
+
+/* Light mode overrides for default tailwind light grey texts to ensure high visibility across all modules */
+:not(.dark) .text-zinc-300,
+:not(.dark) .text-gray-300 {
+  color: #6b7280 !important; /* clear medium-dark grey */
+}
+
+:not(.dark) .text-zinc-400,
+:not(.dark) .text-gray-400 {
+  color: #4b5563 !important; /* dark grey */
+}
+
+:not(.dark) .text-zinc-500,
+:not(.dark) .text-gray-500 {
+  color: #1f2937 !important; /* charcoal black */
 }

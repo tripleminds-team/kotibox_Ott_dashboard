@@ -100,11 +100,11 @@ const SortableSection = ({ section, onToggle, onEdit, onDelete }: SortableSectio
             <div className="flex items-center gap-2">
               <p className="text-sm font-bold text-foreground">{section.title}</p>
               {!section.isActive && (
-                <Badge variant="outline" className="text-[10px] py-0 border-zinc-700 text-zinc-500">Hidden</Badge>
+                <Badge variant="outline" className="text-[10px] py-0 border-border text-muted-foreground">Hidden</Badge>
               )}
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1 bg-zinc-800/50 px-2 py-0.5 rounded-md">
+              <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-md">
                 {getLayoutIcon(section.layout)} {section.layout}
               </span>
               <span>Limit: {section.limit}</span>
@@ -354,16 +354,16 @@ export default function HomeSections() {
         </Button>
       </div>
 
-      <div className="flex gap-2 p-1.5 bg-zinc-900 rounded-xl w-fit border border-white/5">
+      <div className="flex gap-2 p-1.5 bg-muted/80 dark:bg-zinc-900 rounded-xl w-fit border border-border dark:border-white/5">
         <button
           onClick={() => setActiveTab('drama')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'drama' ? 'bg-primary text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'drama' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/50 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/5'}`}
         >
           <MonitorPlay className="w-4 h-4" /> Short Dramas
         </button>
         <button
           onClick={() => setActiveTab('movie')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'movie' ? 'bg-primary text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'movie' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/50 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/5'}`}
         >
           <Film className="w-4 h-4" /> Movies
         </button>
@@ -373,11 +373,11 @@ export default function HomeSections() {
         {isLoading ? (
           <div className="text-center py-10 text-zinc-500">Loading layout...</div>
         ) : localSections.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-zinc-800 rounded-xl">
-            <LayoutGrid className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400 font-semibold mb-1">No sections configured</p>
-            <p className="text-sm text-zinc-500">The app will use fallback sections until you create some here.</p>
-            <Button onClick={openAdd} variant="outline" className="mt-4 bg-transparent border-zinc-700 hover:bg-white/5">
+          <div className="text-center py-12 border-2 border-dashed border-border dark:border-zinc-800 rounded-xl">
+            <LayoutGrid className="w-8 h-8 text-muted-foreground opacity-60 mx-auto mb-3" />
+            <p className="text-foreground font-semibold mb-1">No sections configured</p>
+            <p className="text-sm text-muted-foreground">The app will use fallback sections until you create some here.</p>
+            <Button onClick={openAdd} variant="outline" className="mt-4 bg-transparent border-border dark:border-zinc-700 hover:bg-muted dark:hover:bg-white/5">
               Create First Section
             </Button>
           </div>
@@ -466,9 +466,9 @@ export default function HomeSections() {
               </div>
             </div>
 
-            <div className="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4 mt-2">
-              <div className="grid gap-2">
-                <Label className="text-xs">Content Selection Mode</Label>
+              <div className="bg-muted/50 dark:bg-black/20 p-4 rounded-xl border border-border dark:border-white/5 space-y-4 mt-2">
+                <div className="grid gap-2">
+                  <Label className="text-xs">Content Selection Mode</Label>
                 <Select value={formData.contentSelection} onValueChange={(v) => setFormData({ ...formData, contentSelection: v })}>
                   <SelectTrigger className="bg-muted border-border">
                     <SelectValue placeholder="Select mode" />
@@ -483,7 +483,7 @@ export default function HomeSections() {
 
               {formData.contentSelection !== 'manual' && (
                 <>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mt-4 mb-2">Dynamic Data Source</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Dynamic Data Source</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label className="text-xs">Filter By (Field)</Label>
@@ -544,7 +544,7 @@ export default function HomeSections() {
               </div>
 
               {(formData.contentSelection === 'manual' || formData.contentSelection === 'mixed') && (
-                <div className="col-span-2 space-y-3 pt-4 border-t border-white/5 mt-2">
+                <div className="col-span-2 space-y-3 pt-4 border-t border-border mt-2">
                   <Label className="text-xs">Select Specific Items ({selectedItems.length} selected)</Label>
                   
                   <Select onValueChange={(v) => {
@@ -561,7 +561,7 @@ export default function HomeSections() {
                   </Select>
 
                   {selectedItems.length > 0 && (
-                    <div className="flex flex-col gap-2 mt-3 bg-black/20 border border-white/5 p-2 rounded-md max-h-48 overflow-y-auto">
+                    <div className="flex flex-col gap-2 mt-3 bg-muted/30 dark:bg-black/20 border border-border dark:border-white/5 p-2 rounded-md max-h-48 overflow-y-auto">
                       {selectedItems.map(id => {
                         const allItems = activeTab === 'movie' ? moviesRes?.data : dramasRes?.data;
                         const matchedItem = allItems?.find((i: any) => i._id === id);
@@ -571,7 +571,7 @@ export default function HomeSections() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-6 w-6 rounded-md hover:bg-red-500/20 hover:text-red-500 text-zinc-400"
+                              className="h-6 w-6 rounded-md hover:bg-red-500/20 hover:text-red-500 text-muted-foreground"
                               onClick={() => setSelectedItems(selectedItems.filter(i => i !== id))}
                             >
                               <X className="h-3 w-3" />
@@ -586,7 +586,7 @@ export default function HomeSections() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)} className="bg-transparent border-zinc-700">
+            <Button variant="outline" onClick={() => setModalOpen(false)} className="border-border">
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending} className="bg-primary hover:bg-primary/90 text-white font-bold">

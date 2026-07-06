@@ -14,15 +14,17 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import MediaPicker from "@/components/MediaPicker";
 import {
-  useGetContentById, useCreateContent, useUpdateContent, getImageUrl,
+  useGetDirectors, useGetActors, useGetCrews, useGetContentById, useCreateContent, useUpdateContent,
+  useGetGenres, useGetLanguagesList, useGetCategoriesList,
+  useGetSections, getImageUrl, useGetCountries,
 } from "@/lib/api-client";
 
-type Tab = "TV Show" | "Basic Info" | "Quality Info" | "Subtitle Info" | "SEO Settings";
-const TABS: Tab[] = ["TV Show", "Basic Info", "Quality Info", "Subtitle Info", "SEO Settings"];
+type Tab = "TV Show" | "Basic Info" | "SEO Settings";
+const TABS: Tab[] = ["TV Show", "Basic Info", "SEO Settings"];
 
-type QualityRow = { id: string; type: string; quality: string; filePath: string; url: string };
-type CastRow  = { id: string; name: string; character: string; role: string };
-type CrewRow  = { id: string; name: string; role: string };
+type CastItem = { id: string; actorId: string; character: string; role: string };
+type CrewItem = { id: string; directorId: string; role: string };
+type CrewMemberItem = { id: string; crewId: string; role: string };
 
 const secsToDuration = (s: number): string => {
   const h = Math.floor(s / 3600);
@@ -38,6 +40,9 @@ const durationToSecs = (d: string): number => {
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   return parseInt(d) || 0;
 };
+
+const getId = (item: any): string =>
+  typeof item === "string" ? item : (item?._id || item?.id || "");
 
 function ImageBox({ label, preview, onOpen }: { label: string; preview: string; onOpen: () => void }) {
   return (
@@ -67,23 +72,36 @@ export default function TvShowForm() {
 
   /* ---- Media picker states ---- */
   const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
+  const [posterPickerOpen, setPosterPickerOpen] = useState(false);
   const [bannerPickerOpen, setBannerPickerOpen] = useState(false);
   const [trailerPickerOpen, setTrailerPickerOpen] = useState(false);
-  const [videoPickerOpen, setVideoPickerOpen] = useState(false);
-  const [qualityPickerOpen, setQualityPickerOpen] = useState(false);
-  const [currentQualityRowId, setCurrentQualityRowId] = useState<string | null>(null);
   const [seoImagePickerOpen, setSeoImagePickerOpen] = useState(false);
 
-  /* ---- API ---- */
+  /* ---- API data ---- */
+  const { data: directorsData } = useGetDirectors({ page: 1, limit: 500 });
+  const directorsList = (directorsData as any)?.data || [];
+  const { data: actorsData } = useGetActors({ page: 1, limit: 500 });
+  const actorsList = (actorsData as any)?.data || [];
+  const { data: crewsData } = useGetCrews({ page: 1, limit: 500 });
+  const crewsList = (crewsData as any)?.data || [];
+  const { data: genresData } = useGetGenres({ page: 1, limit: 100 });
+  const genresList = (genresData as any)?.data || [];
+  const { data: languagesData } = useGetLanguagesList();
+  const languagesList = (languagesData as any)?.data || [];
+  const { data: categoriesData } = useGetCategoriesList({ limit: 100 });
+  const categoriesList = (categoriesData as any)?.data || [];
+  const { data: countriesData } = useGetCountries({ limit: 300 });
+  const countries = (countriesData as any)?.data || [];
+
   const { data: existingData } = useGetContentById(isEdit ? id! : "");
   const createMutation = useCreateContent();
   const updateMutation = useUpdateContent();
 
-  // getContentById returns { content, episodes }
   const content = (existingData as any)?.content;
 
   /* ---- TV Show tab state ---- */
   const [thumbnail, setThumbnail] = useState({ filePath: "", preview: "" });
+  const [poster, setPoster] = useState({ filePath: "", preview: "" });
   const [banner, setBanner] = useState({ filePath: "", preview: "" });
   const [title, setTitle] = useState("");
   const [originalTitle, setOriginalTitle] = useState("");
@@ -95,15 +113,13 @@ export default function TvShowForm() {
   const [shortDescription, setShortDescription] = useState("");
   const [planRequired, setPlanRequired] = useState<"free" | "basic" | "standard" | "premium">("free");
   const [status, setStatus] = useState<"published" | "draft" | "processing" | "moderation" | "rejected">("draft");
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
 
   /* ---- Basic Info state ---- */
-  // genres, languages, audioLanguages, subtitleLanguages are plain strings in Content model
-  const [genres, setGenres] = useState<string[]>([]);
-  const [genreInput, setGenreInput] = useState("");
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [languageInput, setLanguageInput] = useState("");
-  const [audioLanguages, setAudioLanguages] = useState<string[]>([]);
-  const [audioLanguageInput, setAudioLanguageInput] = useState("");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedAudioLanguages, setSelectedAudioLanguages] = useState<string[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [year, setYear] = useState("");
   const [rating, setRating] = useState("");
   const [imdbRating, setImdbRating] = useState("");
@@ -113,7 +129,6 @@ export default function TvShowForm() {
   const [country, setCountry] = useState("");
   const [producer, setProducer] = useState("");
   const [studio, setStudio] = useState("");
-  const [director, setDirector] = useState("");
   const [seasons, setSeasons] = useState("");
   const [downloadAllowed, setDownloadAllowed] = useState(true);
   const [featured, setFeatured] = useState(false);
@@ -122,21 +137,9 @@ export default function TvShowForm() {
   const [isExclusive, setIsExclusive] = useState(false);
   const [maturityContent, setMaturityContent] = useState<string[]>([]);
   const [maturityInput, setMaturityInput] = useState("");
-  const [castRows, setCastRows] = useState<CastRow[]>([]);
-  const [crewRows, setCrewRows] = useState<CrewRow[]>([]);
-
-  /* ---- Quality Info state ---- */
-  const [videoUploadType, setVideoUploadType] = useState("url");
-  const [videoFilePath, setVideoFilePath] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [qualityEnabled, setQualityEnabled] = useState(false);
-  const [qualityRows, setQualityRows] = useState<QualityRow[]>([
-    { id: "1", type: "url", quality: "480p", filePath: "", url: "" },
-  ]);
-
-  /* ---- Subtitle Info state ---- */
-  const [subtitleLanguages, setSubtitleLanguages] = useState<string[]>([]);
-  const [subtitleLangInput, setSubtitleLangInput] = useState("");
+  const [castItems, setCastItems] = useState<CastItem[]>([]);
+  const [crewItems, setCrewItems] = useState<CrewItem[]>([]);
+  const [crewMemberItems, setCrewMemberItems] = useState<CrewMemberItem[]>([]);
 
   /* ---- SEO Settings state ---- */
   const [seoImage, setSeoImage] = useState({ filePath: "", preview: "" });
@@ -147,6 +150,10 @@ export default function TvShowForm() {
   const [metaDescription, setMetaDescription] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
+
+  /* ---- Home Sections query ---- */
+  const { data: sectionsData } = useGetSections({ contentType: contentType, activeOnly: true });
+  const sectionOptions = sectionsData?.data?.map((s: any) => ({ id: s.id || s._id, title: s.title })) || [];
 
   /* ---- Populate form on edit ---- */
   useEffect(() => {
@@ -162,12 +169,21 @@ export default function TvShowForm() {
 
     if (content.thumbnail)
       setThumbnail({ filePath: content.thumbnail, preview: getImageUrl(content.thumbnail) });
+    if (content.posterImage)
+      setPoster({ filePath: content.posterImage, preview: getImageUrl(content.posterImage) });
     if (content.bannerImage)
       setBanner({ filePath: content.bannerImage, preview: getImageUrl(content.bannerImage) });
+    if (content.seoImage)
+      setSeoImage({ filePath: content.seoImage, preview: getImageUrl(content.seoImage) });
 
     if (content.trailerUrl) {
-      setTrailerUrlType("url");
-      setTrailerUrl(content.trailerUrl);
+      if (content.trailerUrl.startsWith("http://") || content.trailerUrl.startsWith("https://")) {
+        setTrailerUrlType("url");
+        setTrailerUrl(content.trailerUrl);
+      } else {
+        setTrailerUrlType("local");
+        setTrailerFilePath(content.trailerUrl);
+      }
     }
 
     setYear(content.year ? String(content.year) : "");
@@ -182,7 +198,6 @@ export default function TvShowForm() {
     setCountry(content.country || "");
     setProducer(content.producer || "");
     setStudio(content.studio || "");
-    setDirector(content.director || "");
     setSeasons(content.seasons != null ? String(content.seasons) : "");
     setDownloadAllowed(content.downloadAllowed !== false);
     setFeatured(!!content.featured);
@@ -191,66 +206,44 @@ export default function TvShowForm() {
     setIsExclusive(!!content.isExclusive);
     setMaturityContent(Array.isArray(content.maturityContent) ? content.maturityContent : []);
 
-    // Plain string arrays
-    setGenres(Array.isArray(content.genres) ? content.genres : []);
-    setLanguages(Array.isArray(content.languages) ? content.languages : []);
-    setAudioLanguages(Array.isArray(content.audioLanguages) ? content.audioLanguages : []);
-    setSubtitleLanguages(Array.isArray(content.subtitleLanguages) ? content.subtitleLanguages : []);
+    if (Array.isArray(content.genres))
+      setSelectedGenres(content.genres.map((g: any) => getId(g)).filter(Boolean));
+    if (Array.isArray(content.categories))
+      setSelectedCategories(content.categories.map((c: any) => getId(c)).filter(Boolean));
+    if (Array.isArray(content.languages))
+      setSelectedLanguages(content.languages.map((l: any) => getId(l)).filter(Boolean));
+    if (Array.isArray(content.audioLanguages))
+      setSelectedAudioLanguages(content.audioLanguages.map((l: any) => getId(l)).filter(Boolean));
 
-    // Cast: { name, role, character }
+    if (Array.isArray(content.sections))
+      setSelectedSections(content.sections.map((s: any) => getId(s)).filter(Boolean));
+
     if (Array.isArray(content.cast)) {
-      setCastRows(
+      setCastItems(
         content.cast.map((c: any, i: number) => ({
           id: String(i),
-          name: c.name || "",
+          actorId: getId(c.actor),
           character: c.character || "",
           role: c.role || "Actor",
         }))
       );
     }
-    // Crew: { name, role }
     if (Array.isArray(content.crew)) {
-      setCrewRows(
+      setCrewItems(
         content.crew.map((c: any, i: number) => ({
           id: String(i),
-          name: c.name || "",
+          directorId: getId(c.director),
           role: c.role || "Director",
         }))
       );
     }
-
-    if (content.hlsUrl) {
-      const isS3Url = content.hlsUrl.includes("tripleminds-ott-admin.s3");
-      const isHttp = content.hlsUrl.startsWith("http://") || content.hlsUrl.startsWith("https://");
-      if (content.hlsUrl.endsWith(".m3u8") && isHttp) {
-        setVideoUploadType("hls");
-        setVideoUrl(content.hlsUrl);
-      } else if (isHttp && !isS3Url) {
-        setVideoUploadType("url");
-        setVideoUrl(content.hlsUrl);
-      } else {
-        setVideoUploadType("local");
-        let relPath = content.hlsUrl;
-        if (isS3Url) {
-          const match = content.hlsUrl.match(/amazonaws\.com\/(.+)$/);
-          if (match) relPath = match[1];
-        }
-        setVideoFilePath(relPath);
-      }
-    }
-    if (Array.isArray(content.videoQualities) && content.videoQualities.length > 0) {
-      setQualityEnabled(true);
-      setQualityRows(
-        content.videoQualities.map((q: any, i: number) => {
-          const isUrl = q.url && (q.url.startsWith("http://") || q.url.startsWith("https://"));
-          return {
-            id: String(i + 1),
-            type: isUrl ? "url" : "local",
-            quality: q.quality || "480p",
-            filePath: isUrl ? "" : (q.url || ""),
-            url: isUrl ? q.url : "",
-          };
-        })
+    if (Array.isArray(content.crewMembers)) {
+      setCrewMemberItems(
+        content.crewMembers.map((c: any, i: number) => ({
+          id: String(i),
+          crewId: getId(c.crewMember),
+          role: c.role || "Crew",
+        }))
       );
     }
 
@@ -274,26 +267,26 @@ export default function TvShowForm() {
     }
   };
 
-  const addQualityRow = () =>
-    setQualityRows((p) => [...p, { id: Date.now().toString(), type: "url", quality: "480p", filePath: "", url: "" }]);
-  const removeQualityRow = (rowId: string) =>
-    setQualityRows((p) => p.filter((r) => r.id !== rowId));
-  const updateQualityRow = (rowId: string, key: keyof QualityRow, value: string) =>
-    setQualityRows((p) => p.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)));
+  const addCastItem = () =>
+    setCastItems((p) => [...p, { id: Date.now().toString(), actorId: "", character: "", role: "Actor" }]);
+  const removeCastItem = (itemId: string) =>
+    setCastItems((p) => p.filter((c) => c.id !== itemId));
+  const updateCastItem = (itemId: string, key: keyof CastItem, value: string) =>
+    setCastItems((p) => p.map((c) => (c.id === itemId ? { ...c, [key]: value } : c)));
 
-  const addCastRow = () =>
-    setCastRows((p) => [...p, { id: Date.now().toString(), name: "", character: "", role: "Actor" }]);
-  const removeCastRow = (rowId: string) =>
-    setCastRows((p) => p.filter((r) => r.id !== rowId));
-  const updateCastRow = (rowId: string, key: keyof CastRow, value: string) =>
-    setCastRows((p) => p.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)));
+  const addCrewItem = () =>
+    setCrewItems((p) => [...p, { id: Date.now().toString(), directorId: "", role: "Director" }]);
+  const removeCrewItem = (itemId: string) =>
+    setCrewItems((p) => p.filter((c) => c.id !== itemId));
+  const updateCrewItem = (itemId: string, key: keyof CrewItem, value: string) =>
+    setCrewItems((p) => p.map((c) => (c.id === itemId ? { ...c, [key]: value } : c)));
 
-  const addCrewRow = () =>
-    setCrewRows((p) => [...p, { id: Date.now().toString(), name: "", role: "Director" }]);
-  const removeCrewRow = (rowId: string) =>
-    setCrewRows((p) => p.filter((r) => r.id !== rowId));
-  const updateCrewRow = (rowId: string, key: keyof CrewRow, value: string) =>
-    setCrewRows((p) => p.map((r) => (r.id === rowId ? { ...r, [key]: value } : r)));
+  const addCrewMemberItem = () =>
+    setCrewMemberItems((p) => [...p, { id: Date.now().toString(), crewId: "", role: "Crew" }]);
+  const removeCrewMemberItem = (itemId: string) =>
+    setCrewMemberItems((p) => p.filter((c) => c.id !== itemId));
+  const updateCrewMemberItem = (itemId: string, key: keyof CrewMemberItem, value: string) =>
+    setCrewMemberItems((p) => p.map((c) => (c.id === itemId ? { ...c, [key]: value } : c)));
 
   /* ---- Save ---- */
   const handleSave = async () => {
@@ -307,30 +300,32 @@ export default function TvShowForm() {
 
       const payload: Record<string, any> = {
         title: title.trim(),
+        originalTitle: originalTitle.trim(),
         type: "series",
         contentType,
-        ...(originalTitle.trim() && { originalTitle: originalTitle.trim() }),
-        ...(description.trim() && { description: description.trim() }),
-        ...(shortDescription.trim() && { shortDescription: shortDescription.trim() }),
-        ...(thumbnail.filePath && { thumbnail: thumbnail.filePath }),
-        ...(banner.filePath && { bannerImage: banner.filePath }),
-        ...(effectiveTrailerUrl && { trailerUrl: effectiveTrailerUrl }),
+        description: description.trim(),
+        shortDescription: shortDescription.trim(),
+        thumbnail: thumbnail.filePath,
+        posterImage: poster.filePath,
+        bannerImage: banner.filePath,
+        trailerUrl: effectiveTrailerUrl,
         planRequired,
+        isFree: planRequired === "free",
+        isLocked: planRequired !== "free",
         status,
-        genres,
-        languages,
-        audioLanguages: audioLanguages.length > 0 ? audioLanguages : languages,
-        subtitleLanguages,
-        ...(year && { year: parseInt(year) }),
-        ...(rating.trim() && { rating: rating.trim() }),
-        ...(imdbRating && { imdbRating: parseFloat(imdbRating) }),
-        ...(duration && { duration: durationToSecs(duration) }),
-        ...(releaseDate && { releaseDate: new Date(releaseDate).toISOString() }),
-        ...(country.trim() && { country: country.trim() }),
-        ...(producer.trim() && { producer: producer.trim() }),
-        ...(studio.trim() && { studio: studio.trim() }),
-        ...(director.trim() && { director: director.trim() }),
-        ...(seasons && { seasons: parseInt(seasons) }),
+        genres: selectedGenres,
+        categories: selectedCategories,
+        languages: selectedLanguages,
+        audioLanguages: selectedAudioLanguages.length > 0 ? selectedAudioLanguages : selectedLanguages,
+
+        year: year ? parseInt(year) : undefined,
+        rating: rating.trim(),
+        imdbRating: imdbRating ? parseFloat(imdbRating) : undefined,
+        duration: duration ? durationToSecs(duration) : undefined,
+        releaseDate: releaseDate ? new Date(releaseDate).toISOString() : undefined,
+        country: country.trim(),
+        producer: producer.trim(),
+        studio: studio.trim(),
         ageRating: parseInt(ageRating) || 0,
         downloadAllowed,
         featured,
@@ -339,25 +334,21 @@ export default function TvShowForm() {
         isExclusive,
         maturityContent,
         tags,
-        cast: castRows
-          .filter((r) => r.name.trim())
-          .map((r) => ({ name: r.name.trim(), character: r.character, role: r.role })),
-        crew: crewRows
-          .filter((r) => r.name.trim())
-          .map((r) => ({ name: r.name.trim(), role: r.role })),
-        ...(videoUploadType === "hls" && videoUrl && { hlsUrl: videoUrl }),
-        ...(qualityEnabled && {
-          videoQualities: qualityRows
-            .filter((q) => q.url || q.filePath)
-            .map((q) => ({
-              quality: q.quality as any,
-              url: q.type === "local" ? q.filePath : q.url,
-              size: 0,
-            })),
-        }),
-        ...(slug.trim() && { slug: slug.trim() }),
-        ...(metaTitle.trim() && { metaTitle: metaTitle.trim() }),
-        ...(metaDescription.trim() && { metaDescription: metaDescription.trim() }),
+        sections: selectedSections,
+        cast: castItems
+          .filter((c) => c.actorId)
+          .map((c) => ({ actor: c.actorId, character: c.character, role: c.role })),
+        crew: crewItems
+          .filter((c) => c.directorId)
+          .map((c) => ({ director: c.directorId, role: c.role })),
+        crewMembers: crewMemberItems
+          .filter((c) => c.crewId)
+          .map((c) => ({ crewMember: c.crewId, role: c.role })),
+        seasons: seasons ? parseInt(seasons) : undefined,
+        slug: slug.trim(),
+        metaTitle: metaTitle.trim(),
+        metaDescription: metaDescription.trim(),
+        seoImage: seoImage.filePath,
       };
 
       if (isEdit) {
@@ -390,37 +381,48 @@ export default function TvShowForm() {
     </div>
   );
 
-  // Free-text chip widget
-  const ChipInput = ({
-    label, chips, onRemove, inputValue, onInputChange, onKeyDown, placeholder,
+  const MultiSelect = ({
+    label, required = false, items, selected, onAdd, onRemove, placeholder,
   }: {
-    label: string; chips: string[]; onRemove: (v: string) => void;
-    inputValue: string; onInputChange: (v: string) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    label: string; required?: boolean;
+    items: any[]; selected: string[];
+    onAdd: (id: string) => void; onRemove: (id: string) => void;
     placeholder?: string;
   }) => (
     <div className="space-y-1.5">
-      <Label className="text-foreground text-sm font-medium">{label}</Label>
-      <div
-        className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
-        onClick={() => document.getElementById(`chip-${label}`)?.focus()}
-      >
-        {chips.map((v) => (
-          <span key={v} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/20 text-red-300 text-xs font-medium">
-            {v}
-            <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(v); }}>
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
-        <input
-          id={`chip-${label}`}
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={chips.length === 0 ? (placeholder || "Type and press Enter") : ""}
-          className="flex-1 min-w-[120px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
-        />
+      <Label className="text-foreground text-sm font-medium">
+        {label} {required && <span className="text-primary">*</span>}
+      </Label>
+      <div className="space-y-2">
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {selected.map((itemId) => {
+              const item = items.find((i: any) => getId(i) === itemId);
+              return (
+                <div key={itemId} className="flex items-center gap-1 bg-muted border border-border rounded-lg px-2.5 py-1 text-xs">
+                  <span className="text-foreground">{item?.name || itemId}</span>
+                  <button type="button" onClick={() => onRemove(itemId)} className="text-muted-foreground hover:text-primary">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <Select value="" onValueChange={(v) => { if (v && !selected.includes(v)) onAdd(v); }}>
+          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+            <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+            {items
+              .filter((i: any) => !selected.includes(getId(i)))
+              .map((item: any) => (
+                <SelectItem key={getId(item)} value={getId(item)}>
+                  {item.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
@@ -469,6 +471,7 @@ export default function TvShowForm() {
             <div className="rounded-xl border border-border bg-muted/10 p-5">
               <div className="flex gap-5">
                 <ImageBox label="Thumbnail" preview={thumbnail.preview} onOpen={() => setThumbnailPickerOpen(true)} />
+                <ImageBox label="Poster Image" preview={poster.preview} onOpen={() => setPosterPickerOpen(true)} />
                 <ImageBox label="Banner Image" preview={banner.preview} onOpen={() => setBannerPickerOpen(true)} />
               </div>
             </div>
@@ -530,18 +533,18 @@ export default function TvShowForm() {
               {trailerUrlType === "local" ? (
                 <>
                   <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
-                    <div
-                      onClick={() => setTrailerPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
-                    >
-                      {trailerFilePath ? (
-                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
-                          {getImageUrl(trailerFilePath)}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
-                      )}
-                    </div>
+                  <div
+                    onClick={() => setTrailerPickerOpen(true)}
+                    className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
+                  >
+                    {trailerFilePath ? (
+                      <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
+                        {getImageUrl(trailerFilePath)}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Click to select from media library</span>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -621,6 +624,32 @@ export default function TvShowForm() {
                 </Select>
               </div>
             </div>
+
+            {/* Home Sections */}
+            <div className="space-y-1.5">
+              <Label className="text-foreground text-sm font-medium">Home Categories (Sections)</Label>
+              {sectionOptions.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {sectionOptions.map((sec: any) => (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={() => setSelectedSections(p => p.includes(sec.id) ? p.filter(id => id !== sec.id) : [...p, sec.id])}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        selectedSections.includes(sec.id)
+                          ? 'bg-primary text-primary-foreground border border-primary'
+                          : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-foreground'
+                      }`}
+                    >
+                      {sec.title}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border">No home sections available. Create some in Home Layout Builder.</p>
+              )}
+              <p className="text-xs text-muted-foreground pt-1">Select the categories where this show should be manually displayed.</p>
+            </div>
           </div>
         )}
 
@@ -630,45 +659,65 @@ export default function TvShowForm() {
             <SH title="Media Info" />
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
               {/* Genres + Languages */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <ChipInput
-                  label="Genres"
-                  chips={genres}
-                  onRemove={(v) => setGenres((p) => p.filter((x) => x !== v))}
-                  inputValue={genreInput}
-                  onInputChange={setGenreInput}
-                  onKeyDown={makeChipHandler(setGenres, setGenreInput, genreInput)}
-                  placeholder="e.g. Action, Drama..."
-                />
-                <ChipInput
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <MultiSelect
                   label="Languages"
-                  chips={languages}
-                  onRemove={(v) => setLanguages((p) => p.filter((x) => x !== v))}
-                  inputValue={languageInput}
-                  onInputChange={setLanguageInput}
-                  onKeyDown={makeChipHandler(setLanguages, setLanguageInput, languageInput)}
-                  placeholder="e.g. English, Hindi..."
+                  required
+                  items={languagesList}
+                  selected={selectedLanguages}
+                  onAdd={(v) => setSelectedLanguages((p) => [...p, v])}
+                  onRemove={(v) => setSelectedLanguages((p) => p.filter((x) => x !== v))}
+                />
+                <MultiSelect
+                  label="Audio Languages"
+                  items={languagesList}
+                  selected={selectedAudioLanguages}
+                  onAdd={(v) => setSelectedAudioLanguages((p) => [...p, v])}
+                  onRemove={(v) => setSelectedAudioLanguages((p) => p.filter((x) => x !== v))}
+                />
+                <MultiSelect
+                  label="Genres"
+                  required
+                  items={genresList}
+                  selected={selectedGenres}
+                  onAdd={(v) => setSelectedGenres((p) => [...p, v])}
+                  onRemove={(v) => setSelectedGenres((p) => p.filter((x) => x !== v))}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <ChipInput
-                  label="Audio Languages"
-                  chips={audioLanguages}
-                  onRemove={(v) => setAudioLanguages((p) => p.filter((x) => x !== v))}
-                  inputValue={audioLanguageInput}
-                  onInputChange={setAudioLanguageInput}
-                  onKeyDown={makeChipHandler(setAudioLanguages, setAudioLanguageInput, audioLanguageInput)}
-                  placeholder="e.g. English, Tamil..."
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <MultiSelect
+                  label="Categories"
+                  items={categoriesList}
+                  selected={selectedCategories}
+                  onAdd={(v) => setSelectedCategories((p) => [...p, v])}
+                  onRemove={(v) => setSelectedCategories((p) => p.filter((x) => x !== v))}
                 />
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">Country</Label>
-                  <Input
-                    placeholder="e.g. United States"
+                  <Select
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                  />
+                    onValueChange={setCountry}
+                  >
+                    <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border text-foreground max-h-60 overflow-y-auto">
+                      {(country && !countries.some((c: any) => c.name === country)
+                        ? [{ id: "temp-saved", name: country }, ...countries]
+                        : countries
+                      ).map((c: any) => (
+                        <SelectItem key={c.id || c.name} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground text-sm font-medium">Content Rating</Label>
+                  <Input placeholder="e.g. PG-13, U/A" value={rating} onChange={(e) => setRating(e.target.value)}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
                 </div>
               </div>
 
@@ -697,8 +746,8 @@ export default function TvShowForm() {
                 </div>
               </div>
 
-              {/* Duration + Release Date + Content Rating */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* Duration + Release Date */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">Episode Duration</Label>
                   <Input type="time" step="1" value={duration} onChange={(e) => setDuration(e.target.value)}
@@ -710,20 +759,10 @@ export default function TvShowForm() {
                   <Input type="date" value={releaseDate} onChange={(e) => setReleaseDate(e.target.value)}
                     className="bg-muted border-border text-foreground h-10 rounded-lg text-sm" />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Content Rating</Label>
-                  <Input placeholder="e.g. PG-13, U/A" value={rating} onChange={(e) => setRating(e.target.value)}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
-                </div>
               </div>
 
-              {/* Producer + Studio + Director */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Director</Label>
-                  <Input placeholder="Director name" value={director} onChange={(e) => setDirector(e.target.value)}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
-                </div>
+              {/* Producer + Studio */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <Label className="text-foreground text-sm font-medium">Producer</Label>
                   <Input placeholder="Producer name" value={producer} onChange={(e) => setProducer(e.target.value)}
@@ -737,15 +776,30 @@ export default function TvShowForm() {
               </div>
 
               {/* Maturity Content */}
-              <ChipInput
-                label="Maturity Content"
-                chips={maturityContent}
-                onRemove={(v) => setMaturityContent((p) => p.filter((x) => x !== v))}
-                inputValue={maturityInput}
-                onInputChange={setMaturityInput}
-                onKeyDown={makeChipHandler(setMaturityContent, setMaturityInput, maturityInput)}
-                placeholder="e.g. Violence, Language, Adult..."
-              />
+              <div className="space-y-1.5">
+                <Label className="text-foreground text-sm font-medium">Maturity Content</Label>
+                <div
+                  className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
+                  onClick={() => document.getElementById("maturity-input")?.focus()}
+                >
+                  {maturityContent.map((v) => (
+                    <span key={v} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/20 text-red-300 text-xs font-medium">
+                      {v}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setMaturityContent((p) => p.filter((x) => x !== v)); }}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    id="maturity-input"
+                    value={maturityInput}
+                    onChange={(e) => setMaturityInput(e.target.value)}
+                    onKeyDown={makeChipHandler(setMaturityContent, setMaturityInput, maturityInput)}
+                    placeholder={maturityContent.length === 0 ? "e.g. Violence, Language, Adult..." : ""}
+                    className="flex-1 min-w-[120px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                </div>
+              </div>
 
               {/* Flags */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -771,37 +825,48 @@ export default function TvShowForm() {
               </div>
             </div>
 
-            {/* Cast */}
+            {/* Cast & Crew */}
             <SH title="Cast & Crew" />
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
+              {/* Cast */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-foreground">Cast (Actors)</p>
-                  <Button type="button" onClick={addCastRow}
+                  <Button type="button" onClick={addCastItem}
                     className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
                     <Plus className="h-3.5 w-3.5" /> Add Actor
                   </Button>
                 </div>
-                {castRows.length === 0 ? (
+                {castItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No cast added yet.</p>
                 ) : (
-                  castRows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end p-3 rounded-xl border border-border bg-card">
+                  castItems.map((item) => (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end p-3 rounded-xl border border-border bg-card">
                       <div className="space-y-1">
-                        <Label className="text-foreground text-xs font-medium">Actor Name</Label>
-                        <Input placeholder="Full name" value={row.name}
-                          onChange={(e) => updateCastRow(row.id, "name", e.target.value)}
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 rounded-lg text-sm" />
+                        <Label className="text-foreground text-xs font-medium">Actor</Label>
+                        <Select value={item.actorId} onValueChange={(v) => updateCastItem(item.id, "actorId", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue placeholder="Select actor..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                            {actorsList.map((a: any) => (
+                              <SelectItem key={getId(a)} value={getId(a)}>{a.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-foreground text-xs font-medium">Character</Label>
-                        <Input placeholder="Character name" value={row.character}
-                          onChange={(e) => updateCastRow(row.id, "character", e.target.value)}
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 rounded-lg text-sm" />
+                        <Input
+                          placeholder="Character name"
+                          value={item.character}
+                          onChange={(e) => updateCastItem(item.id, "character", e.target.value)}
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 rounded-lg text-sm"
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-foreground text-xs font-medium">Role</Label>
-                        <Select value={row.role} onValueChange={(v) => updateCastRow(row.id, "role", v)}>
+                        <Select value={item.role} onValueChange={(v) => updateCastItem(item.id, "role", v)}>
                           <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
@@ -814,7 +879,7 @@ export default function TvShowForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <button type="button" onClick={() => removeCastRow(row.id)}
+                      <button type="button" onClick={() => removeCastItem(item.id)}
                         className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30">
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -823,29 +888,36 @@ export default function TvShowForm() {
                 )}
               </div>
 
-              {/* Crew */}
+              {/* Directors */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-foreground">Crew</p>
-                  <Button type="button" onClick={addCrewRow}
+                  <p className="text-sm font-semibold text-foreground">Directors</p>
+                  <Button type="button" onClick={addCrewItem}
                     className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
-                    <Plus className="h-3.5 w-3.5" /> Add Crew
+                    <Plus className="h-3.5 w-3.5" /> Add Director
                   </Button>
                 </div>
-                {crewRows.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No crew added yet.</p>
+                {crewItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No directors added yet.</p>
                 ) : (
-                  crewRows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 rounded-xl border border-border bg-card">
+                  crewItems.map((item) => (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 rounded-xl border border-border bg-card">
                       <div className="space-y-1">
-                        <Label className="text-foreground text-xs font-medium">Name</Label>
-                        <Input placeholder="Full name" value={row.name}
-                          onChange={(e) => updateCrewRow(row.id, "name", e.target.value)}
-                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 rounded-lg text-sm" />
+                        <Label className="text-foreground text-xs font-medium">Director</Label>
+                        <Select value={item.directorId} onValueChange={(v) => updateCrewItem(item.id, "directorId", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue placeholder="Select director..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                            {directorsList.map((d: any) => (
+                              <SelectItem key={getId(d)} value={getId(d)}>{d.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-foreground text-xs font-medium">Role</Label>
-                        <Select value={row.role} onValueChange={(v) => updateCrewRow(row.id, "role", v)}>
+                        <Select value={item.role} onValueChange={(v) => updateCrewItem(item.id, "role", v)}>
                           <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
@@ -854,12 +926,11 @@ export default function TvShowForm() {
                             <SelectItem value="Co-Director">Co-Director</SelectItem>
                             <SelectItem value="Executive Producer">Executive Producer</SelectItem>
                             <SelectItem value="Cinematographer">Cinematographer</SelectItem>
-                            <SelectItem value="Writer">Writer</SelectItem>
                             <SelectItem value="Editor">Editor</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <button type="button" onClick={() => removeCrewRow(row.id)}
+                      <button type="button" onClick={() => removeCrewItem(item.id)}
                         className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30">
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -867,150 +938,62 @@ export default function TvShowForm() {
                   ))
                 )}
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* =========== QUALITY INFO =========== */}
-        {activeTab === "Quality Info" && (
-          <div className="p-6 space-y-6">
-            <SH title="Video Source" />
-            <div className="rounded-xl border border-border bg-muted/10 p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Video Upload Type</Label>
-                  <Select value={videoUploadType} onValueChange={setVideoUploadType}>
-                    <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-foreground">
-                      <SelectItem value="url">External URL</SelectItem>
-                      <SelectItem value="hls">HLS / M3U8 URL</SelectItem>
-                      <SelectItem value="local">Local (Media Library)</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Crew Members */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-foreground">Crew Members</p>
+                  <Button type="button" onClick={addCrewMemberItem}
+                    className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
+                    <Plus className="h-3.5 w-3.5" /> Add Crew Member
+                  </Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-foreground text-sm font-medium">Video</Label>
-                  {videoUploadType === "local" ? (
-                    <div onClick={() => setVideoPickerOpen(true)}
-                      className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
-                      {videoFilePath ? (
-                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
-                          {getImageUrl(videoFilePath)}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
-                      )}
-                    </div>
-                  ) : (
-                    <Input
-                      placeholder={videoUploadType === "hls" ? "https://cdn.example.com/video.m3u8" : "https://..."}
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <SH title="Quality Variants" />
-            <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-foreground">Enable quality-specific video files</p>
-                <Switch checked={qualityEnabled} onCheckedChange={setQualityEnabled} className="data-[state=checked]:bg-primary" />
-              </div>
-              {qualityEnabled && (
-                <div className="space-y-4">
-                  {qualityRows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Upload Type</Label>
-                        <Select value={row.type} onValueChange={(v) => updateQualityRow(row.id, "type", v)}>
-                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
-                            <SelectValue />
+                {crewMemberItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No crew members added yet.</p>
+                ) : (
+                  crewMemberItems.map((item) => (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 rounded-xl border border-border bg-card">
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Crew Member</Label>
+                        <Select value={item.crewId} onValueChange={(v) => updateCrewMemberItem(item.id, "crewId", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
+                            <SelectValue placeholder="Select crew member..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-foreground">
-                            <SelectItem value="url">External URL</SelectItem>
-                            <SelectItem value="local">Local</SelectItem>
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                            {crewsList.map((c: any) => (
+                              <SelectItem key={getId(c)} value={getId(c)}>{c.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-foreground text-sm font-medium">Quality</Label>
-                        <Select value={row.quality} onValueChange={(v) => updateQualityRow(row.id, "quality", v)}>
-                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+                      <div className="space-y-1">
+                        <Label className="text-foreground text-xs font-medium">Role</Label>
+                        <Select value={item.role} onValueChange={(v) => updateCrewMemberItem(item.id, "role", v)}>
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-popover border-border text-foreground">
-                            <SelectItem value="144p">144p</SelectItem>
-                            <SelectItem value="240p">240p</SelectItem>
-                            <SelectItem value="360p">360p</SelectItem>
-                            <SelectItem value="480p">480p</SelectItem>
-                            <SelectItem value="720p">720p</SelectItem>
-                            <SelectItem value="1080p">1080p</SelectItem>
+                            <SelectItem value="Crew">Crew</SelectItem>
+                            <SelectItem value="Writer">Writer</SelectItem>
+                            <SelectItem value="Producer">Producer</SelectItem>
+                            <SelectItem value="Cinematographer">Cinematographer</SelectItem>
+                            <SelectItem value="Editor">Editor</SelectItem>
+                            <SelectItem value="Music Composer">Music Composer</SelectItem>
+                            <SelectItem value="Art Director">Art Director</SelectItem>
+                            <SelectItem value="Costume Designer">Costume Designer</SelectItem>
+                            <SelectItem value="Sound Designer">Sound Designer</SelectItem>
+                            <SelectItem value="VFX Supervisor">VFX Supervisor</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex gap-2 items-end min-w-0">
-                        <div className="flex-1 space-y-1.5 min-w-0">
-                          <Label className="text-foreground text-sm font-medium">Video File / URL</Label>
-                          {row.type === "local" ? (
-                            <div onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
-                              {row.filePath ? (
-                                <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
-                                  {getImageUrl(row.filePath)}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">Click to select</span>
-                              )}
-                            </div>
-                          ) : (
-                            <Input placeholder="https://..." value={row.url}
-                              onChange={(e) => updateQualityRow(row.id, "url", e.target.value)}
-                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
-                          )}
-                        </div>
-                        {qualityRows.length > 1 && (
-                          <button type="button" onClick={() => removeQualityRow(row.id)}
-                            className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 shrink-0">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
+                      <button type="button" onClick={() => removeCrewMemberItem(item.id)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  ))}
-                  <div className="flex justify-end">
-                    <Button type="button" onClick={addQualityRow}
-                      className="bg-primary hover:bg-primary/90 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold">
-                      <Plus className="h-4 w-4" /> Add Quality
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* =========== SUBTITLE INFO =========== */}
-        {activeTab === "Subtitle Info" && (
-          <div className="p-6 space-y-5">
-            <SH title="Subtitle Languages" />
-            <div className="rounded-xl border border-border bg-muted/10 p-5">
-              <ChipInput
-                label="Subtitle Languages"
-                chips={subtitleLanguages}
-                onRemove={(v) => setSubtitleLanguages((p) => p.filter((x) => x !== v))}
-                inputValue={subtitleLangInput}
-                onInputChange={setSubtitleLangInput}
-                onKeyDown={makeChipHandler(setSubtitleLanguages, setSubtitleLangInput, subtitleLangInput)}
-                placeholder="e.g. English, Hindi, Tamil..."
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                These are the subtitle languages available for this show. Upload subtitle files in the episode form.
-              </p>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1114,20 +1097,12 @@ export default function TvShowForm() {
       {/* Media Pickers */}
       <MediaPicker open={thumbnailPickerOpen} onClose={() => setThumbnailPickerOpen(false)}
         onSelect={(m) => setThumbnail({ filePath: m.filePath, preview: m.url })} source="tv-show" accept="image/*" />
+      <MediaPicker open={posterPickerOpen} onClose={() => setPosterPickerOpen(false)}
+        onSelect={(m) => setPoster({ filePath: m.filePath, preview: m.url })} source="tv-show" accept="image/*" />
       <MediaPicker open={bannerPickerOpen} onClose={() => setBannerPickerOpen(false)}
         onSelect={(m) => setBanner({ filePath: m.filePath, preview: m.url })} source="tv-show" accept="image/*" />
       <MediaPicker open={trailerPickerOpen} onClose={() => setTrailerPickerOpen(false)}
         onSelect={(m) => setTrailerFilePath(m.filePath)} source="tv-show" accept="video/*" />
-      <MediaPicker open={videoPickerOpen} onClose={() => setVideoPickerOpen(false)}
-        onSelect={(m) => setVideoFilePath(m.filePath)} source="tv-show" accept="video/*" />
-      <MediaPicker
-        open={qualityPickerOpen}
-        onClose={() => { setQualityPickerOpen(false); setCurrentQualityRowId(null); }}
-        onSelect={(m) => {
-          if (currentQualityRowId) updateQualityRow(currentQualityRowId, "filePath", m.filePath);
-        }}
-        source="tv-show" accept="video/*"
-      />
       <MediaPicker open={seoImagePickerOpen} onClose={() => setSeoImagePickerOpen(false)}
         onSelect={(m) => setSeoImage({ filePath: m.filePath, preview: m.url })} source="tv-show" accept="image/*" />
     </div>

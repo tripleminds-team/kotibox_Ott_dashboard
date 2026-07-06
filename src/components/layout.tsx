@@ -42,10 +42,12 @@ import {
   Video,
   Shield,
   CheckCircle,
+  Flame,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
@@ -75,21 +77,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/dashboard", label: t('nav.dashboard'), icon: Home, permission: null },
         { href: "/media-library", label: t('nav.mediaLibrary'), icon: Image, permission: "mediaLibrary" },
-        { href: "/app-management", label: t('nav.appManagement'), icon: UserCog, permission: null },
-        { href: "/home-sections", label: "Home Layout Builder", icon: LayoutList, permission: null },
+        { href: "/home-sections", label: "Home Layout Builder", icon: LayoutList, permission: "categories" },
+        { href: "/new-hot", label: "New & Hot", icon: Flame, permission: "promotions" },
       ],
     },
     {
-      label: "USER MANAGEMENT",
+      label: "ACCESS MANAGEMENT",
       items: [
-        { href: "/influencers", label: "Influencers", icon: Shield, permission: "influencers" },
-        { href: "/approvals", label: "Approvals", icon: CheckCircle, permission: null },
+        { href: "/users", label: t('nav.users'), icon: Users, permission: "subscriptions" },
+        { href: "/influencers", label: "Role-Based Access", icon: Shield, permission: "influencers" },
+        { href: "/approvals", label: "Approvals", icon: CheckCircle, permission: "movies" },
       ],
     },
     {
       label: t('nav.mediaManagement'),
       items: [
-        { href: "/users", label: t('nav.users'), icon: Users, permission: null },
         { href: "/languages", label: t('nav.languages'), icon: Languages, permission: "languages" },
         { href: "/genres", label: t('nav.genres'), icon: Tags, permission: "genres" },
         { href: "/movies", label: t('nav.movies'), icon: Film, permission: "movies" },
@@ -98,11 +100,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           href: "/tv-shows",
           label: "TV Shows",
           icon: Tv2,
-          permission: null,
+          permission: "shows",
           children: [
-            { href: "/tv-shows", label: "TV Shows", icon: Monitor },
-            { href: "/seasons", label: "Seasons", icon: LayoutList },
-            { href: "/episodes", label: "Episodes", icon: Video },
+            { href: "/tv-shows", label: "TV Shows", icon: Monitor, permission: "shows" },
+            { href: "/seasons", label: "Seasons", icon: LayoutList, permission: "shows" },
+            { href: "/episodes", label: "Episodes", icon: Video, permission: "shows" },
           ],
         },
         {
@@ -130,6 +132,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         { href: "/promotions", label: t('nav.promotions'), icon: Megaphone, permission: "promotions" },
         { href: "/banners", label: t('nav.banners'), icon: Layers, permission: "banners" },
         { href: "/faq", label: t('nav.faq'), icon: HelpCircle, permission: "faqs" },
+        { href: "/reviews", label: "Reviews", icon: MessageSquare, permission: "reviews" },
       ],
     },
     {
@@ -137,8 +140,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/actors", label: t('nav.actors'), icon: UserRound, permission: "actors" },
         { href: "/directors", label: t('nav.directors'), icon: Clapperboard, permission: "directors" },
-        { href: "/crew", label: "Crew", icon: UserCog, permission: null },
-        { href: "/countries", label: "Countries", icon: Globe, permission: null },
+        { href: "/crew", label: "Crew", icon: UserCog, permission: "actors" },
+        { href: "/countries", label: "Countries", icon: Globe, permission: "languages" },
       ],
     },
     {
@@ -404,7 +407,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+    <div className="h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Header */}
       <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-sidebar/90 backdrop-blur-xl sticky top-0 z-50">
         <LogoComponent />
@@ -523,7 +526,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main
-        className={`flex-1 flex flex-col transition-all duration-300 ${
+        className={`flex-1 flex flex-col transition-all duration-300 overflow-y-auto ${
           sidebarCollapsed ? "md:ml-[68px]" : "md:ml-[260px]"
         }`}
       >
@@ -561,32 +564,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <HeaderNotifications />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="outline-none">
-                  <Avatar className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 cursor-pointer hover:opacity-90 transition-opacity">
-                    <AvatarFallback className="text-white font-bold text-sm">
-                      {user?.name?.charAt(0) || "A"}
+                <button className="outline-none ring-0 focus:ring-0">
+                  <Avatar className="h-9 w-9 rounded-xl cursor-pointer hover:opacity-90 transition-opacity border-2 border-primary/40 hover:border-primary/70">
+                    {user?.avatar && (
+                      <AvatarImage src={getImageUrl(user.avatar)} alt={user?.name || "Admin"} className="object-cover" />
+                    )}
+                    <AvatarFallback className="text-white font-bold text-sm bg-gradient-to-br from-primary to-primary/70 rounded-xl">
+                      {user?.name?.charAt(0)?.toUpperCase() || "A"}
                     </AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-56 bg-popover border-border text-foreground p-0 overflow-hidden"
+                className="w-60 bg-card border border-border text-foreground p-0 overflow-hidden rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/50"
               >
-                {/* User info header */}
-                <div className="bg-primary/90 px-4 py-3 flex items-center gap-3">
-                  <Avatar className="h-9 w-9 rounded-full bg-muted shrink-0">
-                    <AvatarFallback className="text-white font-bold text-sm bg-zinc-700">
-                      {user?.name?.charAt(0) || "A"}
+                {/* User info header – theme-aware */}
+                <div className="px-4 py-4 flex items-center gap-3 border-b border-border">
+                  <Avatar className="h-11 w-11 rounded-xl shrink-0 border border-border">
+                    {user?.avatar && (
+                      <AvatarImage src={getImageUrl(user.avatar)} alt={user?.name || "Admin"} className="object-cover" />
+                    )}
+                    <AvatarFallback className="text-white font-black text-base bg-gradient-to-br from-primary to-primary/70 rounded-xl">
+                      {user?.name?.charAt(0)?.toUpperCase() || "A"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="overflow-hidden">
-                    <p className="text-white font-semibold text-sm truncate">
+                  <div className="overflow-hidden flex-1">
+                    <p className="text-foreground font-bold text-sm truncate leading-tight">
                       {user?.name || "Admin"}
                     </p>
-                    <p className="text-primary-foreground/80 text-xs truncate">
-                      {user?.email || "admin@streamit.com"}
+                    <p className="text-muted-foreground text-xs truncate mt-0.5">
+                      {user?.email || ""}
                     </p>
+                    <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-md bg-primary/15 border border-primary/25 text-primary text-[10px] font-bold capitalize">
+                      {user?.role || "Admin"}
+                    </span>
                   </div>
                 </div>
                 <div className="py-1">

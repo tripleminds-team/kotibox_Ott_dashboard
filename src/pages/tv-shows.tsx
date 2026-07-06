@@ -231,16 +231,20 @@ export default function TvShowsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {(show.genres || []).slice(0, 3).map((g: string) => (
-                          <span key={g} className="text-xs bg-muted px-1.5 py-0.5 rounded text-zinc-400">{g}</span>
-                        ))}
+                        {(show.genres || []).slice(0, 3).map((g: any) => {
+                          const name = typeof g === "object" ? g.name : g;
+                          const key = typeof g === "object" ? (g._id || g.id || name) : g;
+                          return (
+                            <span key={key} className="text-xs bg-muted px-1.5 py-0.5 rounded text-zinc-400">{name}</span>
+                          );
+                        })}
                         {(show.genres || []).length > 3 && (
                           <span className="text-xs text-zinc-600">+{show.genres.length - 3}</span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="text-zinc-400 text-sm">
-                      {(show.languages || []).slice(0, 2).join(", ") || "—"}
+                      {(show.languages || []).slice(0, 2).map((l: any) => typeof l === "object" ? l.name : l).join(", ") || "—"}
                     </TableCell>
                     <TableCell className="text-zinc-400 text-sm text-center">
                       {show.episodeCount ?? 0}

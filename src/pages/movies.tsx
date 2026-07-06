@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import {
   Edit2, Eye, Trash2, Search, Plus, Download, Upload,
@@ -26,6 +27,7 @@ import {
   useToggleMovieFeatured,
   useToggleMovieTrending,
   useUpdateMovieStatus,
+  useGetLanguagesList,
 } from "@/lib/api-client";
 import { getImageUrl } from "@/lib/api-client";
 
@@ -63,12 +65,41 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 
 export default function MoviesPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("action");
   const [confirmDelete, setConfirmDelete] = useState<MovieRow | null>(null);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+
+  // Advanced Filter states
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [planFilter, setPlanFilter] = useState("all");
+  const [langFilter, setLangFilter] = useState("all");
+  const [featuredFilter, setFeaturedFilter] = useState("all");
+  const [trendingFilter, setTrendingFilter] = useState("all");
+
+  const { data: langsData } = useGetLanguagesList();
+  const languagesList = langsData?.data || [];
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [statusFilter, planFilter, langFilter, featuredFilter, trendingFilter]);
+
+  const isAnyFilterActive =
+    planFilter !== "all" ||
+    langFilter !== "all" ||
+    featuredFilter !== "all" ||
+    trendingFilter !== "all";
+
+  const handleResetFilters = () => {
+    setPlanFilter("all");
+    setLangFilter("all");
+    setFeaturedFilter("all");
+    setTrendingFilter("all");
+  };
 
   const { data: moviesData, isLoading } = useGetMovies({
     page: 1,
@@ -88,7 +119,26 @@ export default function MoviesPage() {
     const matchStatus =
       statusFilter === "all" ||
       m.status === statusFilter;
-    return matchStatus;
+
+    const matchPlan =
+      planFilter === "all" ||
+      m.planRequired === planFilter;
+
+    const matchLang =
+      langFilter === "all" ||
+      m.languages.some((l: any) => l.name === langFilter);
+
+    const matchFeatured =
+      featuredFilter === "all" ||
+      (featuredFilter === "yes" && m.featured) ||
+      (featuredFilter === "no" && !m.featured);
+
+    const matchTrending =
+      trendingFilter === "all" ||
+      (trendingFilter === "yes" && m.trending) ||
+      (trendingFilter === "no" && !m.trending);
+
+    return matchStatus && matchPlan && matchLang && matchFeatured && matchTrending;
   });
 
   const allSelected = filtered.length > 0 && filtered.every((m) => selectedIds.includes(m.id));
@@ -141,7 +191,54 @@ export default function MoviesPage() {
   };
 
   const handleApplyBulk = () => {
-    toast({ title: "Bulk action not implemented yet" });
+    if (bulkAction === "action" || selectedIds.length === 0) {
+      toast({ title: "Select items and an action first", variant: "destructive" });
+      return;
+    }
+    if (bulkAction === "delete") {
+      setBulkConfirmOpen(true);
+      return;
+    }
+    executeBulkAction();
+  };
+
+  const executeBulkAction = async () => {
+    try {
+      if (bulkAction === "activate") {
+        await Promise.all(
+          selectedIds.map((id) =>
+            updateStatusMutation.mutateAsync({ id, data: { status: "published" } })
+          )
+        );
+        toast({ title: `${selectedIds.length} movie(s) published.` });
+      } else if (bulkAction === "deactivate") {
+        await Promise.all(
+          selectedIds.map((id) =>
+            updateStatusMutation.mutateAsync({ id, data: { status: "draft" } })
+          )
+        );
+        toast({ title: `${selectedIds.length} movie(s) set to draft.` });
+      }
+      setSelectedIds([]);
+      queryClient.invalidateQueries({ queryKey: ["movies"] });
+      setBulkAction("action");
+    } catch {
+      toast({ title: "Action failed. Please try again.", variant: "destructive" });
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    setBulkConfirmOpen(false);
+    try {
+      await Promise.all(selectedIds.map((id) => deleteMutation.mutateAsync(id)));
+      toast({ title: `${selectedIds.length} movie(s) deleted successfully.` });
+      setSelectedIds([]);
+      queryClient.invalidateQueries({ queryKey: ["movies"] });
+      setBulkAction("action");
+    } catch {
+      toast({ title: "Bulk delete failed. Please try again.", variant: "destructive" });
+      queryClient.invalidateQueries({ queryKey: ["movies"] });
+    }
   };
 
   return (
@@ -172,20 +269,7 @@ export default function MoviesPage() {
         >
           Apply
         </Button>
-        <Button
-          variant="outline"
-          className="bg-card border-border text-foreground h-10 gap-2 rounded-lg text-sm hover:bg-muted"
-        >
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
-        <Button
-          variant="outline"
-          className="bg-card border-border text-foreground h-10 gap-2 rounded-lg text-sm hover:bg-muted"
-        >
-          <Upload className="h-4 w-4" />
-          Import
-        </Button>
+
 
         <div className="flex-1" />
 
@@ -214,8 +298,11 @@ export default function MoviesPage() {
         </div>
 
         <Button
+          onClick={() => setShowAdvanced(!showAdvanced)}
           variant="outline"
-          className="bg-card border-border text-foreground h-10 gap-2 rounded-lg text-sm hover:bg-muted"
+          className={`bg-card border-border text-foreground h-10 gap-2 rounded-lg text-sm hover:bg-muted transition-all ${
+            showAdvanced ? "border-primary text-primary hover:text-primary bg-primary/5" : ""
+          }`}
         >
           <SlidersHorizontal className="h-4 w-4" />
           Advanced Filter
@@ -229,6 +316,89 @@ export default function MoviesPage() {
           New
         </Button>
       </div>
+
+      {showAdvanced && (
+        <div className="bg-card border border-border p-4 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Plan Filter */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Plan</label>
+              <Select value={planFilter} onValueChange={setPlanFilter}>
+                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                  <SelectValue placeholder="All Plans" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border text-foreground">
+                  <SelectItem value="all">All Plans</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="basic">Basic</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Language Filter */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Language</label>
+              <Select value={langFilter} onValueChange={setLangFilter}>
+                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                  <SelectValue placeholder="All Languages" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border text-foreground">
+                  <SelectItem value="all">All Languages</SelectItem>
+                  {languagesList.map((lang: any) => (
+                    <SelectItem key={lang._id || lang.id} value={lang.name}>
+                      {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Featured Filter */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Featured</label>
+              <Select value={featuredFilter} onValueChange={setFeaturedFilter}>
+                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border text-foreground">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="yes">Yes (Featured)</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Trending Filter */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Trending</label>
+              <Select value={trendingFilter} onValueChange={setTrendingFilter}>
+                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border text-foreground">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="yes">Yes (Trending)</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {isAnyFilterActive && (
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="text-xs text-primary hover:text-red-500 font-bold hover:bg-red-500/10 h-8 px-3 rounded-lg"
+              >
+                Clear Advanced Filters
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Table */}
       <div className="rounded-xl border border-border overflow-hidden">
@@ -380,6 +550,27 @@ export default function MoviesPage() {
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
+        <AlertDialogContent className="bg-card border-border text-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.length} Movie(s)</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Are you sure you want to delete {selectedIds.length} selected movie(s)?
+              <br />This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete} className="bg-primary hover:bg-primary/90 text-white">
+              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

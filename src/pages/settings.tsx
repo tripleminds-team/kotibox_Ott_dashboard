@@ -15,6 +15,8 @@ import {
   X,
   UserX,
   CreditCard,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +72,37 @@ const inputCls =
   "bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11 rounded-lg";
 const labelCls = "text-foreground text-sm font-medium";
 
+// Reusable secret input with show/hide eye toggle
+function SecretInput({
+  value, onChange, placeholder, className,
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <Input
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`${className ?? ""} pr-10`}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        tabIndex={-1}
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}
+
 function SectionTitle({ icon: Icon, label }: { icon: any; label: string }) {
   return (
     <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-6">
@@ -111,11 +144,17 @@ export default function Settings() {
   const faviconRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      toast({ title: "Settings saved successfully!" });
-    }, 600);
+    // Dispatch to the active section's handler
+    switch (activeSection) {
+      case "business": return handleSaveBusiness();
+      case "misc": return handleSaveMisc();
+      case "customization": return handleSaveCustomization();
+      case "mail": return handleSaveMail();
+      case "currency": return handleSaveCurrency();
+      case "payment": return handleSavePayment();
+      case "storage": return handleSaveStorage();
+      case "seo": return handleSaveSeo();
+    }
   };
 
   // ── Business Settings ──────────────────────────────────────────────────
@@ -218,6 +257,10 @@ export default function Settings() {
     socialLogin: ctxSettings.socialLogin ?? true,
     twoFactorAuth: ctxSettings.twoFactorAuth ?? false,
     emailVerification: ctxSettings.emailVerification ?? true,
+    googleClientId: ctxSettings.googleClientId || '',
+    appleClientId: ctxSettings.appleClientId || '',
+    appleTeamId: ctxSettings.appleTeamId || '',
+    appleKeyId: ctxSettings.appleKeyId || '',
   });
 
   useEffect(() => {
@@ -227,6 +270,10 @@ export default function Settings() {
       socialLogin: ctxSettings.socialLogin ?? true,
       twoFactorAuth: ctxSettings.twoFactorAuth ?? false,
       emailVerification: ctxSettings.emailVerification ?? true,
+      googleClientId: ctxSettings.googleClientId || '',
+      appleClientId: ctxSettings.appleClientId || '',
+      appleTeamId: ctxSettings.appleTeamId || '',
+      appleKeyId: ctxSettings.appleKeyId || '',
     });
   }, [
     ctxSettings.maintenanceMode,
@@ -234,6 +281,10 @@ export default function Settings() {
     ctxSettings.socialLogin,
     ctxSettings.twoFactorAuth,
     ctxSettings.emailVerification,
+    ctxSettings.googleClientId,
+    ctxSettings.appleClientId,
+    ctxSettings.appleTeamId,
+    ctxSettings.appleKeyId,
   ]);
 
   const handleSaveMisc = async () => {
@@ -245,6 +296,10 @@ export default function Settings() {
         socialLogin: misc.socialLogin,
         twoFactorAuth: misc.twoFactorAuth,
         emailVerification: misc.emailVerification,
+        googleClientId: misc.googleClientId.trim(),
+        appleClientId: misc.appleClientId.trim(),
+        appleTeamId: misc.appleTeamId.trim(),
+        appleKeyId: misc.appleKeyId.trim(),
       });
       updateCtx({
         maintenanceMode: misc.maintenanceMode,
@@ -252,6 +307,10 @@ export default function Settings() {
         socialLogin: misc.socialLogin,
         twoFactorAuth: misc.twoFactorAuth,
         emailVerification: misc.emailVerification,
+        googleClientId: misc.googleClientId.trim(),
+        appleClientId: misc.appleClientId.trim(),
+        appleTeamId: misc.appleTeamId.trim(),
+        appleKeyId: misc.appleKeyId.trim(),
       });
       await refreshSettings();
       toast({ title: "Misc settings saved!" });
@@ -332,28 +391,28 @@ export default function Settings() {
 
   // ── Mail Settings ──────────────────────────────────────────────────────
   const [mail, setMail] = useState({
-    email: ctxSettings.mailEmail || "info@kotibox.com",
+    email: ctxSettings.mailEmail || "",
     mailDriver: ctxSettings.mailDriver || "smtp",
-    mailHost: ctxSettings.mailHost || "smtp.gmail.com",
-    mailPort: ctxSettings.mailPort || "587",
+    mailHost: ctxSettings.mailHost || "",
+    mailPort: ctxSettings.mailPort || "",
     mailEncryption: ctxSettings.mailEncryption || "tls",
-    mailUsername: ctxSettings.mailUsername || "youremail@gmail.com",
+    mailUsername: ctxSettings.mailUsername || "",
     password: "",
-    mailFrom: ctxSettings.mailFrom || "info@kotibox.com",
-    fromName: ctxSettings.mailFromName || "Kotibox",
+    mailFrom: ctxSettings.mailFrom || "",
+    fromName: ctxSettings.mailFromName || "",
   });
 
   useEffect(() => {
     setMail({
-      email: ctxSettings.mailEmail || "info@kotibox.com",
+      email: ctxSettings.mailEmail || "",
       mailDriver: ctxSettings.mailDriver || "smtp",
-      mailHost: ctxSettings.mailHost || "smtp.gmail.com",
-      mailPort: ctxSettings.mailPort || "587",
+      mailHost: ctxSettings.mailHost || "",
+      mailPort: ctxSettings.mailPort || "",
       mailEncryption: ctxSettings.mailEncryption || "tls",
-      mailUsername: ctxSettings.mailUsername || "youremail@gmail.com",
-      password: "", // keep password empty unless user edits
-      mailFrom: ctxSettings.mailFrom || "info@kotibox.com",
-      fromName: ctxSettings.mailFromName || "Kotibox",
+      mailUsername: ctxSettings.mailUsername || "",
+      password: "",
+      mailFrom: ctxSettings.mailFrom || "",
+      fromName: ctxSettings.mailFromName || "",
     });
   }, [
     ctxSettings.mailEmail,
@@ -626,7 +685,7 @@ export default function Settings() {
     <div className="space-y-2">
       <Label className={labelCls}>{label}</Label>
       <div
-        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-gray-800 cursor-pointer hover:border-primary/60 transition-colors overflow-hidden"
+        className="relative flex flex-col items-center justify-center h-28 rounded-lg border-2 border-dashed border-border bg-muted/30 dark:bg-zinc-800/40 cursor-pointer hover:border-primary/60 transition-colors overflow-hidden"
         onClick={onClick}
       >
         {preview ? (
@@ -681,7 +740,8 @@ export default function Settings() {
           else if (mediaPickerType === "favicon") setFaviconPreview(media.url);
           setMediaPickerType(null);
         }}
-        type="image"
+        source="settings"
+        accept="image/*"
       />
 
       {/* Theme toggle */}
@@ -770,20 +830,17 @@ export default function Settings() {
   const renderMisc = () => (
     <div>
       <SectionTitle icon={SlidersHorizontal} label="Misc Settings" />
-      <div className="space-y-3">
-        {(
-          [
-            { key: "maintenanceMode", label: "Maintenance Mode", desc: "Put the site in maintenance mode" },
-            { key: "userRegistration", label: "User Registration", desc: "Allow new user registrations" },
-            { key: "socialLogin", label: "Social Login", desc: "Enable social media login options" },
-            { key: "twoFactorAuth", label: "Two Factor Authentication", desc: "Enable 2FA for extra security" },
-            { key: "emailVerification", label: "Email Verification", desc: "Require email verification for new users" },
-          ] as const
-        ).map(({ key, label, desc }) => (
-          <div
-            key={key}
-            className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
-          >
+
+      {/* Toggle switches */}
+      <div className="space-y-3 mb-7">
+        {([
+          { key: "maintenanceMode", label: "Maintenance Mode", desc: "Block login & registration — users see a maintenance message" },
+          { key: "userRegistration", label: "User Registration", desc: "Allow new users to create accounts on the web" },
+          { key: "socialLogin", label: "Social Login", desc: "Show Google / Apple sign-in buttons on the web auth page" },
+          { key: "twoFactorAuth", label: "Two Factor Authentication", desc: "Enable 2FA for extra security (coming soon)" },
+          { key: "emailVerification", label: "Email Verification", desc: "Require email verification for new users" },
+        ] as const).map(({ key, label, desc }) => (
+          <div key={key} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
             <div>
               <p className="text-sm text-foreground font-medium">{label}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
@@ -796,6 +853,83 @@ export default function Settings() {
           </div>
         ))}
       </div>
+
+      {/* Social OAuth Credentials — shown when socialLogin is on */}
+      {misc.socialLogin && (
+        <div className="mb-7 rounded-lg border border-border bg-card p-5">
+          <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-2">
+            <span className="w-2 h-4 rounded-full bg-primary inline-block" />
+            Social Login Credentials
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            Enter OAuth credentials for each provider. Leave blank to disable that provider's button.
+          </p>
+
+          {/* Google */}
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              <span className="text-sm font-semibold text-foreground">Google Sign In</span>
+            </div>
+            <div className="space-y-2">
+              <Label className={labelCls}>Google Client ID</Label>
+              <SecretInput
+                value={misc.googleClientId}
+                onChange={(e) => setMisc({ ...misc, googleClientId: e.target.value })}
+                placeholder="123456789-abc.apps.googleusercontent.com"
+                className={inputCls}
+              />
+              <p className="text-xs text-muted-foreground">From Google Cloud Console → APIs & Services → Credentials</p>
+            </div>
+          </div>
+
+          {/* Apple */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-foreground">
+                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.54 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+              </svg>
+              <span className="text-sm font-semibold text-foreground">Apple Sign In</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className={labelCls}>Apple Client ID (Services ID)</Label>
+                <SecretInput
+                  value={misc.appleClientId}
+                  onChange={(e) => setMisc({ ...misc, appleClientId: e.target.value })}
+                  placeholder="com.example.app"
+                  className={inputCls}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className={labelCls}>Team ID</Label>
+                <SecretInput
+                  value={misc.appleTeamId}
+                  onChange={(e) => setMisc({ ...misc, appleTeamId: e.target.value })}
+                  placeholder="ABCDE12345"
+                  className={inputCls}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label className={labelCls}>Key ID</Label>
+                <SecretInput
+                  value={misc.appleKeyId}
+                  onChange={(e) => setMisc({ ...misc, appleKeyId: e.target.value })}
+                  placeholder="XYZABC1234"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">From Apple Developer → Certificates, Identifiers & Profiles → Keys</p>
+          </div>
+        </div>
+      )}
+
       <SaveBtn saving={saving} onClick={handleSaveMisc} />
     </div>
   );
@@ -1053,8 +1187,7 @@ export default function Settings() {
               <Label className={labelCls}>
                 Password <span className="text-primary">*</span>
               </Label>
-              <Input
-                type="password"
+              <SecretInput
                 value={mail.password}
                 onChange={(e) => setMail({ ...mail, password: e.target.value })}
                 placeholder={ctxSettings.mailPassword ? "••••••••  (saved — leave blank to keep)" : "Enter SMTP password"}
@@ -1230,21 +1363,30 @@ export default function Settings() {
         <div className="space-y-4">
           {(
             [
-              { key: "awsAccessKeyId", label: "AWS Access Key ID" },
-              { key: "awsSecretAccessKey", label: "AWS Secret Access Key" },
-              { key: "awsDefaultRegion", label: "AWS Default Region" },
-              { key: "awsBucket", label: "AWS Bucket" },
+              { key: "awsAccessKeyId", label: "AWS Access Key ID", secret: true },
+              { key: "awsSecretAccessKey", label: "AWS Secret Access Key", secret: true },
+              { key: "awsDefaultRegion", label: "AWS Default Region", secret: false },
+              { key: "awsBucket", label: "AWS Bucket", secret: false },
             ] as const
-          ).map(({ key, label }) => (
+          ).map(({ key, label, secret }) => (
             <div key={key} className="space-y-2">
               <Label className={labelCls}>
                 {label} <span className="text-primary">*</span>
               </Label>
-              <Input
-                value={storage[key]}
-                onChange={(e) => setStorage({ ...storage, [key]: e.target.value })}
-                className={inputCls}
-              />
+              {secret ? (
+                <SecretInput
+                  value={storage[key]}
+                  onChange={(e) => setStorage({ ...storage, [key]: e.target.value })}
+                  placeholder={`Enter ${label}`}
+                  className={inputCls}
+                />
+              ) : (
+                <Input
+                  value={storage[key]}
+                  onChange={(e) => setStorage({ ...storage, [key]: e.target.value })}
+                  className={inputCls}
+                />
+              )}
             </div>
           ))}
           <div className="space-y-2">
@@ -1419,8 +1561,7 @@ export default function Settings() {
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Razorpay Key Secret</Label>
-              <Input
-                type="password"
+              <SecretInput
                 value={payment.razorpayKeySecret}
                 onChange={(e) => setPayment({ ...payment, razorpayKeySecret: e.target.value })}
                 placeholder="Enter Key Secret"
@@ -1480,7 +1621,7 @@ export default function Settings() {
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all border-b border-border last:border-b-0 text-left ${
                     isActive
-                      ? "bg-primary text-foreground"
+                      ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >

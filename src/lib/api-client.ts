@@ -3,6 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 let getAuthToken = () => localStorage.getItem("accessToken");
 
+export const getActiveProfileId = (): string | null => {
+  try {
+    const p = localStorage.getItem('ott_active_profile');
+    return p ? JSON.parse(p).id || null : null;
+  } catch {
+    return null;
+  }
+};
+
 type UploadProgress = {
   loaded: number;
   total: number;
@@ -17,6 +26,11 @@ export const getImageUrl = (filePath) => {
 
   if (filePath.startsWith("http"))
     return filePath;
+
+  if (filePath.startsWith("/uploads/") || filePath.startsWith("uploads/")) {
+    const cleanPath = filePath.startsWith("/") ? filePath.slice(1) : filePath;
+    return `${baseUrl}/${cleanPath}`;
+  }
 
   return `https://tripleminds-ott-admin.s3.eu-north-1.amazonaws.com/${filePath}`;
 };
@@ -113,7 +127,17 @@ const api = async (
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     console.error("Error in fetch response: ", res, errorData);
-    throw new Error(errorData.error || "API request failed");
+    // Token expired or invalid — clear session and redirect to home (login modal)
+    if (res.status === 401) {
+      const msg = (errorData.message || errorData.error || "").toLowerCase();
+      if (msg.includes("expired") || msg.includes("invalid") || msg.includes("no authorization") || msg.includes("unauthorized")) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        window.location.href = "/";
+        return;
+      }
+    }
+    throw new Error(errorData.message || errorData.error || "API request failed");
   }
 
   return res.json();
@@ -561,6 +585,24 @@ export const bulkDeleteBanners = async (ids) => {
   });
 };
 
+export const createBannerFromContent = async (data: {
+  contentId: string;
+  contentSource: "movie" | "content";
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  position?: number;
+  isActive?: boolean;
+}) => {
+  return api("/banners/from-content", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
 export const appendBannerShowVideo = async (
   contentId,
   data,
@@ -619,6 +661,16 @@ export const useCreateBannerShow = () => {
       data,
       onUploadProgress,
     }) => createBannerShow(data, { onUploadProgress }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banners-list"] });
+    },
+  });
+};
+
+export const useCreateBannerFromContent = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: (data) => createBannerFromContent(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banners-list"] });
     },
@@ -699,17 +751,18 @@ export const useGetWebHome = () => {
   });
 };
 
-export const getWebBrowse = async (options: { type: string, genre?: string, page?: number, search?: string, limit?: number }) => {
+export const getWebBrowse = async (options: { type: string, genre?: string, page?: number, search?: string, limit?: number, section?: string }) => {
   const params = new URLSearchParams();
   if (options.type) params.set("type", options.type);
   if (options.genre && options.genre !== "All") params.set("genre", options.genre);
   if (options.page) params.set("page", options.page.toString());
   if (options.search) params.set("search", options.search);
   if (options.limit) params.set("limit", options.limit.toString());
+  if (options.section) params.set("section", options.section);
   return api(`/web-browse?${params.toString()}`);
 };
 
-export const useGetWebBrowse = (options: { type: string, genre?: string, page?: number, search?: string, limit?: number }, enabled = true) => {
+export const useGetWebBrowse = (options: { type: string, genre?: string, page?: number, search?: string, limit?: number, section?: string }, enabled = true) => {
   return useQuery({
     queryKey: ["web-browse", options],
     queryFn: async () => {
@@ -1097,7 +1150,17 @@ export const useUpdateCategoryEpisodeLock = () => {
 };
 
 // Content / Shows
-export const getContentList = async (options) => {
+export const getContentList = async (options?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  type?: string;
+  contentType?: string;
+  status?: string;
+  isNewContent?: boolean;
+  featured?: string;
+  trending?: string;
+}) => {
   const params = new URLSearchParams();
   if (options?.page) params.set("page", options.page.toString());
   if (options?.limit) params.set("limit", options.limit.toString());
@@ -1105,6 +1168,9 @@ export const getContentList = async (options) => {
   if (options?.type) params.set("type", options.type);
   if (options?.contentType) params.set("contentType", options.contentType);
   if (options?.status) params.set("status", options.status);
+  if (options?.isNewContent !== undefined) params.set("isNewContent", options.isNewContent.toString());
+  if (options?.featured) params.set("featured", options.featured);
+  if (options?.trending) params.set("trending", options.trending);
   return api(`/contents?${params.toString()}`);
 };
 
@@ -1129,8 +1195,8 @@ export const appendContentVideo = async (contentId, data, options) => {
 };
 
 export const updateContentEpisodeLock = async (episodeId, isLocked) => {
-  return api(`/contents/episodes/${episodeId}/lock`, {
-    method: "PUT",
+  return api(`/episodes/${episodeId}/lock`, {
+    method: "PATCH",
     body: JSON.stringify({ isLocked }),
   });
 };
@@ -1148,7 +1214,7 @@ export const deleteContent = async (id) => {
 };
 
 // Hooks
-export const useGetContentList = (options) => {
+export const useGetContentList = (options?: Parameters<typeof getContentList>[0]) => {
   return useQuery({
     queryKey: ["content-list", options],
     queryFn: () => getContentList(options),
@@ -1201,6 +1267,7 @@ export const useUpdateContentEpisodeLock = () => {
       updateContentEpisodeLock(episodeId, isLocked),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-list"] });
+      queryClient.invalidateQueries({ queryKey: ["content"] });
     },
   });
 };
@@ -1211,6 +1278,7 @@ export const useUpdateContent = () => {
     mutationFn: ({ id, data }) => updateContent(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["content-list"] });
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
       queryClient.invalidateQueries({ queryKey: ["content", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["categories-with-content"] });
     },
@@ -1404,6 +1472,17 @@ export const useGetPageBySlug = (slug: string) => {
   return useQuery({
     queryKey: ['page', slug],
     queryFn: () => getPageBySlug(slug)
+  });
+};
+
+export const useGetPageById = (id: string) => {
+  return useQuery({
+    queryKey: ['page-detail', id],
+    queryFn: async () => {
+      const res = await getPageById(id);
+      return res.data;
+    },
+    enabled: !!id && id !== 'new',
   });
 };
 
@@ -2081,6 +2160,15 @@ export const useGetSubscriptionPlanById = (id: string) => {
   });
 };
 
+// Public web endpoint — no admin auth required, returns only active plans
+export const useGetWebSubscriptionPlans = () => {
+  return useQuery({
+    queryKey: ['webSubscriptionPlans'],
+    queryFn: () => api('/web/subscription-plans'),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
 export const useCreateSubscriptionPlan = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
@@ -2176,6 +2264,28 @@ export const toggleMovieTrending = async (id: string) => {
   return api(`/movies/${id}/trending`, { method: 'PATCH' });
 };
 
+export const getMovieProcessingStatus = async (id: string) => {
+  return api(`/movies/${id}/processing-status`);
+};
+
+/**
+ * Poll movie HLS processing status every 5 seconds.
+ * Polling stops automatically once status is 'ready' or 'failed'.
+ */
+export const useMovieProcessingStatus = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['movie-processing-status', id],
+    queryFn: () => getMovieProcessingStatus(id),
+    enabled: !!id && enabled,
+    refetchInterval: (data: any) => {
+      const status = data?.data?.processingStatus;
+      if (status === 'ready' || status === 'failed') return false;
+      return 5000; // poll every 5 seconds while processing
+    },
+    refetchIntervalInBackground: false,
+  });
+};
+
 export const useGetMovies = (options?: {
   page?: number;
   limit?: number;
@@ -2216,8 +2326,9 @@ export const useUpdateMovie = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, { id: string; data: any }>({
     mutationFn: ({ id, data }) => updateMovie(id, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['movie', variables.id] });
     },
   });
 };
@@ -2440,6 +2551,7 @@ export const useUpdateProfile = () => {
     mutationFn: updateProfile,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth/me'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 };
@@ -2620,9 +2732,10 @@ export const useUpdateFAQ = () => {
   const queryClient = useQueryClient();
   return useMutation<any, Error, any>({
     mutationFn: ({ id, data }: any) => updateFAQ(id, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['faqs'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ['faq', variables.id] });
+    },
   });
 };
 
@@ -2894,6 +3007,7 @@ export const useDeleteNotificationLog = () => {
     mutationFn: deleteNotificationLog,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-logs'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-notifications'] });
     }
   });
 };
@@ -2904,6 +3018,7 @@ export const useBulkDeleteNotificationLogs = () => {
     mutationFn: bulkDeleteNotificationLogs,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-logs'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-notifications'] });
     }
   });
 };
@@ -3012,29 +3127,34 @@ export const useBulkDeleteSubscriptions = () => {
 };
 
 // Dashboard API
-export const getDashboardStats = async () => {
-  const response = await api("/dashboard/stats");
+type DashboardDateOptions = { period?: string; startDate?: string; endDate?: string };
+
+const buildDashboardParams = (options?: DashboardDateOptions) => {
+  const params = new URLSearchParams();
+  if (options?.period) params.set("period", options.period);
+  if (options?.startDate) params.set("startDate", options.startDate);
+  if (options?.endDate) params.set("endDate", options.endDate);
+  return params.toString();
+};
+
+export const getDashboardStats = async (options?: DashboardDateOptions) => {
+  const q = buildDashboardParams(options);
+  const response = await api(`/dashboard/stats${q ? `?${q}` : ""}`);
   return response.data;
 };
 
-export const getRevenueData = async (options?: { period?: string }) => {
-  const params = new URLSearchParams();
-  if (options?.period) params.set("period", options.period);
-  const response = await api(`/dashboard/revenue?${params.toString()}`);
+export const getRevenueData = async (options?: DashboardDateOptions) => {
+  const response = await api(`/dashboard/revenue?${buildDashboardParams(options)}`);
   return response.data;
 };
 
-export const getNewSubscribersData = async (options?: { period?: string }) => {
-  const params = new URLSearchParams();
-  if (options?.period) params.set("period", options.period);
-  const response = await api(`/dashboard/new-subscribers?${params.toString()}`);
+export const getNewSubscribersData = async (options?: DashboardDateOptions) => {
+  const response = await api(`/dashboard/new-subscribers?${buildDashboardParams(options)}`);
   return response.data;
 };
 
-export const getMostWatchedData = async (options?: { period?: string }) => {
-  const params = new URLSearchParams();
-  if (options?.period) params.set("period", options.period);
-  const response = await api(`/dashboard/most-watched?${params.toString()}`);
+export const getMostWatchedData = async (options?: DashboardDateOptions) => {
+  const response = await api(`/dashboard/most-watched?${buildDashboardParams(options)}`);
   return response.data;
 };
 
@@ -3054,28 +3174,28 @@ export const getTransactions = async () => {
 };
 
 // Dashboard Hooks
-export const useGetDashboardStats = () => {
+export const useGetDashboardStats = (options?: DashboardDateOptions) => {
   return useQuery({
-    queryKey: ["dashboard-stats"],
-    queryFn: getDashboardStats,
+    queryKey: ["dashboard-stats", options],
+    queryFn: () => getDashboardStats(options),
   });
 };
 
-export const useGetRevenueData = (options?: { period?: string }) => {
+export const useGetRevenueData = (options?: DashboardDateOptions) => {
   return useQuery({
     queryKey: ["revenue-data", options],
     queryFn: () => getRevenueData(options),
   });
 };
 
-export const useGetNewSubscribersData = (options?: { period?: string }) => {
+export const useGetNewSubscribersData = (options?: DashboardDateOptions) => {
   return useQuery({
     queryKey: ["new-subscribers-data", options],
     queryFn: () => getNewSubscribersData(options),
   });
 };
 
-export const useGetMostWatchedData = (options?: { period?: string }) => {
+export const useGetMostWatchedData = (options?: DashboardDateOptions) => {
   return useQuery({
     queryKey: ["most-watched-data", options],
     queryFn: () => getMostWatchedData(options),
@@ -3096,6 +3216,64 @@ export const useGetReviews = () => {
   });
 };
 
+// Admin Reviews API
+export const getAdminReviewsList = async (options?: { page?: number; limit?: number; status?: string; contentId?: string; userId?: string }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set("page", options.page.toString());
+  if (options?.limit) params.set("limit", options.limit.toString());
+  if (options?.status) params.set("status", options.status);
+  if (options?.contentId) params.set("contentId", options.contentId);
+  if (options?.userId) params.set("userId", options.userId);
+  return api(`/admin/reviews?${params.toString()}`);
+};
+
+export const updateAdminReviewStatus = async (id: string, status: 'published' | 'hidden') => {
+  return api(`/admin/reviews/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+export const deleteAdminReview = async (id: string) => {
+  return api(`/admin/reviews/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const useGetAdminReviewsList = (options?: { page?: number; limit?: number; status?: string; contentId?: string; userId?: string }) => {
+  return useQuery({
+    queryKey: ["admin-reviews", options],
+    queryFn: () => getAdminReviewsList(options),
+  });
+};
+
+// --- App Reviews API ---
+export const getAppReviews = async (page = 1, limit = 10) => {
+  return api(`/app/reviews?page=${page}&limit=${limit}`);
+};
+
+export const createAppReview = async (payload: { rating: number; comment: string }) => {
+  return api(`/app/reviews`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+export const deleteAppReview = async (id: string) => {
+  return api(`/app/reviews/${id}`, {
+    method: "DELETE",
+  });
+};
+
+export const useGetAppReviews = (page = 1) => {
+  return useQuery({
+    queryKey: ["app-reviews", page],
+    queryFn: () => getAppReviews(page),
+  });
+};
+
 export const useGetTransactions = () => {
   return useQuery({
     queryKey: ["transactions-data"],
@@ -3103,8 +3281,8 @@ export const useGetTransactions = () => {
   });
 };
 
-export const loginClient = async (data: any) => { return api('/app/auth/login', { method: 'POST', body: JSON.stringify(data) }); };
-export const registerClient = async (data: any) => { return api('/app/auth/register', { method: 'POST', body: JSON.stringify(data) }); };
+export const loginClient = async (data: { email: string; password: string }) => { return api('/app/auth/login', { method: 'POST', body: JSON.stringify(data) }); };
+export const registerClient = async (data: { email: string; password: string; name: string; phone?: string }) => { return api('/app/auth/register', { method: 'POST', body: JSON.stringify(data) }); };
 
 // Countries API
 export const getCountries = async (options?: { page?: number; limit?: number; admin?: boolean }) => {
@@ -3263,14 +3441,16 @@ export const getWishlist = async (options?: { page?: number; limit?: number }) =
   const params = new URLSearchParams();
   if (options?.page) params.set('page', options.page.toString());
   if (options?.limit) params.set('limit', options.limit.toString());
-  return api(`/wishlist?${params.toString()}`);
+  const profileId = getActiveProfileId();
+  if (profileId) params.set('profileId', profileId);
+  return api(`/app/wishlist?${params.toString()}`);
 };
 
 export const toggleWishlistItem = async (data: { contentId: string; contentType: 'movie' | 'show' | 'drama' }) => {
   const type = data.contentType === 'movie' ? 'movie' : 'show';
-  return api('/wishlist', {
+  return api('/app/wishlist', {
     method: 'POST',
-    body: JSON.stringify({ contentId: data.contentId, type }),
+    body: JSON.stringify({ contentId: data.contentId, type, profileId: getActiveProfileId() || undefined }),
   });
 };
 
@@ -3294,28 +3474,31 @@ export const useToggleWishlist = () => {
     mutationFn: toggleWishlistItem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['app-profile'] });
     },
   });
 };
 
-// ─── DOWNLOADS (Public User) ──────────────────────────────────────────────────
+// ─── DOWNLOADS (Web — separate from app endpoints) ────────────────────────────
 
 export const getDownloads = async (options?: { page?: number; limit?: number }) => {
   const params = new URLSearchParams();
   if (options?.page) params.set('page', options.page.toString());
   if (options?.limit) params.set('limit', options.limit.toString());
-  return api(`/app/downloads?${params.toString()}`);
+  const profileId = getActiveProfileId();
+  if (profileId) params.set('profileId', profileId);
+  return api(`/web/downloads?${params.toString()}`);
 };
 
 export const requestDownload = async (data: { contentId: string; contentType: 'movie' | 'drama' | 'series'; episodeId?: string }) => {
-  return api('/app/download', {
+  return api('/web/download', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, profileId: getActiveProfileId() || undefined }),
   });
 };
 
 export const removeDownload = async (id: string) => {
-  return api(`/app/downloads/${id}`, { method: 'DELETE' });
+  return api(`/web/downloads/${id}`, { method: 'DELETE' });
 };
 
 export const useGetDownloads = (options?: { page?: number; limit?: number }) => {
@@ -3335,9 +3518,13 @@ export const useGetDownloads = (options?: { page?: number; limit?: number }) => 
 export const useRemoveDownload = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: removeDownload,
-    onSuccess: () => {
+    mutationFn: async ({ id }: { id: string; contentId: string; episodeId?: string }) => {
+      return removeDownload(id);
+    },
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['downloads'] });
+      queryClient.invalidateQueries({ queryKey: ['app-profile'] });
+      removeOfflineVideo(variables.contentId, variables.episodeId);
     },
   });
 };
@@ -3346,8 +3533,248 @@ export const useRequestDownload = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: requestDownload,
-    onSuccess: () => {
+    onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: ['downloads'] });
+      queryClient.invalidateQueries({ queryKey: ['app-profile'] });
+      if (res?.success && res?.data?.downloadUrl) {
+        cacheDownloadedVideo(res.data.downloadUrl, variables.contentId, variables.episodeId);
+      }
     },
   });
+};
+
+// ─── APP PROFILE (Public User) ───────────────────────────────────────────────
+
+export const getAppProfile = async () => {
+  return api('/app/profile');
+};
+
+export const useGetAppProfile = () => {
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  return useQuery({
+    queryKey: ['app-profile'],
+    queryFn: async () => {
+      const res = await getAppProfile();
+      return res.data;
+    },
+    enabled: hasToken,
+    retry: false,
+    staleTime: 30000,
+  });
+};
+
+// Update app user profile (name / email / avatar URL / phone)
+export const updateAppProfile = async (data: { name?: string; email?: string; avatar?: string; phone?: string }) => {
+  return api('/app/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+};
+
+// Upload avatar image file — returns { avatarUrl }
+export const uploadProfileAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const res = await api('/app/profile/avatar', {
+    method: 'POST',
+    body: formData,
+  });
+  return res.data;
+};
+
+// Upload admin profile avatar — tries S3 presigned URL first, falls back to server-side upload
+export const uploadAdminAvatar = async (file: File): Promise<{ avatarUrl: string }> => {
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const contentType = file.type || 'image/jpeg';
+
+  // 1. Try to get a presigned URL (only works when S3 is configured)
+  try {
+    const presign = await api(`/auth/profile/avatar/presign?ext=${ext}&contentType=${encodeURIComponent(contentType)}`);
+    if (presign?.s3 && presign?.uploadUrl && presign?.publicUrl) {
+      // 2. Upload directly to S3 via PUT (no server proxy)
+      const putRes = await fetch(presign.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: file,
+      });
+      if (!putRes.ok) throw new Error(`S3 PUT failed: ${putRes.status}`);
+
+      // 3. Tell the backend the final S3 URL so it can save to AdminUser
+      await api('/auth/profile/avatar/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ publicUrl: presign.publicUrl }),
+      });
+      return { avatarUrl: presign.publicUrl };
+    }
+  } catch (presignErr: any) {
+    // S3 not configured or presign failed — fall through to server-side upload
+    if (!presignErr?.message?.includes('S3 not configured')) {
+      console.warn('Presigned URL failed, falling back to server upload:', presignErr?.message);
+    }
+  }
+
+  // Fallback: server-side multipart upload (local storage or S3 via server)
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const res = await api('/auth/profile/avatar', { method: 'POST', body: formData });
+  return res.data;
+};
+
+// ─── LIKES (Public User) ──────────────────────────────────────────────────────
+
+export const toggleLikeItem = async (data: { contentId: string; contentType: 'movie' | 'show' | 'drama'; episodeId?: string }) => {
+  return api(`/like/${data.contentId}`, {
+    method: 'POST',
+    body: JSON.stringify({ contentType: data.contentType, episodeId: data.episodeId }),
+  });
+};
+
+export const useToggleLike = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: toggleLikeItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['app-profile'] });
+    },
+  });
+};
+
+// ─── WATCH PROGRESS (Continue Watching) ──────────────────────────────────────
+
+export const saveWatchProgress = async (data: {
+  contentId: string;
+  episodeId?: string;
+  progressSeconds: number;
+  durationSeconds: number;
+}) => {
+  return api("/app/watch/progress", {
+    method: "POST",
+    body: JSON.stringify({ ...data, profileId: getActiveProfileId() || undefined }),
+  });
+};
+
+export const useSaveWatchProgress = () => {
+  return useMutation({
+    mutationFn: saveWatchProgress,
+  });
+};
+
+export const useGetWatchProgress = (contentId?: string, episodeId?: string) => {
+  const token = getAuthToken();
+  return useQuery({
+    queryKey: ["watch-progress", contentId, episodeId, getActiveProfileId()],
+    queryFn: async () => {
+      const params = new URLSearchParams({ contentId: contentId! });
+      if (episodeId) params.set("episodeId", episodeId);
+      const profileId = getActiveProfileId();
+      if (profileId) params.set("profileId", profileId);
+      const res = await fetch(`${baseUrl}/api/app/watch/progress?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data as { progressSeconds: number; durationSeconds: number; progressPercent: number } | null;
+    },
+    enabled: !!contentId && !!token,
+    staleTime: 0,
+  });
+};
+
+// ─── OFFLINE CACHE (IndexedDB/Caches offline watch) ──────────────────────────
+
+export const cacheDownloadedVideo = async (
+  url: string,
+  contentId: string,
+  episodeId?: string,
+  onProgress?: (pct: number) => void
+): Promise<boolean> => {
+  // Store metadata so the downloads list can display it offline
+  try {
+    const key = 'offline_downloads_meta';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const metaKey = episodeId ? `episode-${episodeId}` : `movie-${contentId}`;
+    if (!existing.find((m: any) => m.key === metaKey)) {
+      existing.push({ key: metaKey, contentId, episodeId, url, cachedAt: Date.now() });
+      localStorage.setItem(key, JSON.stringify(existing));
+    }
+  } catch {}
+
+  if (!('caches' in window)) return false;
+
+  const cacheKey = episodeId ? `episode-${episodeId}` : `movie-${contentId}`;
+  try {
+    const cache = await caches.open('video-offline-cache');
+    const existingEntry = await cache.match(cacheKey);
+    if (existingEntry) { onProgress?.(100); return true; }
+
+    // Stream the file so we can report progress
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok || !response.body) return false;
+
+    const contentLength = Number(response.headers.get('Content-Length') || '0');
+    const reader = response.body.getReader();
+    const chunks: BlobPart[] = [];
+    let received = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (contentLength > 0) onProgress?.(Math.round((received / contentLength) * 100));
+    }
+
+    const blob = new Blob(chunks, {
+      type: response.headers.get('Content-Type') || 'video/mp4',
+    });
+    await cache.put(cacheKey, new Response(blob, {
+      headers: { 'Content-Type': blob.type },
+    }));
+    onProgress?.(100);
+    return true;
+  } catch (error) {
+    console.warn('Could not cache video for offline use:', error);
+    return false;
+  }
+};
+
+export const getOfflineVideoUrl = async (contentId: string, episodeId?: string): Promise<string | null> => {
+  // 1. Check sessionStorage (set when user taps play from downloads list)
+  const sessionKey = `offline_url_${contentId}_${episodeId || ''}`;
+  const sessionUrl = sessionStorage.getItem(sessionKey);
+  if (sessionUrl) return sessionUrl;
+
+  // 2. Check browser Cache API
+  if (!('caches' in window)) return null;
+  try {
+    const cache = await caches.open('video-offline-cache');
+    const cacheKey = episodeId ? `episode-${episodeId}` : `movie-${contentId}`;
+    const matched = await cache.match(cacheKey);
+    if (matched) {
+      const blob = await matched.blob();
+      return URL.createObjectURL(blob);
+    }
+  } catch (error) {
+    console.warn('Error reading offline cache:', error);
+  }
+  return null;
+};
+
+export const removeOfflineVideo = async (contentId: string, episodeId?: string) => {
+  // Remove from localStorage metadata
+  try {
+    const key = 'offline_downloads_meta';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const metaKey = episodeId ? `episode-${episodeId}` : `movie-${contentId}`;
+    localStorage.setItem(key, JSON.stringify(existing.filter((m: any) => m.key !== metaKey)));
+  } catch {}
+  // Remove from sessionStorage
+  sessionStorage.removeItem(`offline_url_${contentId}_${episodeId || ''}`);
+  // Remove from browser Cache API
+  if (!('caches' in window)) return;
+  try {
+    const cache = await caches.open('video-offline-cache');
+    const cacheKey = episodeId ? `episode-${episodeId}` : `movie-${contentId}`;
+    await cache.delete(cacheKey);
+  } catch {}
 };

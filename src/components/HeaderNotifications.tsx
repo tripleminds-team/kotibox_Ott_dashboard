@@ -1,5 +1,6 @@
 import React from "react";
 import { Bell, Check, Trash2, UserPlus, FileEdit, Film, AlertCircle } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,7 @@ const getIconForType = (type: string, action?: string) => {
 };
 
 export function HeaderNotifications() {
+  const [, setLocation] = useLocation();
   const { data: response } = useGetAdminNotifications();
   const markAsRead = useMarkAdminNotificationsRead();
 
@@ -114,6 +116,17 @@ export function HeaderNotifications() {
             </div>
           )}
         </ScrollArea>
+        <DropdownMenuSeparator className="m-0 bg-border" />
+        <div className="p-2 border-t border-border/50 bg-popover text-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-primary hover:text-primary/90 hover:bg-muted font-semibold"
+            onClick={() => setLocation("/notifications")}
+          >
+            View all notifications
+          </Button>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

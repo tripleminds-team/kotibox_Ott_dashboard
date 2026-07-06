@@ -11,7 +11,9 @@ import {
   ChevronLeft,
   Check,
   ChevronsUpDown,
+  FolderOpen,
 } from "lucide-react";
+import MediaPicker from "@/components/MediaPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,6 +192,8 @@ export default function PromotionForm() {
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailMode, setThumbnailMode] = useState("url");
   const [videoMode, setVideoMode] = useState("url");
+  const [thumbnailPickerOpen, setThumbnailPickerOpen] = useState(false);
+  const [videoPickerOpen, setVideoPickerOpen] = useState(false);
 
   useEffect(() => {
     if (isEdit && promotionData) {
@@ -367,11 +371,22 @@ export default function PromotionForm() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="url" className="mt-4 space-y-4">
-              <Input
-                placeholder="https://example.com/thumbnail.jpg"
-                value={formData.thumbnailUrl}
-                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/thumbnail.jpg"
+                  value={formData.thumbnailUrl}
+                  onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setThumbnailPickerOpen(true)}
+                  className="shrink-0"
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" /> Choose File
+                </Button>
+              </div>
               {formData.thumbnailUrl && (
                 <div className="mt-2">
                   <img
@@ -433,11 +448,22 @@ export default function PromotionForm() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="url" className="mt-4 space-y-4">
-              <Input
-                placeholder="https://example.com/video.mp4"
-                value={formData.videoUrl}
-                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/video.mp4"
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setVideoPickerOpen(true)}
+                  className="shrink-0"
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" /> Choose File
+                </Button>
+              </div>
               {formData.videoUrl && (
                 <div className="mt-2">
                   <video
@@ -654,6 +680,28 @@ export default function PromotionForm() {
         </div>
       </form>
       </div>
+
+      <MediaPicker
+        open={thumbnailPickerOpen}
+        onClose={() => setThumbnailPickerOpen(false)}
+        onSelect={(media) => {
+          setFormData({ ...formData, thumbnailUrl: media.filePath || media.url });
+          setThumbnailPickerOpen(false);
+        }}
+        source="promotion"
+        accept="image/*"
+      />
+
+      <MediaPicker
+        open={videoPickerOpen}
+        onClose={() => setVideoPickerOpen(false)}
+        onSelect={(media) => {
+          setFormData({ ...formData, videoUrl: media.filePath || media.url });
+          setVideoPickerOpen(false);
+        }}
+        source="promotion"
+        accept="video/*"
+      />
     </div>
   );
 }

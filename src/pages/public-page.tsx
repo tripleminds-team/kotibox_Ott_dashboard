@@ -21,6 +21,34 @@ export default function PublicPagePage() {
     } catch {}
   }, []);
 
+  useEffect(() => {
+    if (page) {
+      document.title = page.metaTitle || `${page.title} | Triple Minds`;
+      
+      // Update meta description
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', page.metaDescription || `Read ${page.title} on Triple Minds.`);
+
+      // Update OpenGraph / Twitter meta tags
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', page.metaTitle || page.title);
+
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', page.metaDescription || `Read ${page.title} on Triple Minds.`);
+
+      const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+      if (twitterTitle) twitterTitle.setAttribute('content', page.metaTitle || page.title);
+
+      const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+      if (twitterDesc) twitterDesc.setAttribute('content', page.metaDescription || `Read ${page.title} on Triple Minds.`);
+    }
+  }, [page]);
+
   const handleSignOut = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
@@ -155,7 +183,7 @@ export default function PublicPagePage() {
               </button>
               <div className="flex items-center gap-4 text-xs text-zinc-700 font-medium">
                 <button onClick={() => setLocation("/page/privacy-policy")} className="hover:text-zinc-400 transition-colors">Privacy Policy</button>
-                <button onClick={() => setLocation("/page/terms-of-service")} className="hover:text-zinc-400 transition-colors">Terms</button>
+                <button onClick={() => setLocation("/page/terms-and-conditions")} className="hover:text-zinc-400 transition-colors">Terms</button>
                 <button onClick={() => setLocation("/page/contact")} className="hover:text-zinc-400 transition-colors">Contact</button>
               </div>
             </div>

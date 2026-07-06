@@ -1,18 +1,10 @@
-import { useState, useEffect, useRef } from "react";
-import type { FormEvent } from "react";
+import { useState, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Upload,
-  Link2,
-  ChevronLeft,
-  X,
-  Film,
-  ImageIcon,
-  Lock,
-  Unlock,
-  Edit,
-  Play,
+  ChevronLeft, Edit, Plus, Trash2, Lock, Unlock, Play,
+  Upload, Link2, Loader2, Film, AlertTriangle, X, Clock,
+  ChevronDown, ChevronUp, CheckCircle2, Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,156 +33,289 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  useGetContentById,
-  useAppendContentVideo,
-  useUpdateContentEpisodeLock,
-  getImageUrl,
-} from "../lib/api-client";
+  useGetContentById, useAppendContentVideo, useUpdateContentEpisodeLock,
+  useDeleteEpisode, getImageUrl,
+} from "@/lib/api-client";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-type UploadProgress = {
-  loaded: number;
-  total: number;
-};
+const MAX_EPISODE_MINUTES = 3;
 
 type Episode = {
-  id: string;
-  episode: number;
-  title?: string;
-  heading?: string;
-  description?: string;
-  thumbnail?: string;
-  duration?: number;
-  isLocked: boolean;
-  isFree: boolean;
-  categories?: any[];
-  processingStatus?: string;
-  hlsUrl?: string;
+  id: string; _id?: string;
+  season: number; episode: number;
+  title?: string; thumbnail?: string; duration?: number;
+  isLocked: boolean; isFree: boolean;
+  processingStatus?: string; hlsUrl?: string;
 };
 
+function fmt(s?: number) {
+  if (!s || !Number.isFinite(s)) return "—";
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function StatusBadge({ status }: { status?: string }) {
+  const map: Record<string, string> = {
+    ready:      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    queued:     "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    processing: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    failed:     "bg-red-500/10 text-red-400 border-red-500/20",
+  };
+  const s = status?.toLowerCase() || "queued";
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider ${map[s] || map.queued}`}>
+      {status || "queued"}
+    </span>
+  );
+}
+
+// ── Add Season Form ──────────────────────────────────────────────────────────
+function AddSeasonForm({
+  contentId,
+  nextSeason,
+  onDone,
+}: {
+  contentId: string;
+  nextSeason: number;
+  onDone: () => void;
+}) {
+  const { toast } = useToast();
+  const appendMutation = useAppendContentVideo();
+  const queryClient = useQueryClient();
+
+  const [videoMode, setVideoMode] = useState<"upload" | "url">("upload");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [durationError, setDurationError] = useState("");
+  const [freeEp, setFreeEp] = useState(1);
+  const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState("");
+  const startRef = useRef<number | null>(null);
+
+  const validateVideoDuration = (file: File): Promise<boolean> =>
+    new Promise((resolve) => {
+      const vid = document.createElement("video");
+      vid.preload = "metadata";
+      vid.onloadedmetadata = () => {
+        URL.revokeObjectURL(vid.src);
+        if (vid.duration > MAX_EPISODE_MINUTES * 60) {
+          setDurationError(`Video is ${Math.round(vid.duration)}s. Short drama episodes must be ≤ ${MAX_EPISODE_MINUTES} minutes (${MAX_EPISODE_MINUTES * 60}s).`);
+          resolve(false);
+        } else {
+          setDurationError("");
+          resolve(true);
+        }
+      };
+      vid.onerror = () => { setDurationError(""); resolve(true); };
+      vid.src = URL.createObjectURL(file);
+    });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setVideoFile(f);
+    await validateVideoDuration(f);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (videoMode === "upload" && !videoFile) {
+      toast({ title: "Select a video file", variant: "destructive" }); return;
+    }
+    if (videoMode === "upload" && videoFile) {
+      const ok = await validateVideoDuration(videoFile);
+      if (!ok) return;
+    }
+
+    const fd = new FormData();
+    fd.append("reelDurationMinutes", String(MAX_EPISODE_MINUTES));
+    fd.append("freeEpisodeCount", String(freeEp));
+    fd.append("lockEpisodes", "true");
+    fd.append("season", String(nextSeason));
+    if (videoMode === "url") fd.append("videoUrl", videoUrl);
+    else if (videoFile) fd.append("videoFile", videoFile);
+
+    try {
+      startRef.current = null;
+      await appendMutation.mutateAsync({
+        contentId,
+        data: fd,
+        onUploadProgress: (p: any) => {
+          if (!startRef.current) startRef.current = Date.now();
+          const pct = p.total ? Math.round((p.loaded / p.total) * 100) : 0;
+          const bps = ((Date.now() - (startRef.current || Date.now())) / 1000) > 0
+            ? p.loaded / ((Date.now() - (startRef.current!)) / 1000) : 0;
+          setProgress(pct);
+          setSpeed(bps > 1024 * 1024 ? `${(bps / 1024 / 1024).toFixed(1)} MB/s` : `${(bps / 1024).toFixed(0)} KB/s`);
+        },
+      });
+      queryClient.invalidateQueries({ queryKey: ["content", contentId] });
+      toast({ title: `Season ${nextSeason} added! HLS processing started.` });
+      onDone();
+    } catch (err: any) {
+      toast({ title: err?.message || "Upload failed", variant: "destructive" });
+    } finally {
+      setProgress(0); setSpeed("");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 pt-4 border-t border-border">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center">
+          <Film className="w-3.5 h-3.5 text-primary" />
+        </div>
+        <span className="text-sm font-bold text-foreground">Add Season {nextSeason}</span>
+        <span className="text-xs text-muted-foreground ml-1">· max {MAX_EPISODE_MINUTES} min per episode</span>
+      </div>
+
+      {durationError && (
+        <div className="flex items-start gap-2 mt-2 p-3 bg-primary/10 border border-primary/20 rounded-xl text-primary text-xs font-semibold">
+          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" /> {durationError}
+        </div>
+      )}
+
+      {/* Video source toggle */}
+      <div className="flex gap-2">
+        {(["upload", "url"] as const).map((m) => (
+          <Button key={m} type="button" variant={videoMode === m ? "default" : "outline"} onClick={() => setVideoMode(m)} className="gap-2 h-9">
+            {m === "upload" ? <Upload className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+            {m === "upload" ? "Upload File" : "URL"}
+          </Button>
+        ))}
+      </div>
+
+      {videoMode === "url" ? (
+        <Input
+          type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} required
+          placeholder="https://example.com/video.mp4"
+          className="w-full bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+        />
+      ) : (
+        <div className="space-y-4">
+          <Input
+            type="file"
+            accept="video/*"
+            onChange={handleFileChange}
+            required
+            className="bg-card border-border text-foreground"
+          />
+          {videoFile && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{videoFile.name}</span>
+              <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium text-foreground whitespace-nowrap">Free Episodes</Label>
+          <Input type="number" min={0} value={freeEp} onChange={(e) => setFreeEp(Number(e.target.value))}
+            className="w-20 bg-card border-border text-foreground text-center h-9" />
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="w-3.5 h-3.5" /> Each episode ≤ {MAX_EPISODE_MINUTES} min
+        </div>
+      </div>
+
+      {appendMutation.isPending && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Uploading…</span>
+            <span>{progress}%{speed ? ` · ${speed}` : ""}</span>
+          </div>
+          <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+            <div className="h-full bg-primary transition-all duration-200" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-2 pt-1">
+        <Button type="submit" disabled={appendMutation.isPending || !!durationError} className="gap-2 h-9">
+          {appendMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+          {appendMutation.isPending ? "Processing…" : `Add Season ${nextSeason}`}
+        </Button>
+        <Button type="button" variant="outline" onClick={onDone} className="h-9">
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// ── Main Component ───────────────────────────────────────────────────────────
 export default function ShortDramaDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
 
-  const { data: showData } = useGetContentById(id);
-  const appendMutation = useAppendContentVideo();
+  const { data: showData, isLoading } = useGetContentById(id);
   const lockMutation = useUpdateContentEpisodeLock();
+  const deleteEpisodeMutation = useDeleteEpisode();
 
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadSpeed, setUploadSpeed] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const uploadStartRef = useRef<number | null>(null);
-  const [previewEpisode, setPreviewEpisode] = useState<Episode | null>(null);
+  const [expandedSeasons, setExpandedSeasons] = useState<Record<number, boolean>>({ 1: true });
+  const [addingSeasonForm, setAddingSeasonForm] = useState(false);
+  const [confirmDeleteEp, setConfirmDeleteEp] = useState<Episode | null>(null);
+  const [previewEp, setPreviewEp] = useState<Episode | null>(null);
 
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoMode, setVideoMode] = useState("upload");
-  const [formData, setFormData] = useState({
-    reelDurationMinutes: 3,
-    totalDurationMinutes: "",
-    freeEpisodeCount: 1,
-    lockEpisodes: true,
-    thumbnail: "",
-    videoUrl: "",
-  });
+  const content = showData?.content;
+  const allEpisodes: Episode[] = showData?.episodes || [];
 
-  const episodes: Episode[] = showData?.episodes || [];
+  // Group by season
+  const seasonMap = allEpisodes.reduce<Record<number, Episode[]>>((acc, ep) => {
+    const s = ep.season || 1;
+    if (!acc[s]) acc[s] = [];
+    acc[s].push(ep);
+    return acc;
+  }, {});
+  const seasons = Object.keys(seasonMap).map(Number).sort((a, b) => a - b);
+  const nextSeason = seasons.length > 0 ? Math.max(...seasons) + 1 : 1;
 
-  const formatDuration = (seconds?: number) => {
-    if (!seconds || !Number.isFinite(seconds)) return "-";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
+  const toggleSeason = (s: number) =>
+    setExpandedSeasons((prev) => ({ ...prev, [s]: !prev[s] }));
 
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const formatBytes = (bytes: number) => {
-    if (!bytes) return "0 MB";
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  };
-
-  const formatUploadSpeed = (bytesPerSecond: number) => {
-    if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return "";
-    const megabytesPerSecond = bytesPerSecond / (1024 * 1024);
-    if (megabytesPerSecond >= 1) {
-      return `${megabytesPerSecond.toFixed(1)} MB/s`;
-    }
-    return `${(bytesPerSecond / 1024).toFixed(0)} KB/s`;
-  };
-
-  const handleAppendVideo = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleToggleLock = async (ep: Episode) => {
     try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      setUploadSpeed("");
-      uploadStartRef.current = null;
-      
-      const formDataToSend = new FormData();
-      formDataToSend.append("reelDurationMinutes", formData.reelDurationMinutes.toString());
-      if (formData.totalDurationMinutes) {
-        formDataToSend.append("totalDurationMinutes", formData.totalDurationMinutes);
-      }
-      formDataToSend.append("freeEpisodeCount", formData.freeEpisodeCount.toString());
-      formDataToSend.append("lockEpisodes", formData.lockEpisodes.toString());
-
-      if (videoMode === "url") {
-        if (formData.videoUrl) {
-          formDataToSend.append("videoUrl", formData.videoUrl);
-        }
-      } else if (videoFile) {
-        formDataToSend.append("videoFile", videoFile);
-      }
-
-      const onUploadProgress = (progress: UploadProgress) => {
-        if (!uploadStartRef.current) {
-          uploadStartRef.current = Date.now();
-        }
-
-        const percentage = progress.total
-          ? Math.round((progress.loaded / progress.total) * 100)
-          : 0;
-        const elapsedSeconds = (Date.now() - uploadStartRef.current) / 1000;
-        const bytesPerSecond = elapsedSeconds > 0 ? progress.loaded / elapsedSeconds : 0;
-
-        setUploadProgress(percentage);
-        setUploadSpeed(formatUploadSpeed(bytesPerSecond));
-      };
-
-      await appendMutation.mutateAsync({ contentId: id, data: formDataToSend, onUploadProgress });
-      toast({ title: "Episodes added! HLS processing started in background." });
-
+      await lockMutation.mutateAsync({ episodeId: ep.id || ep._id, isLocked: !ep.isLocked });
       queryClient.invalidateQueries({ queryKey: ["content", id] });
-      setVideoFile(null);
-    } catch (error) {
-      toast({ title: "Something went wrong", variant: "destructive" });
+      toast({ title: `Episode ${ep.isLocked ? "unlocked" : "locked"}` });
+    } catch {
+      toast({ title: "Failed to update lock", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteEpisode = async () => {
+    if (!confirmDeleteEp) return;
+    try {
+      await deleteEpisodeMutation.mutateAsync(confirmDeleteEp.id || confirmDeleteEp._id);
+      queryClient.invalidateQueries({ queryKey: ["content", id] });
+      toast({ title: `Episode ${confirmDeleteEp.episode} deleted` });
+    } catch {
+      toast({ title: "Delete failed", variant: "destructive" });
     } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
-      setUploadSpeed("");
-      uploadStartRef.current = null;
+      setConfirmDeleteEp(null);
     }
   };
 
-  const handleToggleLock = async (episode: Episode) => {
-    try {
-      await lockMutation.mutateAsync({
-        episodeId: episode.id,
-        isLocked: !episode.isLocked,
-      });
-      queryClient.invalidateQueries({ queryKey: ["content", id] });
-      toast({ title: `Episode ${episode.isLocked ? "unlocked" : "locked"}!` });
-    } catch (error) {
-      toast({ title: "Something went wrong", variant: "destructive" });
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/40" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* ── Header ── */}
       <div className="flex items-center gap-4 mb-8">
         <Button variant="ghost" onClick={() => setLocation("/short-dramas")}>
           <ChevronLeft className="w-5 h-5 mr-2" />
@@ -198,265 +323,211 @@ export default function ShortDramaDetail() {
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">
-            {showData?.content?.title || "Short Drama Details"}
+            {content?.title || "Short Drama Details"}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {episodes.length} {episodes.length === 1 ? "episode" : "episodes"}
+            {seasons.length} {seasons.length === 1 ? "season" : "seasons"} · {allEpisodes.length} {allEpisodes.length === 1 ? "episode" : "episodes"}
+            <span className="ml-2 text-primary font-semibold">· max {MAX_EPISODE_MINUTES} min per episode</span>
           </p>
         </div>
-        <Button onClick={() => setLocation(`/short-dramas/${id}/edit`)}>
+        <Button onClick={() => setLocation(`/short-dramas/${id}/edit`)} variant="outline">
           <Edit className="w-4 h-4 mr-2" />
-          Edit
+          Edit Drama
         </Button>
+        {!addingSeasonForm && (
+          <Button onClick={() => setAddingSeasonForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Season {nextSeason}
+          </Button>
+        )}
       </div>
 
-      <div className="space-y-6">
-        <Card className="rounded-lg shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Episodes</CardTitle>
-              <CardDescription>Manage your short drama episodes</CardDescription>
-            </div>
-            <Badge variant="outline">{episodes.length} episodes</Badge>
-          </CardHeader>
-          <CardContent>
-            {episodes.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">No episodes yet</div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[100px]">#</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead className="hidden md:table-cell">Heading</TableHead>
-                      <TableHead className="hidden sm:table-cell">Duration</TableHead>
-                      <TableHead className="hidden sm:table-cell">Status</TableHead>
-                      <TableHead className="hidden lg:table-cell">Categories</TableHead>
-                      <TableHead className="text-right w-[200px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {episodes.map((episode) => (
-                      <TableRow key={episode.id}>
-                        <TableCell className="font-medium">{episode.episode}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {episode.thumbnail && (
-                              <img
-                                src={getImageUrl(episode.thumbnail)}
-                                alt=""
-                                className="h-10 w-14 object-contain rounded bg-gray-800"
-                              />
-                            )}
-                            <div>
-                              <div>{episode.title}</div>
-                              {episode.description && (
-                                <div className="text-xs text-muted-foreground truncate max-w-xs">
-                                  {episode.description}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">{episode.heading}</TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Badge variant="outline">{formatDuration(episode.duration)}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Badge variant={episode.processingStatus === "ready" ? "default" : "outline"}>
-                            {episode.processingStatus}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="flex flex-wrap gap-1">
-                            {showData?.categories?.map((cat) => (
-                              <Badge key={cat.id} variant="outline" className="text-xs">
-                                {cat.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {episode.hlsUrl && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setPreviewEpisode(episode)}
-                              aria-label="Preview episode"
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleToggleLock(episode)}
-                            disabled={lockMutation.isPending}
-                            aria-label={episode.isLocked ? "Unlock episode" : "Lock episode"}
-                          >
-                            {episode.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                <Dialog open={!!previewEpisode} onOpenChange={(open) => !open && setPreviewEpisode(null)}>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>{previewEpisode?.title || "Preview Episode"}</DialogTitle>
-                    </DialogHeader>
-                    {previewEpisode?.hlsUrl && (
-                      <video
-                        src={getImageUrl(previewEpisode.hlsUrl)}
-                        controls
-                        className="w-full rounded-lg"
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
+      {/* ── Add Season Form ── */}
+      {addingSeasonForm && (
         <Card className="rounded-lg shadow-sm">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Film className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Add More Episodes</CardTitle>
-            </div>
-            <CardDescription>Upload another video to add more episodes</CardDescription>
+            <CardTitle>Add Season {nextSeason}</CardTitle>
+            <CardDescription>Upload a video to add a new season of episodes</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAppendVideo} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <Label htmlFor="reelDurationMinutes">Reel Duration (minutes)</Label>
-                  <Input
-                    id="reelDurationMinutes"
-                    type="number"
-                    min="1"
-                    value={formData.reelDurationMinutes}
-                    onChange={(e) => setFormData({ ...formData, reelDurationMinutes: parseInt(e.target.value, 10) || 3 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="totalDurationMinutes">Total Duration (minutes)</Label>
-                  <Input
-                    id="totalDurationMinutes"
-                    type="number"
-                    min="1"
-                    placeholder="Required if ffprobe is unavailable"
-                    value={formData.totalDurationMinutes}
-                    onChange={(e) => setFormData({ ...formData, totalDurationMinutes: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <Label htmlFor="freeEpisodeCount">Free Episode Count</Label>
-                  <Input
-                    id="freeEpisodeCount"
-                    type="number"
-                    min="0"
-                    value={formData.freeEpisodeCount}
-                    onChange={(e) => setFormData({ ...formData, freeEpisodeCount: parseInt(e.target.value, 10) || 1 })}
-                  />
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-border p-3">
-                  <div>
-                    <Label htmlFor="lockEpisodes">Lock Episodes</Label>
-                    <p className="text-xs text-muted-foreground">Lock episodes after free ones</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    id="lockEpisodes"
-                    checked={formData.lockEpisodes}
-                    onChange={(e) => setFormData({ ...formData, lockEpisodes: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>Video File *</Label>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant={videoMode === "url" ? "default" : "outline"}
-                      onClick={() => setVideoMode("url")}
-                    >
-                      <Link2 className="w-4 h-4 mr-2" />
-                      URL
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={videoMode === "upload" ? "default" : "outline"}
-                      onClick={() => setVideoMode("upload")}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload File
-                    </Button>
-                  </div>
-                  {videoMode === "url" && (
-                    <Input
-                      placeholder="https://example.com/video.mp4"
-                      value={formData.videoUrl}
-                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    />
-                  )}
-                  {videoMode === "upload" && (
-                    <div className="space-y-4">
-                      <Input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                        required
-                      />
-                      {videoFile && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-muted-foreground">{videoFile.name} ({formatBytes(videoFile.size)})</span>
-                          <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {isUploading && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Uploading...</span>
-                    <span>{uploadSpeed ? `${uploadProgress}% · ${uploadSpeed}` : `${uploadProgress}%`}</span>
-                  </div>
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300 ease-linear"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-4 pt-4">
-                <Button
-                  type="submit"
-                  disabled={appendMutation.isPending || isUploading}
-                >
-                  Add Episodes
-                </Button>
-              </div>
-            </form>
+            <AddSeasonForm contentId={id} nextSeason={nextSeason} onDone={() => setAddingSeasonForm(false)} />
           </CardContent>
         </Card>
+      )}
+
+      {/* ── Empty state ── */}
+      {seasons.length === 0 && !addingSeasonForm && (
+        <Card className="rounded-lg border-dashed border-2 p-12 text-center text-muted-foreground">
+          <div className="flex flex-col items-center gap-4">
+            <Film className="h-10 w-10 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-semibold">No seasons yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Upload the first video to create Season 1</p>
+            </div>
+            <Button onClick={() => setAddingSeasonForm(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add Season 1
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* ── Seasons ── */}
+      <div className="space-y-4">
+        {seasons.map((seasonNum) => {
+          const eps = (seasonMap[seasonNum] || []).sort((a, b) => a.episode - b.episode);
+          const expanded = expandedSeasons[seasonNum] !== false;
+
+          return (
+            <Card key={seasonNum} className="rounded-lg shadow-sm overflow-hidden">
+              {/* Season header */}
+              <button
+                onClick={() => toggleSeason(seasonNum)}
+                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/40 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary font-bold text-sm">S{seasonNum}</span>
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-foreground">Season {seasonNum}</p>
+                  <p className="text-xs text-muted-foreground">{eps.length} episodes</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{eps.filter(e => e.processingStatus === "ready").length}/{eps.length} ready</Badge>
+                  {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                </div>
+              </button>
+
+              {/* Episodes table */}
+              {expanded && (
+                <CardContent className="p-0 border-t border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[80px]">#</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead className="hidden sm:table-cell text-center w-[100px]">Duration</TableHead>
+                        <TableHead className="hidden md:table-cell text-center w-[120px]">Status</TableHead>
+                        <TableHead className="hidden sm:table-cell text-center w-[100px]">Access</TableHead>
+                        <TableHead className="text-right w-[150px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {eps.map((ep) => {
+                        const epId = ep.id || ep._id || "";
+                        const dur = ep.duration || 0;
+                        const overLimit = dur > MAX_EPISODE_MINUTES * 60;
+
+                        return (
+                          <TableRow key={epId}>
+                            <TableCell className="font-medium">{ep.episode}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-14 rounded overflow-hidden border border-border bg-muted shrink-0 flex items-center justify-center">
+                                  {ep.thumbnail ? (
+                                    <img src={getImageUrl(ep.thumbnail)} alt="" className="h-full w-full object-cover" />
+                                  ) : (
+                                    <Film className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                                <span className="font-medium text-sm text-foreground">
+                                  {ep.title || `Episode ${ep.episode}`}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-center">
+                              <span className={`inline-flex items-center gap-1 text-xs font-semibold ${overLimit ? "text-primary" : "text-muted-foreground"}`}>
+                                {fmt(ep.duration)}
+                                {overLimit && <AlertTriangle className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                              </span>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-center">
+                              <StatusBadge status={ep.processingStatus} />
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell text-center">
+                              <Badge variant={ep.isFree ? "default" : "outline"}>
+                                {ep.isFree ? "Free" : "Paid"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {ep.hlsUrl && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setPreviewEp(ep)}
+                                    className="h-8 w-8 text-blue-400 hover:bg-blue-500/10 hover:text-blue-400"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleToggleLock(ep)}
+                                  disabled={lockMutation.isPending}
+                                  className="h-8 w-8"
+                                >
+                                  {lockMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : ep.isLocked ? (
+                                    <Lock className="h-4 w-4 text-amber-500" />
+                                  ) : (
+                                    <Unlock className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setConfirmDeleteEp(ep)}
+                                  className="h-8 w-8 text-primary hover:bg-primary/10 hover:text-primary"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
+
+      {/* ── Delete Episode Confirm ── */}
+      <AlertDialog open={!!confirmDeleteEp} onOpenChange={() => setConfirmDeleteEp(null)}>
+        <AlertDialogContent className="bg-card border-border text-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Episode</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
+              Are you sure you want to delete Episode {confirmDeleteEp?.episode} of Season {confirmDeleteEp?.season}? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEpisode} className="bg-primary hover:bg-primary/90 text-white border-0">
+              {deleteEpisodeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Preview Dialog ── */}
+      <Dialog open={!!previewEp} onOpenChange={(open) => !open && setPreviewEp(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{previewEp?.title || `Episode ${previewEp?.episode}`}</DialogTitle>
+          </DialogHeader>
+          {previewEp?.hlsUrl && (
+            <video src={getImageUrl(previewEp.hlsUrl)} controls className="w-full rounded-lg bg-black" />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

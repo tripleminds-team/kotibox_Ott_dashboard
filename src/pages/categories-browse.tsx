@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearch, useLocation, useParams } from "wouter";
 import {
-  Play, Search, X, Loader2, Film, Tv, Smartphone, Star, Crown, Flame,
-  SlidersHorizontal, ChevronLeft, ChevronRight, TrendingUp, Sparkles,
+  Search, X, Loader2, Film, Tv, Smartphone, Crown, Flame,
+  SlidersHorizontal, ChevronLeft, ChevronRight, TrendingUp, Sparkles, Star,
 } from "lucide-react";
 import { PublicHeader, PublicFooter } from "./streaming-home";
-import { useGetWebBrowse, useGetGenres, getImageUrl } from "@/lib/api-client";
+import { useGetWebBrowse, useGetGenres } from "@/lib/api-client";
 import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
+import { PortraitCard } from "@/components/ContentCard";
 
 type ContentType = "movie" | "show" | "drama";
 
@@ -15,88 +16,6 @@ const CONTENT_TYPES: { key: ContentType; label: string; icon: React.ReactNode }[
   { key: "show", label: "TV Shows", icon: <Tv className="w-4 h-4" /> },
   { key: "drama", label: "Short Drama", icon: <Smartphone className="w-4 h-4" /> },
 ];
-
-function ContentCard({ item, onClick }: { item: any; onClick: () => void }) {
-  const isPremium = item.badge === "TOP" || item.badge === "EXCLUSIVE";
-  const isDrama = item.type === "drama" || (item.seasons === undefined && item.totalEpisodes !== undefined);
-
-  if (isDrama) {
-    return (
-      <div
-        className="group relative flex-shrink-0 cursor-pointer"
-        onClick={onClick}
-      >
-        <div
-          className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:ring-2 group-hover:ring-purple-500/70 group-hover:scale-[1.03] max-h-[400px] mx-auto w-full max-w-[220px]"
-          style={{ aspectRatio: "9/16" }}
-        >
-          <img
-            src={item.poster ? getImageUrl(item.poster) : ''}
-            alt={item.title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.style.backgroundColor = '#111'; }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          {item.badge && (
-            <span className="absolute top-1.5 left-1.5 text-[9px] font-black px-1.5 py-[2px] rounded-sm uppercase bg-primary text-white">{item.badge}</span>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 p-2">
-            <p className="text-white text-[11px] font-bold leading-tight line-clamp-2">{item.title}</p>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="group relative flex-shrink-0 cursor-pointer" onClick={onClick}>
-      <div
-        className="relative overflow-hidden rounded-xl bg-zinc-900 transition-all duration-300 group-hover:scale-[1.03] group-hover:shadow-[0_12px_32px_rgba(229,9,20,0.25)] group-hover:ring-1 group-hover:ring-primary/40"
-        style={{ aspectRatio: "16/9" }}
-      >
-        <img
-          src={item.backdrop ? getImageUrl(item.backdrop) : (item.poster ? getImageUrl(item.poster) : '')}
-          alt={item.title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.style.backgroundColor = '#111'; }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030306] via-[#030306]/30 to-transparent" />
-        {isPremium ? (
-          <span className="absolute top-2 left-2 flex items-center gap-1 bg-[#f5a623] text-black text-[9px] font-black px-2 py-[2px] rounded-sm uppercase">
-            <Crown className="w-2.5 h-2.5" /> Premium
-          </span>
-        ) : item.badge ? (
-          <span className="absolute top-2 left-2 text-[9px] font-black px-1.5 py-[2px] rounded-sm uppercase bg-primary text-white">{item.badge}</span>
-        ) : null}
-        {item.imdbRating && (
-          <span className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold bg-amber-400/90 text-black px-1.5 py-[2px] rounded">
-            <Star className="w-2.5 h-2.5 fill-black" />{item.imdbRating}
-          </span>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
-            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-white font-bold text-sm leading-tight truncate">{item.title}</p>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-zinc-400">
-            {item.year && <span>{item.year}</span>}
-            {item.duration && <><span>·</span><span>{item.duration}</span></>}
-            {item.seasons && <><span>·</span><span className="text-white bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.seasons}S</span></>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const TAB_TO_TYPE: Record<string, ContentType> = {
   drama: "drama",
@@ -118,13 +37,31 @@ export default function CategoriesBrowsePage() {
   const [plansModalOpen, setPlansModalOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  const initialQ = new URLSearchParams(searchString).get("q") || "";
+  const searchParams = new URLSearchParams(searchString);
+  const isTrending = searchParams.has("trending");
+  const isNew = searchParams.has("new");
+  const isTopRated = searchParams.has("top-rated");
+  const isTv = searchParams.has("tv");
+  const isAction = searchParams.has("action");
+  const isDramaSeries = searchParams.has("drama-series");
+  const isShortDrama = searchParams.has("short-drama");
+
+  const initialQ = searchParams.get("q") || "";
   const [searchInput, setSearchInput] = useState(initialQ);
   const [debouncedQ, setDebouncedQ] = useState(initialQ);
 
-  const initialType: ContentType = (params as any)?.tab ? (TAB_TO_TYPE[(params as any).tab] || "movie") : "movie";
+  const initialType: ContentType = isTv || isDramaSeries
+    ? "show"
+    : isShortDrama
+    ? "drama"
+    : isAction || isTopRated
+    ? "movie"
+    : (params as any)?.tab
+    ? (TAB_TO_TYPE[(params as any).tab] || "movie")
+    : "movie";
+
   const [contentType, setContentType] = useState<ContentType>(initialType);
-  const [activeGenre, setActiveGenre] = useState("All");
+  const [activeGenre, setActiveGenre] = useState(isAction ? "Action" : isDramaSeries ? "Drama" : "All");
   const [page, setPage] = useState(1);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +79,55 @@ export default function CategoriesBrowsePage() {
     setPage(1);
   }, [searchString]);
 
+  // Sync category state from URL query parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(searchString);
+    if (searchParams.has("tv")) {
+      setContentType("show");
+      setActiveGenre("All");
+    } else if (searchParams.has("drama-series")) {
+      setContentType("show");
+      setActiveGenre("Drama");
+    } else if (searchParams.has("short-drama")) {
+      setContentType("drama");
+      setActiveGenre("All");
+    } else if (searchParams.has("action")) {
+      setContentType("movie");
+      setActiveGenre("Action");
+    } else if (searchParams.has("top-rated")) {
+      setContentType("movie");
+      setActiveGenre("All");
+    } else if ((params as any)?.tab) {
+      const type = TAB_TO_TYPE[(params as any).tab] || "movie";
+      setContentType(type);
+      setActiveGenre("All");
+    }
+    setPage(1);
+  }, [searchString, (params as any)?.tab]);
+
+  const getHeading = () => {
+    if (isTrending) return "Trending Now";
+    if (isNew) return "New Releases";
+    if (isTopRated) return "Top Rated Movies";
+    if (isTv) return "Popular TV Shows";
+    if (isAction) return "Action & Adventure";
+    if (isDramaSeries) return "Drama Series";
+    if (isShortDrama) return "Short Dramas";
+    if (activeGenre !== "All") return activeGenre;
+    return CONTENT_TYPES.find(t => t.key === contentType)?.label || "Browse";
+  };
+
+  const getHeadingIcon = () => {
+    if (isTrending) return <TrendingUp className="w-5 h-5 text-primary" />;
+    if (isNew) return <Sparkles className="w-5 h-5 text-primary" />;
+    if (isTopRated) return <Star className="w-5 h-5 text-primary" />;
+    if (isTv) return <Tv className="w-5 h-5 text-primary" />;
+    if (isAction) return <Flame className="w-5 h-5 text-primary" />;
+    if (isDramaSeries) return <Film className="w-5 h-5 text-primary" />;
+    if (isShortDrama) return <Smartphone className="w-5 h-5 text-primary" />;
+    return <TrendingUp className="w-5 h-5 text-primary" />;
+  };
+
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
     setPage(1);
@@ -156,11 +142,12 @@ export default function CategoriesBrowsePage() {
   const genres: string[] = ["All", ...((genresData?.data || []).map((g: any) => g.name))];
 
   const browseOptions = {
-    type: debouncedQ ? contentType : contentType,
+    type: contentType,
     genre: activeGenre,
     page,
     search: debouncedQ || undefined,
     limit: 24,
+    section: isTrending ? "trending" : isNew ? "new" : isTopRated ? "top-rated" : undefined,
   };
 
   const { data: browseData, isLoading, isFetching } = useGetWebBrowse(browseOptions);
@@ -168,9 +155,15 @@ export default function CategoriesBrowsePage() {
   const pagination = browseData?.pagination;
 
   const handlePlay = (item: any) => {
-    const isDrama = item.contentType === "drama";
-    if (isDrama) setLocation(`/show/${item.id || item._id}/episode/1`);
-    else setLocation(`/movie/${item.id || item._id}`);
+    const id = item.id || item._id;
+    const ct = item.contentType || contentType;
+    if (ct === "drama") {
+      setLocation(`/drama/${id}/episode/1`);
+    } else if (ct === "show" || ct === "series") {
+      setLocation(`/show/${id}`);
+    } else {
+      setLocation(`/movie/${id}`);
+    }
   };
 
   const handleSignOut = () => {
@@ -226,7 +219,12 @@ export default function CategoriesBrowsePage() {
             {CONTENT_TYPES.map(({ key, label, icon }) => (
               <button
                 key={key}
-                onClick={() => { setContentType(key); setActiveGenre("All"); setPage(1); }}
+                onClick={() => { 
+                  setContentType(key); 
+                  setActiveGenre("All"); 
+                  setPage(1); 
+                  setLocation("/browse");
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
                   contentType === key
                     ? "bg-primary border-primary text-white shadow-lg shadow-red-900/30"
@@ -258,7 +256,13 @@ export default function CategoriesBrowsePage() {
             {genres.map((g) => (
               <button
                 key={g}
-                onClick={() => { setActiveGenre(g); setPage(1); }}
+                onClick={() => { 
+                  setActiveGenre(g); 
+                  setPage(1); 
+                  if (isAction && g !== "Action") {
+                    setLocation("/browse");
+                  }
+                }}
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
                   activeGenre === g
                     ? "bg-primary border-primary text-white"
@@ -276,14 +280,10 @@ export default function CategoriesBrowsePage() {
           <div className="flex items-center gap-3">
             {!debouncedQ && (
               <>
-                {activeGenre === "All" ? (
-                  <span className="flex items-center gap-1.5 text-white font-bold text-lg">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    {CONTENT_TYPES.find(t => t.key === contentType)?.label}
-                  </span>
-                ) : (
-                  <span className="text-white font-bold text-lg">{activeGenre}</span>
-                )}
+                <span className="flex items-center gap-1.5 text-white font-bold text-lg">
+                  {getHeadingIcon()}
+                  {getHeading()}
+                </span>
                 {pagination?.total !== undefined && (
                   <span className="text-zinc-500 text-sm">{pagination.total} titles</span>
                 )}
@@ -319,13 +319,13 @@ export default function CategoriesBrowsePage() {
           ) : (
             <div
               className={`grid gap-3 sm:gap-4 ${
-                contentType === "drama"
+                contentType === "drama" || contentType === "show"
                   ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8"
-                  : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                  : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
               }`}
             >
               {items.map((item: any) => (
-                <ContentCard key={item.id || item._id} item={item} onClick={() => handlePlay(item)} />
+                <PortraitCard key={item.id || item._id} item={item} onClick={() => handlePlay(item)} fullWidth />
               ))}
             </div>
           )}

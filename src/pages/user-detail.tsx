@@ -6,6 +6,7 @@ import {
   useBanUser,
   useUnbanUser
 } from "../lib/api-client";
+import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, 
@@ -54,15 +55,25 @@ export default function UserDetail() {
   const [banReason, setBanReason] = useState("");
 
   const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
     subscriptionPlan: "free",
-    subscriptionStatus: "inactive"
+    subscriptionStatus: "inactive",
+    status: "active",
+    banReason: ""
   });
 
   useEffect(() => {
     if (user) {
       setFormData({
-        subscriptionPlan: user.subscriptionPlan,
-        subscriptionStatus: (user.subscriptionStatus || "inactive")
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        subscriptionPlan: user.subscriptionPlan || "free",
+        subscriptionStatus: user.subscriptionStatus || "inactive",
+        status: user.status || "active",
+        banReason: user.banReason || ""
       });
     }
   }, [user]);
@@ -80,8 +91,13 @@ export default function UserDetail() {
     updateMutation.mutate({
       id,
       data: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
         subscriptionPlan: formData.subscriptionPlan,
-        subscriptionStatus: formData.subscriptionStatus
+        subscriptionStatus: formData.subscriptionStatus,
+        status: formData.status,
+        banReason: formData.status !== "active" ? formData.banReason : ""
       }
     }, {
       onSuccess: () => {
@@ -102,48 +118,48 @@ export default function UserDetail() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["user", id] });
           queryClient.invalidateQueries({ queryKey: ["users-list"] });
-          toast({ title: "User has been banned" });
+          toast({ title: "User has been suspended/banned" });
           setIsBanDialogOpen(false);
           setBanReason("");
         },
         onError: () => {
-          toast({ title: "Failed to ban user", variant: "destructive" });
+          toast({ title: "Failed to suspend/ban user", variant: "destructive" });
         }
       }
     );
   };
 
   const handleUnban = () => {
-    if (confirm("Are you sure you want to unban this user?")) {
+    if (confirm("Are you sure you want to unsuspend/unban this user?")) {
       unbanMutation.mutate(id, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["user", id] });
           queryClient.invalidateQueries({ queryKey: ["users-list"] });
-          toast({ title: "User has been unbanned" });
+          toast({ title: "User has been unsuspended/unbanned" });
         },
         onError: () => {
-          toast({ title: "Failed to unban user", variant: "destructive" });
+          toast({ title: "Failed to unsuspend/unban user", variant: "destructive" });
         }
       });
     }
   };
 
-  const isBanned = (user as any).status === 'banned';
+  const isSuspendedOrBanned = user.status === 'suspended' || user.status === 'banned';
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {isBanned && (
+      {isSuspendedOrBanned && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-3 text-destructive">
             <AlertTriangle className="h-5 w-5" />
             <div>
-              <p className="font-bold text-sm">THIS USER IS BANNED</p>
-              <p className="text-xs opacity-80">{(user as any).banReason || "No reason provided"}</p>
+              <p className="font-bold text-sm">THIS USER IS {user.status.toUpperCase()}</p>
+              <p className="text-xs opacity-80">{user.banReason || "No reason provided"}</p>
             </div>
           </div>
           <Button variant="destructive" size="sm" onClick={handleUnban} disabled={unbanMutation.isPending}>
             {unbanMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Unban User
+            Unsuspend / Unban User
           </Button>
         </div>
       )}
@@ -154,11 +170,15 @@ export default function UserDetail() {
         </Button>
         <div className="flex-1 flex items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">User Details</h1>
-          {isBanned && <Badge variant="destructive">BANNED</Badge>}
+          {isSuspendedOrBanned && (
+            <Badge variant={user.status === "banned" ? "destructive" : "secondary"}>
+              {user.status.toUpperCase()}
+            </Badge>
+          )}
         </div>
-        {!isBanned && (
+        {!isSuspendedOrBanned && (
           <Button variant="destructive" onClick={() => setIsBanDialogOpen(true)}>
-            <ShieldAlert className="mr-2 h-4 w-4" /> Ban User
+            <ShieldAlert className="mr-2 h-4 w-4" /> Suspend / Ban User
           </Button>
         )}
       </div>
@@ -217,43 +237,125 @@ export default function UserDetail() {
         <div className="md:col-span-2 space-y-6">
           <Card className="bg-card border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Subscription Management</CardTitle>
+              <CardTitle className="text-lg">User Profile & Subscription Management</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdate} className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="plan">Plan</Label>
-                    <Select value={formData.subscriptionPlan} onValueChange={(v: string) => setFormData({...formData, subscriptionPlan: v})}>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select plan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="free">Free</SelectItem>
-                        <SelectItem value="basic">Basic</SelectItem>
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="premium">Premium</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select value={formData.subscriptionStatus} onValueChange={(v: string) => setFormData({...formData, subscriptionStatus: v})}>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                        <SelectItem value="expired">Expired</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Section 1: Personal Information */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Personal Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="userName">Full Name</Label>
+                      <Input
+                        id="userName"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Full Name"
+                        required
+                        className="bg-background border-border text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="userEmail">Email Address</Label>
+                      <Input
+                        id="userEmail"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="Email Address"
+                        required
+                        className="bg-background border-border text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="userPhone">Phone Number</Label>
+                      <Input
+                        id="userPhone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="Phone Number (Optional)"
+                        className="bg-background border-border text-foreground"
+                      />
+                    </div>
                   </div>
                 </div>
-                <Button type="submit" disabled={updateMutation.isPending}>
+
+                <hr className="border-border" />
+
+                {/* Section 2: Subscription Settings */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Subscription Settings</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="plan">Plan</Label>
+                      <Select value={formData.subscriptionPlan} onValueChange={(v: string) => setFormData({...formData, subscriptionPlan: v})}>
+                        <SelectTrigger className="bg-background border-border">
+                          <SelectValue placeholder="Select plan" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-muted border-border text-foreground">
+                          <SelectItem value="free">Free</SelectItem>
+                          <SelectItem value="basic">Basic</SelectItem>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Subscription Status</Label>
+                      <Select value={formData.subscriptionStatus} onValueChange={(v: string) => setFormData({...formData, subscriptionStatus: v})}>
+                        <SelectTrigger className="bg-background border-border">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-muted border-border text-foreground">
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value="expired">Expired</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="border-border" />
+
+                {/* Section 3: Account Access Status */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Account Access & Status</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="accountStatus">Account Status</Label>
+                      <Select value={formData.status} onValueChange={(v: string) => setFormData({...formData, status: v})}>
+                        <SelectTrigger className="bg-background border-border">
+                          <SelectValue placeholder="Select account status" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-muted border-border text-foreground">
+                          <SelectItem value="active">Active (Normal Access)</SelectItem>
+                          <SelectItem value="suspended">Suspended (Temporary Block)</SelectItem>
+                          <SelectItem value="banned">Banned (Permanent Block)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {formData.status !== "active" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="formBanReason">Reason for Suspension / Ban</Label>
+                        <Textarea
+                          id="formBanReason"
+                          value={formData.banReason}
+                          onChange={(e) => setFormData({ ...formData, banReason: e.target.value })}
+                          placeholder="Provide the reason for suspension or banning (e.g. Terms violation, payment dispute...)"
+                          required
+                          className="bg-background border-border text-foreground min-h-[80px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Button type="submit" disabled={updateMutation.isPending} className="w-full md:w-auto">
                   {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Update Subscription
+                  Save Changes
                 </Button>
               </form>
             </CardContent>

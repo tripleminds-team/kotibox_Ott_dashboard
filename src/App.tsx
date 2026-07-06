@@ -131,6 +131,8 @@ import EpisodeForm from "@/pages/episode-form";
 import StreamingHomePage from "@/pages/streaming-home";
 import MovieDetailPage from "@/pages/movie-detail";
 import EpisodeDetailPage from "@/pages/episode-detail";
+import TVShowDetailPage from "@/pages/tv-show-detail";
+import ShortDramaPlayer from "@/pages/short-drama-player";
 import CategoriesBrowsePage from "@/pages/categories-browse";
 import PublicAuthPage from "@/pages/public-auth";
 import TvShowsPublicPage from "@/pages/tv-shows-public";
@@ -144,6 +146,8 @@ import ShortDramaDetail from "@/pages/short-drama-detail";
 import ShortDramaSeasonsPage from "@/pages/short-drama-seasons";
 import ShortDramaEpisodesPage from "@/pages/short-drama-episodes";
 import GoogleAdsPage from "@/pages/google-ads";
+import NewHotManagement from "@/pages/new-hot-management";
+import Reviews from "@/pages/reviews";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -159,10 +163,10 @@ const routePermissions: Record<string, string | null> = {
   "/dashboard": null,
   "/media-library": "mediaLibrary",
   "/app-management": null,
-  "/home-sections": null,
+  "/home-sections": "categories",
   "/influencers": "influencers",
-  "/approvals": null,
-  "/users": null,
+  "/approvals": "movies",
+  "/users": "subscriptions",
   "/languages": "languages",
   "/genres": "genres",
   "/movies": "movies",
@@ -176,19 +180,20 @@ const routePermissions: Record<string, string | null> = {
   "/pages": "pages",
   "/promotions": "promotions",
   "/banners": "banners",
+  "/reviews": "reviews",
   "/faq": "faqs",
   "/actors": "actors",
   "/directors": "directors",
-  "/crew": "crew",
-  "/countries": "countries",
+  "/crew": "actors",
+  "/countries": "languages",
   "/subscriptions": "subscriptions",
   "/plans": "subscriptionPlans",
   "/plan-limits": "planLimits",
   "/notifications": "notifications",
   "/notification-templates": "notificationTemplates",
-  "/settings": null,
-  "/settings/branding": null,
-  "/settings/icons": null,
+  "/settings": "settings",
+  "/settings/branding": "settings",
+  "/settings/icons": "settings",
   "/profile": null,
   "/short-dramas": "shortDramas",
   "/short-drama-seasons": "shortDramas",
@@ -336,6 +341,8 @@ function Router() {
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
       <Route path="/app-management" component={() => <ProtectedRoute component={AppManagement} />} />
       <Route path="/home-sections" component={() => <ProtectedRoute component={HomeSections} />} />
+      <Route path="/reviews" component={() => <ProtectedRoute component={Reviews} />} />
+      <Route path="/new-hot" component={() => <ProtectedRoute component={NewHotManagement} />} />
       <Route path="/influencers" component={() => <ProtectedRoute component={InfluencersPage} />} />
       <Route path="/approvals" component={() => <ProtectedRoute component={ApprovalsPage} />} />
       <Route path="/short-dramas/new" component={() => <ProtectedRoute component={ShortDramaForm} />} />
@@ -356,7 +363,9 @@ function Router() {
       <Route path="/login" component={PublicAuthPage} />
       <Route path="/register" component={PublicAuthPage} />
       <Route path="/movie/:id" component={MovieDetailPage} />
+      <Route path="/show/:id" component={TVShowDetailPage} />
       <Route path="/show/:showTitle/episode/:epNum" component={EpisodeDetailPage} />
+      <Route path="/drama/:id/episode/:epNum" component={ShortDramaPlayer} />
       <Route path="/browse/:tab" component={CategoriesBrowsePage} />
       <Route path="/browse" component={CategoriesBrowsePage} />
       <Route path="/tv-shows-browse" component={TvShowsPublicPage} />

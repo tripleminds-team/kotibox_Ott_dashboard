@@ -226,7 +226,7 @@ export default function SubscriptionFormPage() {
                 <SelectContent className="bg-popover border-border text-foreground max-h-60">
                   {plans.map((p: any) => (
                     <SelectItem key={p.id || p._id} value={String(p.id || p._id)}>
-                      {p.name} — ${Number(p.totalPrice ?? p.price).toFixed(2)} / {p.durationValue} {p.duration}
+                      {p.name} — {settings?.currencyPosition === "before" ? `${settings?.currencySymbol || '₹'}${Number(p.totalPrice ?? p.price).toFixed(settings?.decimalPlaces ?? 2)}` : `${Number(p.totalPrice ?? p.price).toFixed(settings?.decimalPlaces ?? 2)} ${settings?.currencySymbol || '₹'}`} / {p.durationValue} {p.duration}
                     </SelectItem>
                   ))}
                 </SelectContent>

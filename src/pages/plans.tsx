@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Plus, Edit2, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -41,6 +42,15 @@ const PAGE_SIZE = 10;
 export default function PlansPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { settings } = useSettings();
+
+  const formatCurrency = (val: number | string) => {
+    const num = Number(val && typeof val === "string" ? val.replace(/[^0-9.-]+/g,"") : val) || 0;
+    return settings?.currencyPosition === "before" 
+      ? `${settings?.currencySymbol || '₹'}${num.toFixed(settings?.decimalPlaces ?? 2)}` 
+      : `${num.toFixed(settings?.decimalPlaces ?? 2)} ${settings?.currencySymbol || '₹'}`;
+  };
+
   const { data: plansData, isLoading } = useGetSubscriptionPlans({ limit: 100 });
   const deletePlan = useDeleteSubscriptionPlan();
   const updatePlan = useUpdateSubscriptionPlan();
@@ -220,7 +230,7 @@ export default function PlansPage() {
                       <span className="text-zinc-300 font-medium text-sm">{plan.level}</span>
                     </TableCell>
                     <TableCell className="text-zinc-300 text-sm">
-                      ${Number(plan.price).toFixed(2)}
+                      {formatCurrency(plan.price)}
                     </TableCell>
                     <TableCell>
                       {plan.discount > 0 ? (
@@ -233,7 +243,7 @@ export default function PlansPage() {
                     </TableCell>
                     <TableCell>
                       <span className="text-foreground font-semibold text-sm">
-                        ${Number(plan.totalPrice).toFixed(2)}
+                        {formatCurrency(plan.totalPrice)}
                       </span>
                     </TableCell>
                     <TableCell className="max-w-[200px]">

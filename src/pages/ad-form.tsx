@@ -1,12 +1,35 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { ChevronLeft, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import {
+  ChevronLeft, Play, Image as ImageIcon, Code2, Monitor, Home,
+  Film, Globe, HardDrive, Link2, ExternalLink, Calendar, Tag,
+  Loader2, Check, Upload, Eye, EyeOff,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateAd, useUpdateAd, useGetAds, useGetContentList } from "@/lib/api-client";
+import { useCreateAd, useUpdateAd, useGetAds, useGetContentList, getImageUrl } from "@/lib/api-client";
 import MediaPicker from "@/components/MediaPicker";
+import { Switch } from "@/components/ui/switch";
+
+const AD_TYPES = [
+  { value: "Video", label: "Video Ad", icon: <Play className="w-5 h-5" />, desc: "MP4 or HLS video pre-roll", color: "text-purple-400 border-purple-500/40 bg-purple-500/10" },
+  { value: "Image", label: "Image Ad", icon: <ImageIcon className="w-5 h-5" />, desc: "Static banner or interstitial", color: "text-blue-400 border-blue-500/40 bg-blue-500/10" },
+  { value: "Custom", label: "Custom / Script", icon: <Code2 className="w-5 h-5" />, desc: "Google Ads or custom HTML", color: "text-amber-400 border-amber-500/40 bg-amber-500/10" },
+];
+
+const PLACEMENTS = [
+  { value: "Player", label: "Video Player", icon: <Monitor className="w-5 h-5" />, desc: "Pre-roll or mid-roll in player" },
+  { value: "Home Page", label: "Home Page", icon: <Home className="w-5 h-5" />, desc: "Shown on the streaming home" },
+  { value: "Banner", label: "Banner", icon: <Film className="w-5 h-5" />, desc: "Full-width banner overlay" },
+];
+
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-1 h-4 rounded-full bg-primary" />
+      <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">{label}</span>
+    </div>
+  );
+}
 
 export default function AdForm() {
   const { id } = useParams<{ id: string }>();
@@ -19,8 +42,9 @@ export default function AdForm() {
   const updateMutation = useUpdateAd();
 
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(true);
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     adName: "",
     adType: "Video",
     urlType: "Local",
@@ -29,68 +53,51 @@ export default function AdForm() {
     redirectUrl: "",
     targetContentType: "Movie",
     targetCategories: [] as string[],
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-    status: "active"
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split("T")[0],
+    status: "active",
   });
 
-  // Load existing data if editing
   useEffect(() => {
     if (isEdit && adsData?.data) {
-      const existingAd = adsData.data.find((a: any) => a._id === id);
-      if (existingAd) {
-        setFormData({
-          adName: existingAd.adName || "",
-          adType: existingAd.adType || "Video",
-          urlType: existingAd.urlType || "Local",
-          mediaUrl: existingAd.mediaUrl || "",
-          placement: existingAd.placement || "Player",
-          redirectUrl: existingAd.redirectUrl || "",
-          targetContentType: existingAd.targetContentType || "Movie",
-          targetCategories: existingAd.targetCategories?.length ? existingAd.targetCategories : [],
-          startDate: existingAd.startDate ? new Date(existingAd.startDate).toISOString().split('T')[0] : "",
-          endDate: existingAd.endDate ? new Date(existingAd.endDate).toISOString().split('T')[0] : "",
-          status: existingAd.status || "active",
+      const ad = adsData.data.find((a: any) => a._id === id);
+      if (ad) {
+        setForm({
+          adName: ad.adName || "",
+          adType: ad.adType || "Video",
+          urlType: ad.urlType || "Local",
+          mediaUrl: ad.mediaUrl || "",
+          placement: ad.placement || "Player",
+          redirectUrl: ad.redirectUrl || "",
+          targetContentType: ad.targetContentType || "Movie",
+          targetCategories: ad.targetCategories?.length ? ad.targetCategories : [],
+          startDate: ad.startDate ? new Date(ad.startDate).toISOString().split("T")[0] : "",
+          endDate: ad.endDate ? new Date(ad.endDate).toISOString().split("T")[0] : "",
+          status: ad.status || "active",
         });
       }
     }
   }, [isEdit, adsData, id]);
 
-  // Dynamic Content Query for the Dropdown
-  const apiFetchType = formData.targetContentType === 'TV Shows' ? 'TV Show' 
-                     : formData.targetContentType === 'Short Dramas' ? 'Short Drama'
-                     : formData.targetContentType === 'Movie' ? 'Movie'
-                     : undefined;
+  const apiFetchType = form.targetContentType === "TV Shows" ? "TV Show"
+    : form.targetContentType === "Short Dramas" ? "Short Drama"
+    : form.targetContentType === "Movie" ? "Movie"
+    : undefined;
 
-  const { data: contentData } = useGetContentList({ 
-    limit: 100, 
-    type: apiFetchType 
-  });
-  
+  const { data: contentData } = useGetContentList({ limit: 100, type: apiFetchType });
   const contentOptions = contentData?.data || [];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    // If target content type changes, optionally clear the old mismatched tags
-    if (name === 'targetContentType' && value !== formData.targetContentType) {
-      setFormData({ ...formData, [name]: value, targetCategories: [] });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const handleToggleStatus = (checked: boolean) => {
-    setFormData({ ...formData, status: checked ? "active" : "inactive" });
-  };
+  const set = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
+    if (!form.adName.trim()) return toast({ title: "Ad name is required", variant: "destructive" });
     try {
       if (isEdit) {
-        await updateMutation.mutateAsync({ id, data: formData });
-        toast({ title: "Ad updated successfully!" });
+        await updateMutation.mutateAsync({ id, data: form });
+        toast({ title: "Ad updated successfully" });
       } else {
-        await createMutation.mutateAsync(formData);
-        toast({ title: "Ad created successfully!" });
+        await createMutation.mutateAsync(form);
+        toast({ title: "Ad created successfully" });
       }
       setLocation("/ads");
     } catch (e: any) {
@@ -98,270 +105,341 @@ export default function AdForm() {
     }
   };
 
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
   if (isAdsLoading && isEdit) {
-    return <div className="p-6 text-zinc-400">Loading ad details...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
-    <div className="text-foreground bg-[#0f1115] min-h-screen p-6 -m-6 pb-20">
-      <div className="flex items-center gap-2 text-sm text-zinc-400 mb-6">
-        <span>Dashboard</span>
-        <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Custom Ads" : "Add Custom Ad"}</span>
+    <div className="min-h-screen bg-[#0a0b0f] text-white p-6 -m-6 pb-20">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 text-xs text-zinc-500 mb-3">
+          <span>Dashboard</span><span>/</span>
+          <button onClick={() => setLocation("/ads")} className="hover:text-zinc-300 transition-colors">Custom Ads</button>
+          <span>/</span>
+          <span className="text-zinc-300">{isEdit ? "Edit Ad" : "New Ad"}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setLocation("/ads")}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-white">{isEdit ? "Edit Ad Campaign" : "Create New Ad"}</h1>
+            <p className="text-zinc-500 text-sm">{isEdit ? "Update your ad settings and creative" : "Set up a new ad campaign"}</p>
+          </div>
+        </div>
       </div>
 
-      <button 
-        onClick={() => setLocation("/ads")}
-        className="flex items-center text-primary hover:text-primary/80 font-medium mb-8"
-      >
-        <ChevronLeft className="h-5 w-5 mr-1" />
-        Back
-      </button>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl">
 
-      <div className="bg-[#1a1d24] border border-zinc-800 rounded-xl p-8 max-w-5xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Column 1 */}
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Ad Name <span className="text-primary">*</span>
-              </label>
-              <Input 
-                name="adName"
-                value={formData.adName}
-                onChange={handleChange}
-                placeholder="e.g. BigSale" 
-                className="bg-[#0f1115] border-zinc-800 text-white" 
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">Media Preview</label>
-              <div className="aspect-video bg-[#0f1115] border border-zinc-800 rounded-lg flex items-center justify-center overflow-hidden relative mb-2">
-                {formData.mediaUrl ? (
-                  formData.adType === 'Video' ? (
-                    <video src={formData.mediaUrl} controls className="w-full h-full object-contain bg-black" />
-                  ) : formData.adType === 'Image' ? (
-                    <img src={formData.mediaUrl} alt="Preview" className="w-full h-full object-contain bg-black" />
-                  ) : (
-                    <div className="text-zinc-500 text-xs text-center p-4 break-all">
-                      <span className="block text-white font-bold mb-1">Custom / Google Ad Payload</span>
-                      {formData.mediaUrl.length > 80 ? formData.mediaUrl.substring(0, 80) + "..." : formData.mediaUrl}
-                    </div>
-                  )
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-orange-500 opacity-50" />
-                )}
-              </div>
-              <Button 
-                variant="outline" 
-                className="w-full bg-[#0f1115] border-zinc-800 text-zinc-300 hover:bg-[#252830] justify-between"
-                onClick={() => setIsMediaPickerOpen(true)}
-              >
-                <span>Choose File to Upload</span>
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Target Content Type <span className="text-primary">*</span>
-              </label>
-              <select 
-                name="targetContentType"
-                value={formData.targetContentType}
-                onChange={handleChange}
-                className="w-full h-10 px-3 rounded-md bg-[#0f1115] border border-zinc-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
-              >
-                <option value="Movie">Movie</option>
-                <option value="Short Dramas">Short Dramas</option>
-                <option value="TV Shows">TV Shows</option>
-                <option value="Live TV">Live TV</option>
-                <option value="All">All</option>
-              </select>
-            </div>
+        {/* ── LEFT COLUMN: Ad Type + Placement ── */}
+        <div className="space-y-6">
+          {/* Ad Name */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Ad Identity" />
+            <label className="block text-sm font-semibold text-zinc-300 mb-2">Ad Name <span className="text-primary">*</span></label>
+            <input
+              value={form.adName}
+              onChange={e => set("adName", e.target.value)}
+              placeholder="e.g. Summer Sale Banner"
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl focus:outline-none focus:border-zinc-600 placeholder:text-zinc-600 transition-colors"
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                End Date <span className="text-primary">*</span>
-              </label>
-              <Input 
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                className="bg-[#0f1115] border-zinc-800 text-white [color-scheme:dark]" 
-              />
+          {/* Ad Type */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Ad Type" />
+            <div className="space-y-3">
+              {AD_TYPES.map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => set("adType", t.value)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
+                    form.adType === t.value
+                      ? `${t.color} border-current`
+                      : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${form.adType === t.value ? "bg-white/10" : "bg-zinc-800"}`}>
+                    {t.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm">{t.label}</p>
+                    <p className="text-xs opacity-70 mt-0.5">{t.desc}</p>
+                  </div>
+                  {form.adType === t.value && <Check className="w-4 h-4 ml-auto flex-shrink-0" />}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Column 2 */}
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Ad Type <span className="text-primary">*</span>
-              </label>
-              <select 
-                name="adType"
-                value={formData.adType}
-                onChange={handleChange}
-                className="w-full h-10 px-3 rounded-md bg-[#0f1115] border border-zinc-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700 mb-2"
-              >
-                <option value="Video">Video</option>
-                <option value="Image">Image</option>
-                <option value="Custom">Custom / Google</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Placement <span className="text-primary">*</span>
-              </label>
-              <select 
-                name="placement"
-                value={formData.placement}
-                onChange={handleChange}
-                className="w-full h-10 px-3 rounded-md bg-[#0f1115] border border-zinc-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
-              >
-                <option value="Player">Player</option>
-                <option value="Home Page">Home Page</option>
-                <option value="Banner">Banner</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col h-full justify-start">
-              <label className="block text-sm font-medium text-white mb-2">
-                Target Categories <span className="text-primary">*</span>
-              </label>
-              
-              <div className="bg-[#0f1115] border border-zinc-800 rounded-md p-2 min-h-[140px] flex flex-col gap-2">
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.targetCategories.map((cat, i) => (
-                    <div key={i} className="flex items-center bg-primary text-white text-xs px-2 py-1 rounded">
-                      <span 
-                        className="cursor-pointer mr-1 hover:text-black font-bold"
-                        onClick={() => setFormData({
-                          ...formData,
-                          targetCategories: formData.targetCategories.filter((_, index) => index !== i)
-                        })}
-                      >×</span> {cat}
-                    </div>
-                  ))}
-                  {formData.targetCategories.length === 0 && (
-                    <span className="text-zinc-600 text-xs italic">No targets selected (will target all by default)</span>
-                  )}
-                </div>
-                
-                <select
-                  className="bg-[#1a1d24] border border-zinc-700 rounded-md text-white h-9 mt-auto text-xs px-2 outline-none focus:border-primary cursor-pointer"
-                  value=""
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val && !formData.targetCategories.includes(val)) {
-                      setFormData({
-                        ...formData,
-                        targetCategories: [...formData.targetCategories, val]
-                      });
-                    }
-                  }}
+          {/* Placement */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Placement" />
+            <div className="space-y-3">
+              {PLACEMENTS.map(p => (
+                <button
+                  key={p.value}
+                  onClick={() => set("placement", p.value)}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
+                    form.placement === p.value
+                      ? "border-primary bg-primary/10 text-white"
+                      : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
+                  }`}
                 >
-                  <option value="" disabled>Select {formData.targetContentType} to target...</option>
-                  {contentOptions.map((item: any) => (
-                    <option key={item._id} value={item.title || item.name}>
-                      {item.title || item.name}
-                    </option>
-                  ))}
-                  <option value="Global Application">Target All Categories</option>
-                </select>
-              </div>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${form.placement === p.value ? "bg-primary/20" : "bg-zinc-800"}`}>
+                    {p.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm">{p.label}</p>
+                    <p className="text-xs opacity-70 mt-0.5">{p.desc}</p>
+                  </div>
+                  {form.placement === p.value && <Check className="w-4 h-4 ml-auto flex-shrink-0 text-primary" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── MIDDLE COLUMN: Media + URL ── */}
+        <div className="space-y-6">
+          {/* Media */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <SectionLabel label="Creative / Media" />
+              {form.mediaUrl && (
+                <button onClick={() => setPreviewVisible(v => !v)} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                  {previewVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  {previewVisible ? "Hide" : "Show"} preview
+                </button>
+              )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">Status</label>
-              <div className="flex items-center justify-between bg-[#0f1115] border border-zinc-800 rounded-md p-3 h-10">
-                <span className="text-sm text-zinc-300">{formData.status === 'active' ? 'Active' : 'Inactive'}</span>
-                <Switch 
-                  checked={formData.status === "active"} 
-                  onCheckedChange={handleToggleStatus} 
+            {/* URL Type */}
+            <div className="flex gap-2 mb-4">
+              {[{ v: "Local", icon: <HardDrive className="w-3.5 h-3.5" />, label: "Upload File" }, { v: "URL", icon: <Globe className="w-3.5 h-3.5" />, label: "External URL" }].map(o => (
+                <button
+                  key={o.v}
+                  onClick={() => set("urlType", o.v)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                    form.urlType === o.v ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-950 border-zinc-800 text-zinc-500 hover:border-zinc-700"
+                  }`}
+                >
+                  {o.icon} {o.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Media input */}
+            {form.urlType === "Local" ? (
+              <button
+                onClick={() => setIsMediaPickerOpen(true)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-zinc-950 border border-zinc-800 text-zinc-400 rounded-xl hover:border-zinc-700 hover:text-zinc-300 transition-colors text-sm"
+              >
+                <span className="truncate">{form.mediaUrl ? form.mediaUrl.split("/").pop() : "Choose file from media library..."}</span>
+                <Upload className="w-4 h-4 flex-shrink-0 ml-2" />
+              </button>
+            ) : (
+              <input
+                value={form.mediaUrl}
+                onChange={e => set("mediaUrl", e.target.value)}
+                placeholder={form.adType === "Custom" ? "Paste Google/custom ad script..." : "https://cdn.example.com/ad.mp4"}
+                className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl focus:outline-none focus:border-zinc-600 placeholder:text-zinc-600 transition-colors"
+              />
+            )}
+
+            {/* Preview */}
+            {form.mediaUrl && previewVisible && (
+              <div className="mt-4 rounded-xl overflow-hidden bg-black border border-zinc-800" style={{ aspectRatio: "16/9" }}>
+                {form.adType === "Video" ? (
+                  <video src={getImageUrl(form.mediaUrl)} controls className="w-full h-full object-contain" />
+                ) : form.adType === "Image" ? (
+                  <img src={getImageUrl(form.mediaUrl)} alt="Preview" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center p-4">
+                    <div className="text-center">
+                      <Code2 className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                      <p className="text-zinc-400 text-xs break-all line-clamp-3">{form.mediaUrl}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Redirect URL */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Click Destination" />
+            <label className="block text-sm font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+              <ExternalLink className="w-4 h-4 text-zinc-500" /> Redirect URL
+            </label>
+            <div className="relative">
+              <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+              <input
+                value={form.redirectUrl}
+                onChange={e => set("redirectUrl", e.target.value)}
+                placeholder="https://example.com/offer"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl focus:outline-none focus:border-zinc-600 placeholder:text-zinc-600 transition-colors"
+              />
+            </div>
+            <p className="text-zinc-600 text-xs mt-2">Where users are sent when they click on the ad</p>
+          </div>
+
+          {/* Status */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Status" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-white">Ad Active</p>
+                <p className="text-zinc-500 text-xs mt-0.5">Toggle to enable or pause this ad</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs font-bold ${form.status === "active" ? "text-emerald-400" : "text-zinc-500"}`}>
+                  {form.status === "active" ? "Active" : "Inactive"}
+                </span>
+                <Switch
+                  checked={form.status === "active"}
+                  onCheckedChange={v => set("status", v ? "active" : "inactive")}
                   className="data-[state=checked]:bg-primary"
                 />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Column 3 */}
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                URL Type <span className="text-primary">*</span>
-              </label>
-              <select 
-                name="urlType"
-                value={formData.urlType}
-                onChange={handleChange}
-                className="w-full h-10 px-3 rounded-md bg-[#0f1115] border border-zinc-800 text-white text-sm focus:outline-none focus:ring-1 focus:ring-zinc-700"
-              >
-                <option value="Local">Local</option>
-                <option value="URL">URL</option>
-              </select>
-            </div>
+        {/* ── RIGHT COLUMN: Targeting + Schedule ── */}
+        <div className="space-y-6">
+          {/* Targeting */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Targeting" />
 
-            {formData.urlType === 'URL' && (
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Media URL / Code</label>
-                <Input 
-                  name="mediaUrl"
-                  value={formData.mediaUrl}
-                  onChange={handleChange}
-                  placeholder={formData.adType === 'Custom' ? "Paste Google Script here..." : "https://..."}
-                  className="bg-[#0f1115] border-zinc-800 text-white" 
-                />
+                <label className="block text-sm font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+                  <Tag className="w-4 h-4 text-zinc-500" /> Content Type
+                </label>
+                <select
+                  value={form.targetContentType}
+                  onChange={e => set("targetContentType", e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl focus:outline-none focus:border-zinc-600 transition-colors"
+                >
+                  <option value="Movie">Movies</option>
+                  <option value="Short Dramas">Short Dramas</option>
+                  <option value="TV Shows">TV Shows</option>
+                  <option value="Live TV">Live TV</option>
+                  <option value="All">All Content</option>
+                </select>
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">Redirect URL</label>
-              <Input 
-                name="redirectUrl"
-                value={formData.redirectUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/..." 
-                className="bg-[#0f1115] border-zinc-800 text-white" 
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-semibold text-zinc-300 mb-2">
+                  Target Titles
+                  <span className="text-zinc-600 font-normal ml-1.5 text-xs">(optional — leave empty to target all)</span>
+                </label>
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Start Date <span className="text-primary">*</span>
-              </label>
-              <Input 
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                className="bg-[#0f1115] border-zinc-800 text-white [color-scheme:dark]" 
-              />
+                {/* Tags */}
+                {form.targetCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {form.targetCategories.map((cat, i) => (
+                      <span key={i} className="flex items-center gap-1.5 px-3 py-1 bg-primary/15 border border-primary/30 text-primary text-xs font-bold rounded-lg">
+                        {cat}
+                        <button
+                          onClick={() => set("targetCategories", form.targetCategories.filter((_, idx) => idx !== i))}
+                          className="hover:text-white transition-colors font-black leading-none"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <select
+                  value=""
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v && !form.targetCategories.includes(v))
+                      set("targetCategories", [...form.targetCategories, v]);
+                  }}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 text-zinc-400 text-sm rounded-xl focus:outline-none focus:border-zinc-600 transition-colors"
+                >
+                  <option value="" disabled>Add target title...</option>
+                  {contentOptions.map((item: any) => (
+                    <option key={item._id} value={item.title || item.name}>
+                      {item.title || item.name}
+                    </option>
+                  ))}
+                  <option value="Global Application">Target All</option>
+                </select>
+              </div>
             </div>
           </div>
 
-        </div>
+          {/* Schedule */}
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6">
+            <SectionLabel label="Campaign Schedule" />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-zinc-500" /> Start Date <span className="text-primary">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={form.startDate}
+                  onChange={e => set("startDate", e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl focus:outline-none focus:border-zinc-600 [color-scheme:dark] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-zinc-500" /> End Date <span className="text-primary">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={form.endDate}
+                  onChange={e => set("endDate", e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 text-white text-sm rounded-xl focus:outline-none focus:border-zinc-600 [color-scheme:dark] transition-colors"
+                />
+              </div>
+              {form.startDate && form.endDate && (
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl">
+                  <p className="text-zinc-500 text-xs">Campaign duration</p>
+                  <p className="text-white font-bold text-sm mt-0.5">
+                    {Math.max(0, Math.ceil((new Date(form.endDate).getTime() - new Date(form.startDate).getTime()) / 86400000))} days
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
-        <div className="flex justify-end mt-12 border-t border-zinc-800 pt-6">
-          <Button 
-            onClick={handleSave} 
-            disabled={createMutation.isPending || updateMutation.isPending}
-            className="bg-primary hover:bg-primary/90 text-white px-8"
+          {/* Save */}
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !form.adName.trim()}
+            className="w-full flex items-center justify-center gap-2 py-4 bg-primary hover:bg-primary/90 text-white font-black text-sm rounded-2xl transition-all shadow-lg shadow-primary/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save
-          </Button>
+            {isSaving ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+            ) : (
+              <><Check className="w-4 h-4" /> {isEdit ? "Update Ad" : "Create Ad"}</>
+            )}
+          </button>
         </div>
       </div>
 
-      <MediaPicker 
+      <MediaPicker
         open={isMediaPickerOpen}
         onClose={() => setIsMediaPickerOpen(false)}
-        onSelect={(media) => setFormData({ ...formData, mediaUrl: media.url })}
+        onSelect={(media) => set("mediaUrl", media.url)}
         source="Ads"
       />
     </div>

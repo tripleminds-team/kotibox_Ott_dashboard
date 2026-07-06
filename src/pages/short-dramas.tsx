@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Edit2, Trash2, Search, Plus, Loader2, ImageIcon, ChevronLeft, ChevronRight,
+  Edit2, Trash2, Search, Plus, Loader2, ImageIcon, ChevronLeft, ChevronRight, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,12 +59,13 @@ export default function ShortDramasPage() {
     setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
 
   const handleToggleStatus = async (show: any) => {
-    const newStatus = show.status === "published" ? "draft" : "published";
     try {
+      const newStatus = show.status === "published" ? "draft" : "published";
       await updateMutation.mutateAsync({ id: show._id, data: { status: newStatus } });
       queryClient.invalidateQueries({ queryKey: ["content-list"] });
+      toast({ title: `Short Drama ${newStatus === "published" ? "activated" : "deactivated"}.` });
     } catch {
-      toast({ title: "Failed to update status", variant: "destructive" });
+      toast({ title: "Something went wrong", variant: "destructive" });
     }
   };
 
@@ -73,7 +74,7 @@ export default function ShortDramasPage() {
     try {
       await deleteMutation.mutateAsync(confirmDelete._id);
       queryClient.invalidateQueries({ queryKey: ["content-list"] });
-      toast({ title: `"${confirmDelete.title}" deleted. All related episodes removed.` });
+      toast({ title: "Short Drama deleted successfully!" });
     } catch {
       toast({ title: "Delete failed", variant: "destructive" });
     } finally {
@@ -97,10 +98,10 @@ export default function ShortDramasPage() {
     try {
       if (bulkAction === "activate") {
         await Promise.all(selectedIds.map((id) => updateMutation.mutateAsync({ id, data: { status: "published" } })));
-        toast({ title: `${selectedIds.length} short drama(s) activated` });
+        toast({ title: `${selectedIds.length} short drama(s) activated.` });
       } else if (bulkAction === "deactivate") {
         await Promise.all(selectedIds.map((id) => updateMutation.mutateAsync({ id, data: { status: "draft" } })));
-        toast({ title: `${selectedIds.length} short drama(s) deactivated` });
+        toast({ title: `${selectedIds.length} short drama(s) deactivated.` });
       }
       setSelectedIds([]);
       queryClient.invalidateQueries({ queryKey: ["content-list"] });
@@ -114,7 +115,7 @@ export default function ShortDramasPage() {
     setBulkConfirmOpen(false);
     try {
       await Promise.all(selectedIds.map((id) => deleteMutation.mutateAsync(id)));
-      toast({ title: `${selectedIds.length} short drama(s) deleted successfully` });
+      toast({ title: `${selectedIds.length} short drama(s) deleted successfully.` });
       setSelectedIds([]);
       queryClient.invalidateQueries({ queryKey: ["content-list"] });
       setBulkAction("action");
@@ -128,13 +129,13 @@ export default function ShortDramasPage() {
     <div className="space-y-5">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-zinc-500">Dashboard</span>
+        <span>Dashboard</span>
         <span>/</span>
         <span className="text-foreground font-medium">Short Dramas</span>
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Bulk action */}
         <Select value={bulkAction} onValueChange={setBulkAction}>
           <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm">
@@ -142,13 +143,13 @@ export default function ShortDramasPage() {
           </SelectTrigger>
           <SelectContent className="bg-popover border-border text-foreground">
             <SelectItem value="action">Action</SelectItem>
-            <SelectItem value="delete">Delete</SelectItem>
+            <SelectItem value="delete">Delete Selected</SelectItem>
             <SelectItem value="activate">Activate</SelectItem>
             <SelectItem value="deactivate">Deactivate</SelectItem>
           </SelectContent>
         </Select>
         <Button onClick={handleBulkAction}
-          className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold text-sm">
+          className="bg-primary hover:bg-primary/90 text-white h-10 px-5 rounded-lg font-semibold text-sm">
           Apply
         </Button>
 
@@ -167,7 +168,7 @@ export default function ShortDramasPage() {
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search dramas..."
+          <Input placeholder="Search..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-primary" />
@@ -175,17 +176,20 @@ export default function ShortDramasPage() {
 
         <Button onClick={() => setLocation("/short-dramas/new")}
           className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold text-sm">
-          <Plus className="h-4 w-4" /> New Drama
+          <Plus className="h-4 w-4" /> New
         </Button>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="border-border bg-card hover:bg-card">
-                <TableHead className="w-10 pl-4">
+                <TableHead className="w-10">
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll}
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                 </TableHead>
@@ -199,22 +203,16 @@ export default function ShortDramasPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-14">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
-                  </TableCell>
-                </TableRow>
-              ) : allShows.length === 0 ? (
+              {allShows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center text-zinc-500 py-14">
-                    {searchQuery ? "No short dramas match your search" : "No short dramas yet. Click New Drama to add one."}
+                    {searchQuery ? "No short dramas match your search" : "No short dramas yet. Click New to add one."}
                   </TableCell>
                 </TableRow>
               ) : (
                 allShows.map((show) => (
                   <TableRow key={show._id} className="border-border hover:bg-muted/30">
-                    <TableCell className="pl-4">
+                    <TableCell>
                       <Checkbox checked={selectedIds.includes(show._id)} onCheckedChange={() => toggleOne(show._id)}
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                     </TableCell>
@@ -228,23 +226,30 @@ export default function ShortDramasPage() {
                           )}
                         </div>
                         <div>
-                          <p className="text-foreground font-medium text-sm">{show.title}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5 capitalize">Drama</p>
+                          <button onClick={() => setLocation(`/short-dramas/${show._id}`)}
+                            className="text-foreground font-medium text-sm hover:text-primary transition-colors text-left">
+                            {show.title}
+                          </button>
+                          <p className="text-xs text-zinc-500 mt-0.5 capitalize">{show.contentType || "drama"}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {(show.genres || []).slice(0, 2).map((g: string) => (
-                          <span key={g} className="text-xs bg-muted px-1.5 py-0.5 rounded text-zinc-400">{g}</span>
-                        ))}
-                        {(show.genres || []).length > 2 && (
-                          <span className="text-xs text-zinc-600">+{show.genres.length - 2}</span>
+                        {(show.genres || []).slice(0, 3).map((g: any) => {
+                          const name = typeof g === "object" ? g.name : g;
+                          const key = typeof g === "object" ? (g._id || g.id || name) : g;
+                          return (
+                            <span key={key} className="text-xs bg-muted px-1.5 py-0.5 rounded text-zinc-400">{name}</span>
+                          );
+                        })}
+                        {(show.genres || []).length > 3 && (
+                          <span className="text-xs text-zinc-600">+{show.genres.length - 3}</span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="text-zinc-400 text-sm">
-                      {(show.languages || []).slice(0, 2).join(", ") || "—"}
+                      {(show.languages || []).slice(0, 2).map((l: any) => typeof l === "object" ? l.name : l).join(", ") || "—"}
                     </TableCell>
                     <TableCell className="text-zinc-400 text-sm text-center">
                       {show.episodeCount ?? 0}
@@ -263,13 +268,18 @@ export default function ShortDramasPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
+                        <button onClick={() => setLocation(`/short-dramas/${show._id}`)}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                          title="Manage Seasons & Episodes">
+                          <Layers className="h-3.5 w-3.5" />
+                        </button>
                         <button onClick={() => setLocation(`/short-dramas/${show._id}/edit`)}
                           className="h-8 w-8 flex items-center justify-center rounded-lg bg-amber-600/15 text-amber-400 hover:bg-amber-600/30 transition-colors"
                           title="Edit">
                           <Edit2 className="h-3.5 w-3.5" />
                         </button>
                         <button onClick={() => setConfirmDelete(show)}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/80/30 transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/15 text-primary hover:bg-primary/30/30 transition-colors"
                           title="Delete">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -281,7 +291,7 @@ export default function ShortDramasPage() {
             </TableBody>
           </Table>
         </div>
-      </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
