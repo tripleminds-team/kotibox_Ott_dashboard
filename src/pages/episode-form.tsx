@@ -139,12 +139,12 @@ export default function EpisodeForm() {
       video.onloadedmetadata = () => {
         const durationSecs = Math.round(video.duration);
         
-        // 3-minute limit check for short dramas
+        // 3:30-minute limit check for short dramas
         const selectedShow = tvShows.find((s) => getId(s) === showId);
         const isShortDrama = selectedShow?.contentType === "drama";
         
-        if (isShortDrama && durationSecs > 180) {
-          toast({ title: "Short Drama videos cannot exceed 3 minutes.", variant: "destructive" });
+        if (isShortDrama && durationSecs > 210) {
+          toast({ title: "Short Drama videos cannot exceed 3 minutes 30 seconds.", variant: "destructive" });
           setVideoFilePath(""); // Clear selection
           return;
         }

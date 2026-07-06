@@ -34,6 +34,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -61,6 +68,7 @@ type Category = {
 type Episode = {
   id: string;
   episode: number;
+  season?: number;
   title?: string;
   heading?: string;
   description?: string;
@@ -101,6 +109,17 @@ export default function CategoryShowDetail() {
   });
 
   const episodes: Episode[] = showData?.episodes || [];
+  
+  const seasons = Array.from(new Set(episodes.map((e) => e.season || 1))).sort((a, b) => a - b);
+  const [selectedSeason, setSelectedSeason] = useState<number>(1);
+  
+  useEffect(() => {
+    if (seasons.length > 0 && !seasons.includes(selectedSeason)) {
+      setSelectedSeason(seasons[0]);
+    }
+  }, [seasons, selectedSeason]);
+
+  const filteredEpisodes = episodes.filter((e) => (e.season || 1) === selectedSeason);
 
   const formatDuration = (seconds?: number) => {
     if (!seconds || !Number.isFinite(seconds)) return "-";
@@ -219,10 +238,29 @@ export default function CategoryShowDetail() {
               <CardTitle>Episodes</CardTitle>
               <CardDescription>Manage your show episodes</CardDescription>
             </div>
-            <Badge variant="outline">{episodes.length} episodes</Badge>
+            <div className="flex items-center gap-4">
+              {seasons.length > 0 && (
+                <Select
+                  value={selectedSeason.toString()}
+                  onValueChange={(val) => setSelectedSeason(Number(val))}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Select Season" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasons.map((season) => (
+                      <SelectItem key={season} value={season.toString()}>
+                        Season {season}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Badge variant="outline">{filteredEpisodes.length} episodes</Badge>
+            </div>
           </CardHeader>
           <CardContent>
-            {episodes.length === 0 ? (
+            {filteredEpisodes.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">No episodes yet</div>
             ) : (
               <>
@@ -240,7 +278,7 @@ export default function CategoryShowDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {episodes.map((episode) => (
+                    {filteredEpisodes.map((episode) => (
                       <TableRow key={episode.id}>
                         <TableCell className="font-medium">{episode.episode}</TableCell>
                         <TableCell>

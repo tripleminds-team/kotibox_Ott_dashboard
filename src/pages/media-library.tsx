@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   Folder, FolderPlus, Trash2, Search, ChevronLeft, Upload, ImageIcon,
-  Video, Loader2, Filter, Copy, Check, ChevronRight, LayoutGrid, List,
+  Video, Loader2, Filter, Copy, Check, ChevronRight, LayoutGrid, List, Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,8 @@ export default function MediaLibraryPage() {
 
   // View & navigation
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [folderPath, setFolderPath] = useState<{ _id: string; name: string }[]>([]);
+  const [previewMedia, setPreviewMedia] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"folders" | "all">("folders");
   const [gridView, setGridView] = useState<"grid" | "list">("grid");
 
@@ -83,7 +85,7 @@ export default function MediaLibraryPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Queries
-  const foldersQuery = useGetMediaFolders();
+  const foldersQuery = useGetMediaFolders(selectedFolder || undefined);
   const filesQuery = useGetMediaFilesByFolder(selectedFolder || "");
   const allFilesQuery = useGetAllMediaFiles({
     page: allMediaPage,
@@ -115,21 +117,46 @@ export default function MediaLibraryPage() {
     );
   }, [viewMode, selectedFolder, filesQuery.data, allFiles, searchQuery]);
 
-  const handleFolderClick = (folderId: string) => {
+  const handleFolderClick = (folderId: string, folderName: string) => {
     setSelectedFolder(folderId);
+    setFolderPath(prev => {
+      if (prev.some(f => f._id === folderId)) return prev;
+      return [...prev, { _id: folderId, name: folderName }];
+    });
+    setViewMode("folders");
+    setSearchQuery("");
+  };
+
+  const handleBreadcrumbClick = (idx: number) => {
+    if (idx === -1) {
+      setSelectedFolder(null);
+      setFolderPath([]);
+    } else {
+      const target = folderPath[idx];
+      setSelectedFolder(target._id);
+      setFolderPath(folderPath.slice(0, idx + 1));
+    }
     setViewMode("folders");
     setSearchQuery("");
   };
 
   const handleBack = () => {
-    setSelectedFolder(null);
-    setViewMode("folders");
+    if (folderPath.length <= 1) {
+      setSelectedFolder(null);
+      setFolderPath([]);
+    } else {
+      const newPath = folderPath.slice(0, -1);
+      const parent = newPath[newPath.length - 1];
+      setSelectedFolder(parent._id);
+      setFolderPath(newPath);
+    }
     setSearchQuery("");
   };
 
   const handleViewModeChange = (mode: "folders" | "all") => {
     setViewMode(mode);
     setSelectedFolder(null);
+    setFolderPath([]);
     setSearchQuery("");
     setSourceFilter("");
     setFileTypeFilter("");
@@ -208,7 +235,10 @@ export default function MediaLibraryPage() {
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
     try {
-      await createFolderMutation.mutateAsync(newFolderName.trim());
+      await createFolderMutation.mutateAsync({
+        name: newFolderName.trim(),
+        parentFolder: selectedFolder || undefined
+      });
       toast({ title: `Folder "${newFolderName.trim()}" created.` });
       setCreateFolderOpen(false);
       setNewFolderName("");
@@ -240,17 +270,40 @@ export default function MediaLibraryPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Media Library</h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <button
+              onClick={() => handleBreadcrumbClick(-1)}
+              className="hover:text-foreground transition-colors font-medium"
+            >
+              Media Library
+            </button>
+            {folderPath.map((folder, idx) => (
+              <span key={folder._id} className="flex items-center gap-2">
+                <span>/</span>
+                <button
+                  onClick={() => handleBreadcrumbClick(idx)}
+                  className={`hover:text-foreground transition-colors font-medium ${
+                    idx === folderPath.length - 1 ? "text-foreground font-semibold" : ""
+                  }`}
+                >
+                  {folder.name}
+                </button>
+              </span>
+            ))}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {selectedFolder ? folderPath[folderPath.length - 1]?.name : "Media Library"}
+          </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {selectedFolder
-              ? `${currentFolderName} — ${currentFiles.length} files`
+              ? `${folderPath[folderPath.length - 1]?.name} — ${currentFiles.length} files`
               : viewMode === "all"
               ? `All Media — ${allFilesTotal} files`
               : `${folders.length} folders`}
           </p>
         </div>
         <div className="flex gap-2">
-          {!selectedFolder && viewMode === "folders" && (
+          {viewMode === "folders" && (
             <Button
               variant="outline"
               onClick={() => setCreateFolderOpen(true)}
@@ -272,7 +325,7 @@ export default function MediaLibraryPage() {
               <Button
                 variant="destructive"
                 onClick={() =>
-                  setConfirmDelete({ id: selectedFolder, name: currentFolderName, type: "folder" })
+                  setConfirmDelete({ id: selectedFolder, name: folderPath[folderPath.length - 1]?.name || "", type: "folder" })
                 }
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -322,7 +375,7 @@ export default function MediaLibraryPage() {
           {folders.map((folder: any) => (
             <button
               key={folder._id}
-              onClick={() => handleFolderClick(folder._id)}
+              onClick={() => handleFolderClick(folder._id, folder.name)}
               className="group flex flex-col items-center justify-center gap-3 p-5 bg-card border border-border rounded-xl hover:border-primary/50 hover:bg-muted transition-all duration-200 cursor-pointer"
             >
               <Folder className="h-11 w-11 text-primary fill-red-500/20 group-hover:fill-red-500/40 transition-all duration-200" />
@@ -341,7 +394,7 @@ export default function MediaLibraryPage() {
           {/* Top bar */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <h2 className="text-xl font-bold text-foreground">
-              {selectedFolder ? currentFolderName : "All Media"}
+              {selectedFolder ? (folderPath[folderPath.length - 1]?.name || "") : "All Media"}
             </h2>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Search */}
@@ -424,6 +477,28 @@ export default function MediaLibraryPage() {
             </div>
           </div>
 
+          {/* Subfolders Grid if inside a parent folder */}
+          {selectedFolder && folders.length > 0 && (
+            <div className="space-y-2 pb-4 border-b border-border">
+              <h3 className="text-sm font-semibold text-muted-foreground">Subfolders</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                {folders.map((folder: any) => (
+                  <button
+                    key={folder._id}
+                    onClick={() => handleFolderClick(folder._id, folder.name)}
+                    className="group flex flex-col items-center justify-center gap-2 p-4 bg-muted/40 border border-border rounded-xl hover:border-primary/50 hover:bg-muted/70 transition-all duration-200 cursor-pointer"
+                  >
+                    <Folder className="h-8 w-8 text-primary fill-red-500/20 group-hover:fill-red-500/40 transition-all duration-200" />
+                    <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-all duration-200 text-center leading-tight truncate w-full px-1">
+                      {folder.name}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">{folder.count || 0} files</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Empty state */}
           {currentFiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
@@ -479,6 +554,13 @@ export default function MediaLibraryPage() {
                         )}
                       </button>
                       <button
+                        onClick={() => setPreviewMedia(file)}
+                        className="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
+                        title="Preview File"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => setConfirmDelete({ id: file._id, name: file.name, type: "file" })}
                         disabled={deleteFileMutation.isPending}
                         className="h-8 w-8 rounded-lg bg-primary hover:bg-primary/90 flex items-center justify-center text-white transition-colors"
@@ -494,6 +576,11 @@ export default function MediaLibraryPage() {
                     <p className="text-xs text-foreground truncate font-medium leading-tight" title={file.name}>
                       {file.name}
                     </p>
+                    {file.contentName && (
+                      <p className="text-[10px] text-primary truncate font-semibold" title={file.contentName}>
+                        🎬 {file.contentName}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-muted-foreground">{file.size}</p>
                       {file.source && (
@@ -531,7 +618,12 @@ export default function MediaLibraryPage() {
                               <img src={getImageUrl(file.filePath || file.url)} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                             )}
                           </div>
-                          <span className="text-xs font-medium text-foreground truncate max-w-[160px]" title={file.name}>{file.name}</span>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium text-foreground truncate max-w-[160px]" title={file.name}>{file.name}</span>
+                            {file.contentName && (
+                              <span className="text-[10px] text-primary truncate max-w-[160px] font-semibold">🎬 {file.contentName}</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell capitalize">
@@ -551,6 +643,13 @@ export default function MediaLibraryPage() {
                             title="Copy URL"
                           >
                             {copiedId === file._id ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => setPreviewMedia(file)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            title="Preview File"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => setConfirmDelete({ id: file._id, name: file.name, type: "file" })}
@@ -703,6 +802,94 @@ export default function MediaLibraryPage() {
               Create Folder
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* File Preview Dialog */}
+      <Dialog open={!!previewMedia} onOpenChange={(open) => { if (!open) setPreviewMedia(null); }}>
+        <DialogContent className="bg-card border border-border text-foreground max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
+            <DialogTitle className="text-lg font-bold truncate pr-6">{previewMedia?.name}</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              Uploaded on {previewMedia?.createdAt ? new Date(previewMedia.createdAt).toLocaleString() : '—'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {previewMedia && (
+            <>
+              {/* Scrollable Content Body */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ scrollbarWidth: "thin" }}>
+                {/* Media viewport */}
+                <div className="rounded-xl overflow-hidden bg-muted border border-border flex items-center justify-center max-h-[300px] aspect-video">
+                  {previewMedia.fileType?.startsWith("video") ? (
+                    <video
+                      src={getImageUrl(previewMedia.filePath || previewMedia.url)}
+                      controls
+                      className="w-full h-full object-contain max-h-[300px] bg-black"
+                    />
+                  ) : (
+                    <img
+                      src={getImageUrl(previewMedia.filePath || previewMedia.url)}
+                      alt={previewMedia.name}
+                      className="w-full h-full object-contain max-h-[300px]"
+                    />
+                  )}
+                </div>
+
+                {/* Metadata Details */}
+                <div className="grid grid-cols-2 gap-3 text-xs p-4 bg-muted/30 border border-border rounded-xl">
+                  <div>
+                    <p className="text-muted-foreground font-medium">File Size</p>
+                    <p className="font-semibold text-foreground mt-0.5">{previewMedia.size || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground font-medium">File Type</p>
+                    <p className="font-semibold text-foreground mt-0.5 capitalize">{previewMedia.fileType || '—'}</p>
+                  </div>
+                  {previewMedia.contentName && (
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground font-medium">Associated Content</p>
+                      <p className="font-bold text-primary mt-0.5">🎬 {previewMedia.contentName} ({previewMedia.contentType || 'unknown'})</p>
+                    </div>
+                  )}
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground font-medium">Relative File Path</p>
+                    <p className="font-mono bg-muted/60 p-1.5 rounded border border-border/40 text-[10px] text-foreground break-all mt-0.5">{previewMedia.filePath}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground font-medium">Full URL</p>
+                    <p className="font-mono bg-muted/60 p-1.5 rounded border border-border/40 text-[10px] text-foreground break-all mt-0.5">{getImageUrl(previewMedia.filePath || previewMedia.url)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pinned Footer Actions */}
+              <div className="px-6 py-4 border-t border-border flex gap-2 justify-end bg-card shrink-0">
+                <Button
+                  variant="outline"
+                  onClick={() => handleCopyUrl(previewMedia)}
+                  className="border-border text-foreground hover:bg-muted"
+                >
+                  {copiedId === previewMedia._id ? (
+                    <span className="flex items-center gap-1.5 text-green-400 font-semibold"><Check className="h-4 w-4" /> Copied!</span>
+                  ) : (
+                    <span className="flex items-center gap-1.5"><Copy className="h-4 w-4" /> Copy URL</span>
+                  )}
+                </Button>
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-white"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = getImageUrl(previewMedia.filePath || previewMedia.url);
+                    link.download = previewMedia.name;
+                    link.target = '_blank';
+                    link.click();
+                  }}
+                >
+                  Open in New Tab
+                </Button>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

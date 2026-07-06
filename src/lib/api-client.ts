@@ -1833,14 +1833,15 @@ export const updateSubscriptionPlan = async (id: string, data: any) => {
 };
 
 // Media Library API
-export const getMediaFolders = async () => {
-  return api('/media/folders');
+export const getMediaFolders = async (parentFolder?: string) => {
+  const query = parentFolder ? `?parentFolder=${parentFolder}` : '';
+  return api(`/media/folders${query}`);
 };
 
-export const createMediaFolder = async (name: string) => {
+export const createMediaFolder = async (name: string, parentFolder?: string) => {
   return api('/media/folders', {
     method: 'POST',
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, parentFolder }),
     headers: { 'Content-Type': 'application/json' },
   });
 };
@@ -2063,19 +2064,19 @@ export const useEditAppSetting = () => {
 };
 
 // Media Library Hooks
-export const useGetMediaFolders = () => {
+export const useGetMediaFolders = (parentFolder?: string) => {
   return useQuery({
-    queryKey: ['media-folders'],
-    queryFn: () => getMediaFolders(),
+    queryKey: ['media-folders', parentFolder],
+    queryFn: () => getMediaFolders(parentFolder),
   });
 };
 
 export const useCreateMediaFolder = () => {
   const queryClient = useQueryClient();
-  return useMutation<any, Error, string>({
-    mutationFn: (name) => createMediaFolder(name),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['media-folders'] });
+  return useMutation<any, Error, { name: string; parentFolder?: string }>({
+    mutationFn: ({ name, parentFolder }) => createMediaFolder(name, parentFolder),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['media-folders', variables.parentFolder] });
     },
   });
 };

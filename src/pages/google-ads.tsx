@@ -146,28 +146,6 @@ export default function GoogleAdsPage() {
               </div>
             </div>
           </div>
-
-          {/* VAST Settings */}
-          <div className="bg-card border border-border rounded-xl p-6">
-            <h3 className="text-lg font-medium text-foreground flex items-center gap-2 mb-6">
-              <MonitorPlay className="h-5 w-5 text-purple-500" />
-              VAST Video Player Ads
-            </h3>
-            
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Pre-roll VAST URL</Label>
-                <Input name="vastPrerollUrl" value={formData.vastPrerollUrl} onChange={handleChange} placeholder="https://pubads.g.doubleclick.net/gampad/ads?..." className="bg-background border-border text-foreground" />
-                <p className="text-xs text-muted-foreground">Video ad shown before the main content begins.</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Mid-roll VAST URL</Label>
-                <Input name="vastMidrollUrl" value={formData.vastMidrollUrl} onChange={handleChange} placeholder="https://pubads.g.doubleclick.net/gampad/ads?..." className="bg-background border-border text-foreground" />
-                <p className="text-xs text-muted-foreground">Video ad shown during the content (if supported by player).</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ type BannerRow = {
   imageUrl?: string;
   position: number;
   isActive: boolean;
-  content?: { id?: string; thumbnail?: string; episodeCount?: number; status?: string };
+  content?: { id?: string; thumbnail?: string; episodeCount?: number; status?: string; contentType?: string };
 };
 
 export default function BannersPage() {
@@ -46,9 +46,19 @@ export default function BannersPage() {
   const activeCount = banners.filter((b) => b.isActive).length;
   const pagination = bannersData?.pagination || { page: 1, limit: 10, total: 0, pages: 1 };
 
-  const filtered = banners.filter((b) =>
-    !searchQuery || b.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  const filtered = banners.filter((b) => {
+    const matchesSearch = !searchQuery || b.title.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    
+    if (typeFilter === "all") return true;
+    if (typeFilter === "movie") return b.content?.contentType === "movie";
+    if (typeFilter === "tvshow") return b.content?.contentType === "series";
+    if (typeFilter === "drama") return b.content?.contentType === "drama";
+    if (typeFilter === "promotional") return !b.content;
+    return true;
+  });
   const allSelected = filtered.length > 0 && filtered.every((b) => selectedIds.includes(b.id));
 
   const getThumbnail = (banner: BannerRow) =>
@@ -130,6 +140,19 @@ export default function BannersPage() {
         <div className="flex-1" />
         <p className="text-zinc-400 text-sm">{pagination.total} total · {activeCount} active</p>
 
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-40 bg-card border-border text-foreground h-10 rounded-lg">
+            <SelectValue placeholder="Filter by Type" />
+          </SelectTrigger>
+          <SelectContent className="bg-muted border-border text-foreground">
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="movie">Movies</SelectItem>
+            <SelectItem value="tvshow">TV Shows</SelectItem>
+            <SelectItem value="drama">Short Dramas</SelectItem>
+            <SelectItem value="promotional">Promotional</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -202,10 +225,27 @@ export default function BannersPage() {
                             />
                           )}
                         </div>
-                        <div>
-                          <p className="text-foreground font-medium text-sm">{banner.title}</p>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-foreground font-medium text-sm">{banner.title}</p>
+                            {banner.content?.contentType ? (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${
+                                banner.content.contentType === 'movie' ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' :
+                                banner.content.contentType === 'drama' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                                'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                              }`}>
+                                {banner.content.contentType === 'movie' ? 'Movie' :
+                                 banner.content.contentType === 'drama' ? 'Short Drama' :
+                                 'TV Show'}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                Promotional
+                              </span>
+                            )}
+                          </div>
                           {banner.subtitle && (
-                            <p className="text-zinc-500 text-xs mt-0.5 line-clamp-1">{banner.subtitle}</p>
+                            <p className="text-zinc-500 text-xs line-clamp-1">{banner.subtitle}</p>
                           )}
                           {banner.content?.status && (
                             <p className="text-muted-foreground text-xs capitalize">{banner.content.status}</p>

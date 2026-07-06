@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Hls from "hls.js";
 import type { FormEvent } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,6 +34,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -60,6 +68,7 @@ type Category = {
 type Episode = {
   id: string;
   episode: number;
+  season?: number;
   title?: string;
   heading?: string;
   description?: string;
@@ -71,6 +80,34 @@ type Episode = {
   processingStatus?: string;
   hlsUrl?: string;
 };
+
+function PreviewVideo({ src, className }: { src: string; className?: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let hls: Hls | null = null;
+    const isM3u8 = src.includes(".m3u8");
+
+    if (isM3u8 && Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(src);
+      hls.attachMedia(video);
+    } else {
+      video.src = src;
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [src]);
+
+  return <video ref={videoRef} controls className={className} />;
+}
 
 export default function BannerShowDetail() {
   const { toast } = useToast();
@@ -100,6 +137,17 @@ export default function BannerShowDetail() {
   });
 
   const episodes: Episode[] = showData?.episodes || [];
+  
+  const seasons = Array.from(new Set(episodes.map((e) => e.season || 1))).sort((a, b) => a - b);
+  const [selectedSeason, setSelectedSeason] = useState<number>(1);
+  
+  useEffect(() => {
+    if (seasons.length > 0 && !seasons.includes(selectedSeason)) {
+      setSelectedSeason(seasons[0]);
+    }
+  }, [seasons, selectedSeason]);
+
+  const filteredEpisodes = episodes.filter((e) => (e.season || 1) === selectedSeason);
 
   const formatDuration = (seconds?: number) => {
     if (!seconds || !Number.isFinite(seconds)) return "-";
@@ -206,266 +254,176 @@ export default function BannerShowDetail() {
             {showData?.content?.title || "Banner Show Details"}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {episodes.length} {episodes.length === 1 ? "episode" : "episodes"}
+            {showData?.content?.contentType === "movie" ? "Movie Preview" : `${episodes.length} ${episodes.length === 1 ? "episode" : "episodes"}`}
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
-        <Card className="rounded-lg shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Episodes</CardTitle>
-              <CardDescription>Manage your show episodes</CardDescription>
-            </div>
-            <Badge variant="outline">{episodes.length} episodes</Badge>
-          </CardHeader>
-          <CardContent>
-            {episodes.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">No episodes yet</div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">#</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead className="hidden md:table-cell">Heading</TableHead>
-                      <TableHead className="hidden sm:table-cell">Duration</TableHead>
-                      <TableHead className="hidden sm:table-cell">Status</TableHead>
-                      <TableHead className="hidden sm:table-cell">Access</TableHead>
-                      <TableHead className="hidden lg:table-cell">Categories</TableHead>
-                      <TableHead className="text-right w-[200px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {episodes.map((episode) => (
-                      <TableRow key={episode.id}>
-                        <TableCell className="font-medium">{episode.episode}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {episode.thumbnail && (
-                              <img
-                                src={getImageUrl(episode.thumbnail)}
-                                alt=""
-                                className="h-10 w-14 object-contain rounded bg-gray-800"
-                              />
-                            )}
-                            <div>
-                              <div>{episode.title}</div>
-                              {episode.description && (
-                                <div className="text-xs text-muted-foreground truncate max-w-xs">
-                                  {episode.description}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">{episode.heading}</TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Badge variant="outline">{formatDuration(episode.duration)}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Badge variant={episode.processingStatus === "ready" ? "default" : "outline"}>
-                            {episode.processingStatus}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <div className="flex gap-1">
-                            {episode.isFree && (
-                              <Badge variant="default" className="bg-green-500/15 text-green-500 hover:bg-green-500/25">Free</Badge>
-                            )}
-                            {episode.isLocked && (
-                              <Badge variant="outline" className="text-amber-500">Locked</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="flex flex-wrap gap-1">
-                            {episode.categories?.map((cat) => (
-                              <Badge key={cat.id} variant="outline" className="text-xs">
-                                {cat.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {episode.hlsUrl && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setPreviewEpisode(episode)}
-                              aria-label="Preview episode"
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleToggleLock(episode)}
-                            disabled={lockMutation.isPending}
-                            aria-label={episode.isLocked ? "Unlock episode" : "Lock episode"}
-                          >
-                            {episode.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-
-                <Dialog open={!!previewEpisode} onOpenChange={(open) => !open && setPreviewEpisode(null)}>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle>{previewEpisode?.title || "Preview Episode"}</DialogTitle>
-                    </DialogHeader>
-                    {previewEpisode?.hlsUrl && (
-                      <video
-                        src={getImageUrl(previewEpisode.hlsUrl)}
-                        controls
-                        className="w-full rounded-lg"
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-lg shadow-sm">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Film className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Add More Episodes</CardTitle>
-            </div>
-            <CardDescription>Upload another video to add more episodes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAppendVideo} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <Label htmlFor="reelDurationMinutes">Reel Duration (minutes)</Label>
-                  <Input
-                    id="reelDurationMinutes"
-                    type="number"
-                    min="1"
-                    value={formData.reelDurationMinutes}
-                    onChange={(e) => setFormData({ ...formData, reelDurationMinutes: parseInt(e.target.value, 10) || 3 })}
+        {showData?.content?.contentType === "movie" ? (
+          <Card className="rounded-lg shadow-sm bg-card border-border">
+            <CardHeader>
+              <CardTitle>Movie Video Preview</CardTitle>
+              <CardDescription>Watch the source media file uploaded for this movie</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {showData?.content?.hlsUrl || showData?.content?.videoUrl ? (
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-border flex items-center justify-center">
+                  <PreviewVideo
+                    src={getImageUrl(showData.content.hlsUrl || showData.content.videoUrl)}
+                    className="w-full h-full object-contain max-h-[500px]"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="totalDurationMinutes">Total Duration (minutes)</Label>
-                  <Input
-                    id="totalDurationMinutes"
-                    type="number"
-                    min="1"
-                    placeholder="Required if ffprobe is unavailable"
-                    value={formData.totalDurationMinutes}
-                    onChange={(e) => setFormData({ ...formData, totalDurationMinutes: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <Label htmlFor="freeEpisodeCount">Free Episode Count</Label>
-                  <Input
-                    id="freeEpisodeCount"
-                    type="number"
-                    min="0"
-                    value={formData.freeEpisodeCount}
-                    onChange={(e) => setFormData({ ...formData, freeEpisodeCount: parseInt(e.target.value, 10) || 1 })}
-                  />
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-border p-3">
-                  <div>
-                    <Label htmlFor="lockEpisodes">Lock Episodes</Label>
-                    <p className="text-xs text-muted-foreground">Lock episodes after free ones</p>
-                  </div>
-                  <Switch
-                    id="lockEpisodes"
-                    checked={formData.lockEpisodes}
-                    onCheckedChange={(checked) => setFormData({ ...formData, lockEpisodes: checked })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label>Video File *</Label>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant={videoMode === "url" ? "default" : "outline"}
-                      onClick={() => setVideoMode("url")}
-                    >
-                      <Link2 className="w-4 h-4 mr-2" />
-                      URL
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={videoMode === "upload" ? "default" : "outline"}
-                      onClick={() => setVideoMode("upload")}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload File
-                    </Button>
-                  </div>
-                  {videoMode === "url" && (
-                    <Input
-                      placeholder="https://example.com/video.mp4"
-                      value={formData.videoUrl}
-                      onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    />
-                  )}
-                  {videoMode === "upload" && (
-                    <div className="space-y-4">
-                      <Input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                        required
-                      />
-                      {videoFile && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-muted-foreground">{videoFile.name} ({formatBytes(videoFile.size)})</span>
-                          <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {isUploading && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Uploading...</span>
-                    <span>{uploadSpeed ? `${uploadProgress}% · ${uploadSpeed}` : `${uploadProgress}%`}</span>
-                  </div>
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300 ease-linear"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
+              ) : (
+                <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                  No preview video uploaded for this movie.
                 </div>
               )}
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <Card className="rounded-lg shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Episodes</CardTitle>
+                  <CardDescription>Manage your show episodes</CardDescription>
+                </div>
+                <div className="flex items-center gap-4">
+                  {seasons.length > 0 && (
+                    <Select
+                      value={selectedSeason.toString()}
+                      onValueChange={(val) => setSelectedSeason(Number(val))}
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select Season" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {seasons.map((season) => (
+                          <SelectItem key={season} value={season.toString()}>
+                            Season {season}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Badge variant="outline">{filteredEpisodes.length} episodes</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {filteredEpisodes.length === 0 ? (
+                  <div className="py-12 text-center text-muted-foreground">No episodes yet</div>
+                ) : (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-16">#</TableHead>
+                          <TableHead>Title</TableHead>
+                          <TableHead className="hidden md:table-cell">Heading</TableHead>
+                          <TableHead className="hidden sm:table-cell">Duration</TableHead>
+                          <TableHead className="hidden sm:table-cell">Status</TableHead>
+                          <TableHead className="hidden sm:table-cell">Access</TableHead>
+                          <TableHead className="hidden lg:table-cell">Categories</TableHead>
+                          <TableHead className="text-right w-[200px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEpisodes.map((episode) => (
+                          <TableRow key={episode.id}>
+                            <TableCell className="font-medium">{episode.episode}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {episode.thumbnail && (
+                                  <img
+                                    src={getImageUrl(episode.thumbnail)}
+                                    alt=""
+                                    className="h-10 w-14 object-contain rounded bg-gray-800"
+                                  />
+                                )}
+                                <div>
+                                  <div>{episode.title}</div>
+                                  {episode.description && (
+                                    <div className="text-xs text-muted-foreground truncate max-w-xs">
+                                      {episode.description}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">{episode.heading}</TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              <Badge variant="outline">{formatDuration(episode.duration)}</Badge>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              <Badge variant={episode.processingStatus === "ready" ? "default" : "outline"}>
+                                {episode.processingStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              <div className="flex gap-1">
+                                {episode.isFree && (
+                                  <Badge variant="default" className="bg-green-500/15 text-green-500 hover:bg-green-500/25">Free</Badge>
+                                )}
+                                {episode.isLocked && (
+                                  <Badge variant="outline" className="text-amber-500">Locked</Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              <div className="flex flex-wrap gap-1">
+                                {episode.categories?.map((cat) => (
+                                  <Badge key={cat.id} variant="outline" className="text-xs">
+                                    {cat.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {episode.hlsUrl && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setPreviewEpisode(episode)}
+                                  aria-label="Preview episode"
+                                >
+                                  <Play className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleToggleLock(episode)}
+                                  disabled={lockMutation.isPending}
+                                  aria-label={episode.isLocked ? "Unlock episode" : "Lock episode"}
+                              >
+                                {episode.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
 
-              <div className="flex justify-end gap-4 pt-4">
-                <Button
-                  type="submit"
-                  disabled={appendMutation.isPending || isUploading}
-                >
-                  Add Episodes
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                    <Dialog open={!!previewEpisode} onOpenChange={(open) => !open && setPreviewEpisode(null)}>
+                      <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                          <DialogTitle>{previewEpisode?.title || "Preview Episode"}</DialogTitle>
+                        </DialogHeader>
+                        {previewEpisode?.hlsUrl && (
+                          <PreviewVideo
+                            src={getImageUrl(previewEpisode.hlsUrl)}
+                            className="w-full rounded-lg"
+                          />
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   );
