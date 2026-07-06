@@ -128,7 +128,7 @@ export default function ShortDramaEpisodesPage() {
         <span>Dashboard</span><span>/</span>
         <span className="text-foreground font-medium">Episodes</span>
         {episodes.length > 0 && (
-          <span className="text-zinc-600 text-xs">({episodes.length} total)</span>
+          <span className="text-zinc-200 text-xs">({episodes.length} total)</span>
         )}
       </div>
 
@@ -201,19 +201,19 @@ export default function ShortDramaEpisodesPage() {
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll}
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                 </TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Episode</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Season</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Short Drama</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Duration</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Access</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Locked</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Episode</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Season</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Short Drama</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Duration</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Access</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Locked</TableHead>
+                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-zinc-500 py-14">
+                  <TableCell colSpan={8} className="text-center text-zinc-100 py-14">
                     {searchQuery ? "No episodes match your search" : "No episodes found. Click New Episode to add one."}
                   </TableCell>
                 </TableRow>
@@ -232,22 +232,22 @@ export default function ShortDramaEpisodesPage() {
                             {ep.thumbnail ? (
                               <img src={getImageUrl(ep.thumbnail)} alt={ep.title} className="h-full w-full object-cover" />
                             ) : (
-                              <ImageIcon className="h-5 w-5 text-zinc-600" />
+                              <ImageIcon className="h-5 w-5 text-zinc-200" />
                             )}
                           </div>
                           <div>
                             <p className="text-foreground font-medium text-sm">{ep.title}</p>
-                            <p className="text-xs text-zinc-500 mt-0.5">Ep {ep.episode}</p>
+                            <p className="text-xs text-zinc-100 mt-0.5">Ep {ep.episode}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-zinc-400 text-sm">Season {ep.season}</span>
+                        <span className="text-zinc-200 text-sm">Season {ep.season}</span>
                       </TableCell>
-                      <TableCell className="text-zinc-400 text-sm">
+                      <TableCell className="text-zinc-200 text-sm">
                         {ep.showName || (ep.contentId as any)?.title || "—"}
                       </TableCell>
-                      <TableCell className="text-zinc-400 text-sm">{fmt(ep.duration)}</TableCell>
+                      <TableCell className="text-zinc-200 text-sm">{fmt(ep.duration)}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${
                           ep.isFree ? "bg-green-500/20 text-green-400" : "bg-blue-500/20 text-blue-400"
@@ -289,7 +289,7 @@ export default function ShortDramaEpisodesPage() {
         <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Episode</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-zinc-200">
               Are you sure you want to delete "{confirmDelete?.title}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

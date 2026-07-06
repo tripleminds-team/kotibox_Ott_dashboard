@@ -89,7 +89,7 @@ function ToastAlert({ msg, onClose }: { msg: string; onClose: () => void }) {
         <Check className="w-3.5 h-3.5 text-emerald-400" />
       </div>
       <span className="text-white text-xs font-bold">{msg}</span>
-      <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors ml-1">
+      <button onClick={onClose} className="text-zinc-100 hover:text-white transition-colors ml-1">
         <X className="w-3.5 h-3.5" />
       </button>
     </div>
@@ -181,7 +181,7 @@ function ProfileSelectScreen({
       <h1 className="text-white font-black text-3xl sm:text-4xl mb-2 text-center tracking-tight">
         Who's watching?
       </h1>
-      <p className="text-zinc-500 text-sm mb-12 text-center">Select a profile to continue</p>
+      <p className="text-zinc-100 text-sm mb-12 text-center">Select a profile to continue</p>
 
       <div className="flex flex-wrap justify-center gap-8 mb-12">
         {profiles.map((profile) => (
@@ -198,7 +198,7 @@ function ProfileSelectScreen({
               {!profile.isMain && (
                 <button
                   onClick={() => handleDeleteProfile(profile.id)}
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 hover:text-white hover:bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -214,11 +214,11 @@ function ProfileSelectScreen({
           <div className="flex flex-col items-center gap-3">
             <button
               onClick={() => setShowAddModal(true)}
-              className="w-24 h-24 rounded-full bg-zinc-900 border-2 border-dashed border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-500 hover:text-white transition-all hover:scale-105 active:scale-95"
+              className="w-24 h-24 rounded-full bg-zinc-900 border-2 border-dashed border-zinc-700 hover:border-zinc-500 flex items-center justify-center text-zinc-100 hover:text-white transition-all hover:scale-105 active:scale-95"
             >
               <Plus className="w-8 h-8" />
             </button>
-            <span className="text-zinc-500 text-sm font-bold">Add Profile</span>
+            <span className="text-zinc-100 text-sm font-bold">Add Profile</span>
           </div>
         )}
       </div>
@@ -229,7 +229,7 @@ function ProfileSelectScreen({
             <h2 className="text-white font-black text-lg mb-5">New Profile</h2>
 
             <div className="mb-4">
-              <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-black text-zinc-200 uppercase tracking-wider mb-2">
                 Name
               </label>
               <input
@@ -238,12 +238,12 @@ function ProfileSelectScreen({
                 onChange={(e) => setNewProfileName(e.target.value)}
                 placeholder="Profile name"
                 maxLength={20}
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
               />
             </div>
 
             <div className="mb-6">
-              <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-black text-zinc-200 uppercase tracking-wider mb-2">
                 Color
               </label>
               <div className="flex gap-2 flex-wrap">
@@ -275,7 +275,7 @@ function ProfileSelectScreen({
                   setShowAddModal(false);
                   setNewProfileName("");
                 }}
-                className="flex-1 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-sm font-bold transition-all"
+                className="flex-1 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-sm font-bold transition-all"
               >
                 Cancel
               </button>
@@ -540,17 +540,17 @@ export default function UserProfilePage() {
     return (
       <div className="min-h-screen bg-[#030306] flex flex-col items-center justify-center gap-6 p-6 font-sans">
         <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-          <User className="w-8 h-8 text-zinc-500" />
+          <User className="w-8 h-8 text-zinc-100" />
         </div>
         <div className="text-center">
           <h2 className="text-white font-black text-xl mb-2">You're not signed in</h2>
-          <p className="text-zinc-500 text-sm mb-6">
+          <p className="text-zinc-100 text-sm mb-6">
             Please log in to view your profile and account settings.
           </p>
           <div className="flex items-center gap-3 justify-center">
             <Link
               href="/"
-              className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 text-zinc-300 hover:text-white font-bold rounded-xl text-sm transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 text-zinc-100 hover:text-white font-bold rounded-xl text-sm transition-all"
             >
               <ArrowLeft className="w-4 h-4" /> Back Home
             </Link>
@@ -602,7 +602,7 @@ export default function UserProfilePage() {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/"
-              className="flex items-center gap-2 text-zinc-400 hover:text-white transition-all text-sm font-bold flex-shrink-0"
+              className="flex items-center gap-2 text-zinc-200 hover:text-white transition-all text-sm font-bold flex-shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:block">Home</span>
@@ -632,14 +632,14 @@ export default function UserProfilePage() {
                 localStorage.removeItem("ott_active_profile");
                 setActiveProfile(null);
               }}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
             >
               <UserCircle2 className="w-3.5 h-3.5" />
               <span className="hidden sm:block">Switch Profile</span>
             </button>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white hover:border-zinc-700 text-xs font-bold transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:block">Sign Out</span>
@@ -660,7 +660,7 @@ export default function UserProfilePage() {
               <button
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={avatarUploading}
-                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-zinc-800 border-2 border-[#030306] flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all disabled:opacity-50"
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-zinc-800 border-2 border-[#030306] flex items-center justify-center text-zinc-200 hover:text-white hover:bg-zinc-700 transition-all disabled:opacity-50"
               >
                 {avatarUploading ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -682,7 +682,7 @@ export default function UserProfilePage() {
               <h1 className="text-white font-black text-xl sm:text-2xl tracking-tight truncate">
                 {user.name}
               </h1>
-              <p className="text-zinc-500 text-sm mt-0.5 font-medium truncate">
+              <p className="text-zinc-100 text-sm mt-0.5 font-medium truncate">
                 {user.email || "Member"}
               </p>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -691,7 +691,7 @@ export default function UserProfilePage() {
                     <Crown className="w-3 h-3" /> {user.subscriptionPlan || "Premium"} Member
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg text-[11px] font-black">
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-lg text-[11px] font-black">
                     Free Member
                   </span>
                 )}
@@ -700,7 +700,7 @@ export default function UserProfilePage() {
                     <Check className="w-3 h-3" /> Active
                   </span>
                 )}
-                <span className="flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/10 text-zinc-400 rounded-lg text-[11px] font-black">
+                <span className="flex items-center gap-1 px-2.5 py-1 bg-white/5 border border-white/10 text-zinc-200 rounded-lg text-[11px] font-black">
                   {activeProfile.name}
                 </span>
               </div>
@@ -709,7 +709,7 @@ export default function UserProfilePage() {
             {/* Edit button */}
             <button
               onClick={() => setActiveTab("settings")}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition-all flex-shrink-0"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-100 hover:text-white rounded-xl text-xs font-bold transition-all flex-shrink-0"
             >
               <Edit3 className="w-3.5 h-3.5" /> Edit Profile
             </button>
@@ -745,7 +745,7 @@ export default function UserProfilePage() {
               className="relative overflow-hidden bg-gradient-to-br from-white/[0.03] to-transparent hover:from-white/[0.07] hover:to-white/[0.01] border border-white/10 rounded-2xl p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-white/20 group"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 group-hover:text-zinc-300 transition-colors">
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-200 group-hover:text-zinc-300 transition-colors">
                   {stat.label}
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -770,7 +770,7 @@ export default function UserProfilePage() {
                 className={`flex items-center gap-2 px-4 py-3.5 text-xs font-bold whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.id
                     ? "text-white border-primary"
-                    : "text-zinc-500 border-transparent hover:text-zinc-300"
+                    : "text-zinc-100 border-transparent hover:text-zinc-300"
                 }`}
               >
                 {tab.icon}
@@ -800,7 +800,7 @@ export default function UserProfilePage() {
                     <h3 className="text-white font-black text-xl mb-1">
                       {isSubscribed ? "All-Access Subscription" : "Free Account"}
                     </h3>
-                    <p className="text-zinc-400 text-sm">
+                    <p className="text-zinc-200 text-sm">
                       {isSubscribed
                         ? "Unlimited streaming · HD & 4K · All devices"
                         : "Upgrade to unlock all premium content"}
@@ -831,8 +831,8 @@ export default function UserProfilePage() {
                 </h3>
                 {continueWatching.length === 0 ? (
                   <div className="text-center py-10 border border-white/5 rounded-2xl bg-white/2">
-                    <Clock className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-                    <p className="text-zinc-500 text-sm">Nothing to show yet. Start watching!</p>
+                    <Clock className="w-8 h-8 text-zinc-200 mx-auto mb-3" />
+                    <p className="text-zinc-100 text-sm">Nothing to show yet. Start watching!</p>
                     <Link
                       href="/"
                       className="inline-flex items-center gap-2 mt-4 px-5 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl transition-all"
@@ -873,7 +873,7 @@ export default function UserProfilePage() {
                           </div>
                         </div>
                         <p className="text-white text-xs font-bold truncate">{item.title}</p>
-                        <p className="text-zinc-600 text-[10px] mt-0.5">
+                        <p className="text-zinc-200 text-[10px] mt-0.5">
                           {item.progress || 25}% complete
                         </p>
                       </div>
@@ -898,7 +898,7 @@ export default function UserProfilePage() {
                 </h2>
                 <Link
                   href="/browse"
-                  className="text-zinc-500 hover:text-primary text-xs font-bold transition-colors"
+                  className="text-zinc-100 hover:text-primary text-xs font-bold transition-colors"
                 >
                   Browse More +
                 </Link>
@@ -911,10 +911,10 @@ export default function UserProfilePage() {
               ) : wishlistItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-white/5 rounded-2xl bg-white/2">
                   <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                    <Bookmark className="w-8 h-8 text-zinc-600" />
+                    <Bookmark className="w-8 h-8 text-zinc-200" />
                   </div>
                   <p className="text-white font-bold">Your wishlist is empty</p>
-                  <p className="text-zinc-500 text-sm">
+                  <p className="text-zinc-100 text-sm">
                     Click the Watchlist button on any movie or show to save it here
                   </p>
                   <Link
@@ -956,7 +956,7 @@ export default function UserProfilePage() {
                         <p className="text-white font-bold text-xs line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                           {item.title}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-zinc-400">
+                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-zinc-200">
                           <span className="capitalize">
                             {item.type === "show" ? "TV Show" : item.type}
                           </span>
@@ -975,7 +975,7 @@ export default function UserProfilePage() {
                           handleRemoveWishlist(item);
                         }}
                         disabled={toggleWishlistMutation.isPending}
-                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-primary/90 border border-white/10 hover:border-primary/50 text-zinc-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 duration-200 disabled:opacity-50"
+                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-primary/90 border border-white/10 hover:border-primary/50 text-zinc-200 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 duration-200 disabled:opacity-50"
                         title="Remove from wishlist"
                       >
                         <BookmarkX className="w-4 h-4" />
@@ -1008,10 +1008,10 @@ export default function UserProfilePage() {
               ) : downloadItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-white/5 rounded-2xl bg-white/2">
                   <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                    <Download className="w-8 h-8 text-zinc-600" />
+                    <Download className="w-8 h-8 text-zinc-200" />
                   </div>
                   <p className="text-white font-bold">No downloads yet</p>
-                  <p className="text-zinc-500 text-sm">
+                  <p className="text-zinc-100 text-sm">
                     Download movies and episodes to watch offline
                   </p>
                   <Link
@@ -1056,14 +1056,14 @@ export default function UserProfilePage() {
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-3 z-10 pointer-events-none">
                         {item.parentTitle && (
-                          <p className="text-zinc-400 text-[10px] font-semibold mb-0.5 truncate leading-tight">
+                          <p className="text-zinc-200 text-[10px] font-semibold mb-0.5 truncate leading-tight">
                             {item.parentTitle}
                           </p>
                         )}
                         <p className="text-white font-bold text-xs line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                           {item.title}
                         </p>
-                        <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-zinc-400">
+                        <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-zinc-200">
                           <div className="flex items-center gap-1">
                             <span className="capitalize">{item.type}</span>
                             {item.episodeNumber && (
@@ -1072,7 +1072,7 @@ export default function UserProfilePage() {
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1 text-zinc-500 text-[9px]">
+                          <div className="flex items-center gap-1 text-zinc-100 text-[9px]">
                             {item.duration && <span>{item.duration}m</span>}
                             {item.duration && item.year && <span>·</span>}
                             {item.year && <span>{item.year}</span>}
@@ -1085,7 +1085,7 @@ export default function UserProfilePage() {
                           handleRemoveDownload(item);
                         }}
                         disabled={removeDownloadMutation.isPending}
-                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-primary/90 border border-white/10 hover:border-primary/50 text-zinc-400 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 duration-200 disabled:opacity-50"
+                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-primary/90 border border-white/10 hover:border-primary/50 text-zinc-200 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 duration-200 disabled:opacity-50"
                         title="Remove download"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1107,11 +1107,11 @@ export default function UserProfilePage() {
                 <AvatarCircle name={user.name} avatarUrl={user.avatar} size="lg" />
                 <div>
                   <p className="text-white font-bold text-sm">{user.name}</p>
-                  <p className="text-zinc-500 text-xs mb-3">{user.email || "Member"}</p>
+                  <p className="text-zinc-100 text-xs mb-3">{user.email || "Member"}</p>
                   <button
                     onClick={() => avatarInputRef.current?.click()}
                     disabled={avatarUploading}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-100 hover:text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
                   >
                     {avatarUploading ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -1126,47 +1126,47 @@ export default function UserProfilePage() {
               {/* Form */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-black text-zinc-200 uppercase tracking-wider mb-2">
                     Display Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-200" />
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-200 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
                       placeholder="Your display name"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-black text-zinc-200 uppercase tracking-wider mb-2">
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-200" />
                     <input
                       type="email"
                       value={editEmail}
                       onChange={(e) => setEditEmail(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-200 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
                       placeholder="your@email.com"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-black text-zinc-200 uppercase tracking-wider mb-2">
                     Mobile Number
                   </label>
                   <div className="relative">
-                    <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                    <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-200" />
                     <input
                       type="tel"
                       value={editPhone}
                       onChange={e => setEditPhone(e.target.value)}
                       placeholder="e.g. 9876543210"
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-600 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-primary text-white placeholder:text-zinc-200 pl-10 pr-4 py-3 rounded-xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all"
                     />
                   </div>
                 </div>
@@ -1188,7 +1188,7 @@ export default function UserProfilePage() {
             <div className="space-y-8 max-w-lg">
               <div>
                 <h2 className="text-white font-black text-lg mb-1">Security Settings</h2>
-                <p className="text-zinc-500 text-sm">Keep your account safe and secure.</p>
+                <p className="text-zinc-100 text-sm">Keep your account safe and secure.</p>
               </div>
 
               {/* Change Password */}
@@ -1228,11 +1228,11 @@ export default function UserProfilePage() {
                   },
                 ].map((field) => (
                   <div key={field.label}>
-                    <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-black text-zinc-100 uppercase tracking-wider mb-2">
                       {field.label}
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-200" />
                       <input
                         type={field.show ? "text" : "password"}
                         value={field.value}
@@ -1243,7 +1243,7 @@ export default function UserProfilePage() {
                       <button
                         type="button"
                         onClick={field.toggleShow}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-100 hover:text-white transition-colors"
                       >
                         {field.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1271,7 +1271,7 @@ export default function UserProfilePage() {
                   <AlertTriangle className="w-4 h-4 text-primary" />
                   <h3 className="text-primary font-black text-sm">Danger Zone</h3>
                 </div>
-                <p className="text-zinc-500 text-xs mb-5 leading-relaxed">
+                <p className="text-zinc-100 text-xs mb-5 leading-relaxed">
                   Permanently delete your account and all associated data. This action cannot be
                   undone.
                 </p>
@@ -1303,7 +1303,7 @@ export default function UserProfilePage() {
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(false)}
-                        className="px-5 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-xs font-bold transition-all"
+                        className="px-5 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition-all"
                       >
                         Cancel
                       </button>

@@ -139,7 +139,7 @@ export function PortraitCard({
         <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5 pt-6 z-10 pointer-events-none">
           <p className="text-white font-bold text-xs truncate leading-tight">{item.title}</p>
           {(year || duration) && (
-            <p className="text-zinc-400 text-[10px] mt-0.5 truncate">
+            <p className="text-zinc-200 text-[10px] mt-0.5 truncate">
               {[year, duration].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -228,7 +228,7 @@ export function LandscapeCard({
           <div className="min-w-0 flex-1">
             <p className="text-white font-bold text-xs truncate leading-tight">{item.title}</p>
             {(year || duration) && (
-              <p className="text-zinc-400 text-[10px] mt-0.5 truncate">
+              <p className="text-zinc-200 text-[10px] mt-0.5 truncate">
                 {[year, duration].filter(Boolean).join(" · ")}
               </p>
             )}

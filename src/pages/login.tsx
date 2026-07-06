@@ -83,18 +83,18 @@ export default function Login() {
 
       <div className="z-10 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-24 min-w-[6rem] max-w-full bg-muted border border-border rounded-3xl flex items-center justify-center mb-6 shadow-2xl px-6 py-3">
+          <div className="inline-flex items-center justify-center mb-6 bg-muted border border-border rounded-3xl shadow-2xl px-6 py-3">
             {getLogoUrl() ? (
-              <img src={getLogoUrl()} alt="Logo" className="h-full w-auto max-w-full object-contain" />
+              <img
+                src={getLogoUrl()}
+                alt="Logo"
+                className="max-h-32 max-w-xs w-auto h-auto object-contain"
+              />
             ) : (
               <Film className="h-12 w-12 text-primary" />
             )}
           </div>
-          {settings.platformName && (
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent">
-              {settings.platformName}
-            </h1>
-          )}
+
           <p className="text-muted-foreground mt-2 text-lg">{settings.loginSubtitle}</p>
         </div>
 

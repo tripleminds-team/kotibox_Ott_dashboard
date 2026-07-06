@@ -215,14 +215,14 @@ export default function ShortDramaPlayer() {
         <div className="hidden xl:flex flex-col gap-5 mr-8 w-64 flex-shrink-0">
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Short Drama</span>
+              <span className="text-xs text-zinc-200 font-bold uppercase tracking-wider">Short Drama</span>
             </div>
             <h2 className="text-white font-bold text-xl leading-tight">{show?.title || "Drama"}</h2>
             {show?.description && (
-              <p className="text-zinc-400 text-xs mt-2 leading-relaxed line-clamp-4">{show.description}</p>
+              <p className="text-zinc-200 text-xs mt-2 leading-relaxed line-clamp-4">{show.description}</p>
             )}
           </div>
-          <div className="text-zinc-500 text-xs">
+          <div className="text-zinc-100 text-xs">
             <p>{totalEps} Episodes · {freeEps} Free</p>
           </div>
           <button
@@ -237,7 +237,7 @@ export default function ShortDramaPlayer() {
               );
             }}
             disabled={toggleWishlistMutation.isPending}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${inWatchlist ? "bg-rose-600/20 border-rose-600/50 text-rose-400" : "bg-zinc-900/60 border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all ${inWatchlist ? "bg-rose-600/20 border-rose-600/50 text-rose-400" : "bg-zinc-900/60 border-zinc-700 text-zinc-100 hover:border-zinc-500 hover:text-white"}`}
           >
             <Heart className={`w-4 h-4 ${inWatchlist ? "fill-rose-400" : ""}`} />
             {inWatchlist ? "In Wishlist" : "Add to Wishlist"}
@@ -279,7 +279,7 @@ export default function ShortDramaPlayer() {
             </div>
             <div className="text-center px-6">
               <p className="text-white font-bold text-base mb-1">Premium Episode</p>
-              <p className="text-zinc-400 text-xs">Subscribe to unlock all episodes</p>
+              <p className="text-zinc-200 text-xs">Subscribe to unlock all episodes</p>
             </div>
             <button
               onClick={() => setPlansModalOpen(true)}
@@ -305,7 +305,7 @@ export default function ShortDramaPlayer() {
               <div className="flex-1 min-w-0">
                 <p className="text-white font-bold text-sm truncate">{show?.title}</p>
                 {currentEpisode && (
-                  <p className="text-zinc-300 text-xs mt-0.5 truncate">
+                  <p className="text-zinc-100 text-xs mt-0.5 truncate">
                     EP {currentEpNum}: {currentEpisode.title || `Episode ${currentEpNum}`}
                   </p>
                 )}
@@ -367,7 +367,7 @@ export default function ShortDramaPlayer() {
 
             {/* Bottom controls row */}
             <div className="flex items-center justify-between text-white text-xs">
-              <span className="font-mono text-zinc-300">{fmtTime(currentTime)} / {fmtTime(duration)}</span>
+              <span className="font-mono text-zinc-100">{fmtTime(currentTime)} / {fmtTime(duration)}</span>
               <div className="flex items-center gap-3">
                 {currentEpNum > 1 && (
                   <button
@@ -377,7 +377,7 @@ export default function ShortDramaPlayer() {
                     <ChevronLeft className="w-3 h-3" /> Prev
                   </button>
                 )}
-                <span className="font-bold text-zinc-300">{currentEpNum}/{totalEps}</span>
+                <span className="font-bold text-zinc-100">{currentEpNum}/{totalEps}</span>
                 {currentEpNum < totalEps && (
                   <button
                     onClick={(e) => { e.stopPropagation(); goToEpisode(currentEpNum + 1); }}
@@ -432,7 +432,7 @@ export default function ShortDramaPlayer() {
           >
             <div className="sticky top-0 bg-[#0a0a14]/98 flex items-center justify-between px-4 py-3 border-b border-white/5">
               <span className="text-white font-bold text-sm">Episodes ({totalEps})</span>
-              <button onClick={() => setShowEpList(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setShowEpList(false)} className="text-zinc-200 hover:text-white">
                 <ChevronDown className="w-4 h-4" />
               </button>
             </div>
@@ -452,7 +452,7 @@ export default function ShortDramaPlayer() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className={`text-[10px] font-bold ${isCurrent ? "text-red-400" : "text-zinc-500"}`}>EP {n}</span>
+                        <span className={`text-[10px] font-bold ${isCurrent ? "text-red-400" : "text-zinc-100"}`}>EP {n}</span>
                         {ep.isFree && <span className="text-[9px] font-bold px-1 py-0.5 bg-emerald-600/20 text-emerald-400 rounded">FREE</span>}
                         {locked && <Lock className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />}
                       </div>
@@ -470,7 +470,7 @@ export default function ShortDramaPlayer() {
       {/* Right side: Episode list (desktop, when not expanded) */}
       {!isExpanded && (
         <div className="hidden xl:flex flex-col gap-3 ml-8 w-64 flex-shrink-0 max-h-[85vh] overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" } as React.CSSProperties}>
-          <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider sticky top-0 bg-black/50 py-2">Episodes</p>
+          <p className="text-zinc-200 text-xs font-bold uppercase tracking-wider sticky top-0 bg-black/50 py-2">Episodes</p>
           {apiEpisodes.map((ep: any, i: number) => {
             const n = ep.episode || i + 1;
             const locked = ep.isLocked && !ep.isFree && !isSubscribed;
@@ -486,7 +486,7 @@ export default function ShortDramaPlayer() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 mb-0.5">
-                    <span className={`text-[10px] font-bold ${isCurrent ? "text-red-400" : "text-zinc-500"}`}>EP {n}</span>
+                    <span className={`text-[10px] font-bold ${isCurrent ? "text-red-400" : "text-zinc-100"}`}>EP {n}</span>
                     {ep.isFree && <span className="text-[9px] font-bold px-1 py-0.5 bg-emerald-600/20 text-emerald-400 rounded">FREE</span>}
                     {locked && <Lock className="w-2.5 h-2.5 text-amber-400" />}
                   </div>

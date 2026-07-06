@@ -502,7 +502,7 @@ export default function ShortDramaDetail() {
         <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Episode</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-zinc-200">
               Are you sure you want to delete Episode {confirmDeleteEp?.episode} of Season {confirmDeleteEp?.season}? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

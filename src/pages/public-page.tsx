@@ -91,7 +91,7 @@ export default function PublicPagePage() {
           <div className="flex items-center justify-center py-40">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-zinc-500 text-sm font-medium">Loading page...</p>
+              <p className="text-zinc-300 text-sm font-medium">Loading page...</p>
             </div>
           </div>
         )}
@@ -100,10 +100,10 @@ export default function PublicPagePage() {
         {!isLoading && (error || !page) && (
           <div className="max-w-2xl mx-auto px-6 py-24 text-center">
             <div className="w-20 h-20 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="h-9 w-9 text-zinc-600" />
+              <AlertCircle className="h-9 w-9 text-zinc-400" />
             </div>
             <h1 className="text-2xl font-black text-white mb-3 tracking-tight">Page Not Found</h1>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
+            <p className="text-zinc-300 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
               The page you're looking for doesn't exist or hasn't been published yet.
               Check back later or explore other content.
             </p>
@@ -121,14 +121,14 @@ export default function PublicPagePage() {
         {!isLoading && page && (
           <div className="max-w-3xl mx-auto px-6 sm:px-10">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-500 mb-8">
+            <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-300 mb-8">
               <button
                 onClick={() => setLocation("/")}
                 className="hover:text-white transition-colors"
               >
                 Home
               </button>
-              <span className="text-zinc-700">/</span>
+              <span className="text-zinc-400">/</span>
               <span className="text-zinc-400">{page.title}</span>
             </nav>
 
@@ -138,7 +138,7 @@ export default function PublicPagePage() {
                 {page.title}
               </h1>
               {(page.updatedAt || page.createdAt) && (
-                <div className="flex items-center gap-2 text-zinc-600 text-xs font-medium">
+                <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
                   <Clock className="h-3.5 w-3.5" />
                   <span>Last updated: {formatDate(page.updatedAt || page.createdAt)}</span>
                 </div>
@@ -176,12 +176,12 @@ export default function PublicPagePage() {
             <div className="mt-16 pt-8 border-t border-zinc-900 flex items-center justify-between">
               <button
                 onClick={() => setLocation("/")}
-                className="inline-flex items-center gap-2 text-zinc-500 hover:text-white text-xs font-bold transition-colors"
+                className="inline-flex items-center gap-2 text-zinc-300 hover:text-white text-xs font-bold transition-colors"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
                 Back to Home
               </button>
-              <div className="flex items-center gap-4 text-xs text-zinc-700 font-medium">
+              <div className="flex items-center gap-4 text-xs text-zinc-400 font-medium">
                 <button onClick={() => setLocation("/page/privacy-policy")} className="hover:text-zinc-400 transition-colors">Privacy Policy</button>
                 <button onClick={() => setLocation("/page/terms-and-conditions")} className="hover:text-zinc-400 transition-colors">Terms</button>
                 <button onClick={() => setLocation("/page/contact")} className="hover:text-zinc-400 transition-colors">Contact</button>

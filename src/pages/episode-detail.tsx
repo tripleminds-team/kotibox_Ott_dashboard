@@ -34,7 +34,7 @@ function AdOverlay({ ad, onSkip }: { ad: any; onSkip: () => void }) {
         <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: ad.mediaUrl }} />
       )}
       <div className="absolute bottom-4 right-4 flex items-center gap-3">
-        <span className="text-zinc-400 text-xs bg-black/60 px-2 py-1 rounded">Advertisement</span>
+        <span className="text-zinc-200 text-xs bg-black/60 px-2 py-1 rounded">Advertisement</span>
         {countdown > 0 ? (
           <span className="bg-black/70 text-white text-xs px-3 py-1.5 rounded-lg font-bold border border-zinc-700">Skip in {countdown}s</span>
         ) : (
@@ -640,13 +640,13 @@ function VideoPlayer({
                 <div className="absolute bottom-8 right-0 z-50 bg-[#0d0d16]/95 border border-white/10 backdrop-blur-md rounded-xl p-2.5 w-48 text-xs text-white shadow-2xl flex flex-col gap-1">
                   {currentMenu === "main" && (
                     <>
-                      <div className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider px-1.5 pb-1 border-b border-white/5">Settings</div>
+                      <div className="text-[9px] uppercase font-bold text-zinc-100 tracking-wider px-1.5 pb-1 border-b border-white/5">Settings</div>
                       <button
                         onClick={() => setCurrentMenu("quality")}
                         className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                       >
                         <span>Quality</span>
-                        <span className="text-[10px] text-zinc-400 flex items-center gap-0.5">
+                        <span className="text-[10px] text-zinc-200 flex items-center gap-0.5">
                           {videoSettings && videoSettings.find(q => q.key === currentQuality)?.label || "Auto"}
                           <ChevronRight className="w-3 h-3" />
                         </span>
@@ -656,7 +656,7 @@ function VideoPlayer({
                         className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                       >
                         <span>Speed</span>
-                        <span className="text-[10px] text-zinc-400 flex items-center gap-0.5">
+                        <span className="text-[10px] text-zinc-200 flex items-center gap-0.5">
                           {speed === 1.0 ? "Normal" : `${speed}x`}
                           <ChevronRight className="w-3 h-3" />
                         </span>
@@ -668,11 +668,11 @@ function VideoPlayer({
                     <>
                       <button
                         onClick={() => setCurrentMenu("main")}
-                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-zinc-400 hover:text-white transition-colors mb-0.5 font-bold"
+                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-zinc-200 hover:text-white transition-colors mb-0.5 font-bold"
                       >
                         <ChevronLeft className="w-2.5 h-2.5" /> Back
                       </button>
-                      <div className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider px-1.5 pb-1 border-b border-white/5">Quality</div>
+                      <div className="text-[9px] uppercase font-bold text-zinc-100 tracking-wider px-1.5 pb-1 border-b border-white/5">Quality</div>
                       <div className="max-h-32 overflow-y-auto mt-1 flex flex-col gap-0.5">
                         <button
                           onClick={() => {
@@ -682,7 +682,7 @@ function VideoPlayer({
                           }}
                           className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                         >
-                          <span className={currentQuality === "auto" ? "text-red-500 font-bold" : "text-zinc-300"}>Auto</span>
+                          <span className={currentQuality === "auto" ? "text-red-500 font-bold" : "text-zinc-100"}>Auto</span>
                           {currentQuality === "auto" && <Check className="w-3 h-3 text-red-500" />}
                         </button>
                         {videoSettings && videoSettings.filter(q => q.key !== 'auto').map((q) => (
@@ -695,8 +695,8 @@ function VideoPlayer({
                             className="flex items-start justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                           >
                             <div className="flex flex-col gap-0.5">
-                              <span className={currentQuality === q.key ? "text-red-500 font-bold text-[11px]" : "text-zinc-300 text-[11px]"}>{q.label}</span>
-                              {q.description && <span className="text-zinc-600 text-[9px] leading-tight">{q.description}</span>}
+                              <span className={currentQuality === q.key ? "text-red-500 font-bold text-[11px]" : "text-zinc-100 text-[11px]"}>{q.label}</span>
+                              {q.description && <span className="text-zinc-200 text-[9px] leading-tight">{q.description}</span>}
                             </div>
                             {currentQuality === q.key && <Check className="w-3 h-3 text-red-500 flex-shrink-0 mt-0.5" />}
                           </button>
@@ -710,11 +710,11 @@ function VideoPlayer({
                     <>
                       <button
                         onClick={() => setCurrentMenu("main")}
-                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-zinc-400 hover:text-white transition-colors mb-0.5 font-bold"
+                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-zinc-200 hover:text-white transition-colors mb-0.5 font-bold"
                       >
                         <ChevronLeft className="w-2.5 h-2.5" /> Back
                       </button>
-                      <div className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider px-1.5 pb-1 border-b border-white/5">Speed</div>
+                      <div className="text-[9px] uppercase font-bold text-zinc-100 tracking-wider px-1.5 pb-1 border-b border-white/5">Speed</div>
                       <div className="flex flex-col gap-0.5 mt-1">
                         {[0.75, 1.0, 1.25, 1.5, 2.0].map((s) => (
                           <button
@@ -725,7 +725,7 @@ function VideoPlayer({
                             }}
                             className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                           >
-                            <span className={speed === s ? "text-red-500 font-bold" : "text-zinc-300"}>{s === 1.0 ? "Normal" : `${s}x`}</span>
+                            <span className={speed === s ? "text-red-500 font-bold" : "text-zinc-100"}>{s === 1.0 ? "Normal" : `${s}x`}</span>
                             {speed === s && <Check className="w-3 h-3 text-red-500" />}
                           </button>
                         ))}
@@ -790,14 +790,14 @@ function EpisodeGrid({
             key={t.label} onClick={() => setActiveTab(i)}
             className={[
               "text-xs sm:text-sm font-semibold px-3 py-2.5 border-b-2 -mb-px transition-colors whitespace-nowrap",
-              activeTab === i ? "text-[#E50914] border-[#E50914]" : "text-zinc-500 border-transparent hover:text-zinc-300",
+              activeTab === i ? "text-[#E50914] border-[#E50914]" : "text-zinc-100 border-transparent hover:text-zinc-300",
             ].join(" ")}
           >
             {t.label}
           </button>
         ))}
         <div className="flex-1" />
-        <button className="flex items-center gap-0.5 text-zinc-500 hover:text-white text-[11px] px-2 transition-colors whitespace-nowrap">
+        <button className="flex items-center gap-0.5 text-zinc-100 hover:text-white text-[11px] px-2 transition-colors whitespace-nowrap">
           All Episodes <ChevronRight className="w-3 h-3" />
         </button>
       </div>
@@ -835,8 +835,8 @@ function EpisodeGrid({
               className={[
                 "group relative h-11 flex items-center justify-center text-xs font-bold rounded-sm transition-all select-none",
                 isActive  ? "bg-[#E50914] text-white shadow-[0_0_12px_rgba(229,9,20,0.4)]"
-                : isLocked ? "bg-zinc-900 text-zinc-600 cursor-pointer hover:bg-zinc-800"
-                           : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white",
+                : isLocked ? "bg-zinc-900 text-zinc-200 cursor-pointer hover:bg-zinc-800"
+                           : "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 hover:text-white",
               ].join(" ")}
             >
               {isTrailer ? <span className="text-[9px] font-black leading-tight text-center px-0.5">Trailer</span> : n}
@@ -860,7 +860,7 @@ function EpisodeGrid({
                     "absolute top-0.5 right-0.5 w-[14px] h-[14px] rounded-full flex items-center justify-center transition-all cursor-pointer",
                     isEpDownloaded
                       ? "bg-emerald-500 text-white"
-                      : "bg-zinc-700/80 hover:bg-zinc-600 text-zinc-300 opacity-0 group-hover:opacity-100 hover:scale-110",
+                      : "bg-zinc-700/80 hover:bg-zinc-600 text-zinc-100 opacity-0 group-hover:opacity-100 hover:scale-110",
                   ].join(" ")}
                 >
                   {isEpDownloaded ? (
@@ -959,14 +959,14 @@ function LockPopup({ episodeNum, onClose, onSubscribed }: { episodeNum: number; 
           </span>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          <p className="text-zinc-450 text-xs text-center leading-relaxed">
+          <p className="text-zinc-200 text-xs text-center leading-relaxed">
             Episode {episodeNum} is locked. Subscribe to one of our premium plans to unlock the entire library!
           </p>
 
@@ -986,14 +986,14 @@ function LockPopup({ episodeNum, onClose, onSubscribed }: { episodeNum: number; 
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h4 className="text-amber-400 font-bold text-sm uppercase tracking-wide">{plan.name}</h4>
-                        <p className="text-zinc-500 text-[11px] mt-0.5">{plan.description}</p>
+                        <p className="text-zinc-100 text-[11px] mt-0.5">{plan.description}</p>
                       </div>
                       <div className="text-right">
                         <span className="text-white font-black text-lg">₹{plan.totalPrice || plan.price}</span>
-                        <span className="text-zinc-400 text-[10px] block">/ {plan.duration || 'month'}</span>
+                        <span className="text-zinc-200 text-[10px] block">/ {plan.duration || 'month'}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800 text-[11px] text-zinc-400">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800 text-[11px] text-zinc-200">
                       <span>Valid: <strong className="text-white">{plan.durationValue} {plan.duration}</strong></span>
                       {plan.discount > 0 && <span className="text-amber-400 font-bold">{plan.discount}% off</span>}
                       <button
@@ -1286,7 +1286,7 @@ export default function EpisodeDetailPage() {
           <div className="px-4 sm:px-6 lg:px-10 pt-4 pb-2">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm font-semibold transition-colors"
+              className="flex items-center gap-1.5 text-zinc-200 hover:text-white text-sm font-semibold transition-colors"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
@@ -1323,7 +1323,7 @@ export default function EpisodeDetailPage() {
               style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" } as React.CSSProperties}
             >
               {/* Breadcrumb */}
-              <nav className="flex items-center flex-wrap gap-1 text-xs text-zinc-500 mb-3 select-none">
+              <nav className="flex items-center flex-wrap gap-1 text-xs text-zinc-100 mb-3 select-none">
                 <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-white transition-colors">
                   <Home className="w-3.5 h-3.5" /> Home
                 </button>
@@ -1332,7 +1332,7 @@ export default function EpisodeDetailPage() {
                   {title}
                 </button>
                 <ChevronRight className="w-3 h-3 flex-shrink-0" />
-                <span className="text-zinc-400">{epLabel}</span>
+                <span className="text-zinc-200">{epLabel}</span>
               </nav>
 
               {/* Title */}
@@ -1343,7 +1343,7 @@ export default function EpisodeDetailPage() {
               {/* Plot */}
               <div className="mb-5">
                 <h2 className="text-white font-semibold text-[15px] mb-2">{plotTitle}</h2>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <p className="text-zinc-200 text-sm leading-relaxed">
                   {expanded ? detail.description : `${detail.description.slice(0, 130)}...`}
                   {" "}
                   <button
@@ -1358,7 +1358,7 @@ export default function EpisodeDetailPage() {
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-5">
                 {detail.tags.map(tag => (
-                  <button key={tag} className="px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-all">
+                  <button key={tag} className="px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-200 hover:text-white hover:border-zinc-500 transition-all">
                     {tag}
                   </button>
                 ))}
@@ -1381,7 +1381,7 @@ export default function EpisodeDetailPage() {
                   }}
                   disabled={toggleLikeMutation.isPending}
                   className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 disabled:opacity-75 ${
-                    isLiked ? "text-[#E50914]" : "text-zinc-400 hover:text-white"
+                    isLiked ? "text-[#E50914]" : "text-zinc-200 hover:text-white"
                   }`}
                 >
                   {toggleLikeMutation.isPending ? (
@@ -1407,7 +1407,7 @@ export default function EpisodeDetailPage() {
                   }}
                   disabled={toggleWishlistMutation.isPending}
                   className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 disabled:opacity-75 ${
-                    inWatchlist ? "text-[#E50914]" : "text-zinc-400 hover:text-white"
+                    inWatchlist ? "text-[#E50914]" : "text-zinc-200 hover:text-white"
                   }`}
                 >
                   {toggleWishlistMutation.isPending ? (
@@ -1462,7 +1462,7 @@ export default function EpisodeDetailPage() {
                   }}
                   disabled={requestDownloadMutation.isPending || removeDownloadMutation.isPending || dlProgress !== null}
                   className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 disabled:opacity-75 ${
-                    isDownloaded ? "text-emerald-400" : "text-zinc-400 hover:text-white"
+                    isDownloaded ? "text-emerald-400" : "text-zinc-200 hover:text-white"
                   }`}
                 >
                   {requestDownloadMutation.isPending || dlProgress !== null ? (
@@ -1498,7 +1498,7 @@ export default function EpisodeDetailPage() {
                       });
                     }
                   }}
-                  className="flex flex-col items-center gap-1 px-4 py-2 text-zinc-400 hover:text-white transition-all active:scale-95"
+                  className="flex flex-col items-center gap-1 px-4 py-2 text-zinc-200 hover:text-white transition-all active:scale-95"
                 >
                   <Share2 className="w-5 h-5" />
                   <span className="text-[11px] font-semibold mt-0.5">Share</span>
@@ -1529,7 +1529,7 @@ export default function EpisodeDetailPage() {
                           className={`w-full px-4 py-2 text-left text-xs font-bold transition-colors ${
                             selectedSeason === seasonNum
                               ? "text-red-500 bg-red-500/10"
-                              : "text-zinc-300 hover:text-white hover:bg-zinc-800"
+                              : "text-zinc-100 hover:text-white hover:bg-zinc-800"
                           }`}
                         >
                           Season {seasonNum}
@@ -1605,7 +1605,7 @@ export default function EpisodeDetailPage() {
                                     className={`p-1.5 rounded-full transition-all flex-shrink-0 ${
                                       isEpDownloaded
                                         ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+                                        : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white"
                                     }`}
                                   >
                                     {isEpDownloaded ? (
@@ -1616,10 +1616,10 @@ export default function EpisodeDetailPage() {
                                   </button>
                                 )}
                               </div>
-                              <p className="text-[11px] sm:text-xs text-zinc-500 mt-1 font-semibold">
+                              <p className="text-[11px] sm:text-xs text-zinc-100 mt-1 font-semibold">
                                 {ep.duration ? `${Math.round(ep.duration / 60)} min` : "45 min"}
                               </p>
-                              <p className="text-xs text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed">
+                              <p className="text-xs text-zinc-200 mt-1.5 line-clamp-2 leading-relaxed">
                                 {ep.description || "No description available."}
                               </p>
                             </div>

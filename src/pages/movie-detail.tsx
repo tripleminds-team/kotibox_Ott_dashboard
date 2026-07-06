@@ -141,7 +141,7 @@ export default function MovieDetailPage() {
           <div className="px-6 sm:px-10 lg:px-16">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm font-semibold transition-colors"
+              className="flex items-center gap-1.5 text-zinc-200 hover:text-white text-sm font-semibold transition-colors"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
@@ -162,8 +162,8 @@ export default function MovieDetailPage() {
               {/* Genres */}
               <div className="flex flex-wrap items-center gap-x-0 gap-y-1 mb-3">
                 {item.genres.map((g, i) => (
-                  <span key={g} className="text-zinc-400 text-sm font-medium">
-                    {g}{i < item.genres.length - 1 && <span className="mx-2 text-zinc-600">•</span>}
+                  <span key={g} className="text-zinc-200 text-sm font-medium">
+                    {g}{i < item.genres.length - 1 && <span className="mx-2 text-zinc-200">•</span>}
                   </span>
                 ))}
               </div>
@@ -225,7 +225,7 @@ export default function MovieDetailPage() {
         </p>
 
         {/* Metadata row */}
-        <div className="flex flex-wrap items-center gap-3 mb-6 text-xs text-zinc-400">
+        <div className="flex flex-wrap items-center gap-3 mb-6 text-xs text-zinc-200">
           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {item.year}</span>
           {item.language && <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> {item.language}</span>}
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {item.duration}</span>
@@ -411,7 +411,7 @@ export default function MovieDetailPage() {
               <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
               <Tv className="w-5 h-5 text-red-500" />
               <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">Seasons &amp; Episodes</h2>
-              <span className="ml-auto text-zinc-500 text-xs font-semibold">
+              <span className="ml-auto text-zinc-100 text-xs font-semibold">
                 {episodes.length} Episode{episodes.length !== 1 ? 's' : ''} Total
               </span>
             </div>
@@ -428,12 +428,12 @@ export default function MovieDetailPage() {
                       className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all border ${
                         selectedSeason === s
                           ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-900/30'
-                          : 'bg-zinc-900/60 border-zinc-700/60 text-zinc-400 hover:border-zinc-500 hover:text-white hover:bg-zinc-800/80'
+                          : 'bg-zinc-900/60 border-zinc-700/60 text-zinc-200 hover:border-zinc-500 hover:text-white hover:bg-zinc-800/80'
                       }`}
                     >
                       <span>Season {s}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                        selectedSeason === s ? 'bg-white/20 text-white' : 'bg-zinc-700 text-zinc-400'
+                        selectedSeason === s ? 'bg-white/20 text-white' : 'bg-zinc-700 text-zinc-200'
                       }`}>{epCount} EP</span>
                     </button>
                   );
@@ -445,8 +445,8 @@ export default function MovieDetailPage() {
             <div className="px-6 sm:px-10 lg:px-16 space-y-3">
               {seasonEpisodes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <Tv className="w-10 h-10 text-zinc-700" />
-                  <p className="text-zinc-500 text-sm font-medium">No episodes available for Season {selectedSeason}</p>
+                  <Tv className="w-10 h-10 text-zinc-200" />
+                  <p className="text-zinc-100 text-sm font-medium">No episodes available for Season {selectedSeason}</p>
                 </div>
               ) : (
                 seasonEpisodes.map((ep: any) => {
@@ -472,7 +472,7 @@ export default function MovieDetailPage() {
                           />
                         ) : (
                           <div className="w-full h-full bg-zinc-800/80 flex items-center justify-center">
-                            <Play className="w-6 h-6 text-zinc-600" />
+                            <Play className="w-6 h-6 text-zinc-200" />
                           </div>
                         )}
                         {/* Play overlay */}
@@ -483,14 +483,14 @@ export default function MovieDetailPage() {
                         </div>
                         {/* Episode number badge */}
                         <div className="absolute bottom-1.5 left-1.5">
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-black/70 text-zinc-300">
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-black/70 text-zinc-100">
                             E{epNum}
                           </span>
                         </div>
                         {/* Duration badge */}
                         {ep.duration && (
                           <div className="absolute bottom-1.5 right-1.5">
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/70 text-zinc-300 flex items-center gap-1">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/70 text-zinc-100 flex items-center gap-1">
                               <Clock className="w-2.5 h-2.5" />{ep.duration}
                             </span>
                           </div>
@@ -501,7 +501,7 @@ export default function MovieDetailPage() {
                       <div className="flex-1 min-w-0 py-0.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-1 text-zinc-500">
+                            <p className="text-xs font-bold uppercase tracking-widest mb-1 text-zinc-100">
                               S{ep.season ?? 1} · Episode {epNum}
                             </p>
                             <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-2 transition-colors text-zinc-200 group-hover:text-white">
@@ -510,13 +510,13 @@ export default function MovieDetailPage() {
                           </div>
                         </div>
                         {ep.description && (
-                          <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed mt-2 line-clamp-2">
+                          <p className="text-zinc-100 text-xs sm:text-[13px] leading-relaxed mt-2 line-clamp-2">
                             {ep.description}
                           </p>
                         )}
                         <div className="flex items-center gap-3 mt-2.5">
                           {ep.duration && (
-                            <span className="flex items-center gap-1 text-[11px] text-zinc-600 font-semibold">
+                            <span className="flex items-center gap-1 text-[11px] text-zinc-200 font-semibold">
                               <Clock className="w-3 h-3" />{ep.duration}
                             </span>
                           )}
@@ -552,7 +552,7 @@ export default function MovieDetailPage() {
             <div className="flex-1" />
             <button
               onClick={() => setLocation(item.type === "movie" ? "/browse/movie" : "/browse/show")}
-              className="text-zinc-500 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+              className="text-zinc-100 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
             >
               See all <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -578,7 +578,7 @@ export default function MovieDetailPage() {
           <div className="flex-1" />
           <button
             onClick={() => setLocation(item.type === "movie" ? "/browse/movie" : "/browse/show")}
-            className="text-zinc-500 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+            className="text-zinc-100 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
           >
             See all <ChevronRight className="w-3.5 h-3.5" />
           </button>

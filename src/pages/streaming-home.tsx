@@ -139,13 +139,13 @@ function SectionHeader({ title, icon, onSeeAll, count }: { title: string; icon?:
       {icon && <div className="text-red-500">{icon}</div>}
       <h2 className="text-white font-bold text-lg sm:text-xl tracking-tight">{title}</h2>
       {count !== undefined && count > 0 && (
-        <span className="text-[10px] font-bold px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-full">
+        <span className="text-[10px] font-bold px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-full">
           {count}
         </span>
       )}
       <div className="flex-1" />
       {onSeeAll && (
-        <button onClick={onSeeAll} className="text-zinc-400 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 group">
+        <button onClick={onSeeAll} className="text-zinc-200 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 group">
           See all <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform text-red-500" />
         </button>
       )}
@@ -212,7 +212,7 @@ function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => 
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-2">
           <p className="text-white text-[11px] font-bold leading-tight line-clamp-2">{drama.title}</p>
-          <p className="text-zinc-400 text-[10px] mt-0.5">{drama.totalEpisodes} EPs</p>
+          <p className="text-zinc-200 text-[10px] mt-0.5">{drama.totalEpisodes} EPs</p>
         </div>
       </div>
     </div>
@@ -369,7 +369,7 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
               {item.type === "movie" ? "Movie" : "TV Show"}
             </span>
             {(item.genres || []).slice(0, 2).map((g) => (
-              <span key={g} className="text-zinc-300 text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
+              <span key={g} className="text-zinc-100 text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
             ))}
           </div>
 
@@ -380,12 +380,12 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <ImdbBadge rating={item.imdbRating} />
             <AgeBadge rating={item.ageRating} />
-            {item.duration && <span className="text-zinc-400 text-xs font-semibold">{item.duration}</span>}
-            {item.year && <span className="text-zinc-400 text-xs font-semibold">{item.year}</span>}
-            {item.language && <span className="text-zinc-500 text-xs font-semibold">{item.language}</span>}
+            {item.duration && <span className="text-zinc-200 text-xs font-semibold">{item.duration}</span>}
+            {item.year && <span className="text-zinc-200 text-xs font-semibold">{item.year}</span>}
+            {item.language && <span className="text-zinc-100 text-xs font-semibold">{item.language}</span>}
           </div>
 
-          <p className="text-zinc-300 text-sm sm:text-base leading-relaxed mb-6 max-w-lg line-clamp-3">
+          <p className="text-zinc-100 text-sm sm:text-base leading-relaxed mb-6 max-w-lg line-clamp-3">
             {item.description}
           </p>
 
@@ -454,7 +454,7 @@ function GenreFilter({ active, onChange }: { active: string; onChange: (g: strin
           className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
             active === g
               ? "bg-red-600 border-red-600 text-white"
-              : "bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
+              : "bg-transparent border-zinc-700 text-zinc-200 hover:border-zinc-500 hover:text-white"
           }`}
         >
           {g}
@@ -494,16 +494,16 @@ function SubscribeBanner({ onSubscribeClick }: { onSubscribeClick: () => void })
             <span className="text-red-500 font-bold text-sm uppercase tracking-wider">Premium Plan</span>
           </div>
           <h3 className="text-white font-bold text-xl sm:text-2xl mb-1">Unlock All Premium Content</h3>
-          <p className="text-zinc-400 text-sm">4K Ultra HD · No Ads · Download & Watch · Multi-Screen</p>
+          <p className="text-zinc-200 text-sm">4K Ultra HD · No Ads · Download & Watch · Multi-Screen</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           {cheapest && (
             <div className="text-right">
               {cheapest.originalPrice && cheapest.originalPrice > cheapest.price && (
-                <p className="text-zinc-500 text-xs line-through">{formatCurrency(cheapest.originalPrice)}</p>
+                <p className="text-zinc-100 text-xs line-through">{formatCurrency(cheapest.originalPrice)}</p>
               )}
               <p className="text-white font-bold text-xl">
-                {formatCurrency(cheapest.price)}<span className="text-zinc-400 text-sm font-normal">/{cheapest.interval || "mo"}</span>
+                {formatCurrency(cheapest.price)}<span className="text-zinc-200 text-sm font-normal">/{cheapest.interval || "mo"}</span>
               </p>
             </div>
           )}
@@ -529,7 +529,7 @@ function MoviesTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
     <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-6">
         <h2 className="text-white font-bold text-2xl tracking-tight">Movies</h2>
-        <p className="text-zinc-500 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} movies available`}</p>
+        <p className="text-zinc-100 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} movies available`}</p>
       </div>
       <GenreFilter active={activeGenre} onChange={setActiveGenre} />
       {isLoading ? (
@@ -555,7 +555,7 @@ function TVShowsTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
     <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-6">
         <h2 className="text-white font-bold text-2xl tracking-tight">TV Shows</h2>
-        <p className="text-zinc-500 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} shows available`}</p>
+        <p className="text-zinc-100 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} shows available`}</p>
       </div>
       <GenreFilter active={activeGenre} onChange={setActiveGenre} />
       {isLoading ? (
@@ -592,7 +592,7 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
     <div className="pt-6 max-w-4xl mx-auto px-4 pb-20">
       <div className="mb-10 text-center sm:text-left">
         <h2 className="text-white font-bold text-2xl sm:text-3xl tracking-tight">New & Hot</h2>
-        <p className="text-zinc-500 text-xs sm:text-sm mt-1.5 font-medium">Follow the latest upcoming titles and trending releases.</p>
+        <p className="text-zinc-100 text-xs sm:text-sm mt-1.5 font-medium">Follow the latest upcoming titles and trending releases.</p>
       </div>
 
       <div className="relative border-l border-zinc-800 ml-4 sm:ml-10 pl-6 sm:pl-10 space-y-12">
@@ -611,7 +611,7 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
 
               {month && (
                 <div className="absolute -left-[95px] sm:-left-[125px] top-1 text-center w-16">
-                  <p className="text-zinc-500 text-[10px] font-bold tracking-widest">{month}</p>
+                  <p className="text-zinc-100 text-[10px] font-bold tracking-widest">{month}</p>
                   <p className="text-white text-xl sm:text-2xl font-bold leading-none mt-0.5">{day}</p>
                 </div>
               )}
@@ -639,21 +639,21 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                           hasReminder
                             ? "bg-emerald-600/15 border-emerald-600/30 text-emerald-400"
-                            : "bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-300"
+                            : "bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-100"
                         }`}
                       >
                         {hasReminder ? <Check className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
                         {hasReminder ? "Reminder Set" : "Remind Me"}
                       </button>
                     </div>
-                    <p className="text-zinc-500 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
+                    <p className="text-zinc-100 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 flex-wrap">
-                    <span className="text-zinc-600 text-[10px] font-bold tracking-wider uppercase">Coming Soon</span>
-                    <span className="text-zinc-800 text-[10px]">·</span>
+                    <span className="text-zinc-200 text-[10px] font-bold tracking-wider uppercase">Coming Soon</span>
+                    <span className="text-zinc-100 text-[10px]">·</span>
                     {(item.genres || []).slice(0, 2).map((g) => (
-                      <span key={g} className="text-[10px] font-bold px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-400 rounded-full uppercase tracking-wider">{g}</span>
+                      <span key={g} className="text-[10px] font-bold px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-full uppercase tracking-wider">{g}</span>
                     ))}
                   </div>
                 </div>
@@ -677,7 +677,7 @@ function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
     <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-8">
         <h2 className="text-white font-bold text-2xl tracking-tight">Short Drama</h2>
-        <p className="text-zinc-500 text-sm mt-1">{allDramas.length} series · Portrait 9:16 · Episode-based</p>
+        <p className="text-zinc-100 text-sm mt-1">{allDramas.length} series · Portrait 9:16 · Episode-based</p>
       </div>
 
       <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-10">
@@ -698,7 +698,7 @@ function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
               <div className="w-9 h-9 rounded-xl bg-zinc-800/80 flex items-center justify-center flex-shrink-0">{icon}</div>
               <div>
                 <p className="text-white font-bold text-sm">{label}</p>
-                <p className="text-zinc-400 text-xs mt-0.5">{desc}</p>
+                <p className="text-zinc-200 text-xs mt-0.5">{desc}</p>
               </div>
             </div>
           ))}
@@ -757,7 +757,7 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
                   <div className="absolute bottom-0 left-0 right-0 px-3 pb-4 pt-8">
                     <p className="text-white font-bold text-sm truncate leading-tight">{item.title}</p>
                     {item.episodeTitle && (
-                      <p className="text-zinc-400 text-[11px] truncate mt-0.5">{item.episodeTitle}</p>
+                      <p className="text-zinc-200 text-[11px] truncate mt-0.5">{item.episodeTitle}</p>
                     )}
                   </div>
                   {/* Progress bar */}
@@ -817,7 +817,7 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
             <p className="text-white font-bold text-sm truncate leading-none">{user ? user.name || "User" : "Guest User"}</p>
             {user && <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />}
           </div>
-          <p className="text-zinc-500 text-[11px] truncate mt-1 leading-none font-medium">
+          <p className="text-zinc-100 text-[11px] truncate mt-1 leading-none font-medium">
             {user ? "Premium Member" : "Sign in for full access"}
           </p>
         </div>
@@ -832,7 +832,7 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
           <button
             key={opt.label}
             onClick={() => setLocation(opt.href)}
-            className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl text-left text-xs font-semibold transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2 text-zinc-200 hover:text-white hover:bg-white/5 rounded-xl text-left text-xs font-semibold transition-all"
           >
             {opt.icon}
             {opt.label}
@@ -844,7 +844,7 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
         {user ? (
           <button
             onClick={onSignOut}
-            className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white font-bold rounded-xl text-xs transition-all text-center"
+            className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 hover:text-white font-bold rounded-xl text-xs transition-all text-center"
           >
             Sign Out
           </button>
@@ -931,17 +931,17 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 <span className="text-white font-bold text-[15px] tracking-tight mt-2">{settings.platformName || "StreamIT"}</span>
               </>
             )}
-            <p className="text-[10px] text-zinc-400 text-center font-medium mt-3 leading-relaxed">Your portal to premium cinematic experiences.</p>
+            <p className="text-[10px] text-zinc-200 text-center font-medium mt-3 leading-relaxed">Your portal to premium cinematic experiences.</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col p-8 overflow-y-auto">
-          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-all z-10">
+          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-zinc-100 hover:text-white hover:bg-white/5 transition-all z-10">
             <X className="w-4 h-4" />
           </button>
 
           <h2 className="text-white font-bold text-xl sm:text-2xl tracking-tight mb-1 pr-6">{isLogin ? "Welcome Back" : "Create Account"}</h2>
-          <p className="text-zinc-500 text-xs sm:text-sm mb-6 font-medium">
+          <p className="text-zinc-100 text-xs sm:text-sm mb-6 font-medium">
             {isLogin ? "New to the platform? " : "Already have an account? "}
             <button onClick={() => setIsLogin(!isLogin)} className="text-red-500 hover:underline font-bold transition-all">
               {isLogin ? "Sign Up Free" : "Log In"}
@@ -956,12 +956,12 @@ function SignInModal({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 onClick={() => setUsePhone(false)}
-                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!usePhone ? "bg-red-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!usePhone ? "bg-red-600 text-white" : "text-zinc-100 hover:text-white"}`}
               >Email</button>
               <button
                 type="button"
                 onClick={() => setUsePhone(true)}
-                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${usePhone ? "bg-red-600 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${usePhone ? "bg-red-600 text-white" : "text-zinc-100 hover:text-white"}`}
               >Phone</button>
             </div>
           )}
@@ -974,7 +974,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
 
@@ -986,7 +986,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
 
@@ -998,7 +998,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={isLogin ? "Phone Number" : "Phone Number (optional — links app account)"}
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
 
@@ -1010,12 +1010,12 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-600 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all pr-10"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-100 hover:text-white transition-colors"
               >
                 {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
@@ -1026,23 +1026,23 @@ function SignInModal({ onClose }: { onClose: () => void }) {
           </form>
 
           <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-3 text-zinc-600 text-[10px] font-bold uppercase tracking-widest">
+            <div className="flex items-center gap-3 text-zinc-200 text-[10px] font-bold uppercase tracking-widest">
               <div className="flex-1 h-px bg-zinc-800" />
               <span>Or connect with</span>
               <div className="flex-1 h-px bg-zinc-800" />
             </div>
             <div className="flex items-center gap-2">
-              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
                 Google
               </button>
-              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
                 Apple
               </button>
             </div>
           </div>
 
-          <p className="text-zinc-600 text-[10px] text-center leading-relaxed mt-6 font-medium">
-            By continuing, you accept our <a href="#" className="text-zinc-400 hover:underline">Terms of Service</a> & <a href="#" className="text-zinc-400 hover:underline">Privacy Policy</a>.
+          <p className="text-zinc-200 text-[10px] text-center leading-relaxed mt-6 font-medium">
+            By continuing, you accept our <a href="#" className="text-zinc-200 hover:underline">Terms of Service</a> & <a href="#" className="text-zinc-200 hover:underline">Privacy Policy</a>.
           </p>
         </div>
       </div>
@@ -1172,7 +1172,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative flex items-center gap-1.5 px-3.5 py-2 text-[13.5px] font-bold rounded-lg transition-all duration-200 ${activeTab === tab ? "text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                    className={`relative flex items-center gap-1.5 px-3.5 py-2 text-[13.5px] font-bold rounded-lg transition-all duration-200 ${activeTab === tab ? "text-white" : "text-zinc-200 hover:text-white hover:bg-white/5"}`}
                   >
                     {icon}
                     {label}
@@ -1187,7 +1187,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
             <div className="flex items-center gap-1.5 sm:gap-2.5" id="public-search-container">
               <div className="relative flex items-center">
                 <div className={`flex items-center overflow-hidden transition-all duration-300 rounded-full border ${searchOpen ? "w-44 sm:w-52 bg-black/80 border-zinc-800" : "w-9 h-9 border-transparent"}`}>
-                  {searchOpen && <Search className="absolute left-3 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />}
+                  {searchOpen && <Search className="absolute left-3 w-3.5 h-3.5 text-zinc-200 pointer-events-none" />}
                   {searchOpen ? (
                     <input
                       autoFocus
@@ -1195,21 +1195,21 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                       onChange={handleSearchChange}
                       onKeyDown={handleSearchKeyDown}
                       placeholder="Search titles..."
-                      className="w-full bg-transparent text-white text-xs pl-8 pr-7 py-2 focus:outline-none placeholder:text-zinc-500"
+                      className="w-full bg-transparent text-white text-xs pl-8 pr-7 py-2 focus:outline-none placeholder:text-zinc-100"
                     />
                   ) : (
-                    <button onClick={() => { setSearchOpen(true); setLocation("/browse"); }} className="w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white transition-colors rounded-full hover:bg-white/5">
+                    <button onClick={() => { setSearchOpen(true); setLocation("/browse"); }} className="w-9 h-9 flex items-center justify-center text-zinc-100 hover:text-white transition-colors rounded-full hover:bg-white/5">
                       <Search className="w-[17px] h-[17px]" />
                     </button>
                   )}
-                  {searchOpen && <button onMouseDown={handleClearSearch} className="absolute right-2.5 text-zinc-500 hover:text-white"><X className="w-3 h-3" /></button>}
+                  {searchOpen && <button onMouseDown={handleClearSearch} className="absolute right-2.5 text-zinc-100 hover:text-white"><X className="w-3 h-3" /></button>}
                 </div>
               </div>
 
               <div className="relative" ref={notificationsRef}>
                 <button
                   onClick={handleToggleNotifications}
-                  className="relative w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white rounded-full hover:bg-white/5 transition-all"
+                  className="relative w-9 h-9 flex items-center justify-center text-zinc-100 hover:text-white rounded-full hover:bg-white/5 transition-all"
                 >
                   <Bell className="w-[17px] h-[17px]" />
                   {unreadCount > 0 && (
@@ -1231,18 +1231,18 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                             const allIds = new Set(notifications.map((n: any) => n._id || n.id));
                             setReadNotifications(allIds);
                           }}
-                          className="text-zinc-500 hover:text-white text-[10px] font-medium px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                          className="text-zinc-100 hover:text-white text-[10px] font-medium px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
                         >
                           Mark all as read
                         </button>
-                        <button onClick={() => setNotificationsOpen(false)} className="text-zinc-500 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setNotificationsOpen(false)} className="text-zinc-100 hover:text-white"><X className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                     <div className="max-h-[300px] overflow-y-auto divide-y divide-zinc-800/60">
                       {notifications.length === 0 ? (
                         <div className="p-6 text-center">
-                          <Bell className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
-                          <p className="text-zinc-500 text-xs font-medium">No notifications yet</p>
+                          <Bell className="w-8 h-8 text-zinc-200 mx-auto mb-2" />
+                          <p className="text-zinc-100 text-xs font-medium">No notifications yet</p>
                         </div>
                       ) : (
                         notifications.map((n: any) => {
@@ -1253,8 +1253,8 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                             <div key={nid} className={`p-3.5 transition-colors cursor-pointer ${isRead ? "hover:bg-zinc-900/30" : "bg-red-500/5 hover:bg-red-500/10"}`} onClick={() => setNotificationsOpen(false)}>
                               {!isRead && <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full mr-1.5 mb-0.5 align-middle" />}
                               <p className="text-white text-xs font-bold leading-tight inline">{n.title}</p>
-                              {n.text && <p className="text-zinc-400 text-[11px] mt-1 leading-relaxed line-clamp-2">{n.text}</p>}
-                              {timeStr && <p className="text-zinc-600 text-[10px] mt-1.5 font-medium">{timeStr}</p>}
+                              {n.text && <p className="text-zinc-200 text-[11px] mt-1 leading-relaxed line-clamp-2">{n.text}</p>}
+                              {timeStr && <p className="text-zinc-200 text-[10px] mt-1.5 font-medium">{timeStr}</p>}
                             </div>
                           );
                         })
@@ -1284,12 +1284,12 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-xs text-white">
                     {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
                   </div>
-                  <ChevronDown className={`w-3 h-3 text-zinc-400 hidden sm:block transition-transform duration-200 ${userDropdownOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3 h-3 text-zinc-200 hidden sm:block transition-transform duration-200 ${userDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
                 {userDropdownOpen && <UserDropdown onSignIn={onSignIn} onSignOut={onSignOut} user={user} />}
               </div>
 
-              <button className="lg:hidden ml-0.5 w-9 h-9 flex items-center justify-center text-zinc-300 hover:text-white rounded-full hover:bg-white/5 transition-all" onClick={() => setMobileOpen(!mobileOpen)}>
+              <button className="lg:hidden ml-0.5 w-9 h-9 flex items-center justify-center text-zinc-100 hover:text-white rounded-full hover:bg-white/5 transition-all" onClick={() => setMobileOpen(!mobileOpen)}>
                 <div className="flex flex-col gap-[5px] w-5">
                   <span className={`block h-[1.5px] bg-current rounded-full transition-all duration-300 ${mobileOpen ? "rotate-45 translate-y-[6.5px]" : ""}`} />
                   <span className={`block h-[1.5px] bg-current rounded-full transition-all duration-300 ${mobileOpen ? "opacity-0 scale-x-0" : ""}`} />
@@ -1306,7 +1306,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setMobileOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? "bg-red-600/15 text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? "bg-red-600/15 text-white" : "text-zinc-200 hover:text-white hover:bg-white/5"}`}
               >
                 {activeTab === tab && <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />}
                 {icon}
@@ -1378,10 +1378,10 @@ export function PublicFooter() {
                 </>
               )}
             </div>
-            <p className="text-zinc-500 text-xs leading-relaxed max-w-xs">{settings.siteDescription || "Your premium OTT destination for movies, TV shows, and exclusive short dramas."}</p>
+            <p className="text-zinc-100 text-xs leading-relaxed max-w-xs">{settings.siteDescription || "Your premium OTT destination for movies, TV shows, and exclusive short dramas."}</p>
             <div className="flex items-center gap-2 pt-2">
               {socialLinks.map((s) => (
-                <a key={s.label} href="#" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-500 hover:text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
+                <a key={s.label} href="#" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-100 hover:text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                     <path d={s.d} />
                   </svg>
@@ -1400,7 +1400,7 @@ export function PublicFooter() {
                 { label: "New & Hot", href: "/browse" },
               ].map((itm) => (
                 <li key={itm.label}>
-                  <button onClick={() => setLocation(itm.href)} className="text-zinc-500 hover:text-white text-xs font-semibold transition-colors text-left">{itm.label}</button>
+                  <button onClick={() => setLocation(itm.href)} className="text-zinc-100 hover:text-white text-xs font-semibold transition-colors text-left">{itm.label}</button>
                 </li>
               ))}
             </ul>
@@ -1411,19 +1411,19 @@ export function PublicFooter() {
             <ul className="space-y-2.5">
               {pages.length > 0 ? pages.map((p: any) => (
                 <li key={p.slug || p.id}>
-                  <button onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-500 hover:text-white text-xs font-semibold transition-colors text-left">
+                  <button onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-100 hover:text-white text-xs font-semibold transition-colors text-left">
                     {p.title}
                   </button>
                 </li>
               )) : (
-                <li className="text-zinc-600 text-xs">No pages available</li>
+                <li className="text-zinc-200 text-xs">No pages available</li>
               )}
             </ul>
           </div>
 
           <div className="space-y-4">
             <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Subscribe to Newsletter</h4>
-            <p className="text-zinc-500 text-xs leading-normal">Stay updated with our latest releases and exclusive content.</p>
+            <p className="text-zinc-100 text-xs leading-normal">Stay updated with our latest releases and exclusive content.</p>
             <form onSubmit={handleSubscribe} className="relative flex items-center mt-2">
               <input
                 type="email"
@@ -1442,10 +1442,10 @@ export function PublicFooter() {
         </div>
 
         <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-zinc-700 text-xs font-medium">{settings.copyrightText || "2025 StreamIT. All Rights Reserved."}</p>
+          <p className="text-zinc-200 text-xs font-medium">{settings.copyrightText || "2025 StreamIT. All Rights Reserved."}</p>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2">
             {pages.map((p: any) => (
-              <button key={p.slug || p.id} onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-600 hover:text-zinc-400 text-[11px] font-bold transition-colors whitespace-nowrap">
+              <button key={p.slug || p.id} onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-200 hover:text-white text-[11px] font-bold transition-colors whitespace-nowrap">
                 {p.title}
               </button>
             ))}

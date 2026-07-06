@@ -196,19 +196,19 @@ export default function CategoriesBrowsePage() {
         <div className="px-4 sm:px-8 lg:px-14 pt-8 pb-6">
           <div className="max-w-2xl">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-200" />
               <input
                 ref={inputRef}
                 autoFocus={!!initialQ}
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search movies, TV shows, short dramas..."
-                className="w-full bg-zinc-900/80 border border-zinc-800 focus:border-primary focus:ring-1 focus:ring-primary/30 text-white text-base placeholder:text-zinc-500 pl-12 pr-12 py-3.5 rounded-2xl transition-all outline-none"
+                className="w-full bg-zinc-900/80 border border-zinc-800 focus:border-primary focus:ring-1 focus:ring-primary/30 text-white text-base placeholder:text-zinc-300 pl-12 pr-12 py-3.5 rounded-2xl transition-all outline-none"
               />
               {searchInput && (
                 <button
                   onClick={() => { handleSearchChange(""); inputRef.current?.focus(); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -232,7 +232,7 @@ export default function CategoriesBrowsePage() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
                   contentType === key
                     ? "bg-primary border-primary text-white shadow-lg shadow-red-900/30"
-                    : "border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600"
+                    : "border-zinc-800 text-zinc-200 hover:text-white hover:border-zinc-600"
                 }`}
               >
                 {icon} {label}
@@ -242,7 +242,7 @@ export default function CategoriesBrowsePage() {
             <div className="flex-1" />
 
             {debouncedQ && (
-              <div className="flex items-center gap-2 text-sm text-zinc-400">
+              <div className="flex items-center gap-2 text-sm text-zinc-200">
                 <span>Results for</span>
                 <span className="text-white font-bold">"{debouncedQ}"</span>
                 <span>· {pagination?.total ?? 0} found</span>
@@ -270,7 +270,7 @@ export default function CategoriesBrowsePage() {
                 className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
                   activeGenre === g
                     ? "bg-primary border-primary text-white"
-                    : "bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
+                    : "bg-transparent border-zinc-700 text-zinc-200 hover:border-zinc-500 hover:text-white"
                 }`}
               >
                 {g}
@@ -289,7 +289,7 @@ export default function CategoriesBrowsePage() {
                   {getHeading()}
                 </span>
                 {pagination?.total !== undefined && (
-                  <span className="text-zinc-500 text-sm">{pagination.total} titles</span>
+                  <span className="text-zinc-300 text-sm">{pagination.total} titles</span>
                 )}
               </>
             )}
@@ -304,11 +304,11 @@ export default function CategoriesBrowsePage() {
             </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <Search className="w-12 h-12 text-zinc-700 mb-4" />
+              <Search className="w-12 h-12 text-zinc-200 mb-4" />
               <p className="text-white font-bold text-xl mb-2">
                 {debouncedQ ? `No results for "${debouncedQ}"` : "No content found"}
               </p>
-              <p className="text-zinc-500 text-sm">
+              <p className="text-zinc-300 text-sm">
                 {debouncedQ ? "Try different keywords or change the content type" : "Try a different genre or category"}
               </p>
               {debouncedQ && (
@@ -341,7 +341,7 @@ export default function CategoriesBrowsePage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="w-10 h-10 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+              className="w-10 h-10 rounded-xl border border-zinc-800 text-zinc-200 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -359,7 +359,7 @@ export default function CategoriesBrowsePage() {
                     className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${
                       page === p
                         ? "bg-primary text-white border border-primary"
-                        : "border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600"
+                        : "border border-zinc-800 text-zinc-200 hover:text-white hover:border-zinc-600"
                     }`}
                   >
                     {p}
@@ -370,7 +370,7 @@ export default function CategoriesBrowsePage() {
             <button
               onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={page >= pagination.totalPages}
-              className="w-10 h-10 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+              className="w-10 h-10 rounded-xl border border-zinc-800 text-zinc-200 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

@@ -230,7 +230,7 @@ export default function PublicAuthPage() {
           <h2 className="text-white font-black text-2xl tracking-tight mb-2">
             {isLogin ? "Welcome Back" : "Create Your Account"}
           </h2>
-          <p className="text-zinc-500 text-xs sm:text-sm font-medium">
+          <p className="text-zinc-300 text-xs sm:text-sm font-medium">
             {isLogin ? "Enjoy unlimited access to premium OTT content." : "Join us and start streaming the best movies and shows."}
           </p>
         </div>
@@ -254,24 +254,24 @@ export default function PublicAuthPage() {
               type="text" required value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Full Name"
-              className="w-full bg-zinc-950 border border-zinc-900 text-white placeholder:text-zinc-600 px-4 py-3.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-zinc-950 border border-zinc-900 text-white placeholder:text-zinc-400 px-4 py-3.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
             />
           )}
           <input
             type="email" required value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email Address"
-            className="w-full bg-zinc-950 border border-zinc-900 text-white placeholder:text-zinc-600 px-4 py-3.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            className="w-full bg-zinc-950 border border-zinc-900 text-white placeholder:text-zinc-400 px-4 py-3.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"} required minLength={6}
               value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full bg-zinc-950 border border-zinc-900 text-white placeholder:text-zinc-600 px-4 py-3.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+              className="w-full bg-zinc-950 border border-zinc-900 text-white placeholder:text-zinc-400 px-4 py-3.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors">
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-white transition-colors">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
@@ -290,7 +290,7 @@ export default function PublicAuthPage() {
           <>
             <div className="flex items-center gap-3 my-6">
               <div className="flex-1 h-px bg-zinc-900" />
-              <span className="text-zinc-600 text-xs font-semibold">OR CONTINUE WITH</span>
+              <span className="text-zinc-400 text-xs font-semibold">OR CONTINUE WITH</span>
               <div className="flex-1 h-px bg-zinc-900" />
             </div>
 
@@ -336,7 +336,7 @@ export default function PublicAuthPage() {
         )}
 
         <div className="mt-8 pt-6 border-t border-zinc-900/60 text-center">
-          <p className="text-zinc-500 text-xs font-medium">
+          <p className="text-zinc-300 text-xs font-medium">
             {isLogin ? "New to the platform?" : "Already have an account?"}{" "}
             <Link href={isLogin ? "/register" : "/login"} className="text-primary hover:underline font-bold transition-all ml-1">
               {isLogin ? "Sign Up Free" : "Log In"}

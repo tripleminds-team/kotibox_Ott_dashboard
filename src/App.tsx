@@ -71,6 +71,11 @@ function ThemeApplier() {
     root.style.setProperty("--chart-1", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
   }, [settings.colorTheme, settings.primaryColor]);
 
+  useEffect(() => {
+    const name = settings.platformName;
+    document.title = name ? `${name} Admin Panel` : "Admin Panel";
+  }, [settings.platformName]);
+
   return null;
 }
 
