@@ -231,7 +231,7 @@ function AddSeasonForm({
             <span>Uploading…</span>
             <span>{progress}%{speed ? ` · ${speed}` : ""}</span>
           </div>
-          <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary transition-all duration-200" style={{ width: `${progress}%` }} />
           </div>
         </div>

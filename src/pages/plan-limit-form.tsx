@@ -194,15 +194,6 @@ export default function PlanLimitFormPage() {
       <div className="rounded-xl border border-border bg-card/50 p-6">
         <h3 className="text-base font-semibold text-foreground mb-5">Plan Limits</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Video Cast */}
-          <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-            <span className="text-sm text-foreground font-medium">Video Cast</span>
-            <Switch
-              checked={form.videoCast}
-              onCheckedChange={(v) => set("videoCast", v)}
-              className="data-[state=checked]:bg-primary"
-            />
-          </div>
 
           {/* Ads */}
           <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
@@ -257,7 +248,7 @@ export default function PlanLimitFormPage() {
               />
             </div>
             {form.supportedDeviceType && (
-              <div className="flex flex-wrap gap-2 p-3 bg-zinc-950 rounded-lg border border-border">
+              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg border border-border">
                 {DEVICE_OPTIONS.map((device) => (
                   <button
                     key={device}

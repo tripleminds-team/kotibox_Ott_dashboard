@@ -331,10 +331,6 @@ export default function PlanFormPage() {
         <p className="text-base font-semibold text-foreground">Plan Limits</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          {/* Video Cast */}
-          <LimitToggle label="Video Cast" description="Allow video casting to other devices"
-            checked={videoCast} onChange={setVideoCast} />
-
           {/* Ads */}
           <LimitToggle label="Ads" description="Show advertisements to users on this plan"
             checked={ads} onChange={setAds} />

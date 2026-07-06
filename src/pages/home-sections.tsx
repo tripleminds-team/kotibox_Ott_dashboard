@@ -604,11 +604,11 @@ export default function HomeSections() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-muted-foreground text-sm">
-              Are you sure you want to delete <span className="font-bold text-white">{confirmDelete?.title}</span>? This will instantly remove the row from the mobile app.
+              Are you sure you want to delete <span className="font-bold text-foreground">{confirmDelete?.title}</span>? This will instantly remove the row from the mobile app.
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(null)} className="bg-transparent border-zinc-700">Cancel</Button>
+            <Button variant="outline" onClick={() => setConfirmDelete(null)} className="bg-transparent border-border">Cancel</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
               Delete
             </Button>
