@@ -159,8 +159,8 @@ export default function ShortDramaPlayer() {
   };
 
   const goToEpisode = (n: number) => {
-    if (n < 1 || n > totalEps) return;
-    const ep = apiEpisodes[n - 1];
+    if (n < 0 || n > totalEps) return;
+    const ep = n === 0 ? null : apiEpisodes[n - 1];
     if (ep?.isLocked && !ep?.isFree && !isSubscribed) {
       setPlansModalOpen(true);
       return;

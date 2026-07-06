@@ -243,8 +243,8 @@ export default function MovieDetailPage() {
             onClick={() => {
               if (isLocked) {
                 setPlansModalOpen(true);
-              } else if (item.type === "show" || item.type === "series") {
-                setLocation(`/show/${id}/episode/1`);
+              } else if (item.trailerUrl) {
+                setLocation(`/show/${id}/episode/0`);
               } else {
                 setLocation(`/show/${id}/episode/1`);
               }

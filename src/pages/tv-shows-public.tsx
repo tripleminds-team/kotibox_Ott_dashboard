@@ -109,7 +109,11 @@ export default function TvShowsPublicPage() {
     const isDrama = item.contentType === "drama" || item.type === "drama";
     const isShow = item.contentType === "show" || item.contentType === "series" || item.type === "show" || item.type === "series";
     if (isDrama) {
-      setLocation(`/drama/${id}/episode/1`);
+      if (item.trailerUrl) {
+        setLocation(`/drama/${id}/episode/0`);
+      } else {
+        setLocation(`/drama/${id}/episode/1`);
+      }
     } else if (isShow) {
       setLocation(`/show/${id}`);
     } else {

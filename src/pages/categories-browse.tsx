@@ -158,7 +158,11 @@ export default function CategoriesBrowsePage() {
     const id = item.id || item._id;
     const ct = item.contentType || contentType;
     if (ct === "drama") {
-      setLocation(`/drama/${id}/episode/1`);
+      if (item.trailerUrl) {
+        setLocation(`/drama/${id}/episode/0`);
+      } else {
+        setLocation(`/drama/${id}/episode/1`);
+      }
     } else if (ct === "show" || ct === "series") {
       setLocation(`/show/${id}`);
     } else {

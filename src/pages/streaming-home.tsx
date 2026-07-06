@@ -1498,7 +1498,11 @@ export default function StreamingHomePage() {
     const isShow = item.contentType === "show" || item.contentType === "series" || item.type === "show" || item.type === "series";
     const isMovie = item.type === "movie" || item.contentType === "movie";
     if (isDrama) {
-      setLocation(`/drama/${id}/episode/1`);
+      if (item.trailerUrl) {
+        setLocation(`/drama/${id}/episode/0`);
+      } else {
+        setLocation(`/drama/${id}/episode/1`);
+      }
     } else if (isShow) {
       setLocation(`/show/${id}`);
     } else if (isMovie) {
@@ -1509,7 +1513,11 @@ export default function StreamingHomePage() {
   };
 
   const handleSelectDrama = (drama: any) => {
-    setLocation(`/drama/${drama.id || drama._id}/episode/1`);
+    if (drama.trailerUrl) {
+      setLocation(`/drama/${drama.id || drama._id}/episode/0`);
+    } else {
+      setLocation(`/drama/${drama.id || drama._id}/episode/1`);
+    }
   };
 
   return (

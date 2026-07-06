@@ -1205,9 +1205,19 @@ export default function EpisodeDetailPage() {
   const isSubscribed = user?.subscriptionStatus === 'active' && user?.subscriptionPlan !== 'free';
 
   const goToEpisode = useCallback((ep: number) => {
-    if (ep < 0 || ep > detail.totalEpisodes) return;
+    const maxEp = detail.totalEpisodes === 0 ? 1 : detail.totalEpisodes;
+    if (ep < 0 || ep > maxEp) return;
     const targetEp = apiEpisodes[ep - 1];
-    const isLocked = !isSubscribed && ep !== 0 && (targetEp ? !targetEp.isFree : ep > detail.freeEpisodes);
+    
+    let isLocked = false;
+    if (!isSubscribed && ep !== 0) {
+      if (detail.totalEpisodes === 0) {
+        isLocked = showData?.isPremium === true;
+      } else {
+        isLocked = targetEp ? !targetEp.isFree : ep > detail.freeEpisodes;
+      }
+    }
+    
     if (isLocked) {
       setLockedEpNum(ep);
       setLockPopupOpen(true);
@@ -1216,11 +1226,12 @@ export default function EpisodeDetailPage() {
     setCurrentEp(ep);
     setAutoPlay(true);
     navigate(`/show/${contentId}/episode/${ep}`);
-  }, [contentId, detail.totalEpisodes, detail.freeEpisodes, navigate, isSubscribed, apiEpisodes]);
+  }, [contentId, detail.totalEpisodes, detail.freeEpisodes, navigate, isSubscribed, apiEpisodes, showData]);
 
   const handleNext = useCallback(() => {
     const next = currentEp + 1;
-    if (next <= detail.totalEpisodes) {
+    const maxEp = detail.totalEpisodes === 0 ? 1 : detail.totalEpisodes;
+    if (next <= maxEp) {
       goToEpisode(next);
     }
   }, [currentEp, detail.totalEpisodes, goToEpisode]);
@@ -1237,6 +1248,7 @@ export default function EpisodeDetailPage() {
   const videoSrc = (() => {
     // Movie: no episodes → play the movie's own HLS/video URL
     if (apiEpisodes.length === 0) {
+      if (currentEp === 0 && showData?.trailerUrl) return showData.trailerUrl;
       return showData?.hlsUrl || showData?.videoUrl || showData?.sourceVideoUrl || "";
     }
     if (currentEp === 0) return showData?.trailerUrl || showData?.hlsUrl || "";
