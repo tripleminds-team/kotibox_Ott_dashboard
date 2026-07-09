@@ -10,7 +10,7 @@ import {
 setBaseUrl(import.meta.env.VITE_API_URL || "http://localhost:3000");
 
 setAuthTokenGetter(() =>
-  localStorage.getItem("accessToken")
+  localStorage.getItem("appAccessToken")
 );
 
 createRoot(document.getElementById("root")!).render(

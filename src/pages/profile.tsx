@@ -82,7 +82,7 @@ export default function ProfilePage() {
         setUploadingPhoto(false);
       }
       await updateProfileMutation.mutateAsync(updateData);
-      const userStr = localStorage.getItem("user");
+      const userStr = localStorage.getItem("appUser");
       if (userStr) {
         localStorage.setItem("user", JSON.stringify({ ...JSON.parse(userStr), ...updateData }));
       }
@@ -178,16 +178,16 @@ export default function ProfilePage() {
                 {user?.role || "Admin"}
               </span>
             </div>
-            <p className="text-zinc-500 text-sm font-medium flex items-center gap-1.5">
+            <p className="text-zinc-200 text-sm font-medium flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" /> {user?.email || "—"}
             </p>
             <div className="flex flex-wrap items-center gap-4 mt-3">
-              <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+              <span className="flex items-center gap-1.5 text-xs text-zinc-200">
                 <CalendarDays className="w-3.5 h-3.5" />
                 Member since {fmtDate(user?.createdAt)}
               </span>
               {user?.lastLogin && (
-                <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                <span className="flex items-center gap-1.5 text-xs text-zinc-200">
                   <Clock className="w-3.5 h-3.5" />
                   Last login {fmtDate(user?.lastLogin)}
                 </span>
@@ -206,7 +206,7 @@ export default function ProfilePage() {
         {statCards.map((s) => (
           <div key={s.label} className={`rounded-2xl border border-border p-4 bg-card ${s.bg} flex flex-col gap-2`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{s.label}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-200">{s.label}</span>
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>

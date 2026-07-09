@@ -7,11 +7,12 @@ import {
   Play, Pause, Search, ChevronLeft, ChevronRight, X,
   ChevronDown, User, Star, Plus, Info, Film, Tv,
   TrendingUp, Flame, Sparkles, Smartphone, Lock, Crown, Bell,
-  Loader2, Clock, Check, EyeOff, AlertCircle, ListPlus, Send, Eye, Clapperboard
+  Loader2, Clock, Check, EyeOff, AlertCircle, ListPlus, Send, Eye, Clapperboard, Bookmark
 } from "lucide-react";
 import {
   useGetWebHome, useGetWebBrowse, loginClient, registerClient, useGetPages,
   useGetGenres, useGetPublicNotifications, useGetWebSubscriptionPlans,
+  useGetWatchHistory,
 } from "@/lib/api-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WebsiteReviews } from "@/components/WebsiteReviews";
@@ -172,6 +173,17 @@ const DRAMA_BADGE_MAP: Record<string, string> = {
 };
 
 function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => void }) {
+  const isSubscribed = (() => {
+    try {
+      const stored = localStorage.getItem("appUser");
+      if (stored) {
+        const u = JSON.parse(stored);
+        return u.subscriptionStatus === "active" && u.subscriptionPlan !== "free";
+      }
+    } catch {}
+    return false;
+  })();
+
   return (
     <div
       className="group relative flex-shrink-0 cursor-pointer"
@@ -199,7 +211,7 @@ function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => 
             {drama.badge}
           </span>
         )}
-        {drama.freeEpisodes > 0 && (
+        {drama.freeEpisodes > 0 && !isSubscribed && (
           <span className="absolute top-2 right-2 z-10 text-[9px] font-bold px-1.5 py-[2px] rounded-sm bg-emerald-600/90 text-white">
             {drama.freeEpisodes} FREE
           </span>
@@ -363,7 +375,7 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
       <div className="absolute bottom-14 sm:bottom-16 left-0 px-6 sm:px-10 lg:px-14 max-w-2xl w-full">
         <div className={`transition-all duration-500 ${fading ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            {isPremium ? <PremiumBadge /> : <FreeBadge />}
+            {isPremium && !isSubscribed ? <PremiumBadge /> : (!isSubscribed && <FreeBadge />)}
             <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${item.type === "movie" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"}`}>
               {item.type === "movie" ? <Film className="w-3 h-3" /> : <Tv className="w-3 h-3" />}
               {item.type === "movie" ? "Movie" : "TV Show"}
@@ -395,7 +407,7 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
               className="flex items-center gap-2.5 px-8 py-3.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-lg text-sm tracking-wide transition-all active:scale-95 shadow-xl"
             >
               <Play className="w-4 h-4 fill-black" />
-              {isPremium ? "Watch Now" : "Watch Free"}
+              {(isPremium || isSubscribed) ? "Watch Now" : "Watch Free"}
             </button>
             {isPremium && !isSubscribed && (
               <button
@@ -587,16 +599,26 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
   if (isLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
 
   const newReleases = homeData.newReleases || [];
+  const trendingNow = homeData.trendingNow || [];
+  const newDramas = homeData.newDramas || [];
+  const featuredDramas = homeData.featuredDramas || [];
+  const allItems = [...newReleases, ...trendingNow, ...newDramas, ...featuredDramas]
+    .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)
+    .sort((a, b) => {
+      const dateA = new Date(a.releaseDate || a.year || 0).getTime();
+      const dateB = new Date(b.releaseDate || b.year || 0).getTime();
+      return dateB - dateA;
+    });
 
   return (
     <div className="pt-6 max-w-4xl mx-auto px-4 pb-20">
       <div className="mb-10 text-center sm:text-left">
         <h2 className="text-white font-bold text-2xl sm:text-3xl tracking-tight">New & Hot</h2>
-        <p className="text-zinc-100 text-xs sm:text-sm mt-1.5 font-medium">Follow the latest upcoming titles and trending releases.</p>
+        <p className="text-zinc-100 text-xs sm:text-sm mt-1.5 font-medium">Follow the latest titles and trending releases.</p>
       </div>
 
       <div className="relative border-l border-zinc-800 ml-4 sm:ml-10 pl-6 sm:pl-10 space-y-12">
-        {newReleases.map((item: ContentItem) => {
+        {allItems.map((item: any) => {
           const id = item.id || item._id || "";
           const hasReminder = !!reminders[id];
           const releaseDate = item.releaseDate || item.year;
@@ -618,22 +640,15 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
 
               <div className="rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800/60 flex flex-col md:flex-row gap-5 p-4 sm:p-5 hover:border-zinc-700/60 transition-colors">
                 <div
-                  onClick={() => onPlay(item)}
-                  className="relative md:w-64 w-full flex-shrink-0 rounded-xl overflow-hidden bg-black cursor-pointer group/poster"
-                  style={{ aspectRatio: "16/9" }}
+                  className={`relative md:w-64 w-full flex-shrink-0 rounded-xl overflow-hidden bg-black ${item.contentType === 'drama' ? 'aspect-[9/16] md:w-36' : 'aspect-[16/9]'}`}
                 >
-                  <img src={item.backdrop || item.poster} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover/poster:scale-105" />
-                  <div className="absolute inset-0 bg-black/20 group-hover/poster:bg-black/45 transition-colors flex items-center justify-center">
-                    <div className="w-10 h-10 rounded-full bg-red-600 opacity-0 group-hover/poster:opacity-100 scale-90 group-hover/poster:scale-100 transition-all flex items-center justify-center shadow-lg shadow-red-600/40">
-                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                    </div>
-                  </div>
+                  <img src={getImageUrl(item.contentType === 'drama' ? (item.poster || item.backdrop) : (item.backdrop || item.poster))} alt={item.title} className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                   <div>
                     <div className="flex items-center justify-between gap-4 flex-wrap">
-                      <h3 onClick={() => onPlay(item)} className="text-white text-base sm:text-lg font-bold hover:text-red-500 transition-colors truncate cursor-pointer">{item.title}</h3>
+                      <h3 className="text-white text-base sm:text-lg font-bold truncate">{item.title}</h3>
                       <button
                         onClick={() => toggleReminder(id, item.title)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
@@ -646,13 +661,15 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
                         {hasReminder ? "Reminder Set" : "Remind Me"}
                       </button>
                     </div>
-                    <p className="text-zinc-100 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
+                    {item.description && (
+                      <p className="text-zinc-100 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 flex-wrap">
-                    <span className="text-zinc-200 text-[10px] font-bold tracking-wider uppercase">Coming Soon</span>
+                    <span className="text-zinc-200 text-[10px] font-bold tracking-wider uppercase">{item.badge || 'NEW'}</span>
                     <span className="text-zinc-100 text-[10px]">·</span>
-                    {(item.genres || []).slice(0, 2).map((g) => (
+                    {(item.genres || []).slice(0, 2).map((g: string) => (
                       <span key={g} className="text-[10px] font-bold px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-full uppercase tracking-wider">{g}</span>
                     ))}
                   </div>
@@ -717,11 +734,8 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
 }) {
   const [, setLocation] = useLocation();
   const { data: homeData, isLoading } = useGetWebHome();
-  const [cw, setCw] = useState<any[]>([]);
-
-  useEffect(() => {
-    setCw(getContinueWatching());
-  }, []);
+  const { data: watchHistoryData } = useGetWatchHistory({ limit: 10 });
+  const cw = watchHistoryData?.items || [];
 
   if (isLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
 
@@ -762,7 +776,7 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
                   </div>
                   {/* Progress bar */}
                   <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-zinc-700/80">
-                    <div className="h-full bg-red-600 transition-all rounded-r-full" style={{ width: `${item.progress || 0}%` }} />
+                    <div className="h-full bg-red-600 transition-all rounded-r-full" style={{ width: `${Math.round(item.progress || 0)}%` }} />
                   </div>
                 </div>
               </div>
@@ -809,9 +823,17 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
   return (
     <div className="absolute top-[calc(100%+8px)] right-0 w-[260px] bg-[#0a0a10] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
       <div className="p-4 flex items-center gap-3 border-b border-zinc-800">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-sm text-white">
-          {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
-        </div>
+        {user && user.avatar ? (
+          <img
+            src={getImageUrl(user.avatar)}
+            alt={user.name || "User"}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-sm text-white">
+            {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-white font-bold text-sm truncate leading-none">{user ? user.name || "User" : "Guest User"}</p>
@@ -826,8 +848,8 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
       <div className="p-1.5 space-y-0.5">
         {[
           { label: "Account Settings", href: "/account", icon: <User className="w-4 h-4" /> },
-          { label: "My Watchlist", href: "/browse", icon: <ListPlus className="w-4 h-4" /> },
-          { label: "Help & Support", href: "/browse", icon: <AlertCircle className="w-4 h-4" /> },
+          { label: "My Watchlist", href: "/wishlist", icon: <Bookmark className="w-4 h-4" /> },
+          { label: "Help & Support", href: "/help-support", icon: <AlertCircle className="w-4 h-4" /> },
         ].map((opt) => (
           <button
             key={opt.label}
@@ -897,13 +919,41 @@ function SignInModal({ onClose }: { onClose: () => void }) {
         // Phone login: pass phone number as the email field — server handles phone vs email
         const loginIdentifier = usePhone ? phone : email;
         const res = await loginClient({ email: loginIdentifier, password });
-        localStorage.setItem("accessToken", res.accessToken);
-        localStorage.setItem("user", JSON.stringify({ id: res.userId, name: res.name || email.split("@")[0] }));
+        localStorage.setItem("appAccessToken", res.accessToken);
+        localStorage.setItem("accessToken", res.accessToken); // legacy compat
+        localStorage.setItem("appUser", JSON.stringify({
+          id: res.userId,
+          name: res.name || email.split("@")[0],
+          avatar: res.avatar || null,
+          subscriptionPlan: res.subscriptionPlan || "free",
+          subscriptionStatus: res.subscriptionStatus || "inactive",
+        }));
+        localStorage.setItem("user", JSON.stringify({
+          id: res.userId,
+          name: res.name || email.split("@")[0],
+          avatar: res.avatar || null,
+          subscriptionPlan: res.subscriptionPlan || "free",
+          subscriptionStatus: res.subscriptionStatus || "inactive",
+        }));
         window.location.reload();
       } else {
         const res = await registerClient({ email, password, name, phone: phone || undefined });
-        localStorage.setItem("accessToken", res.accessToken);
-        localStorage.setItem("user", JSON.stringify({ id: res.userId, name }));
+        localStorage.setItem("appAccessToken", res.accessToken);
+        localStorage.setItem("accessToken", res.accessToken); // legacy compat
+        localStorage.setItem("appUser", JSON.stringify({
+          id: res.userId,
+          name,
+          avatar: res.avatar || null,
+          subscriptionPlan: res.subscriptionPlan || "free",
+          subscriptionStatus: res.subscriptionStatus || "inactive",
+        }));
+        localStorage.setItem("user", JSON.stringify({
+          id: res.userId,
+          name,
+          avatar: res.avatar || null,
+          subscriptionPlan: res.subscriptionPlan || "free",
+          subscriptionStatus: res.subscriptionStatus || "inactive",
+        }));
         window.location.reload();
       }
     } catch (err: any) {
@@ -1281,9 +1331,17 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-full hover:bg-white/5 transition-all ml-1"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-xs text-white">
-                    {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
-                  </div>
+                  {user && user.avatar ? (
+                    <img
+                      src={getImageUrl(user.avatar)}
+                      alt={user.name || "User"}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-red-900 flex items-center justify-center flex-shrink-0 uppercase font-bold text-xs text-white">
+                      {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
+                    </div>
+                  )}
                   <ChevronDown className={`w-3 h-3 text-zinc-200 hidden sm:block transition-transform duration-200 ${userDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
                 {userDropdownOpen && <UserDropdown onSignIn={onSignIn} onSignOut={onSignOut} user={user} />}
@@ -1332,12 +1390,15 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
 export function PublicFooter() {
   const { settings } = useSettings();
   const { resolvedTheme } = useTheme();
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
   const [, setLocation] = useLocation();
 
   const { data: pagesData } = useGetPages({ limit: 50 });
-  const pages: any[] = (pagesData?.data || []).filter((p: any) => p.status === "published" || !p.status);
+  const pages: any[] = (pagesData?.data || []).filter((p: any) => 
+    (p.status === "published" || !p.status) &&
+    p.title && p.title.trim() !== "" &&
+    p.slug && p.slug.trim() !== "" &&
+    p.slug !== "faq" && p.slug !== "help"
+  );
 
   const getLogoUrl = () => {
     if (resolvedTheme === "dark" && settings.darkLogoUrl) return getImageUrl(settings.darkLogoUrl);
@@ -1346,26 +1407,18 @@ export function PublicFooter() {
   };
   const logoUrl = getLogoUrl();
 
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 4000);
-    }
-  };
-
   const socialLinks = [
-    { label: "Facebook", d: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" },
-    { label: "YouTube", d: "M22.54 6.42a2.78 2.78 0 0 0-1.95-1.97C18.88 4 12 4 12 4s-6.88 0-8.59.47A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.97C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.97A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" },
-    { label: "Instagram", d: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01M7.5 2h9A5.5 5.5 0 0 1 2 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2z" },
-  ];
+    { label: "Facebook", d: "M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z", url: settings.facebookUrl },
+    { label: "Twitter", d: "M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z", url: settings.twitterUrl },
+    { label: "YouTube", d: "M22.54 6.42a2.78 2.78 0 0 0-1.95-1.97C18.88 4 12 4 12 4s-6.88 0-8.59.47A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.97C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.97A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z", url: settings.youtubeUrl },
+    { label: "Instagram", d: "M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01M7.5 2h9A5.5 5.5 0 0 1 2 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2z", url: settings.instagramUrl },
+  ].filter(link => link.url && link.url.trim() !== "");
 
   return (
     <footer className="bg-[#040407] border-t border-zinc-900 mt-20 pt-16 pb-10">
       <div className="px-6 sm:px-10 lg:px-14 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
-          <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center gap-2.5">
               {logoUrl ? (
                 <img src={logoUrl} alt={settings.platformName || "StreamIT"} className="h-9 w-auto object-contain" />
@@ -1381,7 +1434,7 @@ export function PublicFooter() {
             <p className="text-zinc-100 text-xs leading-relaxed max-w-xs">{settings.siteDescription || "Your premium OTT destination for movies, TV shows, and exclusive short dramas."}</p>
             <div className="flex items-center gap-2 pt-2">
               {socialLinks.map((s) => (
-                <a key={s.label} href="#" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-100 hover:text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-100 hover:text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                     <path d={s.d} />
                   </svg>
@@ -1406,38 +1459,51 @@ export function PublicFooter() {
             </ul>
           </div>
 
-          <div className="space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Help & Info</h4>
-            <ul className="space-y-2.5">
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
               {pages.length > 0 ? pages.map((p: any) => (
                 <li key={p.slug || p.id}>
-                  <button onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-100 hover:text-white text-xs font-semibold transition-colors text-left">
+                  <button 
+                    onClick={() => {
+                      if (p.slug === "faq" || p.slug === "help") {
+                        setLocation("/help-support");
+                      } else {
+                        setLocation(`/page/${p.slug}`);
+                      }
+                    }} 
+                    className="text-zinc-100 hover:text-white text-xs font-semibold transition-colors text-left truncate max-w-full" 
+                    title={p.title}
+                  >
                     {p.title}
                   </button>
                 </li>
               )) : (
-                <li className="text-zinc-200 text-xs">No pages available</li>
+                <li className="text-zinc-200 text-xs col-span-2">No pages available</li>
               )}
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Subscribe to Newsletter</h4>
-            <p className="text-zinc-100 text-xs leading-normal">Stay updated with our latest releases and exclusive content.</p>
-            <form onSubmit={handleSubscribe} className="relative flex items-center mt-2">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
-                className="w-full bg-zinc-900 border border-zinc-800 focus:border-red-600 text-white text-xs px-3 py-2.5 rounded-xl focus:outline-none pr-10"
-              />
-              <button type="submit" className="absolute right-1 w-8 h-8 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors">
-                {subscribed ? <Check className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-              </button>
-            </form>
-            {subscribed && <p className="text-[10px] text-emerald-400 font-bold">Successfully subscribed!</p>}
+            <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Contact Info</h4>
+            <ul className="space-y-3 text-zinc-100 text-xs">
+              {settings.contactNo && (
+                <li className="flex flex-col gap-0.5">
+                  <span className="text-zinc-300 font-semibold uppercase tracking-wider text-[9px]">Phone</span>
+                  <span className="font-medium text-zinc-200 text-[11px]">{settings.contactNo}</span>
+                </li>
+              )}
+              {settings.inquiryEmail && (
+                <li className="flex flex-col gap-0.5">
+                  <span className="text-zinc-300 font-semibold uppercase tracking-wider text-[9px]">Email</span>
+                  <a href={`mailto:${settings.inquiryEmail}`} className="font-medium text-zinc-200 text-[11px] hover:text-primary transition-colors truncate block max-w-full">{settings.inquiryEmail}</a>
+                </li>
+              )}
+              <li className="text-zinc-100 text-[10px] mt-2 font-medium leading-relaxed pt-2 border-t border-zinc-900">
+                Support Hours:<br />
+                Mon - Sat: 9:00 AM - 6:00 PM
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -1445,7 +1511,17 @@ export function PublicFooter() {
           <p className="text-zinc-200 text-xs font-medium">{settings.copyrightText || "2025 StreamIT. All Rights Reserved."}</p>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2">
             {pages.map((p: any) => (
-              <button key={p.slug || p.id} onClick={() => setLocation(`/page/${p.slug}`)} className="text-zinc-200 hover:text-white text-[11px] font-bold transition-colors whitespace-nowrap">
+              <button 
+                key={p.slug || p.id} 
+                onClick={() => {
+                  if (p.slug === "faq" || p.slug === "help") {
+                    setLocation("/help-support");
+                  } else {
+                    setLocation(`/page/${p.slug}`);
+                  }
+                }} 
+                className="text-zinc-200 hover:text-white text-[11px] font-bold transition-colors whitespace-nowrap"
+              >
                 {p.title}
               </button>
             ))}
@@ -1473,7 +1549,7 @@ export default function StreamingHomePage() {
   useEffect(() => {
     const loadUser = () => {
       try {
-        const storedUser = localStorage.getItem("user");
+        const storedUser = localStorage.getItem("appUser") || localStorage.getItem("user");
         if (storedUser) setUser(JSON.parse(storedUser));
         else setUser(null);
       } catch (e) { /* ignore */ }
@@ -1484,6 +1560,8 @@ export default function StreamingHomePage() {
   }, []);
 
   const handleSignOut = () => {
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     setUser(null);
@@ -1493,10 +1571,11 @@ export default function StreamingHomePage() {
   const isSubscribed = user?.subscriptionStatus === "active" && user?.subscriptionPlan !== "free";
 
   const handlePlay = (item: any) => {
-    const id = item.id || item._id;
-    const isDrama = item.contentType === "drama" || item.type === "drama";
-    const isShow = item.contentType === "show" || item.contentType === "series" || item.type === "show" || item.type === "series";
-    const isMovie = item.type === "movie" || item.contentType === "movie";
+    const id = item.contentId || item.id || item._id;
+    const type = (item.type || item.contentType || "").toLowerCase();
+    const isDrama = type === "drama";
+    const isShow = type === "show" || type === "series";
+    const isMovie = type === "movie";
     if (isDrama) {
       if (item.trailerUrl) {
         setLocation(`/drama/${id}/episode/0`);
@@ -1556,12 +1635,7 @@ export default function StreamingHomePage() {
         )}
         {activeTab === "new" && <NewHotTab onPlay={handlePlay} showToast={showToast} />}
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pb-20">
-          <WebsiteReviews 
-            user={user} 
-            onSignInRequired={() => setShowSignIn(true)} 
-          />
-        </div>
+
       </main>
 
       <PublicFooter />

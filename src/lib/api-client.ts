@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-let getAuthToken = () => localStorage.getItem("accessToken");
+let getAuthToken = () => localStorage.getItem("appAccessToken");
 
 export const getActiveProfileId = (): string | null => {
   try {
@@ -52,7 +52,19 @@ const api = async (
     ...options.headers,
   } as Record<string, string>;
 
-  const token = getAuthToken();
+  // Make sure endpoint starts with /api, add it if it doesn't
+  const finalEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
+
+  const isAppRoute =
+    finalEndpoint.startsWith("/api/app/") ||
+    finalEndpoint.startsWith("/app/") ||
+    finalEndpoint.startsWith("/api/like/") ||
+    finalEndpoint.startsWith("/api/wishlist") ||
+    finalEndpoint.startsWith("/api/views/") ||
+    finalEndpoint.startsWith("/api/share/") ||
+    finalEndpoint.startsWith("/api/web/");
+  const tokenKey = isAppRoute ? "appAccessToken" : "adminAccessToken";
+  const token = localStorage.getItem(tokenKey);
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -65,10 +77,6 @@ const api = async (
   headers["Content-Type"] = "application/json";
 }
   const requestBody = options.body;
-  
-  // Make sure endpoint starts with /api, add it if it doesn't
-  const finalEndpoint = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
-  
   // If we have FormData and onUploadProgress, use XMLHttpRequest for progress tracking
   if (options.body instanceof FormData && options.onUploadProgress) {
     return new Promise((resolve, reject) => {
@@ -130,10 +138,19 @@ const api = async (
     // Token expired or invalid — clear session and redirect to home (login modal)
     if (res.status === 401) {
       const msg = (errorData.message || errorData.error || "").toLowerCase();
-      if (msg.includes("expired") || msg.includes("invalid") || msg.includes("no authorization") || msg.includes("unauthorized")) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
-        window.location.href = "/";
+      if (msg.includes("expired") || msg.includes("invalid signature") || msg.includes("no authorization") || msg.includes("jwt")) {
+        if (isAppRoute) {
+          // Clear all app session keys (both streaming-home and public-auth variants)
+          localStorage.removeItem("appAccessToken");
+          localStorage.removeItem("appUser");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("user");
+          window.location.href = "/";
+        } else {
+          localStorage.removeItem("adminAccessToken");
+          localStorage.removeItem("adminRefreshToken");
+          window.location.href = "/admin/login";
+        }
         return;
       }
     }
@@ -224,9 +241,9 @@ export const useLogin = () => {
     mutationFn: ({ email, password }) =>
       login(email, password),
     onSuccess: (data) => {
-      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("adminAccessToken", data.accessToken);
       if (data.refreshToken) {
-        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("adminRefreshToken", data.refreshToken);
       }
       queryClient.invalidateQueries();
     },
@@ -238,8 +255,8 @@ export const useLogout = () => {
   return useMutation<any, Error, any>({
     mutationFn: () => logout(),
     onSuccess: () => {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("adminAccessToken");
+      localStorage.removeItem("adminRefreshToken");
       queryClient.clear();
     },
   });
@@ -250,7 +267,7 @@ export const useDeleteAccount = () => {
   return useMutation<any, Error, any>({
     mutationFn: () => deleteAccount(),
     onSuccess: () => {
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("appAccessToken");
       localStorage.removeItem("refreshToken");
       queryClient.clear();
     },
@@ -2675,6 +2692,20 @@ export const getFAQs = async (options?: { page?: number; limit?: number; admin?:
   return api(`/faqs?${params.toString()}`);
 };
 
+export const getPublicFAQs = async (options?: { page?: number; limit?: number }) => {
+  const params = new URLSearchParams();
+  if (options?.page) params.set('page', options.page.toString());
+  if (options?.limit) params.set('limit', options.limit.toString());
+  return api(`/faqs/public?${params.toString()}`);
+};
+
+export const useGetPublicFAQs = (options?: { page?: number; limit?: number }) => {
+  return useQuery({
+    queryKey: ['public-faqs', options],
+    queryFn: () => getPublicFAQs(options)
+  });
+};
+
 export const getFAQById = async (id: string) => {
   return api(`/faqs/item/${id}`);
 };
@@ -3456,14 +3487,14 @@ export const toggleWishlistItem = async (data: { contentId: string; contentType:
 };
 
 export const useGetWishlist = (options?: { page?: number; limit?: number }) => {
-  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('appAccessToken') : null;
   return useQuery({
-    queryKey: ['wishlist', options],
+    queryKey: ['wishlist', options, token],
     queryFn: async () => {
+      if (!token) return { items: [], pagination: { total: 0, page: 1, limit: 20, totalPages: 0 } };
       const res = await getWishlist(options);
       return res.data;
     },
-    enabled: hasToken,
     retry: false,
     staleTime: 30000,
   });
@@ -3503,14 +3534,14 @@ export const removeDownload = async (id: string) => {
 };
 
 export const useGetDownloads = (options?: { page?: number; limit?: number }) => {
-  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('appAccessToken') : null;
   return useQuery({
-    queryKey: ['downloads', options],
+    queryKey: ['downloads', options, token],
     queryFn: async () => {
+      if (!token) return [];
       const res = await getDownloads(options);
       return res.data;
     },
-    enabled: hasToken,
     retry: false,
     staleTime: 30000,
   });
@@ -3551,14 +3582,14 @@ export const getAppProfile = async () => {
 };
 
 export const useGetAppProfile = () => {
-  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('appAccessToken') : null;
   return useQuery({
-    queryKey: ['app-profile'],
+    queryKey: ['app-profile', token],
     queryFn: async () => {
+      if (!token) return null;
       const res = await getAppProfile();
       return res.data;
     },
-    enabled: hasToken,
     retry: false,
     staleTime: 30000,
   });
@@ -3640,6 +3671,35 @@ export const useToggleLike = () => {
   });
 };
 
+// ─── VIEWS & SHARES (Public User) ────────────────────────────────────────────
+
+export const recordViewItem = async (data: { contentId: string; contentType: 'movie' | 'show' | 'drama'; episodeId?: string }) => {
+  return api(`/views/${data.contentId}`, {
+    method: 'POST',
+    body: JSON.stringify({ contentType: data.contentType, episodeId: data.episodeId }),
+  });
+};
+
+export const useRecordView = () => {
+  return useMutation({
+    mutationFn: recordViewItem,
+  });
+};
+
+export const recordShareItem = async (data: { contentId: string; contentType: 'movie' | 'show' | 'drama' }) => {
+  return api(`/share/${data.contentId}`, {
+    method: 'POST',
+    body: JSON.stringify({ contentType: data.contentType }),
+  });
+};
+
+export const useRecordShare = () => {
+  return useMutation({
+    mutationFn: recordShareItem,
+  });
+};
+
+
 // ─── WATCH PROGRESS (Continue Watching) ──────────────────────────────────────
 
 export const saveWatchProgress = async (data: {
@@ -3678,6 +3738,23 @@ export const useGetWatchProgress = (contentId?: string, episodeId?: string) => {
     },
     enabled: !!contentId && !!token,
     staleTime: 0,
+  });
+};
+
+export const useGetWatchHistory = (options?: { page?: number; limit?: number }) => {
+  const token = getAuthToken();
+  const profileId = getActiveProfileId();
+  return useQuery({
+    queryKey: ["watch-history", profileId, options?.page, options?.limit],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (options?.page) params.set("page", String(options.page));
+      if (options?.limit) params.set("limit", String(options.limit));
+      if (profileId) params.set("profileId", profileId);
+      const res = await api(`/app/watch/history?${params}`);
+      return res.data;
+    },
+    enabled: !!token,
   });
 };
 

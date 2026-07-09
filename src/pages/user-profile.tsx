@@ -14,12 +14,14 @@ import {
   getImageUrl, updateAppProfile, uploadProfileAvatar, updatePassword, deleteAccount,
   useGetWishlist, useToggleWishlist,
   useGetDownloads, useRemoveDownload, getOfflineVideoUrl, removeOfflineVideo,
+  useGetAppProfile, useGetWatchHistory,
 } from "@/lib/api-client";
 import { PublicFooter } from "@/pages/streaming-home";
+import { WebsiteReviews } from "@/components/WebsiteReviews";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type ProfileTab = "overview" | "settings" | "security" | "watchlist" | "downloads";
+type ProfileTab = "overview" | "settings" | "security" | "watchlist" | "downloads" | "feedback";
 
 interface OttProfile {
   id: string;
@@ -122,15 +124,26 @@ function ProfileColorCircle({
 
 function ProfileSelectScreen({
   mainUserName,
+  profileLimitCount,
   onSelect,
 }: {
   mainUserName: string;
+  profileLimitCount: number;
   onSelect: (profile: OttProfile) => void;
 }) {
   const [profiles, setProfiles] = useState<OttProfile[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
   const [newProfileColor, setNewProfileColor] = useState(PROFILE_COLORS[1]);
+
+  const usedColors = profiles.map((p) => p.color);
+  const availableColors = PROFILE_COLORS.filter((c) => !usedColors.includes(c));
+
+  useEffect(() => {
+    if (showAddModal && availableColors.length > 0) {
+      setNewProfileColor(availableColors[0]);
+    }
+  }, [showAddModal, profiles]);
 
   useEffect(() => {
     try {
@@ -160,7 +173,7 @@ function ProfileSelectScreen({
 
   const handleAddProfile = () => {
     if (!newProfileName.trim()) return;
-    if (profiles.length >= 4) return;
+    if (profiles.length >= profileLimitCount) return;
     const newP: OttProfile = {
       id: `profile_${Date.now()}`,
       name: newProfileName.trim(),
@@ -210,7 +223,7 @@ function ProfileSelectScreen({
           </div>
         ))}
 
-        {profiles.length < 4 && (
+        {profiles.length < profileLimitCount && (
           <div className="flex flex-col items-center gap-3">
             <button
               onClick={() => setShowAddModal(true)}
@@ -247,18 +260,21 @@ function ProfileSelectScreen({
                 Color
               </label>
               <div className="flex gap-2 flex-wrap">
-                {PROFILE_COLORS.map((color, idx) => (
-                  <button
-                    key={color}
-                    onClick={() => setNewProfileColor(color)}
-                    className={`w-8 h-8 rounded-full ${color} transition-all ${
-                      newProfileColor === color
-                        ? "ring-2 ring-white ring-offset-2 ring-offset-[#0c0c14] scale-110"
-                        : "hover:scale-105"
-                    }`}
-                    title={COLOR_LABELS[idx]}
-                  />
-                ))}
+                {availableColors.map((color) => {
+                  const idx = PROFILE_COLORS.indexOf(color);
+                  return (
+                    <button
+                      key={color}
+                      onClick={() => setNewProfileColor(color)}
+                      className={`w-8 h-8 rounded-full ${color} transition-all ${
+                        newProfileColor === color
+                          ? "ring-2 ring-white ring-offset-2 ring-offset-[#0c0c14] scale-110"
+                          : "hover:scale-105"
+                      }`}
+                      title={COLOR_LABELS[idx]}
+                    />
+                  );
+                })}
               </div>
             </div>
 
@@ -287,6 +303,25 @@ function ProfileSelectScreen({
   );
 }
 
+// ─── Plan display helpers ───────────────────────────────────────────────────────
+function getPlanDisplayName(plan: string): string {
+  switch ((plan || "free").toLowerCase()) {
+    case "premium": return "Premium Plan";
+    case "standard": return "Standard Plan";
+    case "basic": return "Basic Plan";
+    default: return "Free Plan";
+  }
+}
+
+function getPlanDescription(plan: string): string {
+  switch ((plan || "free").toLowerCase()) {
+    case "premium": return "4K + Dolby Atmos · 4 devices · Unlimited access · VIP support";
+    case "standard": return "Full HD streaming · 2 devices · Ads-free experience";
+    case "basic": return "HD quality · 1 device · Ads-free library";
+    default: return "Access to free content · Standard quality";
+  }
+}
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function UserProfilePage() {
@@ -294,9 +329,36 @@ export default function UserProfilePage() {
   const { settings } = useSettings();
   const { resolvedTheme } = useTheme();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem("appUser");
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [toast, setToast] = useState("");
+
+  const { data: profileData } = useGetAppProfile();
+
+  useEffect(() => {
+    if (profileData?.user) {
+      const freshUser = {
+        id: profileData.user.id || profileData.user._id,
+        name: profileData.user.name,
+        email: profileData.user.email,
+        phone: profileData.user.phone || profileData.user.mobile,
+        avatar: profileData.user.avatar,
+        subscriptionPlan: profileData.user.subscriptionPlan || "free",
+        subscriptionStatus: profileData.user.subscriptionStatus || "inactive",
+        profileLimitCount: profileData.user.profileLimitCount || 1,
+      };
+      localStorage.setItem("user", JSON.stringify(freshUser));
+      setUser(freshUser);
+      setEditName(freshUser.name || "");
+      setEditEmail(freshUser.email || "");
+      setEditPhone(freshUser.phone || "");
+    }
+  }, [profileData]);
 
   // Active OTT profile (null = show selector screen)
   const [activeProfile, setActiveProfile] = useState<OttProfile | null>(null);
@@ -323,7 +385,8 @@ export default function UserProfilePage() {
   const [deleting, setDeleting] = useState(false);
 
   // Continue watching
-  const [continueWatching, setContinueWatching] = useState<any[]>([]);
+  const { data: watchHistoryData } = useGetWatchHistory({ limit: 10 });
+  const continueWatching = watchHistoryData?.items || [];
 
   const getLogoUrl = () => {
     if (resolvedTheme === "dark" && settings.darkLogoUrl) return getImageUrl(settings.darkLogoUrl);
@@ -333,17 +396,13 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("user");
+      const stored = localStorage.getItem("appUser");
       if (stored) {
         const u = JSON.parse(stored);
-        setUser(u);
         setEditName(u.name || "");
         setEditEmail(u.email || "");
         setEditPhone(u.phone || "");
       }
-      const pid = (() => { try { const p = localStorage.getItem('ott_active_profile'); return p ? JSON.parse(p).id : 'default'; } catch { return 'default'; } })();
-      const cw = JSON.parse(localStorage.getItem(`continue_watching_${pid}`) || localStorage.getItem("continue_watching") || "[]");
-      setContinueWatching(Array.isArray(cw) ? cw : []);
 
       const savedProfile = localStorage.getItem("ott_active_profile");
       if (savedProfile) {
@@ -393,8 +452,8 @@ export default function UserProfilePage() {
   }, [downloadItems.length]);
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("ott_active_profile");
     setLocation("/");
@@ -478,8 +537,8 @@ export default function UserProfilePage() {
     setDeleting(true);
     try {
       await deleteAccount();
-      localStorage.removeItem("user");
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem("appUser");
+      localStorage.removeItem("appAccessToken");
       setLocation("/");
     } catch {
       setDeleting(false);
@@ -537,6 +596,15 @@ export default function UserProfilePage() {
   // ── Not signed in ────────────────────────────────────────────────────────────
 
   if (!user) {
+    // If profileData hasn't resolved yet, show a loading screen instead of the not-signed-in screen
+    const hasToken = typeof window !== "undefined" && !!localStorage.getItem("appAccessToken");
+    if (hasToken) {
+      return (
+        <div className="min-h-screen bg-[#030306] flex items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-[#030306] flex flex-col items-center justify-center gap-6 p-6 font-sans">
         <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
@@ -572,6 +640,7 @@ export default function UserProfilePage() {
     return (
       <ProfileSelectScreen
         mainUserName={user.name}
+        profileLimitCount={user.profileLimitCount || 1}
         onSelect={(profile) => {
           setActiveProfile(profile);
           window.dispatchEvent(new Event('profile-changed'));
@@ -591,6 +660,7 @@ export default function UserProfilePage() {
     { id: "downloads", label: "Downloads", icon: <Download className="w-4 h-4" /> },
     { id: "settings", label: "Edit Profile", icon: <Settings className="w-4 h-4" /> },
     { id: "security", label: "Security", icon: <Shield className="w-4 h-4" /> },
+    { id: "feedback", label: "Rate Website", icon: <Star className="w-4 h-4" /> },
   ];
 
   return (
@@ -786,43 +856,7 @@ export default function UserProfilePage() {
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && (
             <div className="space-y-6">
-              {/* Subscription Card */}
-              <div className="relative overflow-hidden rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 via-[#0c0c14] to-[#0c0c14] p-6">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-amber-400/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="flex items-start justify-between gap-4 relative">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Crown className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400 font-black text-sm capitalize">
-                        {user.subscriptionPlan || "Free"} Plan
-                      </span>
-                    </div>
-                    <h3 className="text-white font-black text-xl mb-1">
-                      {isSubscribed ? "All-Access Subscription" : "Free Account"}
-                    </h3>
-                    <p className="text-zinc-200 text-sm">
-                      {isSubscribed
-                        ? "Unlimited streaming · HD & 4K · All devices"
-                        : "Upgrade to unlock all premium content"}
-                    </p>
-                    {!isSubscribed && (
-                      <div className="mt-4">
-                        <button
-                          onClick={() => setLocation("/")}
-                          className="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary/30"
-                        >
-                          Upgrade Now
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {isSubscribed && (
-                    <button className="flex items-center gap-1.5 px-4 py-2 bg-amber-400/20 border border-amber-400/30 text-amber-400 hover:bg-amber-400/30 rounded-xl text-xs font-bold transition-all flex-shrink-0">
-                      <CreditCard className="w-3.5 h-3.5" /> Manage
-                    </button>
-                  )}
-                </div>
-              </div>
+
 
               {/* Recent Activity */}
               <div>
@@ -844,7 +878,7 @@ export default function UserProfilePage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {continueWatching.slice(0, 8).map((item: any) => (
                       <div
-                        key={item.id}
+                        key={item.id || item._id}
                         onClick={() => handlePlayItem(item)}
                         className="group cursor-pointer"
                       >
@@ -853,7 +887,7 @@ export default function UserProfilePage() {
                           style={{ aspectRatio: "16/9" }}
                         >
                           <img
-                            src={item.poster ? getImageUrl(item.poster) : ""}
+                            src={getImageUrl(item.thumbnail || item.poster || "")}
                             alt={item.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             onError={(e) => {
@@ -863,7 +897,7 @@ export default function UserProfilePage() {
                           <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
                             <div
                               className="h-full bg-primary rounded-full"
-                              style={{ width: `${item.progress || 25}%` }}
+                              style={{ width: `${Math.round(item.progressPercent || item.progress || 25)}%` }}
                             />
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -874,7 +908,7 @@ export default function UserProfilePage() {
                         </div>
                         <p className="text-white text-xs font-bold truncate">{item.title}</p>
                         <p className="text-zinc-200 text-[10px] mt-0.5">
-                          {item.progress || 25}% complete
+                          {Math.round(item.progressPercent || item.progress || 25)}% complete
                         </p>
                       </div>
                     ))}
@@ -1311,6 +1345,25 @@ export default function UserProfilePage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* FEEDBACK TAB */}
+          {activeTab === "feedback" && (
+            <div className="space-y-6">
+              <div className="border-b border-zinc-900 pb-5">
+                <h3 className="text-white font-black text-lg mb-1 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-primary fill-primary animate-pulse" />
+                  Website Feedback & Reviews
+                </h3>
+                <p className="text-zinc-400 text-xs">
+                  Share your experience using our platform and see what other viewers think about us.
+                </p>
+              </div>
+              <WebsiteReviews 
+                user={user} 
+                onSignInRequired={() => setLocation("/login")} 
+              />
             </div>
           )}
 

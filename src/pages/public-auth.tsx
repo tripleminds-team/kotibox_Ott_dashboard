@@ -28,7 +28,7 @@ function loadScript(src: string, id: string): Promise<void> {
 const baseUrl = (import.meta as any).env?.VITE_API_URL || "";
 
 async function socialAuthRequest(provider: "google" | "apple", idToken: string, user?: any) {
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("appAccessToken");
   const res = await fetch(`${baseUrl}/api/app/auth/${provider}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
@@ -72,9 +72,10 @@ export default function PublicAuthPage() {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const handleAuthSuccess = useCallback((res: any) => {
-    localStorage.setItem("accessToken", res.accessToken);
-    localStorage.setItem("user", JSON.stringify({
+    localStorage.setItem("appAccessToken", res.accessToken);
+    localStorage.setItem("appUser", JSON.stringify({
       id: res.userId, name: res.name,
+      avatar: res.avatar || null,
       subscriptionPlan: res.subscriptionPlan || "free",
       subscriptionStatus: res.subscriptionStatus || "inactive",
     }));

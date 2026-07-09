@@ -262,15 +262,15 @@ export default function EpisodeForm() {
         .filter((r) => r.filePath && r.language)
         .map((r) => ({ language: r.language, filePath: r.filePath })),
       duration: duration ? durationToSecs(duration) : undefined,
-      ...(qualityEnabled && {
-        videoQualities: qualityRows
-          .filter((q) => q.url || q.filePath)
-          .map((q) => ({
-            quality: q.quality as any,
-            url: q.type === "local" ? q.filePath : q.url,
-            size: 0,
-          })),
-      }),
+      videoQualities: qualityEnabled
+        ? qualityRows
+            .filter((q) => q.url || q.filePath)
+            .map((q) => ({
+              quality: q.quality as any,
+              url: q.type === "local" ? q.filePath : q.url,
+              size: 0,
+            }))
+        : [],
     };
 
     try {

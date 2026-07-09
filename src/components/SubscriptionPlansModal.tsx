@@ -20,7 +20,7 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = localStorage.getItem("appUser");
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch (e) {}
   }, [isOpen]);

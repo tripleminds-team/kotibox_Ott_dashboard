@@ -9,9 +9,10 @@ import { useGetWebBrowse, useGetGenres } from "@/lib/api-client";
 import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
 import { PortraitCard } from "@/components/ContentCard";
 
-type ContentType = "movie" | "show" | "drama";
+type ContentType = "all" | "movie" | "show" | "drama";
 
 const CONTENT_TYPES: { key: ContentType; label: string; icon: React.ReactNode }[] = [
+  { key: "all", label: "All", icon: <SlidersHorizontal className="w-4 h-4" /> },
   { key: "movie", label: "Movies", icon: <Film className="w-4 h-4" /> },
   { key: "show", label: "TV Shows", icon: <Tv className="w-4 h-4" /> },
   { key: "drama", label: "Short Drama", icon: <Smartphone className="w-4 h-4" /> },
@@ -23,6 +24,7 @@ const TAB_TO_TYPE: Record<string, ContentType> = {
   tvshows: "show",
   movie: "movie",
   movies: "movie",
+  all: "all",
   new: "movie",
   trending: "movie",
   "top-rated": "movie",
@@ -45,29 +47,32 @@ export default function CategoriesBrowsePage() {
   const isAction = searchParams.has("action");
   const isDramaSeries = searchParams.has("drama-series");
   const isShortDrama = searchParams.has("short-drama");
+  const genreParam = searchParams.get("genre");
 
   const initialQ = searchParams.get("q") || "";
   const [searchInput, setSearchInput] = useState(initialQ);
   const [debouncedQ, setDebouncedQ] = useState(initialQ);
 
-  const initialType: ContentType = isTv || isDramaSeries
+  const initialType: ContentType = searchParams.has("trending") || searchParams.has("new")
+    ? "all"
+    : isTv || isDramaSeries
     ? "show"
     : isShortDrama
     ? "drama"
     : isAction || isTopRated
     ? "movie"
     : (params as any)?.tab
-    ? (TAB_TO_TYPE[(params as any).tab] || "movie")
-    : "movie";
+    ? (TAB_TO_TYPE[(params as any).tab] || "all")
+    : "all";
 
   const [contentType, setContentType] = useState<ContentType>(initialType);
-  const [activeGenre, setActiveGenre] = useState(isAction ? "Action" : isDramaSeries ? "Drama" : "All");
+  const [activeGenre, setActiveGenre] = useState(genreParam ? genreParam : isAction ? "Action" : isDramaSeries ? "Drama" : "All");
   const [page, setPage] = useState(1);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
+    const stored = localStorage.getItem("appUser");
     if (stored) try { setUser(JSON.parse(stored)); } catch {}
   }, []);
 
@@ -82,7 +87,10 @@ export default function CategoriesBrowsePage() {
   // Sync category state from URL query parameters
   useEffect(() => {
     const searchParams = new URLSearchParams(searchString);
-    if (searchParams.has("tv")) {
+    if (searchParams.has("trending") || searchParams.has("new") || searchParams.has("top-rated")) {
+      setContentType("all");
+      setActiveGenre("All");
+    } else if (searchParams.has("tv")) {
       setContentType("show");
       setActiveGenre("All");
     } else if (searchParams.has("drama-series")) {
@@ -97,8 +105,12 @@ export default function CategoriesBrowsePage() {
     } else if (searchParams.has("top-rated")) {
       setContentType("movie");
       setActiveGenre("All");
+    } else if (searchParams.has("genre")) {
+      const type = (params as any)?.tab ? TAB_TO_TYPE[(params as any).tab] || "all" : "all";
+      setContentType(type);
+      setActiveGenre(searchParams.get("genre") || "All");
     } else if ((params as any)?.tab) {
-      const type = TAB_TO_TYPE[(params as any).tab] || "movie";
+      const type = TAB_TO_TYPE[(params as any).tab] || "all";
       setContentType(type);
       setActiveGenre("All");
     }
@@ -171,8 +183,8 @@ export default function CategoriesBrowsePage() {
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     setUser(null);
     window.location.reload();
   };

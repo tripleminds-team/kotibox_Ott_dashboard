@@ -60,7 +60,7 @@ export default function ShortDramaPlayer({
   const [user, setUser] = useState<any>(null);
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("user");
+      const stored = localStorage.getItem("appUser");
       if (stored) setUser(JSON.parse(stored));
     } catch {}
   }, []);
@@ -535,13 +535,15 @@ export default function ShortDramaPlayer({
             </div>
 
             {/* Free / lock divider */}
-            <div className="flex items-center gap-2 mt-3 px-1">
-              <div className="flex-1 h-px bg-zinc-800" />
-              <span className="text-zinc-600 text-[10px] flex-shrink-0 text-center leading-snug">
-                EP 1–{drama.freeEpisodes} FREE · Subscribe to unlock all {drama.totalEpisodes} episodes
-              </span>
-              <div className="flex-1 h-px bg-zinc-800" />
-            </div>
+            {!isSubscribed && (
+              <div className="flex items-center gap-2 mt-3 px-1">
+                <div className="flex-1 h-px bg-zinc-800" />
+                <span className="text-zinc-600 text-[10px] flex-shrink-0 text-center leading-snug">
+                  EP 1–{drama.freeEpisodes} FREE · Subscribe to unlock all {drama.totalEpisodes} episodes
+                </span>
+                <div className="flex-1 h-px bg-zinc-800" />
+              </div>
+            )}
           </div>
         </div>
       </div>

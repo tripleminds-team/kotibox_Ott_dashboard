@@ -420,15 +420,15 @@ export default function MovieForm() {
           .filter((c) => c.directorId)
           .map((c) => ({ director: c.directorId, role: c.role })),
         hlsUrl: videoUploadType === "local" ? videoFilePath : videoUrl,
-        ...(qualityEnabled && {
-          videoQualities: qualityRows
-            .filter((q) => q.url || q.filePath)
-            .map((q) => ({
-              quality: q.quality as any,
-              url: q.type === "local" ? q.filePath : q.url,
-              size: 0,
-            })),
-        }),
+        videoQualities: qualityEnabled
+          ? qualityRows
+              .filter((q) => q.url || q.filePath)
+              .map((q) => ({
+                quality: q.quality as any,
+                url: q.type === "local" ? q.filePath : q.url,
+                size: 0,
+              }))
+          : [],
         subtitles: subtitleRows
           .filter((r) => r.filePath && r.language)
           .map((r) => ({ language: r.language, filePath: r.filePath })),

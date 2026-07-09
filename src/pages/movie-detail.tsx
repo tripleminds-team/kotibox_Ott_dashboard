@@ -6,7 +6,7 @@ import {
   ChevronLeft, Crown, Tv,
   Check, ChevronRight, Loader2, Download
 } from "lucide-react";
-import { useGetWebDetail, getImageUrl, useGetWishlist, useToggleWishlist, useGetAppProfile, useToggleLike, useRequestDownload, useRemoveDownload, useGetDownloads, cacheDownloadedVideo, removeOfflineVideo } from "@/lib/api-client";
+import { useGetWebDetail, getImageUrl, useGetWishlist, useToggleWishlist, useGetAppProfile, useToggleLike, useRequestDownload, useRemoveDownload, useGetDownloads, cacheDownloadedVideo, removeOfflineVideo, useRecordShare } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 import { PublicHeader, PublicFooter } from "@/pages/streaming-home";
 import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
@@ -16,9 +16,12 @@ import { PortraitCard, LandscapeCard } from "@/components/ContentCard";
    MAIN PAGE
 ───────────────────────────────────────────── */
 export default function MovieDetailPage() {
-  const [, params]    = useRoute("/movie/:id");
+  const [, params] = useRoute("/movie/:id");
   const [, setLocation] = useLocation();
   const id = (params as any)?.id;
+  const { toast } = useToast();
+
+  const recordShareMutation = useRecordShare();
 
   const [user, setUser] = useState<any>(null);
   const [plansModalOpen, setPlansModalOpen] = useState(false);
@@ -30,7 +33,7 @@ export default function MovieDetailPage() {
   useEffect(() => {
     const loadUser = () => {
       try {
-        const storedUser = localStorage.getItem("user");
+        const storedUser = localStorage.getItem("appUser");
         if (storedUser) setUser(JSON.parse(storedUser));
         else setUser(null);
       } catch (e) {}
@@ -41,8 +44,8 @@ export default function MovieDetailPage() {
   }, []);
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     setUser(null);
     window.location.reload();
   };
@@ -54,9 +57,8 @@ export default function MovieDetailPage() {
   const [selectedSeason, setSelectedSeason] = useState(1);
 
   const { data: profileData } = useGetAppProfile();
-  const { toast } = useToast();
 
-  const isLiked = profileData?.likes?.some((l: any) => l.contentId === id && !l.episodeId) || false;
+  const isLiked = profileData?.likeRecords?.some((l: any) => l.contentId === id && !l.episodeId) || false;
   const toggleLikeMutation = useToggleLike();
 
   // Downloads — use web endpoint as single source of truth (cross-device consistent)
@@ -369,6 +371,10 @@ export default function MovieDetailPage() {
 
           <button
             onClick={() => {
+              recordShareMutation.mutate({
+                contentId: id,
+                contentType: item.type === "movie" ? "movie" : "show",
+              });
               navigator.clipboard.writeText(window.location.href);
               toast({
                 title: "Link Copied",
@@ -378,11 +384,6 @@ export default function MovieDetailPage() {
             className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-white/20 bg-white/8 text-white hover:border-white/35 transition-all active:scale-95"
           >
             <Share2 className="w-4 h-4" />
-          </button>
-
-          <button className="hidden sm:flex ml-2 items-center gap-2 px-5 py-3 bg-zinc-800/70 hover:bg-zinc-700/70 border border-zinc-700 text-white font-semibold rounded-xl text-sm transition-all">
-            <Star className="w-4 h-4 text-amber-400" />
-            Rate this
           </button>
         </div>
             </div>{/* end text block */}
@@ -542,6 +543,73 @@ export default function MovieDetailPage() {
       })()}
 
       {/* ══════════════════════════════════════════
+          2.5. CAST & CREW
+      ══════════════════════════════════════════ */}
+      {((item.cast && item.cast.length > 0) || (item.crew && item.crew.length > 0) || (item.crewMembers && item.crewMembers.length > 0)) && (
+        <div className="pb-10">
+          <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
+            <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
+            <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">Cast & Crew</h2>
+          </div>
+          <div
+            className="flex gap-6 overflow-x-auto px-6 sm:px-10 lg:px-16 pb-2"
+            style={{ scrollbarWidth: "none" } as React.CSSProperties}
+          >
+            {item.cast?.map((c: any) => (
+              <div key={`cast-${c.id}-${c.character}`} className="flex flex-col items-center text-center w-24 sm:w-28 flex-shrink-0 group">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 group-hover:border-primary transition-all duration-300 shadow-md">
+                  <img
+                    src={getImageUrl(c.image || "")}
+                    alt={c.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`;
+                    }}
+                  />
+                </div>
+                <h4 className="text-zinc-100 font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
+                <p className="text-zinc-200 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.character || c.role || 'Cast'}</p>
+              </div>
+            ))}
+
+            {item.crew?.map((c: any) => (
+              <div key={`crew-${c.id}-${c.role}`} className="flex flex-col items-center text-center w-24 sm:w-28 flex-shrink-0 group">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 group-hover:border-primary transition-all duration-300 shadow-md">
+                  <img
+                    src={getImageUrl(c.image || "")}
+                    alt={c.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`;
+                    }}
+                  />
+                </div>
+                <h4 className="text-zinc-100 font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
+                <p className="text-zinc-200 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.role || 'Director'}</p>
+              </div>
+            ))}
+
+            {item.crewMembers?.map((c: any) => (
+              <div key={`crewMem-${c.id}-${c.role}`} className="flex flex-col items-center text-center w-24 sm:w-28 flex-shrink-0 group">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 group-hover:border-primary transition-all duration-300 shadow-md">
+                  <img
+                    src={getImageUrl(c.image || "")}
+                    alt={c.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`;
+                    }}
+                  />
+                </div>
+                <h4 className="text-zinc-100 font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
+                <p className="text-zinc-200 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.role || 'Crew'}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════
           3. MORE LIKE THIS
       ══════════════════════════════════════════ */}
       {related.length > 0 && (
@@ -551,7 +619,11 @@ export default function MovieDetailPage() {
             <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">More Like This</h2>
             <div className="flex-1" />
             <button
-              onClick={() => setLocation(item.type === "movie" ? "/browse/movie" : "/browse/show")}
+              onClick={() => {
+                const firstGenre = item.genres?.[0] || '';
+                const path = item.type === "movie" ? "/browse/movie" : "/browse/show";
+                window.open(firstGenre ? `${path}?genre=${encodeURIComponent(firstGenre)}` : path, "_blank");
+              }}
               className="text-zinc-100 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
             >
               See all <ChevronRight className="w-3.5 h-3.5" />
@@ -571,27 +643,33 @@ export default function MovieDetailPage() {
       {/* ══════════════════════════════════════════
           4. YOU MAY ALSO LIKE
       ══════════════════════════════════════════ */}
-      <div className="pb-12">
-        <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
-          <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
-          <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">You May Also Like</h2>
-          <div className="flex-1" />
-          <button
-            onClick={() => setLocation(item.type === "movie" ? "/browse/movie" : "/browse/show")}
-            className="text-zinc-100 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+      {similarContent.length > 0 && (
+        <div className="pb-12">
+          <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
+            <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
+            <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">You May Also Like</h2>
+            <div className="flex-1" />
+            <button
+              onClick={() => {
+                const firstGenre = item.genres?.[0] || '';
+                const path = item.type === "movie" ? "/browse/movie" : "/browse/show";
+                window.open(firstGenre ? `${path}?genre=${encodeURIComponent(firstGenre)}` : path, "_blank");
+              }}
+              className="text-zinc-100 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+            >
+              See all <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div
+            className="flex gap-4 overflow-x-auto px-6 sm:px-10 lg:px-16 pb-2"
+            style={{ scrollbarWidth: "none" } as React.CSSProperties}
           >
-            See all <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+            {similarContent.map((c) => (
+              <LandscapeCard key={c.id} item={c} onClick={() => setLocation(`/movie/${c.id}`)} />
+            ))}
+          </div>
         </div>
-        <div
-          className="flex gap-4 overflow-x-auto px-6 sm:px-10 lg:px-16 pb-2"
-          style={{ scrollbarWidth: "none" } as React.CSSProperties}
-        >
-          {similarContent.map((c) => (
-            <LandscapeCard key={c.id} item={c} onClick={() => setLocation(`/movie/${c.id}`)} />
-          ))}
-        </div>
-      </div>
+      )}
 
       <PublicFooter />
 

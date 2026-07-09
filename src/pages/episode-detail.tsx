@@ -7,10 +7,11 @@ import {
   Settings, Check, RotateCcw, RotateCw, SkipBack, Plus, Download
 } from "lucide-react";
 import { PublicHeader, PublicFooter } from "./streaming-home";
+import { WebsiteReviews } from "@/components/WebsiteReviews";
 import Hls from "hls.js";
-import { useGetWebSubscriptionPlans, useCreateSubscription, useGetWebDetail, getImageUrl, useGetPublicAds, useGetAppProfile, useToggleLike, useRequestDownload, useRemoveDownload, useGetWishlist, useToggleWishlist, useSaveWatchProgress, useGetWatchProgress, getOfflineVideoUrl, useGetDownloads, cacheDownloadedVideo, removeOfflineVideo } from "@/lib/api-client";
+import { useGetWebSubscriptionPlans, useCreateSubscription, useGetWebDetail, getImageUrl, useGetPublicAds, useGetAppProfile, useToggleLike, useRequestDownload, useRemoveDownload, useGetWishlist, useToggleWishlist, useSaveWatchProgress, useGetWatchProgress, getOfflineVideoUrl, useGetDownloads, cacheDownloadedVideo, removeOfflineVideo, useRecordView, useRecordShare } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-
+import { PortraitCard } from "@/components/ContentCard";
 /* ─── AD OVERLAY ─── */
 function AdOverlay({ ad, onSkip }: { ad: any; onSkip: () => void }) {
   const [countdown, setCountdown] = useState(5);
@@ -75,6 +76,7 @@ function VideoPlayer({
   contentId,
   episodeId,
   resumeFrom,
+  contentType,
 }: {
   videoSrc: string;
   thumbnail: string;
@@ -84,6 +86,7 @@ function VideoPlayer({
   contentId?: string;
   episodeId?: string;
   resumeFrom?: number;
+  contentType?: 'drama' | 'movie' | 'series';
 }) {
   const videoRef      = useRef<HTMLVideoElement>(null);
   const containerRef  = useRef<HTMLDivElement>(null);
@@ -113,6 +116,21 @@ function VideoPlayer({
   const lastSavedTimeRef = useRef(0);
   const resumeAppliedRef = useRef(false);
 
+  const recordViewMutation = useRecordView();
+  const viewRecordedRef = useRef(false);
+
+  useEffect(() => {
+    if (playing && !viewRecordedRef.current && contentId) {
+      viewRecordedRef.current = true;
+      const apiContentType = contentType === 'drama' ? 'drama' : contentType === 'movie' ? 'movie' : 'show';
+      recordViewMutation.mutate({
+        contentId,
+        contentType: apiContentType,
+        episodeId: episodeId || undefined,
+      });
+    }
+  }, [playing, contentId, episodeId, contentType]);
+
   // If resumeFrom arrives after mount (async), apply it before the video has started
   useEffect(() => {
     if (resumeFrom && resumeFrom > 5 && !resumeAppliedRef.current && currentTime < 2) {
@@ -122,7 +140,7 @@ function VideoPlayer({
 
   useEffect(() => {
     if (!contentId || !duration) return;
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("appAccessToken");
     if (!token) return;
 
     const diff = Math.abs(currentTime - lastSavedTimeRef.current);
@@ -898,7 +916,7 @@ function LockPopup({ episodeNum, onClose, onSubscribed }: { episodeNum: number; 
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = localStorage.getItem("appUser");
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch (e) {}
   }, []);
@@ -1032,17 +1050,27 @@ export default function EpisodeDetailPage() {
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) setUser(JSON.parse(storedUser));
+      const appUserStr = localStorage.getItem("appUser");
+      const userStr = localStorage.getItem("user");
+      const parsedUser = appUserStr ? JSON.parse(appUserStr) : (userStr ? JSON.parse(userStr) : null);
+      if (parsedUser) setUser(parsedUser);
+      // Sync token key so API calls work for users who logged in via streaming-home
+      if (!localStorage.getItem("appAccessToken") && localStorage.getItem("accessToken")) {
+        localStorage.setItem("appAccessToken", localStorage.getItem("accessToken")!);
+      }
     } catch (e) {}
   }, []);
 
   const handleSignOut = () => {
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     setUser(null);
     window.location.reload();
   };
+
+  const recordShareMutation = useRecordShare();
 
   // params.showTitle is the content ID (drama's _id / id from DB)
   const contentId = params.showTitle || "";
@@ -1050,6 +1078,7 @@ export default function EpisodeDetailPage() {
   const { data: detailData, isLoading } = useGetWebDetail(contentId);
   const showData = (detailData as any)?.content || detailData;
   const apiEpisodes: any[] = (detailData as any)?.episodes || [];
+  const related: any[] = (detailData as any)?.related || [];
 
   const title = showData?.title || "Drama";
 
@@ -1064,7 +1093,7 @@ export default function EpisodeDetailPage() {
     genre: Array.isArray(showData?.genres) ? showData.genres.join(" · ") : "Drama",
     tags: Array.isArray(showData?.genres) ? showData.genres as string[] : [] as string[],
     description: showData?.description || "",
-    likes: showData?.views || 0,
+    likes: showData?.likes || 0,
     favorites: 0,
     totalEpisodes: totalEps,
     freeEpisodes: freeEps,
@@ -1074,8 +1103,10 @@ export default function EpisodeDetailPage() {
 
   const handleSubscribed = useCallback(() => {
     try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) setUser(JSON.parse(storedUser));
+      const appUserStr = localStorage.getItem("appUser");
+      const userStr = localStorage.getItem("user");
+      const parsedUser = appUserStr ? JSON.parse(appUserStr) : (userStr ? JSON.parse(userStr) : null);
+      if (parsedUser) setUser(parsedUser);
     } catch (e) {}
   }, []);
 
@@ -1121,9 +1152,11 @@ export default function EpisodeDetailPage() {
   const inWatchlist = wishlistItems.some((w: any) => w.id === contentId || w.contentId === contentId);
   const toggleWishlistMutation = useToggleWishlist();
 
-  const isLiked = currentEp === 0
-    ? (profileData?.likes?.some((l: any) => l.contentId === contentId && !l.episodeId) || false)
-    : (profileData?.likes?.some((l: any) => l.episodeId === currentEpId) || false);
+  const isMovieOrSeries = currentEp === 0 || !currentEpId;
+
+  const isLiked = isMovieOrSeries
+    ? (profileData?.likeRecords?.some((l: any) => l.contentId === contentId && !l.episodeId) || false)
+    : (profileData?.likeRecords?.some((l: any) => l.episodeId === currentEpId) || false);
 
   const toggleLikeMutation = useToggleLike();
 
@@ -1140,7 +1173,10 @@ export default function EpisodeDetailPage() {
 
   const handleDownloadToggle = useCallback((epNum: number) => {
     if (!user) { navigate("/login"); return; }
-    if (epNum === 0) {
+
+    const isMovieOrSeries = epNum === 0 || apiEpisodes.length === 0;
+
+    if (isMovieOrSeries) {
       const record = downloadItems.find((d: any) => d.contentId === contentId && !d.episodeId);
       if (record) {
         removeDownloadMutation.mutate(
@@ -1202,7 +1238,21 @@ export default function EpisodeDetailPage() {
     }
   }, [user, navigate, downloadItems, contentId, showData, apiEpisodes, removeDownloadMutation, requestDownloadMutation, toast]);
 
-  const isSubscribed = user?.subscriptionStatus === 'active' && user?.subscriptionPlan !== 'free';
+  const getPlanLevel = (plan?: string) => {
+    switch (plan?.toLowerCase()) {
+      case "premium": return 3;
+      case "standard": return 2;
+      case "basic": return 1;
+      default: return 0;
+    }
+  };
+
+  // Use live profileData as source of truth for subscription (avoids stale localStorage)
+  const liveStatus = profileData?.subscriptionStatus || user?.subscriptionStatus;
+  const livePlan   = profileData?.subscriptionPlan   || user?.subscriptionPlan;
+  const userPlan = liveStatus === "active" ? (livePlan || "free") : "free";
+  const requiredPlan = showData?.planRequired || "free";
+  const isLockedForContent = getPlanLevel(userPlan) < getPlanLevel(requiredPlan);
 
   const goToEpisode = useCallback((ep: number) => {
     const maxEp = detail.totalEpisodes === 0 ? 1 : detail.totalEpisodes;
@@ -1210,11 +1260,12 @@ export default function EpisodeDetailPage() {
     const targetEp = apiEpisodes[ep - 1];
     
     let isLocked = false;
-    if (!isSubscribed && ep !== 0) {
+    if (ep !== 0) {
       if (detail.totalEpisodes === 0) {
-        isLocked = showData?.isPremium === true;
+        isLocked = (showData?.isPremium === true || requiredPlan !== "free") && isLockedForContent;
       } else {
-        isLocked = targetEp ? !targetEp.isFree : ep > detail.freeEpisodes;
+        const isEpFree = targetEp ? targetEp.isFree : ep <= detail.freeEpisodes;
+        isLocked = !isEpFree && isLockedForContent;
       }
     }
     
@@ -1226,24 +1277,27 @@ export default function EpisodeDetailPage() {
     setCurrentEp(ep);
     setAutoPlay(true);
     navigate(`/show/${contentId}/episode/${ep}`);
-  }, [contentId, detail.totalEpisodes, detail.freeEpisodes, navigate, isSubscribed, apiEpisodes, showData]);
+  }, [contentId, detail.totalEpisodes, detail.freeEpisodes, navigate, isLockedForContent, requiredPlan, apiEpisodes, showData]);
 
   const handleNext = useCallback(() => {
     const next = currentEp + 1;
-    const maxEp = detail.totalEpisodes === 0 ? 1 : detail.totalEpisodes;
+    // Use actual episode array length, not detail.totalEpisodes which may be 0 when loading
+    const maxEp = apiEpisodes.length > 0 ? apiEpisodes.length : detail.totalEpisodes;
     if (next <= maxEp) {
       goToEpisode(next);
     }
-  }, [currentEp, detail.totalEpisodes, goToEpisode]);
+  }, [currentEp, apiEpisodes.length, detail.totalEpisodes, goToEpisode]);
 
   const handleLocked = useCallback((ep: number) => {
     setLockedEpNum(ep);
     setLockPopupOpen(true);
   }, []);
 
-  const epLabel   = currentEp === 0 ? "Trailer" : `Episode ${currentEp}`;
-  const epTitle   = currentEp === 0 ? `Trailer - ${title}` : `Episode ${currentEp} - ${title}`;
-  const plotTitle = currentEp === 0 ? "About Trailer" : `Plot of Episode ${currentEp}`;
+  const isMovieContent = showData?.contentType === 'movie' || apiEpisodes.length === 0;
+  
+  const epLabel   = isMovieContent ? "Movie" : currentEp === 0 ? "Trailer" : `Episode ${currentEp}`;
+  const epTitle   = isMovieContent ? title : currentEp === 0 ? `Trailer - ${title}` : `Episode ${currentEp} - ${title}`;
+  const plotTitle = isMovieContent ? "Plot Synopsis" : currentEp === 0 ? "About Trailer" : `Plot of Episode ${currentEp}`;
 
   const videoSrc = (() => {
     // Movie: no episodes → play the movie's own HLS/video URL
@@ -1266,9 +1320,15 @@ export default function EpisodeDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[#09090b] text-white">
       <PublicHeader
-        activeTab="drama"
+        activeTab={
+          showData?.contentType === "movie"
+            ? "movies"
+            : showData?.contentType === "series"
+            ? "tvshows"
+            : "drama"
+        }
         setActiveTab={(tab) => {
           if (tab === "home") navigate("/");
           else if (tab === "tvshows") navigate("/tv-shows-browse");
@@ -1279,11 +1339,11 @@ export default function EpisodeDetailPage() {
         user={user}
       />
 
-      <main className="pt-[68px] pb-16">
-        <div className="max-w-[1600px] mx-auto">
+      <main className="pt-[68px] pb-16 bg-[#09090b] text-white">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Back button row */}
-          <div className="px-4 sm:px-6 lg:px-10 pt-4 pb-2">
+          <div className="pt-4 pb-4">
             <button
               onClick={() => window.history.back()}
               className="flex items-center gap-1.5 text-zinc-200 hover:text-white text-sm font-semibold transition-colors"
@@ -1292,38 +1352,34 @@ export default function EpisodeDetailPage() {
             </button>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-0 items-start">
+          {/* Player Container */}
+          <div
+            key={`${title}-ep-${currentEp}`}
+            className="relative overflow-hidden bg-black shadow-2xl rounded-2xl border border-zinc-900 mb-8"
+            style={{ aspectRatio: "16 / 9" }}
+            onClick={() => !playerStarted && setPlayerStarted(true)}
+          >
+            <VideoPlayer
+              videoSrc={videoSrc}
+              thumbnail={detail.thumbnail}
+              autoPlay={autoPlay}
+              onNext={() => { setAdDismissed(false); setPlayerStarted(false); handleNext(); }}
+              videoSettings={currentEpisode?.videoSettings || showData?.videoSettings}
+              contentId={contentId}
+              episodeId={currentEpisode?.id || currentEpisode?._id}
+              resumeFrom={savedProgress?.progressPercent && savedProgress.progressPercent < 95 ? savedProgress.progressSeconds : undefined}
+              contentType={showData?.contentType}
+            />
+            {currentAd && <AdOverlay ad={currentAd} onSkip={() => setAdDismissed(true)} />}
+          </div>
 
-            {/* LEFT: player — full width on mobile, 75% on desktop */}
-            <div className="lg:sticky lg:top-[68px] w-full lg:w-[75%] flex-shrink-0">
-              {/* Video wrapper — key changes on episode change → remount */}
-              <div
-                key={`${title}-ep-${currentEp}`}
-                className="relative overflow-hidden bg-black shadow-2xl"
-                style={{ aspectRatio: "16 / 9" }}
-                onClick={() => !playerStarted && setPlayerStarted(true)}
-              >
-                <VideoPlayer
-                  videoSrc={videoSrc}
-                  thumbnail={detail.thumbnail}
-                  autoPlay={autoPlay}
-                  onNext={() => { setAdDismissed(false); setPlayerStarted(false); handleNext(); }}
-                  videoSettings={currentEpisode?.videoSettings || showData?.videoSettings}
-                  contentId={contentId}
-                  episodeId={currentEpisode?.id || currentEpisode?._id}
-                  resumeFrom={savedProgress?.progressPercent && savedProgress.progressPercent < 95 ? savedProgress.progressSeconds : undefined}
-                />
-                {currentAd && <AdOverlay ad={currentAd} onSkip={() => setAdDismissed(true)} />}
-              </div>
-            </div>
-
-            {/* RIGHT: info + episodes */}
-            <div
-              className="flex-1 min-w-0 lg:max-h-[calc(100vh-68px)] lg:overflow-y-auto px-4 sm:px-6 pt-4 lg:pt-0 lg:border-l border-zinc-900"
-              style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" } as React.CSSProperties}
-            >
+          {/* Details and Content Blocks */}
+          <div className="space-y-6">
+            
+            {/* 1. Main Info Block */}
+            <div className="bg-zinc-900/20 border border-zinc-900/50 rounded-2xl p-5 sm:p-6 shadow-md">
               {/* Breadcrumb */}
-              <nav className="flex items-center flex-wrap gap-1 text-xs text-zinc-100 mb-3 select-none">
+              <nav className="flex items-center flex-wrap gap-1 text-xs text-zinc-300 mb-3 select-none">
                 <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-white transition-colors">
                   <Home className="w-3.5 h-3.5" /> Home
                 </button>
@@ -1332,17 +1388,17 @@ export default function EpisodeDetailPage() {
                   {title}
                 </button>
                 <ChevronRight className="w-3 h-3 flex-shrink-0" />
-                <span className="text-zinc-200">{epLabel}</span>
+                <span className="text-zinc-400">{epLabel}</span>
               </nav>
 
               {/* Title */}
-              <h1 className="text-white font-bold text-lg sm:text-xl lg:text-[22px] leading-snug mb-4">
+              <h1 className="text-white font-black text-xl sm:text-2xl lg:text-3xl leading-tight mb-4">
                 {epTitle}
               </h1>
 
               {/* Plot */}
               <div className="mb-5">
-                <h2 className="text-white font-semibold text-[15px] mb-2">{plotTitle}</h2>
+                <h2 className="text-white font-bold text-sm mb-2">{plotTitle}</h2>
                 <p className="text-zinc-200 text-sm leading-relaxed">
                   {expanded ? detail.description : `${detail.description.slice(0, 130)}...`}
                   {" "}
@@ -1358,20 +1414,20 @@ export default function EpisodeDetailPage() {
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-5">
                 {detail.tags.map(tag => (
-                  <button key={tag} className="px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-200 hover:text-white hover:border-zinc-500 transition-all">
+                  <button key={tag} className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-500 transition-all bg-zinc-950/30">
                     {tag}
                   </button>
                 ))}
               </div>
 
               {/* Actions: Like / Watchlist / Download / Share */}
-              <div className="flex items-center gap-2 sm:gap-4 flex-wrap mb-5">
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap mb-6">
                 {/* Like Button */}
                 <button
                   onClick={() => {
                     if (!user) { navigate("/login"); return; }
                     const contentType = (showData?.contentType === 'drama' ? 'drama' : showData?.contentType === 'series' ? 'show' : 'movie') as 'show' | 'movie' | 'drama';
-                    const payload = currentEp === 0
+                    const payload = isMovieOrSeries
                       ? { contentId, contentType }
                       : { contentId, contentType, episodeId: currentEpId };
                     toggleLikeMutation.mutate(payload, {
@@ -1380,7 +1436,7 @@ export default function EpisodeDetailPage() {
                     });
                   }}
                   disabled={toggleLikeMutation.isPending}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 disabled:opacity-75 ${
+                  className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 ${
                     isLiked ? "text-[#E50914]" : "text-zinc-200 hover:text-white"
                   }`}
                 >
@@ -1389,87 +1445,46 @@ export default function EpisodeDetailPage() {
                   ) : (
                     <Heart className={`w-5 h-5 ${isLiked ? "fill-[#E50914]" : ""}`} />
                   )}
-                  <span className="text-[11px] font-semibold tabular-nums mt-0.5">{fmtCount(detail.likes + (isLiked ? 1 : 0))} Likes</span>
+                  <span className="text-[11px] font-semibold mt-0.5">{fmtCount(detail.likes + (isLiked ? 1 : 0))} Likes</span>
                 </button>
 
                 {/* Watchlist Button */}
                 <button
                   onClick={() => {
                     if (!user) { navigate("/login"); return; }
-                    const contentType = showData?.contentType === 'drama' ? 'drama' : showData?.contentType === 'series' ? 'show' : 'movie';
                     toggleWishlistMutation.mutate(
-                      { contentId, contentType },
+                      { contentId, contentType: (showData?.contentType || "show") as "movie" | "show" | "drama" },
                       {
-                        onSuccess: (data: any) => toast({ title: data?.isWishlisted ? "Added to watchlist" : "Removed from watchlist" }),
-                        onError: () => toast({ title: "Failed to update watchlist", variant: "destructive" }),
+                        onSuccess: (data: any) => {
+                          toast({
+                            title: data?.message || (inWatchlist ? "Removed from Watchlist" : "Added to Watchlist"),
+                          });
+                        },
                       }
                     );
                   }}
                   disabled={toggleWishlistMutation.isPending}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 disabled:opacity-75 ${
+                  className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 ${
                     inWatchlist ? "text-[#E50914]" : "text-zinc-200 hover:text-white"
                   }`}
                 >
                   {toggleWishlistMutation.isPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : inWatchlist ? (
-                    <Check className="w-5 h-5" />
                   ) : (
-                    <Plus className="w-5 h-5" />
+                    <Plus className={`w-5 h-5 ${inWatchlist ? "rotate-45 text-[#E50914]" : ""}`} />
                   )}
-                  <span className="text-[11px] font-semibold mt-0.5">{inWatchlist ? "In Watchlist" : "Watchlist"}</span>
+                  <span className="text-[11px] font-semibold mt-0.5">
+                    {inWatchlist ? "Wishlisted" : "Watchlist"}
+                  </span>
                 </button>
 
                 {/* Download Button */}
                 <button
-                  onClick={async () => {
-                    if (!user) { navigate("/login"); return; }
-                    if (!isSubscribed) {
-                      toast({ title: "Subscription required", description: "An active plan is needed to download content.", variant: "destructive" });
-                      return;
-                    }
-                    if (isDownloaded) {
-                      removeDownloadMutation.mutate(
-                        { id: downloadRecord.id, contentId, episodeId: currentEp === 0 ? undefined : currentEpId },
-                        {
-                          onSuccess: async () => {
-                            await removeOfflineVideo(contentId, currentEp === 0 ? undefined : currentEpId);
-                            toast({ title: "Removed from downloads" });
-                          },
-                          onError: () => toast({ title: "Failed to remove", variant: "destructive" }),
-                        }
-                      );
-                    } else {
-                      const contentType = showData?.contentType === 'drama' ? 'drama' : showData?.contentType === 'series' ? 'series' : 'movie';
-                      requestDownloadMutation.mutate(
-                        { contentId, contentType, episodeId: currentEp === 0 ? undefined : currentEpId },
-                        {
-                          onSuccess: async (data: any) => {
-                            const dlUrl = data?.data?.downloadUrl || data?.downloadUrl;
-                            if (dlUrl) {
-                              setDlProgress(0);
-                              const ok = await cacheDownloadedVideo(dlUrl, contentId, currentEp === 0 ? undefined : currentEpId, setDlProgress);
-                              setDlProgress(null);
-                              toast({ title: ok ? "Downloaded — available offline" : "Saved to downloads (online only)" });
-                            } else {
-                              toast({ title: "Added to downloads" });
-                            }
-                          },
-                          onError: (err: any) => toast({ title: "Download failed", description: err?.message || "Please try again.", variant: "destructive" }),
-                        }
-                      );
-                    }
-                  }}
-                  disabled={requestDownloadMutation.isPending || removeDownloadMutation.isPending || dlProgress !== null}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 disabled:opacity-75 ${
-                    isDownloaded ? "text-emerald-400" : "text-zinc-200 hover:text-white"
-                  }`}
+                  onClick={() => handleDownloadToggle(currentEp)}
+                  disabled={requestDownloadMutation.isPending || removeDownloadMutation.isPending}
+                  className="flex flex-col items-center gap-1 px-4 py-2 text-zinc-200 hover:text-white transition-all active:scale-95 disabled:opacity-70"
                 >
-                  {requestDownloadMutation.isPending || dlProgress !== null ? (
-                    dlProgress !== null && dlProgress > 0
-                      ? <span className="text-xs font-bold text-primary">{dlProgress}%</span>
-                      : <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : removeDownloadMutation.isPending ? (
+                  {requestDownloadMutation.isPending || removeDownloadMutation.isPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : isDownloaded ? (
                     <Check className="w-5 h-5 text-emerald-400" strokeWidth={3} />
@@ -1477,78 +1492,89 @@ export default function EpisodeDetailPage() {
                     <Download className="w-5 h-5" />
                   )}
                   <span className="text-[11px] font-semibold mt-0.5">
-                    {dlProgress !== null ? "Saving..." : isDownloaded ? "Downloaded" : "Download"}
+                    {isDownloaded ? "Downloaded" : "Download"}
                   </span>
-                </button>
-
-                {/* Share Button */}
-                <button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: epTitle,
-                        text: detail.description,
-                        url: window.location.href,
-                      }).catch(() => {});
-                    } else {
-                      navigator.clipboard.writeText(window.location.href);
-                      toast({
-                        title: "Link Copied",
-                        description: "Episode link copied to clipboard successfully!",
-                      });
-                    }
-                  }}
-                  className="flex flex-col items-center gap-1 px-4 py-2 text-zinc-200 hover:text-white transition-all active:scale-95"
-                >
-                  <Share2 className="w-5 h-5" />
-                  <span className="text-[11px] font-semibold mt-0.5">Share</span>
                 </button>
               </div>
 
-              <div className="border-t border-zinc-800 mb-4 pt-4" />
-
-              {/* Season Selector Dropdown */}
-              {uniqueSeasons.length > 1 && (
-                <div className="relative mb-6">
-                  <button
-                    onClick={() => setSeasonDropdownOpen(o => !o)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 border border-zinc-800 text-white rounded-xl text-sm font-bold hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200"
+              {/* Cast & Crew Section */}
+              {((showData?.cast && showData.cast.length > 0) || (showData?.crew && showData.crew.length > 0) || (showData?.crewMembers && showData.crewMembers.length > 0)) && (
+                <div className="border-t border-zinc-900/80 pt-5 mt-5">
+                  <h3 className="text-white font-bold text-sm mb-3">Cast & Crew</h3>
+                  <div
+                    className="flex gap-5 overflow-x-auto pb-2"
+                    style={{ scrollbarWidth: "none" } as React.CSSProperties}
                   >
-                    <span>Season {selectedSeason}</span>
-                    <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${seasonDropdownOpen ? "rotate-90" : ""}`} />
-                  </button>
-                  {seasonDropdownOpen && (
-                    <div className="absolute left-0 mt-2 w-48 bg-[#18181b] border border-zinc-850 rounded-xl shadow-2xl z-30 py-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {uniqueSeasons.map((seasonNum) => (
-                        <button
-                          key={seasonNum}
-                          onClick={() => {
-                            setSelectedSeason(seasonNum);
-                            setSeasonDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2 text-left text-xs font-bold transition-colors ${
-                            selectedSeason === seasonNum
-                              ? "text-red-500 bg-red-500/10"
-                              : "text-zinc-100 hover:text-white hover:bg-zinc-800"
-                          }`}
-                        >
-                          Season {seasonNum}
-                        </button>
-                      ))}
+                    {showData.cast?.map((c: any) => (
+                      <div key={`cast-${c.id}-${c.character}`} className="flex flex-col items-center text-center w-20 flex-shrink-0 group">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-900 flex-shrink-0 group-hover:border-primary transition-all duration-300 shadow-md">
+                          <img
+                            src={getImageUrl(c.image || "")}
+                            alt={c.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}`;
+                            }}
+                          />
+                        </div>
+                        <h4 className="text-zinc-100 font-semibold text-[10px] sm:text-xs mt-2 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
+                        <p className="text-zinc-200 text-[9px] sm:text-[10px] mt-0.5 line-clamp-1 font-semibold">{c.character || c.role || 'Cast'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Episodes Grid Section */}
+            {apiEpisodes.length > 0 && (
+              <div className="bg-zinc-900/20 border border-zinc-900/50 rounded-2xl p-5 sm:p-6 shadow-md">
+                
+                {/* Header with Season Dropdown */}
+                <div className="flex items-center justify-between gap-4 mb-6 border-b border-zinc-900/80 pb-4">
+                  <h3 className="text-white font-bold text-base sm:text-lg">Episodes</h3>
+                  
+                  {uniqueSeasons.length > 1 && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setSeasonDropdownOpen(o => !o)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white rounded-lg text-xs font-bold hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-200"
+                      >
+                        <span>Season {selectedSeason}</span>
+                        <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${seasonDropdownOpen ? "rotate-90" : ""}`} />
+                      </button>
+                      {seasonDropdownOpen && (
+                        <div className="absolute right-0 mt-2 w-40 bg-[#18181b] border border-zinc-800 rounded-xl shadow-2xl z-30 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {uniqueSeasons.map((seasonNum) => (
+                            <button
+                              key={seasonNum}
+                              onClick={() => {
+                                setSelectedSeason(seasonNum);
+                                setSeasonDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs font-bold transition-colors ${
+                                selectedSeason === seasonNum
+                                  ? "text-red-500 bg-red-500/10"
+                                  : "text-zinc-100 hover:text-white hover:bg-zinc-800"
+                              }`}
+                            >
+                                Season {seasonNum}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* Episode list */}
-              {apiEpisodes.length > 0 && (
-                <div className="space-y-4">
+                {/* Episodes grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {apiEpisodes
                     .map((ep, idx) => ({ ...ep, globalIndex: idx + 1 }))
                     .filter((ep) => (ep.season || 1) === selectedSeason)
                     .map((ep) => {
                       const isActive = ep.globalIndex === currentEp;
-                      const isLocked = !ep.isFree && !isSubscribed;
+                      const isLocked = !ep.isFree && isLockedForContent;
                       const isEpDownloaded = profileData?.downloads?.some((d: any) => d.episodeId === (ep.id || ep._id));
 
                       return (
@@ -1556,14 +1582,14 @@ export default function EpisodeDetailPage() {
                           key={ep.id || ep._id}
                           className={`flex gap-4 p-3 rounded-xl border transition-all duration-300 group/ep ${
                             isActive
-                              ? "bg-red-500/5 border-red-500/40 shadow-[0_4px_20px_rgba(229,9,20,0.05)]"
-                              : "bg-zinc-900/40 border-zinc-800/80 hover:bg-zinc-900/80 hover:border-zinc-700"
+                              ? "bg-red-500/5 border-red-500/40"
+                              : "bg-zinc-950/40 border-zinc-800/80 hover:bg-zinc-900/80 hover:border-zinc-700"
                           }`}
                         >
                           {/* Left: Thumbnail */}
                           <div
                             onClick={() => isLocked ? handleLocked(ep.globalIndex) : goToEpisode(ep.globalIndex)}
-                            className="relative w-32 sm:w-40 aspect-video rounded-lg overflow-hidden bg-zinc-950 flex-shrink-0 cursor-pointer"
+                            className="relative w-28 sm:w-36 aspect-video rounded-lg overflow-hidden bg-zinc-950 flex-shrink-0 cursor-pointer"
                           >
                             <img
                               src={getImageUrl(ep.thumbnail || showData?.thumbnail || "")}
@@ -1589,7 +1615,7 @@ export default function EpisodeDetailPage() {
                               <div className="flex items-start justify-between gap-3">
                                 <h4
                                   onClick={() => isLocked ? handleLocked(ep.globalIndex) : goToEpisode(ep.globalIndex)}
-                                  className={`font-bold text-sm sm:text-base cursor-pointer line-clamp-1 transition-colors ${
+                                  className={`font-bold text-xs sm:text-sm cursor-pointer line-clamp-1 transition-colors ${
                                     isActive ? "text-red-500" : "text-white group-hover/ep:text-red-500"
                                   }`}
                                 >
@@ -1616,10 +1642,10 @@ export default function EpisodeDetailPage() {
                                   </button>
                                 )}
                               </div>
-                              <p className="text-[11px] sm:text-xs text-zinc-100 mt-1 font-semibold">
+                              <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5 font-semibold">
                                 {ep.duration ? `${Math.round(ep.duration / 60)} min` : "45 min"}
                               </p>
-                              <p className="text-xs text-zinc-200 mt-1.5 line-clamp-2 leading-relaxed">
+                              <p className="text-[11px] sm:text-xs text-zinc-300 mt-1 line-clamp-2 leading-relaxed">
                                 {ep.description || "No description available."}
                               </p>
                             </div>
@@ -1628,8 +1654,47 @@ export default function EpisodeDetailPage() {
                       );
                     })}
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+
+          {/* 3. RELATED CONTENT SECTION */}
+          {related && related.length > 0 && (
+            <div className="px-4 sm:px-6 lg:px-10 mt-12 border-t border-zinc-900 pt-10">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
+                <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">More Like This</h2>
+                <div className="flex-1" />
+                {detail.tags.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const firstGenre = detail.tags[0];
+                      const contentType = showData?.contentType === 'movie' ? 'movie' : 'show';
+                      window.open(`/browse/${contentType}?genre=${encodeURIComponent(firstGenre)}`, "_blank");
+                    }}
+                    className="text-zinc-100 hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+                  >
+                    See all <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <div
+                className="flex gap-4 overflow-x-auto pb-2"
+                style={{ scrollbarWidth: "none" } as React.CSSProperties}
+              >
+                {related.map((r: any) => (
+                  <PortraitCard key={r.id || r._id} item={r} onClick={() => navigate(r.type === 'movie' || r.contentType === 'movie' ? `/movie/${r.id || r._id}` : `/show/${r.id || r._id}/episode/1`)} />
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* Experience Reviews & Ratings Section */}
+          <div className="px-4 sm:px-6 lg:px-10 mt-12 border-t border-zinc-900 pt-10">
+            <WebsiteReviews 
+              user={user} 
+              onSignInRequired={() => navigate("/login")} 
+            />
           </div>
         </div>
       </main>

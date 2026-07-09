@@ -143,6 +143,8 @@ import PublicAuthPage from "@/pages/public-auth";
 import TvShowsPublicPage from "@/pages/tv-shows-public";
 import UserProfilePage from "@/pages/user-profile";
 import PublicPagePage from "@/pages/public-page";
+import WishlistPage from "@/pages/wishlist";
+import HelpSupportPage from "@/pages/help-support";
 import InfluencersPage from "@/pages/influencers";
 import ApprovalsPage from "@/pages/approvals";
 import ShortDramasPage from "@/pages/short-dramas";
@@ -227,15 +229,15 @@ const hasPermissionForRoute = (path: string, user: any): boolean => {
 
 function ProtectedRoute({ component: Component, ...rest }: { component: any; [key: string]: any }) {
   const [location, setLocation] = useLocation();
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("adminAccessToken");
   const { data: user, isLoading, error } = useGetMe();
 
   useEffect(() => {
     if (!token) {
       setLocation("/admin/login");
     } else if (!isLoading && error) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("adminAccessToken");
+      localStorage.removeItem("adminRefreshToken");
       setLocation("/admin/login");
     }
   }, [token, isLoading, error, setLocation]);
@@ -264,7 +266,7 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
 }
 
 function Router() {
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("adminAccessToken");
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
@@ -375,6 +377,8 @@ function Router() {
       <Route path="/browse" component={CategoriesBrowsePage} />
       <Route path="/tv-shows-browse" component={TvShowsPublicPage} />
       <Route path="/account" component={UserProfilePage} />
+      <Route path="/wishlist" component={WishlistPage} />
+      <Route path="/help-support" component={HelpSupportPage} />
       <Route path="/page/:slug" component={PublicPagePage} />
       <Route component={NotFound} />
     </Switch>

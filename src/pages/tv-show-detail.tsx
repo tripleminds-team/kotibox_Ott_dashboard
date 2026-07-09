@@ -31,15 +31,15 @@ export default function TVShowDetailPage() {
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = localStorage.getItem("appUser");
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch {}
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     setUser(null);
     window.location.reload();
   };
@@ -177,7 +177,7 @@ export default function TVShowDetailPage() {
               className="flex items-center gap-2.5 px-8 py-3.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-lg text-sm tracking-wide transition-all active:scale-95 shadow-xl"
             >
               <Play className="w-4 h-4 fill-black" />
-              {freeEps > 0 ? "Watch Free" : "Watch Now"}
+              {isSubscribed ? "Watch Now" : (freeEps > 0 ? "Watch Free" : "Watch Now")}
             </button>
             {!isSubscribed && (
               <button
@@ -228,7 +228,7 @@ export default function TVShowDetailPage() {
               {seasonEpisodes.map((ep: any, idx: number) => {
                 const epNum = ep.episode || idx + 1;
                 const epThumb = getImageUrl(ep.thumbnail || show?.thumbnail || "");
-                const isLocked = ep.isLocked && !ep.isFree;
+                const isLocked = ep.isLocked && !ep.isFree && !isSubscribed;
                 return (
                   <div
                     key={ep._id || ep.id || idx}
@@ -266,7 +266,7 @@ export default function TVShowDetailPage() {
                     <div className="flex-1 min-w-0 py-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-zinc-100 text-xs font-bold">EP {epNum}</span>
-                        {ep.isFree && <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-600/20 text-emerald-400 rounded">FREE</span>}
+                        {ep.isFree && !isSubscribed && <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-600/20 text-emerald-400 rounded">FREE</span>}
                         {isLocked && <span className="text-[9px] font-bold px-1.5 py-0.5 bg-amber-600/20 text-amber-400 rounded flex items-center gap-0.5"><Lock className="w-2.5 h-2.5" /> PREMIUM</span>}
                       </div>
                       <p className="text-white text-sm font-semibold leading-tight truncate group-hover:text-red-400 transition-colors">{ep.title || `Episode ${epNum}`}</p>

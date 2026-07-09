@@ -10,13 +10,19 @@ export default function PublicPagePage() {
   const [user, setUser] = useState<any>(null);
   const [plansModalOpen, setPlansModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (slug === "faq" || slug === "help") {
+      setLocation("/help-support");
+    }
+  }, [slug, setLocation]);
+
   const { data, isLoading, error } = useGetPageBySlug(slug || "");
 
   const page = data?.page || data?.data || (data && !data.data && !data.page ? data : null);
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = localStorage.getItem("appUser");
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch {}
   }, []);
@@ -50,8 +56,8 @@ export default function PublicPagePage() {
   }, [page]);
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     setUser(null);
     setLocation("/");
   };

@@ -4,8 +4,19 @@ import { getImageUrl } from "@/lib/api-client";
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 function BadgeTop({ item }: { item: any }) {
+  const isSubscribed = (() => {
+    try {
+      const stored = localStorage.getItem("appUser");
+      if (stored) {
+        const u = JSON.parse(stored);
+        return u.subscriptionStatus === "active" && u.subscriptionPlan !== "free";
+      }
+    } catch {}
+    return false;
+  })();
+
   const isPremium = item.isPremium || item.badge === "TOP" || item.badge === "EXCLUSIVE";
-  if (isPremium) {
+  if (isPremium && !isSubscribed) {
     return (
       <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-400/90 text-black text-[9px] font-black rounded-md leading-none shadow">
         <Crown className="w-2.5 h-2.5" /> PREMIUM
@@ -33,13 +44,16 @@ function BadgeTop({ item }: { item: any }) {
       </span>
     );
   }
-  if (item.badge) {
+  if (item.badge && item.badge !== "TOP" && item.badge !== "EXCLUSIVE") {
     return (
       <span className="px-1.5 py-0.5 bg-white/20 text-white text-[9px] font-black rounded-md leading-none shadow">
         {item.badge}
       </span>
     );
   }
+
+  if (isSubscribed) return null;
+
   return (
     <span className="px-1.5 py-0.5 bg-teal-500/90 text-white text-[9px] font-black rounded-md leading-none shadow">
       FREE

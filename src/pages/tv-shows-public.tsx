@@ -6,7 +6,7 @@ import {
   SlidersHorizontal, ChevronDown, Layers, Clock,
   TrendingUp, Flame, Sparkles, ArrowLeft, Eye,
 } from "lucide-react";
-import { useGetWebBrowse, useGetWebHome, getImageUrl } from "@/lib/api-client";
+import { useGetWebBrowse, useGetWebHome, getImageUrl, useGetWatchHistory } from "@/lib/api-client";
 import { PublicHeader, PublicFooter } from "@/pages/streaming-home";
 import { useSettings } from "@/contexts/SettingsContext";
 import SubscriptionPlansModal from "@/components/SubscriptionPlansModal";
@@ -96,18 +96,20 @@ export default function TvShowsPublicPage() {
 
   const { data: browseData, isLoading } = useGetWebBrowse({ type: "show", genre: activeGenre, page });
   const { data: homeData } = useGetWebHome();
+  const { data: watchHistoryData } = useGetWatchHistory({ limit: 20 });
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = localStorage.getItem("appUser");
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch {}
   }, []);
 
   const handlePlay = (item: any) => {
-    const id = item.id || item._id;
-    const isDrama = item.contentType === "drama" || item.type === "drama";
-    const isShow = item.contentType === "show" || item.contentType === "series" || item.type === "show" || item.type === "series";
+    const id = item.contentId || item.id || item._id;
+    const type = (item.type || item.contentType || "").toLowerCase();
+    const isDrama = type === "drama";
+    const isShow = type === "show" || type === "series";
     if (isDrama) {
       if (item.trailerUrl) {
         setLocation(`/drama/${id}/episode/0`);
@@ -122,8 +124,8 @@ export default function TvShowsPublicPage() {
   };
 
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem("appUser");
+    localStorage.removeItem("appAccessToken");
     setUser(null);
     window.location.reload();
   };
@@ -340,10 +342,8 @@ export default function TvShowsPublicPage() {
 
         {/* Continue Watching Row */}
         {(() => {
-          const cw = (() => {
-            try { return JSON.parse(localStorage.getItem("continue_watching") || "[]"); } catch { return []; }
-          })();
-          const showCw = cw.filter((i: any) => i.type === "show" || i.seasons);
+          const cw = watchHistoryData?.items || [];
+          const showCw = cw.filter((i: any) => i.type === "series");
           if (!showCw.length) return null;
           return (
             <div className="px-4 sm:px-8 lg:px-14 pb-8">
@@ -353,12 +353,12 @@ export default function TvShowsPublicPage() {
                 </h3>
                 <div className="flex gap-4 overflow-x-auto scrollbar-none pb-2">
                   {showCw.map((item: any) => (
-                    <div key={item.id} className="flex-shrink-0 w-[160px] cursor-pointer group" onClick={() => handlePlay(item)}>
+                    <div key={item.id || item._id} className="flex-shrink-0 w-[160px] cursor-pointer group" onClick={() => handlePlay(item)}>
                       <div className="relative rounded-xl overflow-hidden bg-zinc-900" style={{ aspectRatio: "2/3" }}>
-                        <img src={item.poster || item.backdrop} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        <img src={getImageUrl(item.thumbnail || item.poster || item.backdrop)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=300&h=450&fit=crop"; }} />
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${item.progress || 30}%` }} />
+                          <div className="h-full bg-primary rounded-full" style={{ width: `${item.progressPercent || 30}%` }} />
                         </div>
                       </div>
                       <p className="text-white text-xs font-bold truncate mt-2">{item.title}</p>
