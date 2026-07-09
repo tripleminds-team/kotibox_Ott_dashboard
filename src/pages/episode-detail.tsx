@@ -329,7 +329,7 @@ function VideoPlayer({
     const loadSource = async () => {
       // Check offline cache first!
       const offlineUrl = await getOfflineVideoUrl(contentId || "", episodeId);
-      const activeSrc = offlineUrl || currentSrc;
+      const activeSrc = offlineUrl || getImageUrl(currentSrc);
 
       if (!activeSrc) {
         setLoading(false);

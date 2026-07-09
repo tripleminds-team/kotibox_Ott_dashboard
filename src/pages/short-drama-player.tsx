@@ -112,7 +112,8 @@ export default function ShortDramaPlayer() {
 
   // Episode is locked only if it's not free AND the user doesn't have a sufficient plan
   const isLocked = currentEpisode ? (!currentEpisode.isFree && isLockedForContent) : false;
-  const videoSrc = isLocked ? "" : (currentEpisode?.hlsUrl || currentEpisode?.videoUrl || (currentEpNum === 0 ? (show?.trailerUrl || show?.hlsUrl || "") : ""));
+  const videoSrcRaw = isLocked ? "" : (currentEpisode?.hlsUrl || currentEpisode?.videoUrl || (currentEpNum === 0 ? (show?.trailerUrl || show?.hlsUrl || "") : ""));
+  const videoSrc = getImageUrl(videoSrcRaw);
   const poster = getImageUrl(currentEpisode?.thumbnail || show?.posterImage || show?.thumbnail || "");
 
   const { data: wishlistData } = useGetWishlist({ limit: 100 });
