@@ -1,6 +1,6 @@
 
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
@@ -231,6 +231,7 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
   const [location, setLocation] = useLocation();
   const token = localStorage.getItem("adminAccessToken");
   const { data: user, isLoading, error } = useGetMe();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!token) {
@@ -238,9 +239,15 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
     } else if (!isLoading && error) {
       localStorage.removeItem("adminAccessToken");
       localStorage.removeItem("adminRefreshToken");
+      queryClient.clear();
+      setLocation("/admin/login");
+    } else if (!isLoading && user === null) {
+      localStorage.removeItem("adminAccessToken");
+      localStorage.removeItem("adminRefreshToken");
+      queryClient.clear();
       setLocation("/admin/login");
     }
-  }, [token, isLoading, error, setLocation]);
+  }, [token, isLoading, error, user, setLocation, queryClient]);
 
   if (!token) return null;
   
@@ -249,6 +256,10 @@ function ProtectedRoute({ component: Component, ...rest }: { component: any; [ke
   if (error) {
     console.error("Error fetching user:", error);
     // While redirecting, show nothing or a subtle message instead of an error block
+    return <div className="min-h-screen flex items-center justify-center">Session expired. Redirecting...</div>;
+  }
+
+  if (user === null) {
     return <div className="min-h-screen flex items-center justify-center">Session expired. Redirecting...</div>;
   }
   

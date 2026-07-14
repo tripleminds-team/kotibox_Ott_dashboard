@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 interface MediaPickerProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (media: { url: string; filePath: string; name: string }) => void;
+  onSelect: (media: any) => void;
   source: string;
   accept?: string;
 }
@@ -56,10 +56,11 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
 
   const handleConfirm = async () => {
     if (mode === "library" && selectedMedia) {
+      // Pass the entire media object
       onSelect({
+        ...selectedMedia,
         url: getImageUrl(selectedMedia.filePath || selectedMedia.url),
         filePath: selectedMedia.filePath || selectedMedia.url,
-        name: selectedMedia.name,
       });
       handleClose();
     } else if (mode === "upload" && selectedMedia?.file) {
@@ -83,10 +84,11 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
 
         const uploadedFile = result?.data?.[0];
         if (uploadedFile) {
+          // Pass the entire uploaded file
           onSelect({
+            ...uploadedFile,
             url: getImageUrl(uploadedFile.filePath || uploadedFile.url),
             filePath: uploadedFile.filePath || uploadedFile.url,
-            name: uploadedFile.name,
           });
         } else {
           onSelect({ url: preview || "", filePath: "", name: selectedMedia.name });

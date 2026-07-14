@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import {
   ChevronLeft, Play, Star, Calendar, Globe, Clock, Film,
   Crown, Tv, Lock, Plus, Share2, ChevronRight, Loader2,
-  Check, Heart, Download
+  Check, Heart, Download, Smartphone
 } from "lucide-react";
 import { useGetWebDetail, getImageUrl, useGetWishlist, useToggleWishlist, useGetAppProfile, useRequestDownload } from "@/lib/api-client";
 import { PublicHeader, PublicFooter } from "@/pages/streaming-home";
@@ -90,12 +90,14 @@ export default function TVShowDetailPage() {
     );
   }
 
+  const isDrama = show?.contentType === "drama";
   const title = show?.title || "TV Show";
   const description = show?.description || "";
   const year = show?.year || "";
   const imdbRating = show?.imdbRating ? String(show.imdbRating) : "";
   const ageRating = show?.ageRating ? String(show.ageRating) : "";
-  const genres: string[] = Array.isArray(show?.genres) ? show.genres.map((g: any) => typeof g === "string" ? g : g.name || "") : [];
+  const rawGenres: string[] = Array.isArray(show?.genres) ? show.genres.map((g: any) => typeof g === "string" ? g : g.name || "") : [];
+  const genres = [...new Set(rawGenres)];
   const cast: any[] = Array.isArray(show?.cast) ? show.cast : [];
   const seasons = uniqueSeasons.length || 1;
   const totalEps = apiEpisodes.length;
@@ -139,8 +141,8 @@ export default function TVShowDetailPage() {
         <div className="absolute bottom-10 left-0 px-6 sm:px-10 lg:px-14 max-w-2xl">
           {/* Badge */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <span className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              <Tv className="w-3 h-3" /> TV Series
+            <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${isDrama ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"}`}>
+              {isDrama ? <Smartphone className="w-3 h-3" /> : <Tv className="w-3 h-3" />} {isDrama ? "Short Drama" : "TV Series"}
             </span>
             {genres.slice(0, 2).map((g) => (
               <span key={g} className="text-zinc-100 text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>

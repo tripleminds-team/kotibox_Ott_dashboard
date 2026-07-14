@@ -175,8 +175,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && user === null) {
-      localStorage.removeItem("appAccessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("adminAccessToken");
+      localStorage.removeItem("adminRefreshToken");
       setLocation("/admin/login");
     }
   }, [isLoading, user, setLocation]);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment, useMemo } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTheme } from "next-themes";
@@ -317,12 +317,30 @@ function ShortDramaRow({ title, icon, items, onSelect, onSeeAll }: {
 }
 
 /* ─── HERO BANNER ─── */
-function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: ContentItem) => void; onSubscribeClick: () => void; isSubscribed?: boolean }) {
+function Hero({ activeTab, onPlay, onSubscribeClick, isSubscribed }: { activeTab: Tab; onPlay: (item: ContentItem) => void; onSubscribeClick: () => void; isSubscribed?: boolean }) {
   const { data: homeData, isLoading } = useGetWebHome();
-  const heroContent = homeData?.heroContent || [];
+  
+  const heroContent = useMemo(() => {
+    const raw = homeData?.heroContent || [];
+    if (activeTab === "drama") {
+      return raw.filter((item: any) => item.contentType === "drama");
+    }
+    if (activeTab === "movies") {
+      return raw.filter((item: any) => item.type === "movie" || item.contentType === "movie");
+    }
+    if (activeTab === "tvshows") {
+      return raw.filter((item: any) => (item.type === "show" || item.contentType === "series") && item.contentType !== "drama");
+    }
+    return raw;
+  }, [homeData?.heroContent, activeTab]);
+
   const [current, setCurrent] = useState(0);
   const [fading, setFading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    setCurrent(0);
+  }, [activeTab, heroContent.length]);
 
   const go = (index: number) => {
     if (index === current) return;
@@ -354,7 +372,7 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
       {/* Backdrop */}
       <div className={`absolute inset-0 transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}>
         <img
-          src={item.backdrop || item.poster}
+          src={getImageUrl(item.backdrop || item.poster) || ""}
           alt={item.title}
           className="w-full h-full object-cover object-center"
           onError={(e) => {
@@ -376,11 +394,17 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
         <div className={`transition-all duration-500 ${fading ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {isPremium && !isSubscribed ? <PremiumBadge /> : (!isSubscribed && <FreeBadge />)}
-            <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${item.type === "movie" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"}`}>
-              {item.type === "movie" ? <Film className="w-3 h-3" /> : <Tv className="w-3 h-3" />}
-              {item.type === "movie" ? "Movie" : "TV Show"}
+            <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${
+              item.type === "movie"
+                ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                : item.contentType === "drama"
+                  ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                  : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+            }`}>
+              {item.type === "movie" ? <Film className="w-3 h-3" /> : item.contentType === "drama" ? <Smartphone className="w-3 h-3" /> : <Tv className="w-3 h-3" />}
+              {item.type === "movie" ? "Movie" : item.contentType === "drama" ? "Short Drama" : "TV Show"}
             </span>
-            {(item.genres || []).slice(0, 2).map((g) => (
+            {[...new Set(item.genres || [])].slice(0, 2).map((g) => (
               <span key={g} className="text-zinc-100 text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
             ))}
           </div>
@@ -417,9 +441,6 @@ function Hero({ onPlay, onSubscribeClick, isSubscribed }: { onPlay: (item: Conte
                 <Crown className="w-4 h-4" /> Subscribe
               </button>
             )}
-            <button className="flex items-center justify-center w-11 h-11 bg-zinc-900/80 border border-zinc-700/60 text-white rounded-lg transition-all hover:bg-zinc-800 hover:scale-105 active:scale-95">
-              <Plus className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -769,14 +790,18 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
                   </div>
                   {/* Title */}
                   <div className="absolute bottom-0 left-0 right-0 px-3 pb-4 pt-8">
-                    <p className="text-white font-bold text-sm truncate leading-tight">{item.title}</p>
-                    {item.episodeTitle && (
-                      <p className="text-zinc-200 text-[11px] truncate mt-0.5">{item.episodeTitle}</p>
+                    <p className="text-white font-bold text-sm truncate leading-tight">
+                      {item.showTitle || item.title}
+                    </p>
+                    {item.showTitle && (
+                      <p className="text-zinc-200 text-[11px] truncate mt-0.5">
+                        {item.title}
+                      </p>
                     )}
                   </div>
                   {/* Progress bar */}
-                  <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-zinc-700/80">
-                    <div className="h-full bg-red-600 transition-all rounded-r-full" style={{ width: `${Math.round(item.progress || 0)}%` }} />
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-700/60">
+                    <div className="h-full bg-red-600 rounded-r-full transition-all" style={{ width: `${Math.min(100, Math.round(item.progressPercent || 0))}%` }} />
                   </div>
                 </div>
               </div>
@@ -785,6 +810,12 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
         </section>
       )}
 
+      {homeData.featuredDramas?.length > 0 && (
+        <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
+      )}
+      {homeData.newDramas?.length > 0 && (
+        <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
+      )}
       {homeData.trendingNow?.length > 0 && (
         <FeaturedRow title="Trending Now" icon={<TrendingUp className="w-4 h-4" />} items={homeData.trendingNow} onPlay={onPlay} onSeeAll={() => setLocation("/browse?trending")} />
       )}
@@ -797,14 +828,8 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
       {homeData.topRated?.length > 0 && (
         <ContentRow title="Top Rated Movies" icon={<Star className="w-4 h-4" />} items={homeData.topRated} onPlay={onPlay} size="lg" onSeeAll={() => setLocation("/browse?top-rated")} />
       )}
-      {homeData.featuredDramas?.length > 0 && (
-        <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
-      )}
       {homeData.tvShows?.length > 0 && (
         <FeaturedRow title="Popular TV Shows" icon={<Tv className="w-4 h-4" />} items={homeData.tvShows.slice(0, 10)} onPlay={onPlay} onSeeAll={() => setLocation("/browse?tv")} />
-      )}
-      {homeData.newDramas?.length > 0 && (
-        <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
       )}
       {homeData.actionMovies?.length > 0 && (
         <FeaturedRow title="Action & Adventure" icon={<Flame className="w-4 h-4" />} items={homeData.actionMovies} onPlay={onPlay} onSeeAll={() => setLocation("/browse?action")} />
@@ -1103,9 +1128,9 @@ function SignInModal({ onClose }: { onClose: () => void }) {
 /* ─── HEADER ─── */
 const NAV_TABS: { label: string; tab: Tab; icon: React.ReactNode }[] = [
   { label: "Home", tab: "home", icon: null },
+  { label: "Short Drama", tab: "drama", icon: <Smartphone className="w-3.5 h-3.5" /> },
   { label: "Movies", tab: "movies", icon: <Film className="w-3.5 h-3.5" /> },
   { label: "TV Shows", tab: "tvshows", icon: <Tv className="w-3.5 h-3.5" /> },
-  { label: "Short Drama", tab: "drama", icon: <Smartphone className="w-3.5 h-3.5" /> },
   { label: "New & Hot", tab: "new", icon: <Flame className="w-3.5 h-3.5" /> },
 ];
 
@@ -1541,6 +1566,16 @@ export default function StreamingHomePage() {
   const [toastMsg, setToastMsg] = useState("");
   const [plansModalOpen, setPlansModalOpen] = useState(false);
 
+  const { data: homeData } = useGetWebHome();
+  const rawBanners = homeData?.heroContent || [];
+  const hasHeroForTab = useMemo(() => {
+    if (activeTab === "home" || activeTab === "new") return rawBanners.length > 0;
+    if (activeTab === "drama") return rawBanners.some((b: any) => b.contentType === "drama");
+    if (activeTab === "movies") return rawBanners.some((b: any) => b.type === "movie" || b.contentType === "movie");
+    if (activeTab === "tvshows") return rawBanners.some((b: any) => b.type === "show" || b.contentType === "series");
+    return false;
+  }, [rawBanners, activeTab]);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 3500);
@@ -1572,20 +1607,22 @@ export default function StreamingHomePage() {
 
   const handlePlay = (item: any) => {
     const id = item.contentId || item.id || item._id;
-    const type = (item.type || item.contentType || "").toLowerCase();
-    const isDrama = type === "drama";
-    const isShow = type === "show" || type === "series";
-    const isMovie = type === "movie";
+    const contentType = (item.contentType || "").toLowerCase();
+    const type = (item.type || "").toLowerCase();
+    // Check contentType first — short dramas have type="show" but contentType="drama"
+    const isDrama = contentType === "drama";
+    const isMovie = type === "movie" || contentType === "movie";
+    const isShow = type === "show" || type === "series" || contentType === "series";
     if (isDrama) {
       if (item.trailerUrl) {
         setLocation(`/drama/${id}/episode/0`);
       } else {
         setLocation(`/drama/${id}/episode/1`);
       }
-    } else if (isShow) {
-      setLocation(`/show/${id}`);
     } else if (isMovie) {
       setLocation(`/movie/${id}`);
+    } else if (isShow) {
+      setLocation(`/show/${id}`);
     } else {
       setLocation(`/movie/${id}`);
     }
@@ -1611,27 +1648,20 @@ export default function StreamingHomePage() {
       />
 
       <main>
-        {(activeTab === "home" || activeTab === "new") && (
-          <Hero onPlay={handlePlay} onSubscribeClick={() => setPlansModalOpen(true)} isSubscribed={isSubscribed} />
-        )}
+        <Hero activeTab={activeTab} onPlay={handlePlay} onSubscribeClick={() => setPlansModalOpen(true)} isSubscribed={isSubscribed} />
+        {!hasHeroForTab && <div className="h-20" />}
 
         {activeTab === "home" && (
           <HomeTab onPlay={handlePlay} onSelectDrama={handleSelectDrama} onSubscribeClick={() => setPlansModalOpen(true)} isSubscribed={isSubscribed} />
         )}
         {activeTab === "movies" && (
-          <div className="pt-24">
-            <MoviesTab onPlay={handlePlay} />
-          </div>
+          <MoviesTab onPlay={handlePlay} />
         )}
         {activeTab === "tvshows" && (
-          <div className="pt-24">
-            <TVShowsTab onPlay={handlePlay} />
-          </div>
+          <TVShowsTab onPlay={handlePlay} />
         )}
         {activeTab === "drama" && (
-          <div className="pt-24">
-            <ShortDramaTab onSelect={handleSelectDrama} />
-          </div>
+          <ShortDramaTab onSelect={handleSelectDrama} />
         )}
         {activeTab === "new" && <NewHotTab onPlay={handlePlay} showToast={showToast} />}
 

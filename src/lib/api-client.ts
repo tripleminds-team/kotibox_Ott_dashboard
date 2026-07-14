@@ -62,7 +62,15 @@ const api = async (
     finalEndpoint.startsWith("/api/wishlist") ||
     finalEndpoint.startsWith("/api/views/") ||
     finalEndpoint.startsWith("/api/share/") ||
-    finalEndpoint.startsWith("/api/web/");
+    finalEndpoint.startsWith("/api/web/") ||
+    finalEndpoint.startsWith("/api/web-") ||
+    finalEndpoint.startsWith("/web-") ||
+    finalEndpoint.startsWith("/api/explore") ||
+    finalEndpoint.startsWith("/explore") ||
+    finalEndpoint.startsWith("/api/search") ||
+    finalEndpoint.startsWith("/search") ||
+    finalEndpoint.startsWith("/api/home") ||
+    finalEndpoint.startsWith("/home");
   const tokenKey = isAppRoute ? "appAccessToken" : "adminAccessToken";
   const token = localStorage.getItem(tokenKey);
   if (token) {
@@ -169,7 +177,7 @@ export const login = async (email, password) => {
 };
 
 export const logout = async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
+  const refreshToken = localStorage.getItem("adminRefreshToken");
   return api("/api/auth/logout", {
     method: "POST",
     body: JSON.stringify({ refreshToken }),
@@ -245,7 +253,7 @@ export const useLogin = () => {
       if (data.refreshToken) {
         localStorage.setItem("adminRefreshToken", data.refreshToken);
       }
-      queryClient.invalidateQueries();
+      queryClient.clear();
     },
   });
 };
@@ -275,9 +283,11 @@ export const useDeleteAccount = () => {
 };
 
 export const useGetMe = () => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("adminAccessToken") : null;
   return useQuery({
     queryKey: ["me"],
     queryFn: getMe,
+    enabled: !!token,
     retry: 1,
   });
 };

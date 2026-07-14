@@ -121,7 +121,7 @@ export default function EpisodeForm() {
   const tvShows: any[] = showsData?.data || [];
   const availableSeasons: any[] = seasonsData?.data || [];
 
-  const handleVideoSelect = (media: { url: string; filePath: string; name: string }) => {
+  const handleVideoSelect = (media: any) => {
     setVideoFilePath(media.filePath);
     setVideoPickerOpen(false);
 
@@ -131,27 +131,82 @@ export default function EpisodeForm() {
       setName(titleWithoutExt);
     }
 
-    // Auto-calculate duration
-    const videoUrl = media.url || media.filePath;
-    if (videoUrl) {
-      const video = document.createElement("video");
-      video.src = getImageUrl(videoUrl);
-      video.onloadedmetadata = () => {
-        const durationSecs = Math.round(video.duration);
-        
+    // If media has HLS transcoded
+    if (media.isHls && media.hlsMasterPlaylistUrl) {
+      setVideoUploadType("hls");
+      setVideoUrl(media.hlsMasterPlaylistUrl);
+      
+      // Auto-set duration from media if available
+      if (media.duration) {
         // 3:30-minute limit check for short dramas
         const selectedShow = tvShows.find((s) => getId(s) === showId);
         const isShortDrama = selectedShow?.contentType === "drama";
         
-        if (isShortDrama && durationSecs > 210) {
+        if (isShortDrama && media.duration > 210) {
           toast({ title: "Short Drama videos cannot exceed 3 minutes 30 seconds.", variant: "destructive" });
           setVideoFilePath(""); // Clear selection
           return;
         }
+        
+        setDuration(secsToDuration(media.duration));
+      }
+      
+      // Auto-fill quality rows from hlsQualities
+      if (Array.isArray(media.hlsQualities) && media.hlsQualities.length > 0) {
+        setQualityEnabled(true);
+        setQualityRows(
+          media.hlsQualities.map((q: any, i: number) => {
+            const isUrl = q.url && (q.url.startsWith("http://") || q.url.startsWith("https://"));
+            return {
+              id: String(i + 1),
+              type: isUrl ? "url" : "local",
+              quality: q.quality || "480p",
+              filePath: isUrl ? "" : (q.filePath || ""),
+              url: isUrl ? q.url : "",
+            };
+          })
+        );
+      }
+    } else {
+      // Fall back to original local/url
+      setVideoUploadType("local");
+      
+      // Auto-calculate duration if not available from media
+      if (media.duration) {
+        // 3:30-minute limit check for short dramas
+        const selectedShow = tvShows.find((s) => getId(s) === showId);
+        const isShortDrama = selectedShow?.contentType === "drama";
+        
+        if (isShortDrama && media.duration > 210) {
+          toast({ title: "Short Drama videos cannot exceed 3 minutes 30 seconds.", variant: "destructive" });
+          setVideoFilePath(""); // Clear selection
+          return;
+        }
+        
+        setDuration(secsToDuration(media.duration));
+      } else {
+        const videoUrl = media.url || media.filePath;
+        if (videoUrl) {
+          const video = document.createElement("video");
+          video.src = getImageUrl(videoUrl);
+          video.onloadedmetadata = () => {
+            const durationSecs = Math.round(video.duration);
+            
+            // 3:30-minute limit check for short dramas
+            const selectedShow = tvShows.find((s) => getId(s) === showId);
+            const isShortDrama = selectedShow?.contentType === "drama";
+            
+            if (isShortDrama && durationSecs > 210) {
+              toast({ title: "Short Drama videos cannot exceed 3 minutes 30 seconds.", variant: "destructive" });
+              setVideoFilePath(""); // Clear selection
+              return;
+            }
 
-        setDuration(secsToDuration(durationSecs));
-      };
-      video.onerror = () => console.warn("Could not load video metadata for duration calculation");
+            setDuration(secsToDuration(durationSecs));
+          };
+          video.onerror = () => console.warn("Could not load video metadata for duration calculation");
+        }
+      }
     }
   };
 
