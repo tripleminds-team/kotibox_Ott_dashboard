@@ -88,13 +88,21 @@ function ThemeApplier() {
         .join(' ');
     }
     
-    // Check if it's the admin panel root
-    if (location === "/dashboard") {
-      document.title = `Dashboard | ${name} Admin`;
-    } else if (location === "/" || location === "") {
+    // Identify frontend routes
+    const frontendPrefixes = [
+      "/wallet", "/membership", "/account", "/wishlist", 
+      "/help-support", "/browse", "/tv-shows-browse", 
+      "/drama", "/show", "/movie", "/page", "/login", "/register"
+    ];
+    
+    const isFrontend = location === "/" || location === "" || frontendPrefixes.some(p => location.startsWith(p));
+    const suffix = isFrontend ? name : `${name} Admin`;
+    
+    // Check if it's the root
+    if (location === "/" || location === "") {
       document.title = `Home | ${name}`;
     } else {
-      document.title = `${pageName} | ${name}`;
+      document.title = `${pageName} | ${suffix}`;
     }
   }, [settings.platformName, location]);
 
