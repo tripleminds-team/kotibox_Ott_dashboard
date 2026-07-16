@@ -50,6 +50,7 @@ const COLOR_THEMES = [
 // Component to apply custom theme
 function ThemeApplier() {
   const { settings } = useSettings();
+  const [location] = useLocation();
   
   useEffect(() => {
     const root = document.documentElement;
@@ -72,9 +73,30 @@ function ThemeApplier() {
   }, [settings.colorTheme, settings.primaryColor]);
 
   useEffect(() => {
-    const name = settings.platformName;
-    document.title = name ? `${name} Admin Panel` : "Admin Panel";
-  }, [settings.platformName]);
+    const name = settings.platformName || "Flipshorts";
+    
+    // Convert path to a readable page name
+    const pathSegments = location.split('/').filter(Boolean);
+    let pageName = "Home";
+    
+    if (pathSegments.length > 0) {
+      const firstSegment = pathSegments[0];
+      // Convert e.g., "user-profile" to "User Profile"
+      pageName = firstSegment
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    // Check if it's the admin panel root
+    if (location === "/dashboard") {
+      document.title = `Dashboard | ${name} Admin`;
+    } else if (location === "/" || location === "") {
+      document.title = `Home | ${name}`;
+    } else {
+      document.title = `${pageName} | ${name}`;
+    }
+  }, [settings.platformName, location]);
 
   return null;
 }

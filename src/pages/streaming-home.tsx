@@ -1756,6 +1756,19 @@ export default function StreamingHomePage() {
     return () => window.removeEventListener("user-updated", loadUser);
   }, []);
 
+  useEffect(() => {
+    const tabNames: Record<string, string> = {
+      home: "Home",
+      drama: "Short Dramas",
+      movies: "Movies",
+      tvshows: "TV Shows",
+      new: "New & Hot",
+    };
+    const titleName = tabNames[activeTab] || "Home";
+    const appName = settings?.platformName || "Flipshorts";
+    document.title = `${titleName} | ${appName}`;
+  }, [activeTab, settings?.platformName]);
+
   const handleSignOut = () => {
     localStorage.removeItem("appUser");
     localStorage.removeItem("appAccessToken");
