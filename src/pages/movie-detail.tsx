@@ -81,7 +81,7 @@ export default function MovieDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen text-white flex flex-col items-center justify-center" style={{ background: "#0c0c14" }}>
+      <div className="min-h-screen text-foreground flex flex-col items-center justify-center" style={{ background: "#0c0c14" }}>
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
@@ -108,7 +108,7 @@ export default function MovieDetailPage() {
   const posterImg = getImageUrl(item.poster || item.posterImage || item.thumbnail || item.backdrop) || "";
 
   return (
-    <div className="min-h-screen text-white" style={{ background: "#0c0c14" }}>
+    <div className="min-h-screen text-foreground" style={{ background: "#0c0c14" }}>
       <PublicHeader
         activeTab={item.type === "movie" ? "movies" : "tvshows"}
         setActiveTab={(tab) => {
@@ -143,7 +143,7 @@ export default function MovieDetailPage() {
           <div className="px-6 sm:px-10 lg:px-16">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-semibold transition-colors"
+              className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground text-sm font-semibold transition-colors"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
@@ -164,13 +164,13 @@ export default function MovieDetailPage() {
               {/* Genres */}
               <div className="flex flex-wrap items-center gap-x-0 gap-y-1 mb-3">
                 {item.genres.map((g, i) => (
-                  <span key={g} className="text-white/80 text-sm font-medium">
-                    {g}{i < item.genres.length - 1 && <span className="mx-2 text-white/80">•</span>}
+                  <span key={g} className="text-foreground/80 text-sm font-medium">
+                    {g}{i < item.genres.length - 1 && <span className="mx-2 text-foreground/80">•</span>}
                   </span>
                 ))}
               </div>
               {/* Title */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-3 tracking-tight drop-shadow-lg">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground leading-tight mb-3 tracking-tight drop-shadow-lg">
                 {item.title}
               </h1>
 
@@ -191,20 +191,20 @@ export default function MovieDetailPage() {
             </span>
           )}
           {item.ageRating && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-white/60">
+            <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-muted-foreground/80">
               {item.ageRating}
             </span>
           )}
-          <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-white/60">
+          <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-muted-foreground/80">
             {item.year}
           </span>
           {item.type === "movie" && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-white/60">
+            <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-muted-foreground/80">
               {item.duration}
             </span>
           )}
           {item.language && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-white/60 uppercase">
+            <span className="text-xs font-bold px-2.5 py-1 rounded border border-white/20 text-muted-foreground/80 uppercase">
               {item.language}
             </span>
           )}
@@ -222,12 +222,12 @@ export default function MovieDetailPage() {
         </div>
 
         {/* Description */}
-        <p className="text-white/80 text-sm sm:text-[15px] leading-relaxed mb-5 max-w-2xl line-clamp-3">
+        <p className="text-foreground/80 text-sm sm:text-[15px] leading-relaxed mb-5 max-w-2xl line-clamp-3">
           {item.description}
         </p>
 
         {/* Metadata row */}
-        <div className="flex flex-wrap items-center gap-3 mb-6 text-xs text-white/80">
+        <div className="flex flex-wrap items-center gap-3 mb-6 text-xs text-foreground/80">
           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {item.year}</span>
           {item.language && <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> {item.language}</span>}
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {item.duration}</span>
@@ -251,7 +251,7 @@ export default function MovieDetailPage() {
                 setLocation(`/show/${id}/episode/1`);
               }
             }}
-            className="flex items-center gap-2.5 px-8 py-3.5 font-black rounded-xl text-sm tracking-wide transition-all active:scale-95 shadow-lg text-white"
+            className="flex items-center gap-2.5 px-8 py-3.5 font-black rounded-xl text-sm tracking-wide transition-all active:scale-95 shadow-lg text-foreground"
             style={{ background: "linear-gradient(135deg, #e50914 0%, #b9090b 100%)", boxShadow: "0 8px 24px rgba(229,9,20,0.3)" }}
           >
             {isLocked ? <Crown className="w-4 h-4 text-amber-500 fill-amber-500" /> : <Play className="w-4 h-4 fill-white" />}
@@ -284,7 +284,7 @@ export default function MovieDetailPage() {
             className={`flex items-center gap-2 px-5 py-3.5 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 disabled:opacity-70 ${
               inWatchlist
                 ? "bg-red-500/20 border-red-500 text-red-500"
-                : "bg-white/8 border-white/20 text-white hover:bg-white/12 hover:border-white/35"
+                : "bg-white/8 border-white/20 text-foreground hover:bg-white/12 hover:border-white/35"
             }`}
           >
             {toggleWishlistMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -331,7 +331,7 @@ export default function MovieDetailPage() {
             className={`flex items-center gap-2 px-5 py-3.5 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 disabled:opacity-70 ${
               isDownloaded
                 ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                : "bg-white/8 border-white/20 text-white hover:bg-white/12 hover:border-white/35"
+                : "bg-white/8 border-white/20 text-foreground hover:bg-white/12 hover:border-white/35"
             }`}
           >
             {requestDownloadMutation.isPending || dlProgress !== null ? (
@@ -359,7 +359,7 @@ export default function MovieDetailPage() {
             className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all active:scale-95 disabled:opacity-70 ${
               isLiked
                 ? "bg-rose-500/20 border-rose-500 text-rose-400"
-                : "bg-white/8 border-white/20 text-white hover:border-white/35"
+                : "bg-white/8 border-white/20 text-foreground hover:border-white/35"
             }`}
           >
             {toggleLikeMutation.isPending ? (
@@ -381,7 +381,7 @@ export default function MovieDetailPage() {
                 description: "Movie link copied to clipboard successfully!",
               });
             }}
-            className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-white/20 bg-white/8 text-white hover:border-white/35 transition-all active:scale-95"
+            className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-white/20 bg-white/8 text-foreground hover:border-white/35 transition-all active:scale-95"
           >
             <Share2 className="w-4 h-4" />
           </button>
@@ -411,8 +411,8 @@ export default function MovieDetailPage() {
             <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
               <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
               <Tv className="w-5 h-5 text-red-500" />
-              <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">Seasons &amp; Episodes</h2>
-              <span className="ml-auto text-white text-xs font-semibold">
+              <h2 className="text-foreground font-black text-lg sm:text-xl tracking-tight">Seasons &amp; Episodes</h2>
+              <span className="ml-auto text-foreground text-xs font-semibold">
                 {episodes.length} Episode{episodes.length !== 1 ? 's' : ''} Total
               </span>
             </div>
@@ -434,7 +434,7 @@ export default function MovieDetailPage() {
                     >
                       <span>Season {s}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                        selectedSeason === s ? 'bg-white/20 text-white' : 'bg-zinc-700 text-white/80'
+                        selectedSeason === s ? 'bg-white/20 text-foreground' : 'bg-zinc-700 text-foreground/80'
                       }`}>{epCount} EP</span>
                     </button>
                   );
@@ -446,8 +446,8 @@ export default function MovieDetailPage() {
             <div className="px-6 sm:px-10 lg:px-16 space-y-3">
               {seasonEpisodes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <Tv className="w-10 h-10 text-white/80" />
-                  <p className="text-white text-sm font-medium">No episodes available for Season {selectedSeason}</p>
+                  <Tv className="w-10 h-10 text-foreground/80" />
+                  <p className="text-foreground text-sm font-medium">No episodes available for Season {selectedSeason}</p>
                 </div>
               ) : (
                 seasonEpisodes.map((ep: any) => {
@@ -473,7 +473,7 @@ export default function MovieDetailPage() {
                           />
                         ) : (
                           <div className="w-full h-full bg-zinc-800/80 flex items-center justify-center">
-                            <Play className="w-6 h-6 text-white/80" />
+                            <Play className="w-6 h-6 text-foreground/80" />
                           </div>
                         )}
                         {/* Play overlay */}
@@ -502,22 +502,22 @@ export default function MovieDetailPage() {
                       <div className="flex-1 min-w-0 py-0.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-xs font-bold uppercase tracking-widest mb-1 text-white">
+                            <p className="text-xs font-bold uppercase tracking-widest mb-1 text-foreground">
                               S{ep.season ?? 1} · Episode {epNum}
                             </p>
-                            <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-2 transition-colors text-white/80 group-hover:text-white">
+                            <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-2 transition-colors text-foreground/80 group-hover:text-foreground">
                               {ep.title}
                             </h3>
                           </div>
                         </div>
                         {ep.description && (
-                          <p className="text-white text-xs sm:text-[13px] leading-relaxed mt-2 line-clamp-2">
+                          <p className="text-foreground text-xs sm:text-[13px] leading-relaxed mt-2 line-clamp-2">
                             {ep.description}
                           </p>
                         )}
                         <div className="flex items-center gap-3 mt-2.5">
                           {ep.duration && (
-                            <span className="flex items-center gap-1 text-[11px] text-white/80 font-semibold">
+                            <span className="flex items-center gap-1 text-[11px] text-foreground/80 font-semibold">
                               <Clock className="w-3 h-3" />{ep.duration}
                             </span>
                           )}
@@ -549,7 +549,7 @@ export default function MovieDetailPage() {
         <div className="pb-10">
           <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
             <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
-            <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">Cast & Crew</h2>
+            <h2 className="text-foreground font-black text-lg sm:text-xl tracking-tight">Cast & Crew</h2>
           </div>
           <div
             className="flex gap-6 overflow-x-auto px-6 sm:px-10 lg:px-16 pb-2"
@@ -567,8 +567,8 @@ export default function MovieDetailPage() {
                     }}
                   />
                 </div>
-                <h4 className="text-white font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
-                <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.character || c.role || 'Cast'}</p>
+                <h4 className="text-foreground font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-foreground transition-colors">{c.name}</h4>
+                <p className="text-foreground/80 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.character || c.role || 'Cast'}</p>
               </div>
             ))}
 
@@ -584,8 +584,8 @@ export default function MovieDetailPage() {
                     }}
                   />
                 </div>
-                <h4 className="text-white font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
-                <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.role || 'Director'}</p>
+                <h4 className="text-foreground font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-foreground transition-colors">{c.name}</h4>
+                <p className="text-foreground/80 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.role || 'Director'}</p>
               </div>
             ))}
 
@@ -601,8 +601,8 @@ export default function MovieDetailPage() {
                     }}
                   />
                 </div>
-                <h4 className="text-white font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
-                <p className="text-white/80 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.role || 'Crew'}</p>
+                <h4 className="text-foreground font-bold text-xs sm:text-sm mt-3 line-clamp-1 group-hover:text-foreground transition-colors">{c.name}</h4>
+                <p className="text-foreground/80 text-[10px] sm:text-xs mt-0.5 line-clamp-1 font-semibold">{c.role || 'Crew'}</p>
               </div>
             ))}
           </div>
@@ -616,7 +616,7 @@ export default function MovieDetailPage() {
         <div className="pb-10">
           <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
             <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
-            <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">More Like This</h2>
+            <h2 className="text-foreground font-black text-lg sm:text-xl tracking-tight">More Like This</h2>
             <div className="flex-1" />
             <button
               onClick={() => {
@@ -624,7 +624,7 @@ export default function MovieDetailPage() {
                 const path = item.type === "movie" ? "/browse/movie" : "/browse/show";
                 window.open(firstGenre ? `${path}?genre=${encodeURIComponent(firstGenre)}` : path, "_blank");
               }}
-              className="text-white hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+              className="text-foreground hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
             >
               See all <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -647,7 +647,7 @@ export default function MovieDetailPage() {
         <div className="pb-12">
           <div className="flex items-center gap-3 mb-5 px-6 sm:px-10 lg:px-16">
             <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
-            <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">You May Also Like</h2>
+            <h2 className="text-foreground font-black text-lg sm:text-xl tracking-tight">You May Also Like</h2>
             <div className="flex-1" />
             <button
               onClick={() => {
@@ -655,7 +655,7 @@ export default function MovieDetailPage() {
                 const path = item.type === "movie" ? "/browse/movie" : "/browse/show";
                 window.open(firstGenre ? `${path}?genre=${encodeURIComponent(firstGenre)}` : path, "_blank");
               }}
-              className="text-white hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+              className="text-foreground hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
             >
               See all <ChevronRight className="w-3.5 h-3.5" />
             </button>

@@ -198,20 +198,20 @@ export default function GenresPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Genres</span>
+        <span className="text-foreground font-medium">Genres</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Bulk action */}
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
@@ -228,7 +228,7 @@ export default function GenresPage() {
         <Button
           variant="outline"
           onClick={handleExport}
-          className="border-border text-white hover:bg-muted hover:text-white h-10 gap-2 rounded-lg"
+          className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg"
         >
           <Download className="h-4 w-4" />
           Export
@@ -236,7 +236,7 @@ export default function GenresPage() {
         <Button
           variant="outline"
           onClick={() => document.getElementById('import-file-input')?.click()}
-          className="border-border text-white hover:bg-muted hover:text-white h-10 gap-2 rounded-lg"
+          className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg"
         >
           <Upload className="h-4 w-4" />
           Import
@@ -251,10 +251,10 @@ export default function GenresPage() {
 
         {/* Status filter */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-28 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
@@ -263,12 +263,12 @@ export default function GenresPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
@@ -294,19 +294,19 @@ export default function GenresPage() {
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-white font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Genres
-                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
+                  <ChevronDown className="h-3.5 w-3.5 text-foreground/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-white font-semibold text-sm">
+              <TableHead className="text-foreground font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Status
-                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
+                  <ChevronDown className="h-3.5 w-3.5 text-foreground/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-white font-semibold text-sm text-right pr-6">
+              <TableHead className="text-foreground font-semibold text-sm text-right pr-6">
                 Action
               </TableHead>
             </TableRow>
@@ -314,7 +314,7 @@ export default function GenresPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="border-border">
-                <TableCell colSpan={4} className="text-center text-white/65 py-16">
+                <TableCell colSpan={4} className="text-center text-foreground/65 py-16">
                   No genres found
                 </TableCell>
               </TableRow>
@@ -338,7 +338,7 @@ export default function GenresPage() {
                         alt={genre.name}
                         className="h-10 w-10 rounded-lg object-contain border border-border bg-gray-800"
                       />
-                      <span className="font-medium text-white">{genre.name}</span>
+                      <span className="font-medium text-foreground">{genre.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -376,24 +376,24 @@ export default function GenresPage() {
       </div>
 
       {/* Showing count */}
-      <p className="text-sm text-white/65">
+      <p className="text-sm text-foreground/65">
         Showing {filtered.length} of {genres.length} genres
       </p>
 
       {/* Delete Confirm Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
-        <AlertDialogContent className="bg-card border border-border text-white">
+        <AlertDialogContent className="bg-card border border-border text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Genre</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/75">
+            <AlertDialogTitle className="text-foreground">Delete Genre</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-white/80">"{confirmDelete?.name}"</span>?
+              <span className="font-semibold text-foreground/80">"{confirmDelete?.name}"</span>?
               <br />
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted hover:text-white">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted hover:text-foreground">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction

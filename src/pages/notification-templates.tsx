@@ -41,20 +41,20 @@ export default function NotificationTemplatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Notification Templates</span>
+        <span className="text-foreground font-medium">Notification Templates</span>
       </div>
 
       <div className="flex items-center justify-end gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-56 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-56 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
       </div>
@@ -63,21 +63,21 @@ export default function NotificationTemplatesPage() {
         <Table>
           <TableHeader>
             <TableRow className="border-border bg-card hover:bg-card">
-              <TableHead className="text-white/70 font-semibold text-sm">Template Name</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Template Name</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-white/65 py-10">
+                <TableCell colSpan={3} className="text-center text-foreground/65 py-10">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-white/65 py-10">
+                <TableCell colSpan={3} className="text-center text-foreground/65 py-10">
                   No templates found
                 </TableCell>
               </TableRow>

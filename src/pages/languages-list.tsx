@@ -103,19 +103,19 @@ export default function LanguagesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Languages</span>
+        <span className="text-foreground font-medium">Languages</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1" />
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search languages..."
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -133,22 +133,22 @@ export default function LanguagesList() {
         <Table>
           <TableHeader>
             <TableRow className="border-border bg-card hover:bg-card">
-              <TableHead className="text-white/70 font-semibold text-sm">Language</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Code</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Language</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Code</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-white/65 py-10">
+                <TableCell colSpan={4} className="text-center text-foreground/65 py-10">
                   Loading languages...
                 </TableCell>
               </TableRow>
             ) : filteredLanguages.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-white/65 py-10">
+                <TableCell colSpan={4} className="text-center text-foreground/65 py-10">
                   No languages found.
                 </TableCell>
               </TableRow>
@@ -161,16 +161,16 @@ export default function LanguagesList() {
                         {lang.image ? (
                           <AvatarImage src={getImageUrl(lang.image)} alt={lang.name} />
                         ) : (
-                          <AvatarFallback className="bg-muted text-white/70 rounded-lg">
+                          <AvatarFallback className="bg-muted text-foreground/70 rounded-lg">
                             <Globe className="h-4 w-4" />
                           </AvatarFallback>
                         )}
                       </Avatar>
-                      <span className="text-white font-medium text-sm">{lang.name}</span>
+                      <span className="text-foreground font-medium text-sm">{lang.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-white/75 uppercase">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground uppercase">
                       {lang.code}
                     </span>
                   </TableCell>
@@ -179,7 +179,7 @@ export default function LanguagesList() {
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         lang.isActive
                           ? "bg-green-500/15 text-green-400"
-                          : "bg-muted text-white/70"
+                          : "bg-muted text-foreground/70"
                       }`}
                     >
                       {lang.isActive ? "Active" : "Inactive"}
@@ -211,39 +211,39 @@ export default function LanguagesList() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="bg-card border-border text-white sm:max-w-md">
+        <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-white">
+            <DialogTitle className="text-foreground">
               {editingLanguage ? "Edit Language" : "Add Language"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-sm">Name</Label>
+              <Label className="text-foreground/70 text-sm">Name</Label>
               <Input
                 placeholder="e.g. English"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-muted border-border text-white placeholder:text-white/75 focus:border-primary h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-sm">Code</Label>
+              <Label className="text-foreground/70 text-sm">Code</Label>
               <Input
                 placeholder="e.g. en"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                className="bg-muted border-border text-white placeholder:text-white/75 focus:border-primary h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-sm">Image</Label>
+              <Label className="text-foreground/70 text-sm">Image</Label>
               <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setMediaPickerOpen(true)}
-                  className="bg-muted border-border text-white hover:bg-muted h-11 px-4 rounded-lg font-semibold text-sm gap-2"
+                  className="bg-muted border-border text-foreground hover:bg-muted h-11 px-4 rounded-lg font-semibold text-sm gap-2"
                 >
                   <ImageIcon className="h-4 w-4" />
                   Select from Media Library
@@ -271,7 +271,7 @@ export default function LanguagesList() {
             <Button
               variant="outline"
               onClick={closeDialog}
-              className="bg-muted border-border text-white hover:bg-muted"
+              className="bg-muted border-border text-foreground hover:bg-muted"
             >
               Cancel
             </Button>
@@ -288,15 +288,15 @@ export default function LanguagesList() {
 
       {/* Delete Confirm */}
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Language</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to delete "{confirmDelete?.name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">

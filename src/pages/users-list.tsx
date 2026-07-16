@@ -55,19 +55,19 @@ export default function UsersList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Users</span>
+        <span className="text-foreground font-medium">Users</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1" />
         <Select value={plan} onValueChange={setPlan}>
-          <SelectTrigger className="w-40 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-40 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="All Plans" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All Plans</SelectItem>
             <SelectItem value="premium">Premium</SelectItem>
             <SelectItem value="standard">Standard</SelectItem>
@@ -76,10 +76,10 @@ export default function UsersList() {
           </SelectContent>
         </Select>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -90,24 +90,24 @@ export default function UsersList() {
         <Table>
           <TableHeader>
             <TableRow className="border-border bg-card hover:bg-card">
-              <TableHead className="text-white/70 font-semibold text-sm">Name</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Plan</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Watch Time</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Joined</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Name</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Plan</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Watch Time</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Joined</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/65 py-10">
+                <TableCell colSpan={6} className="text-center text-foreground/65 py-10">
                   Loading users...
                 </TableCell>
               </TableRow>
             ) : data?.data?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/65 py-10">
+                <TableCell colSpan={6} className="text-center text-foreground/65 py-10">
                   No users found.
                 </TableCell>
               </TableRow>
@@ -118,13 +118,13 @@ export default function UsersList() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 rounded-full border border-border">
                         {user.avatar && <AvatarImage src={user.avatar} />}
-                        <AvatarFallback className="bg-muted text-white text-sm">
+                        <AvatarFallback className="bg-muted text-foreground text-sm">
                           {user.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-white font-medium text-sm">{user.name}</p>
-                        <p className="text-white/65 text-xs">{user.email}</p>
+                        <p className="text-foreground font-medium text-sm">{user.name}</p>
+                        <p className="text-foreground/65 text-xs">{user.email}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -135,7 +135,7 @@ export default function UsersList() {
                           user.status === "banned" ? "bg-primary" : "bg-green-500"
                         }`}
                       />
-                      <span className="text-white/75 text-sm capitalize">
+                      <span className="text-muted-foreground text-sm capitalize">
                         {user.status || "active"}
                       </span>
                     </div>
@@ -148,17 +148,17 @@ export default function UsersList() {
                           : user.subscriptionPlan === "standard"
                           ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                           : user.subscriptionPlan === "basic"
-                          ? "bg-muted text-white/60 dark:text-white/75"
-                          : "bg-muted text-white/60 dark:text-white/70"
+                          ? "bg-muted text-muted-foreground/80 dark:text-muted-foreground"
+                          : "bg-muted text-muted-foreground/80 dark:text-foreground/70"
                       }`}
                     >
                       {user.subscriptionPlan || "Free"}
                     </span>
                   </TableCell>
-                  <TableCell className="text-white/75 text-sm">
+                  <TableCell className="text-muted-foreground text-sm">
                     {user.totalWatchTime ? `${Math.round(user.totalWatchTime / 60)} hrs` : "0 hrs"}
                   </TableCell>
-                  <TableCell className="text-white/75 text-sm">
+                  <TableCell className="text-muted-foreground text-sm">
                     {format(new Date(user.createdAt), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell>
@@ -197,7 +197,7 @@ export default function UsersList() {
       </div>
 
       {data?.pagination && data.pagination.pages > 1 && (
-        <div className="flex items-center justify-between text-sm text-white/70">
+        <div className="flex items-center justify-between text-sm text-foreground/70">
           <span>
             Showing {((data.pagination.page - 1) * data.pagination.limit) + 1}–
             {Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} of{" "}
@@ -207,7 +207,7 @@ export default function UsersList() {
             <button
               onClick={() => setPage(Math.max(1, data.pagination.page - 1))}
               disabled={data.pagination.page <= 1}
-              className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -217,7 +217,7 @@ export default function UsersList() {
             <button
               onClick={() => setPage(Math.min(data.pagination.pages, data.pagination.page + 1))}
               disabled={data.pagination.page >= data.pagination.pages}
-              className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

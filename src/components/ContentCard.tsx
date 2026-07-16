@@ -25,14 +25,14 @@ function BadgeTop({ item }: { item: any }) {
   }
   if (item.badge === "NEW") {
     return (
-      <span className="px-1.5 py-0.5 bg-emerald-500/90 text-white text-[9px] font-black rounded-md leading-none shadow">
+      <span className="px-1.5 py-0.5 bg-emerald-500/90 text-foreground text-[9px] font-black rounded-md leading-none shadow">
         NEW
       </span>
     );
   }
   if (item.badge === "HOT") {
     return (
-      <span className="px-1.5 py-0.5 bg-orange-500/90 text-white text-[9px] font-black rounded-md leading-none shadow">
+      <span className="px-1.5 py-0.5 bg-orange-500/90 text-foreground text-[9px] font-black rounded-md leading-none shadow">
         HOT
       </span>
     );
@@ -46,7 +46,7 @@ function BadgeTop({ item }: { item: any }) {
   }
   if (item.badge && item.badge !== "TOP" && item.badge !== "EXCLUSIVE") {
     return (
-      <span className="px-1.5 py-0.5 bg-white/20 text-white text-[9px] font-black rounded-md leading-none shadow">
+      <span className="px-1.5 py-0.5 bg-white/20 text-foreground text-[9px] font-black rounded-md leading-none shadow">
         {item.badge}
       </span>
     );
@@ -55,7 +55,7 @@ function BadgeTop({ item }: { item: any }) {
   if (isSubscribed) return null;
 
   return (
-    <span className="px-1.5 py-0.5 bg-teal-500/90 text-white text-[9px] font-black rounded-md leading-none shadow">
+    <span className="px-1.5 py-0.5 bg-teal-500/90 text-foreground text-[9px] font-black rounded-md leading-none shadow">
       FREE
     </span>
   );
@@ -143,7 +143,7 @@ export function PortraitCard({
         {/* Bottom-left: TV pill for shows */}
         {isShow && (
           <div className="absolute bottom-11 left-2 z-10">
-            <span className="px-1.5 py-0.5 bg-white/15 border border-white/20 text-white text-[9px] font-black rounded-md leading-none">
+            <span className="px-1.5 py-0.5 bg-white/15 border border-white/20 text-foreground text-[9px] font-black rounded-md leading-none">
               TV
             </span>
           </div>
@@ -151,9 +151,9 @@ export function PortraitCard({
 
         {/* Bottom info (always visible) */}
         <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5 pt-6 z-10 pointer-events-none">
-          <p className="text-white font-bold text-xs truncate leading-tight">{item.title}</p>
+          <p className="text-foreground font-bold text-xs truncate leading-tight">{item.title}</p>
           {(year || duration) && (
-            <p className="text-white/80 text-[10px] mt-0.5 truncate">
+            <p className="text-foreground/80 text-[10px] mt-0.5 truncate">
               {[year, duration].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -168,7 +168,7 @@ export function PortraitCard({
           }}
           aria-label="Play"
         >
-          <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+          <Play className="w-4 h-4 text-foreground fill-white ml-0.5" />
         </button>
       </div>
     </div>
@@ -240,9 +240,9 @@ export function LandscapeCard({
         {/* Bottom info row */}
         <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-8 z-10 flex items-end justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-white font-bold text-xs truncate leading-tight">{item.title}</p>
+            <p className="text-foreground font-bold text-xs truncate leading-tight">{item.title}</p>
             {(year || duration) && (
-              <p className="text-white/80 text-[10px] mt-0.5 truncate">
+              <p className="text-foreground/80 text-[10px] mt-0.5 truncate">
                 {[year, duration].filter(Boolean).join(" · ")}
               </p>
             )}
@@ -257,7 +257,7 @@ export function LandscapeCard({
             }}
             aria-label="Play"
           >
-            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+            <Play className="w-4 h-4 text-foreground fill-white ml-0.5" />
           </button>
         </div>
       </div>

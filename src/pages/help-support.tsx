@@ -36,7 +36,7 @@ export default function HelpSupportPage() {
   };
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-[#030306]">
+    <div className="min-h-screen text-foreground flex flex-col bg-[#030306]">
       <PublicHeader
         activeTab="home"
         setActiveTab={(tab) => {
@@ -55,25 +55,25 @@ export default function HelpSupportPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => setLocation("/")}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/75 hover:text-white transition-all"
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2">
             <HelpCircle className="w-5 h-5 text-primary" />
-            <h1 className="text-white font-black text-2xl tracking-tight">Help & Support</h1>
+            <h1 className="text-foreground font-black text-2xl tracking-tight">Help & Support</h1>
           </div>
         </div>
 
         {/* Search Block */}
         <div className="relative mb-8">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/80" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/80" />
           <input
             type="text"
             placeholder="Search for questions (e.g. subscription, login, playback)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/[0.02] border border-white/5 focus:border-primary text-white placeholder:text-white/80 pl-12 pr-4 py-4 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all backdrop-blur-md"
+            className="w-full bg-white/[0.02] border border-white/5 focus:border-primary text-foreground placeholder:text-foreground/80 pl-12 pr-4 py-4 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary transition-all backdrop-blur-md"
           />
         </div>
 
@@ -84,9 +84,9 @@ export default function HelpSupportPage() {
           </div>
         ) : filteredFaqs.length === 0 ? (
           <div className="text-center py-16 bg-white/[0.01] border border-white/5 rounded-2xl p-8 mb-8">
-            <HelpCircle className="w-12 h-12 text-white/80 mx-auto mb-3 opacity-40" />
-            <h3 className="text-white font-bold text-lg mb-1">No results found</h3>
-            <p className="text-white/80 text-sm max-w-sm mx-auto">
+            <HelpCircle className="w-12 h-12 text-foreground/80 mx-auto mb-3 opacity-40" />
+            <h3 className="text-foreground font-bold text-lg mb-1">No results found</h3>
+            <p className="text-foreground/80 text-sm max-w-sm mx-auto">
               We couldn't find any FAQs matching "{search}". Try searching for other terms or get in touch.
             </p>
           </div>
@@ -101,11 +101,11 @@ export default function HelpSupportPage() {
                 >
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : faq.id)}
-                    className="w-full flex items-center justify-between p-5 text-left font-bold text-sm sm:text-base text-white focus:outline-none"
+                    className="w-full flex items-center justify-between p-5 text-left font-bold text-sm sm:text-base text-foreground focus:outline-none"
                   >
                     <span>{faq.question}</span>
                     <ChevronDown
-                      className={`w-4 h-4 text-white/75 transition-transform duration-300 ${
+                      className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
                         isExpanded ? "rotate-180 text-primary" : ""
                       }`}
                     />
@@ -115,7 +115,7 @@ export default function HelpSupportPage() {
                       isExpanded ? "max-h-[500px] border-t border-white/5" : "max-h-0 overflow-hidden"
                     }`}
                   >
-                    <p className="p-5 text-white/80 text-xs sm:text-sm leading-relaxed whitespace-pre-line bg-zinc-950/20">
+                    <p className="p-5 text-foreground/80 text-xs sm:text-sm leading-relaxed whitespace-pre-line bg-zinc-950/20">
                       {faq.answer}
                     </p>
                   </div>

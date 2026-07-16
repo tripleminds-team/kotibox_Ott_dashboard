@@ -20,8 +20,8 @@ type DirectorData = {
   image: string;
 };
 
-const inputCls = "bg-card border-border text-white placeholder:text-white/60 focus:border-primary h-11 rounded-lg";
-const labelCls = "text-white text-sm font-medium";
+const inputCls = "bg-card border-border text-foreground placeholder:text-muted-foreground/80 focus:border-primary h-11 rounded-lg";
+const labelCls = "text-foreground text-sm font-medium";
 
 export default function DirectorFormPage() {
   const [, setLocation] = useLocation();
@@ -99,10 +99,10 @@ export default function DirectorFormPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Director" : "New Director"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Director" : "New Director"}</span>
       </div>
 
       {/* Back */}
@@ -130,8 +130,8 @@ export default function DirectorFormPage() {
                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center gap-2">
-                  <ImageIcon className="h-8 w-8 text-white/75" />
-                  <p className="text-sm text-white/65">Select from Library or Upload</p>
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm text-foreground/65">Select from Library or Upload</p>
                 </div>
               )}
             </Button>
@@ -170,7 +170,7 @@ export default function DirectorFormPage() {
             <div className="space-y-2">
               <Label className={labelCls}>Status</Label>
               <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card">
-                <span className="text-sm text-white font-medium">Active</span>
+                <span className="text-sm text-foreground font-medium">Active</span>
                 <Switch checked={form.status} onCheckedChange={(v) => set("status", v)} className="data-[state=checked]:bg-primary" />
               </div>
             </div>

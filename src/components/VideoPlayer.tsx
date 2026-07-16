@@ -374,8 +374,8 @@ export default function VideoPlayer({
         {showResumePrompt && (
           <div className="absolute inset-0 z-[350] bg-black/80 flex items-center justify-center">
             <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
-              <p className="text-white font-bold text-lg mb-1">Resume Watching?</p>
-              <p className="text-white/70 text-sm mb-5">
+              <p className="text-foreground font-bold text-lg mb-1">Resume Watching?</p>
+              <p className="text-foreground/70 text-sm mb-5">
                 You left off at {formatTime(resumeTime)}. Continue from there?
               </p>
               <div className="flex gap-3">
@@ -387,7 +387,7 @@ export default function VideoPlayer({
                 </button>
                 <button
                   onClick={() => handleResume(false)}
-                  className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-sm transition-all"
+                  className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-foreground font-bold rounded-xl text-sm transition-all"
                 >
                   Start Over
                 </button>
@@ -400,11 +400,11 @@ export default function VideoPlayer({
         {showNextUp && isTvShow && onNextEpisode && (
           <div className="absolute inset-0 z-[350] bg-black/60 flex items-end justify-end p-6">
             <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-700 rounded-2xl p-4 max-w-xs w-full shadow-2xl">
-              <p className="text-white/70 text-[10px] uppercase tracking-widest font-bold mb-2">Next Up</p>
+              <p className="text-foreground/70 text-[10px] uppercase tracking-widest font-bold mb-2">Next Up</p>
               {nextEpisodePoster && (
                 <img src={nextEpisodePoster} alt="" className="w-full rounded-lg mb-3 object-cover" style={{ aspectRatio: '16/9' }} />
               )}
-              <p className="text-white font-bold text-sm truncate">{nextEpisodeTitle || 'Next Episode'}</p>
+              <p className="text-foreground font-bold text-sm truncate">{nextEpisodeTitle || 'Next Episode'}</p>
               <div className="flex items-center gap-2 mt-3">
                 <button
                   onClick={() => { setShowNextUp(false); onNextEpisode(); }}
@@ -414,7 +414,7 @@ export default function VideoPlayer({
                 </button>
                 <button
                   onClick={() => setShowNextUp(false)}
-                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-lg text-xs transition-all"
+                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-foreground font-bold rounded-lg text-xs transition-all"
                 >
                   Cancel
                 </button>
@@ -436,11 +436,11 @@ export default function VideoPlayer({
             <div className="flex flex-col items-center gap-1 animate-fade-out">
               <div className="flex">
                 {showSkipAnim === "right"
-                  ? [0,1,2].map(i => <ChevronRight key={i} className={`w-8 h-8 text-white ${i === 2 ? "opacity-100" : i === 1 ? "opacity-60" : "opacity-30"}`} />)
-                  : [2,1,0].map(i => <ChevronRight key={i} className={`w-8 h-8 text-white rotate-180 ${i === 0 ? "opacity-100" : i === 1 ? "opacity-60" : "opacity-30"}`} />)
+                  ? [0,1,2].map(i => <ChevronRight key={i} className={`w-8 h-8 text-foreground ${i === 2 ? "opacity-100" : i === 1 ? "opacity-60" : "opacity-30"}`} />)
+                  : [2,1,0].map(i => <ChevronRight key={i} className={`w-8 h-8 text-foreground rotate-180 ${i === 0 ? "opacity-100" : i === 1 ? "opacity-60" : "opacity-30"}`} />)
                 }
               </div>
-              <span className="text-white text-xs font-medium">{showSkipAnim === "right" ? "+10s" : "-10s"}</span>
+              <span className="text-foreground text-xs font-medium">{showSkipAnim === "right" ? "+10s" : "-10s"}</span>
             </div>
           </div>
         )}
@@ -453,8 +453,8 @@ export default function VideoPlayer({
           {/* Top Bar */}
           <div className="flex items-center justify-between px-4 pt-4">
             <div className="flex-1 min-w-0">
-              {title && <p className="text-white font-bold text-base truncate drop-shadow">{title}</p>}
-              {subtitle && <p className="text-white/70 text-xs truncate">{subtitle}</p>}
+              {title && <p className="text-foreground font-bold text-base truncate drop-shadow">{title}</p>}
+              {subtitle && <p className="text-foreground/70 text-xs truncate">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
@@ -467,7 +467,7 @@ export default function VideoPlayer({
           {/* Center Play Button */}
           <div className="flex items-center justify-center gap-10 pointer-events-none select-none">
             <button
-              className="pointer-events-auto w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90"
+              className="pointer-events-auto w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-foreground transition-all active:scale-90"
               onClick={(e) => { e.stopPropagation(); skip(-10); }}
             >
               <RotateCcw className="w-5 h-5" />
@@ -479,7 +479,7 @@ export default function VideoPlayer({
               {playing ? <Pause className="w-7 h-7 fill-black" /> : <Play className="w-7 h-7 fill-black ml-1" />}
             </button>
             <button
-              className="pointer-events-auto w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-90"
+              className="pointer-events-auto w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-foreground transition-all active:scale-90"
               onClick={(e) => { e.stopPropagation(); skip(10); }}
             >
               <RotateCw className="w-5 h-5" />
@@ -490,7 +490,7 @@ export default function VideoPlayer({
           <div className="px-4 pb-4 space-y-2">
             {/* Seek Bar */}
             <div className="flex items-center gap-2">
-              <span className="text-white/80 text-xs font-mono w-12 flex-shrink-0 text-right">{formatTime(currentTime)}</span>
+              <span className="text-foreground/80 text-xs font-mono w-12 flex-shrink-0 text-right">{formatTime(currentTime)}</span>
               <div className="relative flex-1 h-1 group/seek">
                 <input
                   ref={seekRef}
@@ -506,7 +506,7 @@ export default function VideoPlayer({
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <span className="text-white/80 text-xs font-mono w-12 flex-shrink-0">{formatTime(duration)}</span>
+              <span className="text-foreground/80 text-xs font-mono w-12 flex-shrink-0">{formatTime(duration)}</span>
             </div>
 
             {/* Control Buttons */}
@@ -515,21 +515,21 @@ export default function VideoPlayer({
               <div className="flex items-center gap-3">
                 <button
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                  className="text-white hover:text-white/80 transition-colors"
+                  className="text-foreground hover:text-foreground/80 transition-colors"
                 >
                   {playing ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
                 </button>
 
                 <button
                   onClick={(e) => { e.stopPropagation(); skip(-10); }}
-                  className="text-white/80 hover:text-white transition-colors"
+                  className="text-foreground/80 hover:text-foreground transition-colors"
                 >
                   <SkipBack className="w-4 h-4 fill-current" />
                 </button>
 
                 <button
                   onClick={(e) => { e.stopPropagation(); skip(10); }}
-                  className="text-white/80 hover:text-white transition-colors"
+                  className="text-foreground/80 hover:text-foreground transition-colors"
                 >
                   <SkipForward className="w-4 h-4 fill-current" />
                 </button>
@@ -538,7 +538,7 @@ export default function VideoPlayer({
                 <div className="flex items-center gap-2 group/vol" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={toggleMute}
-                    className="text-white/80 hover:text-white transition-colors"
+                    className="text-foreground/80 hover:text-foreground transition-colors"
                   >
                     {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
@@ -562,7 +562,7 @@ export default function VideoPlayer({
                 {/* Orientation Toggle */}
                 <button
                   onClick={() => setOrientation(o => o === "landscape" ? "portrait" : "landscape")}
-                  className="text-white/80 hover:text-white transition-colors p-1"
+                  className="text-foreground/80 hover:text-foreground transition-colors p-1"
                   title={orientation === "landscape" ? "Switch to Portrait" : "Switch to Landscape"}
                 >
                   {orientation === "landscape" ? <Smartphone className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
@@ -572,18 +572,18 @@ export default function VideoPlayer({
                 <div className="relative">
                   <button
                     onClick={() => { setShowSettings(!showSettings); setShowQualityMenu(false); }}
-                    className="text-white/80 hover:text-white transition-colors p-1 text-xs font-bold"
+                    className="text-foreground/80 hover:text-foreground transition-colors p-1 text-xs font-bold"
                   >
                     {speed}x
                   </button>
                   {showSettings && (
                     <div className="absolute bottom-8 right-0 bg-zinc-900/95 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl min-w-[120px]">
-                      <p className="text-white/65 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Speed</p>
+                      <p className="text-foreground/65 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Speed</p>
                       {SPEEDS.map((s) => (
                         <button
                           key={s}
                           onClick={() => changeSpeed(s)}
-                          className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${speed === s ? "text-primary font-bold" : "text-white"}`}
+                          className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${speed === s ? "text-primary font-bold" : "text-foreground"}`}
                         >
                           {s === 1 ? "Normal" : `${s}x`}
                         </button>
@@ -597,18 +597,18 @@ export default function VideoPlayer({
                   <div className="relative">
                     <button
                       onClick={() => { setShowQualityMenu(!showQualityMenu); setShowSettings(false); }}
-                      className="text-white/80 hover:text-white transition-colors p-1 text-xs font-bold"
+                      className="text-foreground/80 hover:text-foreground transition-colors p-1 text-xs font-bold"
                     >
                       {currentQualityLabel}
                     </button>
                     {showQualityMenu && (
                       <div className="absolute bottom-8 right-0 bg-zinc-900/95 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl min-w-[120px]">
-                        <p className="text-white/65 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Quality</p>
+                        <p className="text-foreground/65 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Quality</p>
                         {allQualities.map((q) => (
                           <button
                             key={q.label}
                             onClick={() => changeQuality(q)}
-                            className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${currentQualityLabel === q.label ? "text-primary font-bold" : "text-white"}`}
+                            className={`w-full px-4 py-2 text-sm text-left transition-colors hover:bg-white/10 ${currentQualityLabel === q.label ? "text-primary font-bold" : "text-foreground"}`}
                           >
                             {q.label}
                           </button>
@@ -622,7 +622,7 @@ export default function VideoPlayer({
                 {isTvShow && onNextEpisode && (
                   <button
                     onClick={() => { if (!adIsActive) onNextEpisode(); }}
-                    className="text-white/80 hover:text-white transition-colors p-1 hidden sm:block"
+                    className="text-foreground/80 hover:text-foreground transition-colors p-1 hidden sm:block"
                     title="Next Episode"
                   >
                     <FastForward className="w-4 h-4" />
@@ -631,7 +631,7 @@ export default function VideoPlayer({
 
                 <button
                   onClick={() => { document.pictureInPictureElement ? document.exitPictureInPicture() : videoRef.current?.requestPictureInPicture?.().catch(() => {}); }}
-                  className="text-white/80 hover:text-white transition-colors p-1 hidden sm:block"
+                  className="text-foreground/80 hover:text-foreground transition-colors p-1 hidden sm:block"
                   title="Picture in Picture"
                 >
                   <Circle className="w-4 h-4" />
@@ -639,7 +639,7 @@ export default function VideoPlayer({
 
                 <button
                   onClick={toggleFullscreen}
-                  className="text-white/80 hover:text-white transition-colors p-1"
+                  className="text-foreground/80 hover:text-foreground transition-colors p-1"
                 >
                   {fullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
                 </button>

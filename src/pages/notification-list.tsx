@@ -88,18 +88,18 @@ export default function NotificationListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Notification List</span>
+        <span className="text-foreground font-medium">Notification List</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
@@ -110,10 +110,10 @@ export default function NotificationListPage() {
         <div className="flex-1" />
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-44 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-44 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="All" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="user_registered">User Registered</SelectItem>
             <SelectItem value="content_created">Created</SelectItem>
@@ -124,12 +124,12 @@ export default function NotificationListPage() {
         </Select>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
       </div>
@@ -145,17 +145,17 @@ export default function NotificationListPage() {
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Type</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Text</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Target</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Updated At</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Type</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Text</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Target</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm whitespace-nowrap">Updated At</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/65 py-10">
+                <TableCell colSpan={6} className="text-center text-foreground/65 py-10">
                   No notifications found
                 </TableCell>
               </TableRow>
@@ -170,26 +170,26 @@ export default function NotificationListPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <span className={notif.isHighlight ? "text-primary text-sm font-medium" : "text-white/75 text-sm"}>
+                    <span className={notif.isHighlight ? "text-primary text-sm font-medium" : "text-muted-foreground text-sm"}>
                       {notif.type}
                     </span>
                   </TableCell>
                   <TableCell className="max-w-xs">
-                    <p className="text-white font-semibold text-sm">{notif.title}</p>
-                    <p className="text-white/65 text-xs mt-0.5 line-clamp-2">{notif.text}</p>
+                    <p className="text-foreground font-semibold text-sm">{notif.title}</p>
+                    <p className="text-foreground/65 text-xs mt-0.5 line-clamp-2">{notif.text}</p>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2.5">
                       <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                        <User className="h-4 w-4 text-white/70" />
+                        <User className="h-4 w-4 text-foreground/70" />
                       </div>
                       <div>
-                        <p className="text-white font-medium text-sm">{notif.userName}</p>
-                        <p className="text-white/65 text-xs">{notif.userEmail}</p>
+                        <p className="text-foreground font-medium text-sm">{notif.userName}</p>
+                        <p className="text-foreground/65 text-xs">{notif.userEmail}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-white/75 text-sm whitespace-nowrap">
+                  <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                     {notif.updatedAt ? new Date(notif.updatedAt).toLocaleString() : "Just now"}
                   </TableCell>
                   <TableCell>
@@ -208,15 +208,15 @@ export default function NotificationListPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Notification</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to delete this notification? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

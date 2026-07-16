@@ -26,7 +26,7 @@ function SectionLabel({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
       <div className="w-1 h-4 rounded-full bg-primary" />
-      <span className="text-xs font-black text-white/75 uppercase tracking-widest">{label}</span>
+      <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{label}</span>
     </div>
   );
 }
@@ -116,25 +116,25 @@ export default function AdForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-white p-6 -m-6 pb-20">
+    <div className="min-h-screen bg-background text-foreground p-6 -m-6 pb-20">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 text-xs text-white/75 mb-3">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
           <span>Dashboard</span><span>/</span>
-          <button onClick={() => setLocation("/ads")} className="hover:text-white transition-colors">Custom Ads</button>
+          <button onClick={() => setLocation("/ads")} className="hover:text-foreground transition-colors">Custom Ads</button>
           <span>/</span>
-          <span className="text-white">{isEdit ? "Edit Ad" : "New Ad"}</span>
+          <span className="text-foreground">{isEdit ? "Edit Ad" : "New Ad"}</span>
         </div>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setLocation("/ads")}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-muted border border-border text-white/75 hover:text-white hover:border-ring transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-muted border border-border text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-xl font-black text-white">{isEdit ? "Edit Ad Campaign" : "Create New Ad"}</h1>
-            <p className="text-white/75 text-sm">{isEdit ? "Update your ad settings and creative" : "Set up a new ad campaign"}</p>
+            <h1 className="text-xl font-black text-foreground">{isEdit ? "Edit Ad Campaign" : "Create New Ad"}</h1>
+            <p className="text-muted-foreground text-sm">{isEdit ? "Update your ad settings and creative" : "Set up a new ad campaign"}</p>
           </div>
         </div>
       </div>
@@ -146,12 +146,12 @@ export default function AdForm() {
           {/* Ad Name */}
           <div className="bg-card border border-border rounded-2xl p-6">
             <SectionLabel label="Ad Identity" />
-            <label className="block text-sm font-semibold text-white/75 mb-2">Ad Name <span className="text-primary">*</span></label>
+            <label className="block text-sm font-semibold text-muted-foreground mb-2">Ad Name <span className="text-primary">*</span></label>
             <input
               value={form.adName}
               onChange={e => set("adName", e.target.value)}
               placeholder="e.g. Summer Sale Banner"
-              className="w-full px-4 py-3 bg-background border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-white/75 transition-colors"
+              className="w-full px-4 py-3 bg-background border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-muted-foreground transition-colors"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function AdForm() {
                   className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                     form.adType === t.value
                       ? `${t.color} border-current`
-                      : "border-border bg-muted/50 text-white/75 hover:border-ring hover:text-white"
+                      : "border-border bg-muted/50 text-muted-foreground hover:border-ring hover:text-foreground"
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${form.adType === t.value ? "bg-white/10" : "bg-muted"}`}>
@@ -193,7 +193,7 @@ export default function AdForm() {
                   className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                     form.placement === p.value
                       ? "border-primary bg-primary/10 text-white"
-                      : "border-border bg-muted/50 text-white/75 hover:border-ring hover:text-white"
+                      : "border-border bg-muted/50 text-muted-foreground hover:border-ring hover:text-foreground"
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${form.placement === p.value ? "bg-primary/20" : "bg-muted"}`}>
@@ -217,7 +217,7 @@ export default function AdForm() {
             <div className="flex items-center justify-between mb-4">
               <SectionLabel label="Creative / Media" />
               {form.mediaUrl && (
-                <button onClick={() => setPreviewVisible(v => !v)} className="flex items-center gap-1.5 text-xs text-white/65 hover:text-white/75 transition-colors">
+                <button onClick={() => setPreviewVisible(v => !v)} className="flex items-center gap-1.5 text-xs text-foreground/65 hover:text-muted-foreground transition-colors">
                   {previewVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   {previewVisible ? "Hide" : "Show"} preview
                 </button>
@@ -231,7 +231,7 @@ export default function AdForm() {
                   key={o.v}
                   onClick={() => set("urlType", o.v)}
                   className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                    form.urlType === o.v ? "bg-primary/15 border-primary/40 text-white" : "bg-muted border-border text-white/75 hover:border-ring"
+                    form.urlType === o.v ? "bg-primary/15 border-primary/40 text-white" : "bg-muted border-border text-muted-foreground hover:border-ring"
                   }`}
                 >
                   {o.icon} {o.label}
@@ -243,7 +243,7 @@ export default function AdForm() {
             {form.urlType === "Local" ? (
               <button
                 onClick={() => setIsMediaPickerOpen(true)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-background border border-border text-white/75 rounded-xl hover:border-ring hover:text-white transition-colors text-sm"
+                className="w-full flex items-center justify-between px-4 py-3 bg-background border border-border text-muted-foreground rounded-xl hover:border-ring hover:text-foreground transition-colors text-sm"
               >
                 <span className="truncate">{form.mediaUrl ? form.mediaUrl.split("/").pop() : "Choose file from media library..."}</span>
                 <Upload className="w-4 h-4 flex-shrink-0 ml-2" />
@@ -253,7 +253,7 @@ export default function AdForm() {
                 value={form.mediaUrl}
                 onChange={e => set("mediaUrl", e.target.value)}
                 placeholder={form.adType === "Custom" ? "Paste Google/custom ad script..." : "https://cdn.example.com/ad.mp4"}
-                className="w-full px-4 py-3 bg-background border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-white/75 transition-colors"
+                className="w-full px-4 py-3 bg-background border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-muted-foreground transition-colors"
               />
             )}
 
@@ -287,7 +287,7 @@ export default function AdForm() {
               <div className="mt-4 rounded-xl border-2 border-dashed border-amber-500/30 bg-amber-500/5 p-6 flex flex-col items-center justify-center gap-2 text-center">
                 <Code2 className="w-8 h-8 text-amber-400" />
                 <p className="text-sm font-semibold text-amber-500">Paste your ad script or HTML above</p>
-                <p className="text-xs text-white/75">Supports Google AdSense tags, custom HTML banners, and JavaScript ad scripts. A live preview will appear here.</p>
+                <p className="text-xs text-muted-foreground">Supports Google AdSense tags, custom HTML banners, and JavaScript ad scripts. A live preview will appear here.</p>
               </div>
             )}
           </div>
@@ -295,19 +295,19 @@ export default function AdForm() {
           {/* Redirect URL */}
           <div className="bg-card border border-border rounded-2xl p-6">
             <SectionLabel label="Click Destination" />
-            <label className="block text-sm font-semibold text-white/75 mb-2 flex items-center gap-1.5">
-              <ExternalLink className="w-4 h-4 text-white/75" /> Redirect URL
+            <label className="block text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+              <ExternalLink className="w-4 h-4 text-muted-foreground" /> Redirect URL
             </label>
             <div className="relative">
-              <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/75" />
+              <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 value={form.redirectUrl}
                 onChange={e => set("redirectUrl", e.target.value)}
                 placeholder="https://example.com/offer"
-                className="w-full pl-10 pr-4 py-3 bg-background border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-white/75 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-background border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-muted-foreground transition-colors"
               />
             </div>
-            <p className="text-white/75 text-xs mt-2">Where users are sent when they click on the ad</p>
+            <p className="text-muted-foreground text-xs mt-2">Where users are sent when they click on the ad</p>
           </div>
 
           {/* Status */}
@@ -315,11 +315,11 @@ export default function AdForm() {
             <SectionLabel label="Status" />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-white">Ad Active</p>
-                <p className="text-white/75 text-xs mt-0.5">Toggle to enable or pause this ad</p>
+                <p className="text-sm font-bold text-foreground">Ad Active</p>
+                <p className="text-muted-foreground text-xs mt-0.5">Toggle to enable or pause this ad</p>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`text-xs font-bold ${form.status === "active" ? "text-emerald-400" : "text-white/65"}`}>
+                <span className={`text-xs font-bold ${form.status === "active" ? "text-emerald-400" : "text-foreground/65"}`}>
                   {form.status === "active" ? "Active" : "Inactive"}
                 </span>
                 <Switch
@@ -340,13 +340,13 @@ export default function AdForm() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-white/75 mb-2 flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-white/75" /> Content Type
+                <label className="block text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <Tag className="w-4 h-4 text-muted-foreground" /> Content Type
                 </label>
                 <select
                   value={form.targetContentType}
                   onChange={e => set("targetContentType", e.target.value)}
-                  className="w-full px-4 py-3 bg-background border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
+                  className="w-full px-4 py-3 bg-background border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
                 >
                   <option value="Movie">Movies</option>
                   <option value="Short Dramas">Short Dramas</option>
@@ -356,9 +356,9 @@ export default function AdForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-white/75 mb-2">
+                <label className="block text-sm font-semibold text-muted-foreground mb-2">
                   Target Titles
-                  <span className="text-white/75 font-normal ml-1.5 text-xs">(optional — leave empty to target all)</span>
+                  <span className="text-muted-foreground font-normal ml-1.5 text-xs">(optional — leave empty to target all)</span>
                 </label>
 
                 {/* Tags */}
@@ -369,7 +369,7 @@ export default function AdForm() {
                         {cat}
                         <button
                           onClick={() => set("targetCategories", form.targetCategories.filter((_, idx) => idx !== i))}
-                          className="hover:text-white transition-colors font-black leading-none"
+                          className="hover:text-foreground transition-colors font-black leading-none"
                         >
                           ×
                         </button>
@@ -385,7 +385,7 @@ export default function AdForm() {
                     if (v && !form.targetCategories.includes(v))
                       set("targetCategories", [...form.targetCategories, v]);
                   }}
-                  className="w-full px-4 py-3 bg-background border border-border text-white/75 text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
+                  className="w-full px-4 py-3 bg-background border border-border text-muted-foreground text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
                 >
                   <option value="" disabled>Add target title...</option>
                   {contentOptions.map((item: any) => (
@@ -404,31 +404,31 @@ export default function AdForm() {
             <SectionLabel label="Campaign Schedule" />
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-white/75 mb-2 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-white/75" /> Start Date <span className="text-primary">*</span>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-muted-foreground" /> Start Date <span className="text-primary">*</span>
                 </label>
                 <input
                   type="date"
                   value={form.startDate}
                   onChange={e => set("startDate", e.target.value)}
-                  className="w-full px-4 py-3 bg-background border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
+                  className="w-full px-4 py-3 bg-background border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-white/75 mb-2 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-white/75" /> End Date <span className="text-primary">*</span>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-muted-foreground" /> End Date <span className="text-primary">*</span>
                 </label>
                 <input
                   type="date"
                   value={form.endDate}
                   onChange={e => set("endDate", e.target.value)}
-                  className="w-full px-4 py-3 bg-background border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
+                  className="w-full px-4 py-3 bg-background border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring transition-colors"
                 />
               </div>
               {form.startDate && form.endDate && (
                 <div className="p-3 bg-muted border border-border rounded-xl">
-                  <p className="text-white/75 text-xs">Campaign duration</p>
-                  <p className="text-white font-bold text-sm mt-0.5">
+                  <p className="text-muted-foreground text-xs">Campaign duration</p>
+                  <p className="text-foreground font-bold text-sm mt-0.5">
                     {Math.max(0, Math.ceil((new Date(form.endDate).getTime() - new Date(form.startDate).getTime()) / 86400000))} days
                   </p>
                 </div>

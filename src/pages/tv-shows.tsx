@@ -126,17 +126,17 @@ export default function TvShowsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-sm text-white/75">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span>Dashboard</span><span>/</span>
-        <span className="text-white font-medium">TV Shows</span>
+        <span className="text-foreground font-medium">TV Shows</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-white">
+          <SelectContent className="bg-popover border-border text-foreground">
             <SelectItem value="action">Action</SelectItem>
             <SelectItem value="delete">Delete Selected</SelectItem>
             <SelectItem value="activate">Activate</SelectItem>
@@ -150,10 +150,10 @@ export default function TvShowsPage() {
         <div className="flex-1" />
 
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-          <SelectTrigger className="w-28 bg-card border-border text-white h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-white">
+          <SelectContent className="bg-popover border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Published</SelectItem>
             <SelectItem value="inactive">Draft</SelectItem>
@@ -161,12 +161,12 @@ export default function TvShowsPage() {
         </Select>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm focus:border-primary"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-primary"
           />
         </div>
 
@@ -191,19 +191,19 @@ export default function TvShowsPage() {
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll}
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                 </TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide min-w-[220px]">TV Show</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Genres</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Language</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Episodes</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Plan</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide min-w-[220px]">TV Show</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Genres</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Language</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Episodes</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Plan</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {allShows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-white/65 py-14">
+                  <TableCell colSpan={8} className="text-center text-foreground/65 py-14">
                     {searchQuery ? "No TV shows match your search" : "No TV shows yet. Click New to add one."}
                   </TableCell>
                 </TableRow>
@@ -220,12 +220,12 @@ export default function TvShowsPage() {
                           {show.thumbnail ? (
                             <img src={getImageUrl(show.thumbnail)} alt={show.title} className="h-full w-full object-cover" />
                           ) : (
-                            <ImageIcon className="h-5 w-5 text-white/60" />
+                            <ImageIcon className="h-5 w-5 text-muted-foreground/80" />
                           )}
                         </div>
                         <div>
-                          <p className="text-white font-medium text-sm">{show.title}</p>
-                          <p className="text-xs text-white/65 mt-0.5 capitalize">{show.contentType || "series"}</p>
+                          <p className="text-foreground font-medium text-sm">{show.title}</p>
+                          <p className="text-xs text-foreground/65 mt-0.5 capitalize">{show.contentType || "series"}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -235,18 +235,18 @@ export default function TvShowsPage() {
                           const name = typeof g === "object" ? g.name : g;
                           const key = typeof g === "object" ? (g._id || g.id || name) : g;
                           return (
-                            <span key={key} className="text-xs bg-muted px-1.5 py-0.5 rounded text-white/70">{name}</span>
+                            <span key={key} className="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground/70">{name}</span>
                           );
                         })}
                         {(show.genres || []).length > 3 && (
-                          <span className="text-xs text-white/60">+{show.genres.length - 3}</span>
+                          <span className="text-xs text-muted-foreground/80">+{show.genres.length - 3}</span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-white/70 text-sm">
+                    <TableCell className="text-foreground/70 text-sm">
                       {(show.languages || []).slice(0, 2).map((l: any) => typeof l === "object" ? l.name : l).join(", ") || "—"}
                     </TableCell>
-                    <TableCell className="text-white/70 text-sm text-center">
+                    <TableCell className="text-foreground/70 text-sm text-center">
                       {show.episodeCount ?? 0}
                     </TableCell>
                     <TableCell>
@@ -292,7 +292,7 @@ export default function TvShowsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-1">
-          <p className="text-sm text-white/75">
+          <p className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
             {pagination?.total ? ` · ${pagination.total} total` : ""}
           </p>
@@ -321,15 +321,15 @@ export default function TvShowsPage() {
 
       {/* Single Delete Confirm */}
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete TV Show</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to delete "{confirmDelete?.title}"? All related episodes will also be removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -337,16 +337,16 @@ export default function TvShowsPage() {
 
       {/* Bulk Delete Confirm */}
       <AlertDialog open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selectedIds.length} TV Show(s)</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to delete {selectedIds.length} selected TV show(s)?
               <br />All related episodes will also be removed. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmBulkDelete} className="bg-primary hover:bg-primary/90 text-white">Delete All</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

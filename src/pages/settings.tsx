@@ -71,8 +71,8 @@ const COLOR_THEMES = [
 ];
 
 const inputCls =
-  "bg-input border-border text-white placeholder:text-white/75 focus:border-primary h-11 rounded-lg";
-const labelCls = "text-white text-sm font-medium";
+  "bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11 rounded-lg";
+const labelCls = "text-foreground text-sm font-medium";
 
 // Reusable secret input with show/hide eye toggle
 function SecretInput({
@@ -96,7 +96,7 @@ function SecretInput({
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/75 hover:text-white transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
         tabIndex={-1}
       >
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -107,7 +107,7 @@ function SecretInput({
 
 function SectionTitle({ icon: Icon, label }: { icon: any; label: string }) {
   return (
-    <h2 className="text-xl font-semibold text-white flex items-center gap-2 mb-6">
+    <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-6">
       <Icon className="h-5 w-5 text-primary" />
       {label}
     </h2>
@@ -730,13 +730,13 @@ export default function Settings() {
           <>
             <img src={getImageUrl(preview)} alt={label} className="h-full w-full object-contain p-2" />
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <Upload className="h-5 w-5 text-white" />
+              <Upload className="h-5 w-5 text-foreground" />
             </div>
           </>
         ) : (
           <>
-            <Upload className="h-5 w-5 text-white/75 mb-1" />
-            <p className="text-xs text-white/75">Click to upload</p>
+            <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+            <p className="text-xs text-muted-foreground">Click to upload</p>
           </>
         )}
       </div>
@@ -749,7 +749,7 @@ export default function Settings() {
 
       {/* Logo uploads */}
       <div className="mb-6">
-        <p className="text-sm font-semibold text-white mb-4">Logos & Favicon</p>
+        <p className="text-sm font-semibold text-foreground mb-4">Logos & Favicon</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <LogoUploadBox
             label="Light Theme Logo"
@@ -786,13 +786,13 @@ export default function Settings() {
       <div className="mb-6 flex items-center justify-between p-4 rounded-lg border border-border bg-card">
         <div className="flex items-center gap-3">
           {resolvedTheme === "dark" ? (
-            <Moon className="h-4 w-4 text-white/75" />
+            <Moon className="h-4 w-4 text-muted-foreground" />
           ) : (
             <Sun className="h-4 w-4 text-yellow-400" />
           )}
           <div>
-            <p className="text-sm text-white font-medium">Dark Mode</p>
-            <p className="text-xs text-white/75 mt-0.5">Toggle between dark and light theme</p>
+            <p className="text-sm text-foreground font-medium">Dark Mode</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Toggle between dark and light theme</p>
           </div>
         </div>
         <Switch
@@ -828,7 +828,7 @@ export default function Settings() {
             value={business.siteDescription}
             onChange={(e) => setBusiness({ ...business, siteDescription: e.target.value })}
             placeholder="StreamVault: Your Ultimate Destination for Unlimited Movies and Shows!"
-            className="bg-input border-border text-white focus:border-primary rounded-lg resize-none"
+            className="bg-background border-border text-foreground focus:border-primary rounded-lg resize-none"
             rows={3}
           />
         </div>
@@ -836,7 +836,7 @@ export default function Settings() {
 
       {/* Social URLs */}
       <div className="mb-5">
-        <p className="text-sm font-semibold text-white mb-4">Social Media Links</p>
+        <p className="text-sm font-semibold text-foreground mb-4">Social Media Links</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {[
             { key: "facebookUrl", label: "Facebook URL", placeholder: "https://facebook.com/yourpage" },
@@ -880,8 +880,8 @@ export default function Settings() {
         ] as const).map(({ key, label, desc }) => (
           <div key={key} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
             <div>
-              <p className="text-sm text-white font-medium">{label}</p>
-              <p className="text-xs text-white/75 mt-0.5">{desc}</p>
+              <p className="text-sm text-foreground font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
             </div>
             <Switch
               checked={misc[key]}
@@ -895,11 +895,11 @@ export default function Settings() {
       {/* Social OAuth Credentials — shown when socialLogin is on */}
       {misc.socialLogin && (
         <div className="mb-7 rounded-lg border border-border bg-card p-5">
-          <p className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+          <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-2">
             <span className="w-2 h-4 rounded-full bg-primary inline-block" />
             Social Login Credentials
           </p>
-          <p className="text-xs text-white/75 mb-4">
+          <p className="text-xs text-muted-foreground mb-4">
             Enter OAuth credentials for each provider. Leave blank to disable that provider's button.
           </p>
 
@@ -912,7 +912,7 @@ export default function Settings() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              <span className="text-sm font-semibold text-white">Google Sign In</span>
+              <span className="text-sm font-semibold text-foreground">Google Sign In</span>
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Google Client ID</Label>
@@ -922,7 +922,7 @@ export default function Settings() {
                 placeholder="123456789-abc.apps.googleusercontent.com"
                 className={inputCls}
               />
-              <p className="text-xs text-white/75">From Google Cloud Console → APIs & Services → Credentials</p>
+              <p className="text-xs text-muted-foreground">From Google Cloud Console → APIs & Services → Credentials</p>
             </div>
           </div>
 
@@ -932,7 +932,7 @@ export default function Settings() {
               <svg viewBox="0 0 24 24" className="w-4 h-4 fill-foreground">
                 <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.54 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
               </svg>
-              <span className="text-sm font-semibold text-white">Apple Sign In</span>
+              <span className="text-sm font-semibold text-foreground">Apple Sign In</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -963,7 +963,7 @@ export default function Settings() {
                 />
               </div>
             </div>
-            <p className="text-xs text-white/75 mt-2">From Apple Developer → Certificates, Identifiers & Profiles → Keys</p>
+            <p className="text-xs text-muted-foreground mt-2">From Apple Developer → Certificates, Identifiers & Profiles → Keys</p>
           </div>
         </div>
       )}
@@ -979,7 +979,7 @@ export default function Settings() {
       {/* Color Customizer */}
       <div className="space-y-3 mb-7">
         <div className="flex items-center justify-between">
-          <Label className="text-white font-medium">Color Customizer</Label>
+          <Label className="text-foreground font-medium">Color Customizer</Label>
           <label className="text-sm text-primary hover:text-primary/80 font-medium cursor-pointer flex items-center gap-2">
             Custom ✨
             <input 
@@ -1014,7 +1014,7 @@ export default function Settings() {
 
       {/* Navbar Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-white font-medium">Navbar Style</Label>
+        <Label className="text-foreground font-medium">Navbar Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Glass", "Sticky", "Transparent", "Default"].map((s) => (
             <button
@@ -1023,7 +1023,7 @@ export default function Settings() {
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.navbarStyle === s
                   ? "bg-primary border-red-600 text-white"
-                  : "border-border text-white hover:border-primary hover:text-white bg-card"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -1034,7 +1034,7 @@ export default function Settings() {
 
       {/* Navbar Hide */}
       <div className="flex items-center justify-between py-4 border-t border-b border-border mb-7">
-        <Label className="text-white font-medium">Navbar Hide</Label>
+        <Label className="text-foreground font-medium">Navbar Hide</Label>
         <Switch
           checked={custom.navbarHide}
           onCheckedChange={(v) => setCustom({ ...custom, navbarHide: v })}
@@ -1044,7 +1044,7 @@ export default function Settings() {
 
       {/* Card Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-white font-medium">Card Style</Label>
+        <Label className="text-foreground font-medium">Card Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Default", "Glass", "Transparent"].map((s) => (
             <button
@@ -1053,7 +1053,7 @@ export default function Settings() {
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.cardStyle === s
                   ? "bg-primary border-red-600 text-white"
-                  : "border-border text-white hover:border-primary hover:text-white bg-card"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -1064,7 +1064,7 @@ export default function Settings() {
 
       {/* Menu Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-white font-medium">Menu Style</Label>
+        <Label className="text-foreground font-medium">Menu Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Mini", "Hover", "Boxed", "Soft"].map((s) => (
             <button
@@ -1073,7 +1073,7 @@ export default function Settings() {
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.menuStyle === s
                   ? "bg-primary border-red-600 text-white"
-                  : "border-border text-white hover:border-primary hover:text-white bg-card"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -1084,7 +1084,7 @@ export default function Settings() {
 
       {/* Active Menu Style */}
       <div className="space-y-3 mb-7">
-        <Label className="text-white font-medium">Active Menu Style</Label>
+        <Label className="text-foreground font-medium">Active Menu Style</Label>
         <div className="flex flex-wrap gap-3">
           {["Rounded One Side", "Rounded All", "Pill One Side", "Pill All", "Left Bordered", "Full Width"].map((s) => (
             <button
@@ -1093,7 +1093,7 @@ export default function Settings() {
               className={`px-5 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.activeMenuStyle === s
                   ? "bg-primary border-red-600 text-white"
-                  : "border-border text-white hover:border-primary hover:text-white bg-card"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -1104,7 +1104,7 @@ export default function Settings() {
 
       {/* Footer */}
       <div className="space-y-3">
-        <Label className="text-white font-medium">Footer</Label>
+        <Label className="text-foreground font-medium">Footer</Label>
         <div className="flex flex-wrap gap-3">
           {["Default", "Sticky"].map((s) => (
             <button
@@ -1113,7 +1113,7 @@ export default function Settings() {
               className={`px-6 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                 custom.footerStyle === s.toLowerCase()
                   ? "bg-primary border-red-600 text-white"
-                  : "border-border text-white hover:border-primary hover:text-white bg-card"
+                  : "border-border text-foreground hover:border-primary hover:text-foreground bg-card"
               }`}
             >
               {s}
@@ -1132,15 +1132,15 @@ export default function Settings() {
 
       {/* Email Status */}
       <div className="mb-6 p-4 rounded-lg border border-border bg-card">
-        <p className="text-sm font-semibold text-white mb-3">Email Configuration Status</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Email Configuration Status</p>
         <div className="flex items-center gap-3">
           <div className={`h-3 w-3 rounded-full ${emailStatus?.data?.configured ? 'bg-green-500' : 'bg-primary'}`} />
-          <span className="text-sm text-white">
+          <span className="text-sm text-foreground">
             {emailStatus?.data?.configured ? 'Email is configured' : 'Email is NOT configured — credentials will not be sent via email'}
           </span>
         </div>
         {!emailStatus?.data?.configured && (
-          <p className="text-xs text-white/75 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Set <strong>Mail Username</strong> and <strong>Password</strong> below, then click Save.
           </p>
         )}
@@ -1159,7 +1159,7 @@ export default function Settings() {
             <SelectTrigger className={`${inputCls} h-11`}>
               <SelectValue placeholder="Select Mail Driver" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="smtp">SMTP</SelectItem>
               <SelectItem value="sendmail">Sendmail</SelectItem>
               <SelectItem value="log">Log</SelectItem>
@@ -1203,7 +1203,7 @@ export default function Settings() {
                 <SelectTrigger className={`${inputCls} h-11`}>
                   <SelectValue placeholder="Select Encryption" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-white">
+                <SelectContent className="bg-popover border-border text-foreground">
                   <SelectItem value="tls">TLS</SelectItem>
                   <SelectItem value="ssl">SSL</SelectItem>
                   <SelectItem value="none">None</SelectItem>
@@ -1262,7 +1262,7 @@ export default function Settings() {
 
       {/* Test Email */}
       <div className="mt-6 p-4 rounded-lg border border-border bg-muted/20">
-        <p className="text-sm font-semibold text-white mb-3">Test Email Configuration</p>
+        <p className="text-sm font-semibold text-foreground mb-3">Test Email Configuration</p>
         <div className="flex gap-3">
           <Input
             value={mail.email}
@@ -1281,12 +1281,12 @@ export default function Settings() {
               }
             }}
             disabled={testEmailMutation.isPending || !mail.email}
-            className="border-border text-white hover:bg-muted whitespace-nowrap"
+            className="border-border text-foreground hover:bg-muted whitespace-nowrap"
           >
             {testEmailMutation.isPending ? "Sending..." : "Send Test Email"}
           </Button>
         </div>
-        <p className="text-xs text-white/75 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           Sends a test email to verify your SMTP configuration is working.
         </p>
       </div>
@@ -1312,7 +1312,7 @@ export default function Settings() {
             <SelectTrigger className={`${inputCls} h-11`}>
               <SelectValue placeholder="Select Currency" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="USD">USD - US Dollar</SelectItem>
               <SelectItem value="EUR">EUR - Euro</SelectItem>
               <SelectItem value="GBP">GBP - British Pound</SelectItem>
@@ -1344,7 +1344,7 @@ export default function Settings() {
             <SelectTrigger className={`${inputCls} h-11`}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="left">Left ($10)</SelectItem>
               <SelectItem value="right">Right (10$)</SelectItem>
             </SelectContent>
@@ -1417,7 +1417,7 @@ export default function Settings() {
               i < arr.length - 1 ? "border-b border-border" : ""
             }`}
           >
-            <span className="text-white font-medium">{label}</span>
+            <span className="text-foreground font-medium">{label}</span>
             <Switch
               checked={storage[key]}
               onCheckedChange={(v) => {
@@ -1470,7 +1470,7 @@ export default function Settings() {
             <Input
               value={storage.awsPathStyle ? "True" : "False"}
               readOnly
-              className="bg-card border-border text-white/75 h-11 rounded-lg cursor-not-allowed"
+              className="bg-card border-border text-muted-foreground h-11 rounded-lg cursor-not-allowed"
             />
           </div>
         </div>
@@ -1494,7 +1494,7 @@ export default function Settings() {
               placeholder="Enter Meta Title"
               className={inputCls}
             />
-            <span className="text-xs text-white/75 ml-2">{seo.metaTitle.length}/100</span>
+            <span className="text-xs text-muted-foreground ml-2">{seo.metaTitle.length}/100</span>
           </div>
         </div>
 
@@ -1541,13 +1541,13 @@ export default function Settings() {
           <Label className={labelCls}>
             Site Meta Description <span className="text-primary">*</span>
           </Label>
-          <span className="text-xs text-white/75">{seo.metaDescription.length}/200</span>
+          <span className="text-xs text-muted-foreground">{seo.metaDescription.length}/200</span>
         </div>
         <Textarea
           value={seo.metaDescription}
           onChange={(e) => setSeo({ ...seo, metaDescription: e.target.value.slice(0, 200) })}
           placeholder="Enter Meta Description"
-          className="bg-card border-border text-white placeholder:text-white/75 focus:border-primary rounded-lg resize-none"
+          className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary rounded-lg resize-none"
           rows={4}
         />
       </div>
@@ -1573,13 +1573,13 @@ export default function Settings() {
                 }}
                 className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center z-10"
               >
-                <X className="h-3.5 w-3.5 text-white" />
+                <X className="h-3.5 w-3.5 text-foreground" />
               </button>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 py-8">
-              <ImageIcon className="h-8 w-8 text-white/75" />
-              <p className="text-sm text-white/75 text-center px-4">Choose Media to Upload</p>
+              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground text-center px-4">Choose Media to Upload</p>
             </div>
           )}
         </div>
@@ -1609,8 +1609,8 @@ export default function Settings() {
       <div className="grid grid-cols-1 gap-6">
         <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-background/50">
           <div className="space-y-0.5">
-            <Label className="text-base text-white font-semibold">Enable Razorpay</Label>
-            <p className="text-sm text-white/75">
+            <Label className="text-base text-foreground font-semibold">Enable Razorpay</Label>
+            <p className="text-sm text-muted-foreground">
               Turn on to allow users to pay using Razorpay gateway.
             </p>
           </div>
@@ -1631,7 +1631,7 @@ export default function Settings() {
                 placeholder="rzp_test_..."
                 className={inputCls}
               />
-              <p className="text-xs text-white/75">Public key ID from your Razorpay Dashboard</p>
+              <p className="text-xs text-muted-foreground">Public key ID from your Razorpay Dashboard</p>
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Razorpay Key Secret</Label>
@@ -1641,7 +1641,7 @@ export default function Settings() {
                 placeholder="Enter Key Secret"
                 className={inputCls}
               />
-              <p className="text-xs text-white/75">Keep this secure. Do not share it publicly.</p>
+              <p className="text-xs text-muted-foreground">Keep this secure. Do not share it publicly.</p>
             </div>
           </div>
         )}
@@ -1670,14 +1670,14 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/75">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-muted-foreground">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Settings</span>
+        <span className="text-foreground font-medium">Settings</span>
         {activeSection !== "business" && (
           <>
             <span>/</span>
-            <span className="text-white/75">{activeLabel}</span>
+            <span className="text-muted-foreground">{activeLabel}</span>
           </>
         )}
       </div>
@@ -1697,7 +1697,7 @@ export default function Settings() {
                   className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all border-b border-border last:border-b-0 text-left ${
                     isActive
                       ? "bg-primary text-primary-foreground"
-                      : "text-white/75 hover:bg-muted hover:text-white"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
@@ -1715,15 +1715,15 @@ export default function Settings() {
                     Deactivate Account
                   </button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-card border border-border text-white">
+                <AlertDialogContent className="bg-card border border-border text-foreground">
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Deactivate Account?</AlertDialogTitle>
-                    <AlertDialogDescription className="text-white/75">
+                    <AlertDialogTitle className="text-foreground">Deactivate Account?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-muted-foreground">
                       This action cannot be undone. You will lose access to this admin panel.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted hover:text-white">
+                    <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted hover:text-foreground">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction

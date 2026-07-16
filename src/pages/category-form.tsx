@@ -173,10 +173,10 @@ export default function CategoryForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <button
           onClick={() => setLocation("/categories")}
-          className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-white hover:bg-muted/80 transition-colors"
+          className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted border border-border text-foreground hover:bg-muted/80 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -184,25 +184,25 @@ export default function CategoryForm() {
         <span>/</span>
         <button
           onClick={() => setLocation("/categories")}
-          className="text-white/75 hover:text-white transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           Categories
         </button>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Category" : "New Category"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Category" : "New Category"}</span>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
         {/* Basic Information */}
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div>
-            <h3 className="text-white font-semibold text-base">Basic Information</h3>
-            <p className="text-white/75 text-sm mt-0.5">Name, slug, and description for the category.</p>
+            <h3 className="text-foreground font-semibold text-base">Basic Information</h3>
+            <p className="text-muted-foreground text-sm mt-0.5">Name, slug, and description for the category.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-white text-sm">
+              <Label htmlFor="name" className="text-foreground text-sm">
                 Name <span className="text-primary">*</span>
               </Label>
               <Input
@@ -218,12 +218,12 @@ export default function CategoryForm() {
                   }
                 }}
                 required
-                className="bg-muted border-border text-white placeholder:text-white/75 focus:border-primary h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="slug" className="text-white text-sm">
+              <Label htmlFor="slug" className="text-foreground text-sm">
                 Slug
               </Label>
               <Input
@@ -231,20 +231,20 @@ export default function CategoryForm() {
                 placeholder="category-slug"
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                className="bg-muted border-border text-white placeholder:text-white/75 focus:border-primary h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-white text-sm">Description</Label>
+            <Label htmlFor="description" className="text-foreground text-sm">Description</Label>
             <Textarea
               id="description"
               placeholder="A small description"
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-muted border-border text-white placeholder:text-white/75 focus:border-primary resize-none"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary resize-none"
             />
           </div>
         </div>
@@ -252,13 +252,13 @@ export default function CategoryForm() {
         {/* Images */}
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div>
-            <h3 className="text-white font-semibold text-base">Images & Icon</h3>
-            <p className="text-white/75 text-sm mt-0.5">Thumbnail, banner, and icon for the category.</p>
+            <h3 className="text-foreground font-semibold text-base">Images & Icon</h3>
+            <p className="text-muted-foreground text-sm mt-0.5">Thumbnail, banner, and icon for the category.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="thumbnail" className="text-white text-sm">Thumbnail</Label>
+              <Label htmlFor="thumbnail" className="text-foreground text-sm">Thumbnail</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -277,7 +277,7 @@ export default function CategoryForm() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="bannerImage" className="text-white text-sm">Banner Image</Label>
+              <Label htmlFor="bannerImage" className="text-foreground text-sm">Banner Image</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -296,14 +296,14 @@ export default function CategoryForm() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="icon" className="text-white text-sm">Icon</Label>
+              <Label htmlFor="icon" className="text-foreground text-sm">Icon</Label>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between bg-muted border-border text-white h-11"
+                    className="w-full justify-between bg-muted border-border text-foreground h-11"
                   >
                     {selectedIcon ? (
                       <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ export default function CategoryForm() {
                 </PopoverTrigger>
                 <PopoverContent className="w-[200px] p-0 bg-popover border-border">
                   <Command>
-                    <CommandInput placeholder="Search icon..." className="h-9 text-white" />
+                    <CommandInput placeholder="Search icon..." className="h-9 text-foreground" />
                     <CommandList>
                       <CommandEmpty>No icon found.</CommandEmpty>
                       <CommandGroup>
@@ -332,7 +332,7 @@ export default function CategoryForm() {
                                 setFormData({ ...formData, icon: currentValue });
                                 setOpen(false);
                               }}
-                              className="text-white"
+                              className="text-foreground"
                             >
                               <Check
                                 className={cn(
@@ -359,13 +359,13 @@ export default function CategoryForm() {
         {/* Display Settings */}
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div>
-            <h3 className="text-white font-semibold text-base">Display Settings</h3>
-            <p className="text-white/75 text-sm mt-0.5">Color, order, and visibility settings.</p>
+            <h3 className="text-foreground font-semibold text-base">Display Settings</h3>
+            <p className="text-muted-foreground text-sm mt-0.5">Color, order, and visibility settings.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="color" className="text-white text-sm">Color</Label>
+              <Label htmlFor="color" className="text-foreground text-sm">Color</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="color"
@@ -377,24 +377,24 @@ export default function CategoryForm() {
                 <Input
                   value={formData.color}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="flex-1 bg-muted border-border text-white placeholder:text-white/75 focus:border-primary h-11"
+                  className="flex-1 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="order" className="text-white text-sm">Order</Label>
+              <Label htmlFor="order" className="text-foreground text-sm">Order</Label>
               <Input
                 id="order"
                 type="number"
                 value={formData.order}
                 onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                className="bg-muted border-border text-white placeholder:text-white/75 focus:border-primary h-11"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-11"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-white text-sm">Status</Label>
+              <Label className="text-foreground text-sm">Status</Label>
               <div className="flex items-center gap-4 h-11">
                 <div className="flex items-center gap-2">
                   <Switch
@@ -403,7 +403,7 @@ export default function CategoryForm() {
                     onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
                     className="data-[state=checked]:bg-primary"
                   />
-                  <Label htmlFor="isActive" className="text-white text-sm cursor-pointer">Active</Label>
+                  <Label htmlFor="isActive" className="text-foreground text-sm cursor-pointer">Active</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
@@ -412,7 +412,7 @@ export default function CategoryForm() {
                     onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
                     className="data-[state=checked]:bg-primary"
                   />
-                  <Label htmlFor="isFeatured" className="text-white text-sm cursor-pointer">Featured</Label>
+                  <Label htmlFor="isFeatured" className="text-foreground text-sm cursor-pointer">Featured</Label>
                 </div>
               </div>
             </div>
@@ -424,7 +424,7 @@ export default function CategoryForm() {
             type="button"
             variant="outline"
             onClick={() => setLocation("/categories")}
-            className="bg-muted border-border text-white hover:bg-muted px-6 h-11"
+            className="bg-muted border-border text-foreground hover:bg-muted px-6 h-11"
           >
             Cancel
           </Button>

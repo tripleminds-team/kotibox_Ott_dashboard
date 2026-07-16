@@ -49,7 +49,7 @@ const fmtDate = (d: string) => {
 
 function ChartEmpty({ icon: Icon, text }: { icon: any; text: string }) {
   return (
-    <div className="h-64 flex flex-col items-center justify-center text-white/75 gap-2">
+    <div className="h-64 flex flex-col items-center justify-center text-muted-foreground gap-2">
       <Icon className="w-8 h-8 opacity-30" />
       <p className="text-sm">{text}</p>
     </div>
@@ -156,33 +156,33 @@ export default function Dashboard() {
       {/* ── Header + Date Controls ────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-white/75 mt-0.5">
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Data from{" "}
-            <span className="font-semibold text-white">{fmtDate(appliedFrom)}</span>
+            <span className="font-semibold text-foreground">{fmtDate(appliedFrom)}</span>
             {" to "}
-            <span className="font-semibold text-white">{fmtDate(appliedTo)}</span>
+            <span className="font-semibold text-foreground">{fmtDate(appliedTo)}</span>
           </p>
         </div>
 
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex items-center gap-1.5 bg-card border border-border rounded-xl px-3 py-2.5">
-            <CalendarRange className="w-4 h-4 text-white/75 flex-shrink-0" />
+            <CalendarRange className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <input
               type="date"
               value={fromInput}
               onChange={(e) => setFromInput(e.target.value)}
               max={toInput}
-              className="bg-transparent text-white text-sm outline-none w-[130px] [color-scheme:dark]"
+              className="bg-transparent text-foreground text-sm outline-none w-[130px] [color-scheme:dark]"
             />
-            <span className="text-white/75 text-sm px-1">→</span>
+            <span className="text-muted-foreground text-sm px-1">→</span>
             <input
               type="date"
               value={toInput}
               onChange={(e) => setToInput(e.target.value)}
               min={fromInput}
               max={new Date().toISOString().split("T")[0]}
-              className="bg-transparent text-white text-sm outline-none w-[130px] [color-scheme:dark]"
+              className="bg-transparent text-foreground text-sm outline-none w-[130px] [color-scheme:dark]"
             />
           </div>
 
@@ -197,7 +197,7 @@ export default function Dashboard() {
           <Button
             variant="outline"
             onClick={handleReset}
-            className="border-border text-white hover:bg-muted h-[42px] px-4 rounded-xl font-semibold text-sm gap-2"
+            className="border-border text-foreground hover:bg-muted h-[42px] px-4 rounded-xl font-semibold text-sm gap-2"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Reset
           </Button>
@@ -218,11 +218,11 @@ export default function Dashboard() {
                 }`}>
                   <Icon className="h-4 w-4 text-primary" />
                 </div>
-                <div className={`text-2xl font-black text-white mb-0.5 ${statsLoading ? "animate-pulse opacity-50" : ""}`}>
+                <div className={`text-2xl font-black text-foreground mb-0.5 ${statsLoading ? "animate-pulse opacity-50" : ""}`}>
                   {statsLoading ? "—" : s.value}
                 </div>
-                <div className="text-sm font-semibold text-white">{s.title}</div>
-                <div className="text-xs text-white/75 mt-0.5">{s.sub}</div>
+                <div className="text-sm font-semibold text-foreground">{s.title}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{s.sub}</div>
               </CardContent>
             </Card>
           );
@@ -237,8 +237,8 @@ export default function Dashboard() {
               <Megaphone className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-white font-bold text-base">Ad Performance</h2>
-              <p className="text-white/60 text-xs mt-0.5">{adAnalytics?.activeAds ?? 0} active campaigns running</p>
+              <h2 className="text-foreground font-bold text-base">Ad Performance</h2>
+              <p className="text-muted-foreground/80 text-xs mt-0.5">{adAnalytics?.activeAds ?? 0} active campaigns running</p>
             </div>
           </div>
           <button
@@ -271,21 +271,21 @@ export default function Dashboard() {
           ].map((m) => (
             <div key={m.label} className="p-5">
               <div className={`mb-2 ${m.color}`}>{m.icon}</div>
-              <p className="text-xl font-black text-white">{m.value}</p>
-              <p className="text-xs text-white/60 mt-0.5 font-semibold">{m.label}</p>
+              <p className="text-xl font-black text-foreground">{m.value}</p>
+              <p className="text-xs text-muted-foreground/80 mt-0.5 font-semibold">{m.label}</p>
             </div>
           ))}
         </div>
         {adAnalytics?.topAds?.length > 0 && (
           <div className="px-5 pb-4 pt-0 border-t border-border">
-            <p className="text-xs font-bold text-white/50 uppercase tracking-wider mt-4 mb-3">Top Performing Ads</p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-4 mb-3">Top Performing Ads</p>
             <div className="space-y-2">
               {adAnalytics.topAds.slice(0, 3).map((ad: any) => (
                 <div key={ad.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/40 border border-border/50">
                   <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
-                  <p className="text-white text-xs font-semibold flex-1 truncate">{ad.adName}</p>
-                  <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">{ad.adType}</span>
-                  <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">{ad.placement}</span>
+                  <p className="text-foreground text-xs font-semibold flex-1 truncate">{ad.adName}</p>
+                  <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">{ad.adType}</span>
+                  <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">{ad.placement}</span>
                   <span className="text-blue-400 text-xs font-bold">{ad.impressions.toLocaleString()} imp</span>
                   <span className="text-emerald-400 text-xs font-bold">{ad.ctr}% CTR</span>
                 </div>
@@ -300,12 +300,12 @@ export default function Dashboard() {
         {/* Revenue */}
         <Card className="bg-card border-border shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-white">Total Revenue</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">Total Revenue</CardTitle>
             <Select value={revPeriod} onValueChange={setRevPeriod}>
-              <SelectTrigger className="w-24 bg-input border-border text-white h-8 rounded-lg text-xs">
+              <SelectTrigger className="w-24 bg-background border-border text-foreground h-8 rounded-lg text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-white">
+              <SelectContent className="bg-popover border-border text-foreground">
                 <SelectItem value="week">Week</SelectItem>
                 <SelectItem value="month">Month</SelectItem>
                 <SelectItem value="year">Year</SelectItem>
@@ -341,12 +341,12 @@ export default function Dashboard() {
         {/* New Subscribers */}
         <Card className="bg-card border-border shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-white">New Subscribers</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">New Subscribers</CardTitle>
             <Select value={subPeriod} onValueChange={setSubPeriod}>
-              <SelectTrigger className="w-24 bg-input border-border text-white h-8 rounded-lg text-xs">
+              <SelectTrigger className="w-24 bg-background border-border text-foreground h-8 rounded-lg text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-white">
+              <SelectContent className="bg-popover border-border text-foreground">
                 <SelectItem value="week">Week</SelectItem>
                 <SelectItem value="month">Month</SelectItem>
                 <SelectItem value="year">Year</SelectItem>
@@ -381,12 +381,12 @@ export default function Dashboard() {
         {/* Most Watched */}
         <Card className="bg-card border-border shadow-sm overflow-hidden lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-white">Most Watched</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">Most Watched</CardTitle>
             <Select value={watchPeriod} onValueChange={setWatchPeriod}>
-              <SelectTrigger className="w-24 bg-input border-border text-white h-8 rounded-lg text-xs">
+              <SelectTrigger className="w-24 bg-background border-border text-foreground h-8 rounded-lg text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-white">
+              <SelectContent className="bg-popover border-border text-foreground">
                 <SelectItem value="week">Week</SelectItem>
                 <SelectItem value="month">Month</SelectItem>
                 <SelectItem value="year">Year</SelectItem>
@@ -418,7 +418,7 @@ export default function Dashboard() {
         {/* Top Genres */}
         <Card className="bg-card border-border shadow-sm overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-white">Top Genres</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">Top Genres</CardTitle>
           </CardHeader>
           <CardContent>
             {topGenresData.length === 0 ? (
@@ -439,7 +439,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-1.5 justify-center mt-2">
                   {topGenresData.map((g: any, i: number) => (
-                    <div key={i} className="flex items-center gap-1.5 text-xs text-white">
+                    <div key={i} className="flex items-center gap-1.5 text-xs text-foreground">
                       <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                       <span className="truncate max-w-[72px]">{g.name}</span>
                     </div>
@@ -456,19 +456,19 @@ export default function Dashboard() {
         {/* Reviews */}
         <Card className="bg-card border-border shadow-sm overflow-hidden lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-white">Recent Reviews</CardTitle>
-            <span className="text-xs text-white/75 bg-muted px-2 py-0.5 rounded-full">{reviewsData.length} total</span>
+            <CardTitle className="text-base font-semibold text-foreground">Recent Reviews</CardTitle>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{reviewsData.length} total</span>
           </CardHeader>
           <CardContent className="overflow-x-auto" style={{ maxHeight: 320, overflowY: "auto" }}>
             {reviewsData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-white/75 gap-2">
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
                 <Star className="w-8 h-8 opacity-30" />
                 <p className="text-sm">No reviews yet</p>
               </div>
             ) : (
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-card z-10">
-                  <tr className="border-b border-border text-white/75">
+                  <tr className="border-b border-border text-muted-foreground">
                     <th className="text-left py-2.5 px-3 text-xs font-semibold">User</th>
                     <th className="text-left py-2.5 px-3 text-xs font-semibold">Date</th>
                     <th className="text-left py-2.5 px-3 text-xs font-semibold">Type</th>
@@ -483,15 +483,15 @@ export default function Dashboard() {
                           <div className="h-7 w-7 bg-primary/20 rounded-lg flex-shrink-0 flex items-center justify-center text-xs text-primary font-bold">
                             {r.avatar}
                           </div>
-                          <span className="text-white font-medium text-sm truncate max-w-[120px]">{r.name}</span>
+                          <span className="text-foreground font-medium text-sm truncate max-w-[120px]">{r.name}</span>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 text-white/75 text-xs">{r.date}</td>
-                      <td className="py-2.5 px-3 text-white/75 text-xs">{r.category}</td>
+                      <td className="py-2.5 px-3 text-muted-foreground text-xs">{r.date}</td>
+                      <td className="py-2.5 px-3 text-muted-foreground text-xs">{r.category}</td>
                       <td className="py-2.5 px-3">
                         <div className="flex gap-0.5">
                           {Array.from({ length: 5 }, (_, j) => (
-                            <Star key={j} className={`h-3.5 w-3.5 ${j < r.rating ? "text-yellow-400 fill-yellow-400" : "text-white/75/40"}`} />
+                            <Star key={j} className={`h-3.5 w-3.5 ${j < r.rating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/40"}`} />
                           ))}
                         </div>
                       </td>
@@ -506,19 +506,19 @@ export default function Dashboard() {
         {/* Transactions */}
         <Card className="bg-card border-border shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-white">Recent Transactions</CardTitle>
-            <span className="text-xs text-white/75 bg-muted px-2 py-0.5 rounded-full">{transactionsData.length} recent</span>
+            <CardTitle className="text-base font-semibold text-foreground">Recent Transactions</CardTitle>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{transactionsData.length} recent</span>
           </CardHeader>
           <CardContent className="overflow-x-auto" style={{ maxHeight: 320, overflowY: "auto" }}>
             {transactionsData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-white/75 gap-2">
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
                 <DollarSign className="w-8 h-8 opacity-30" />
                 <p className="text-sm">No transactions yet</p>
               </div>
             ) : (
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-card z-10">
-                  <tr className="border-b border-border text-white/75">
+                  <tr className="border-b border-border text-muted-foreground">
                     <th className="text-left py-2.5 px-2 font-semibold">User</th>
                     <th className="text-left py-2.5 px-2 font-semibold">Type</th>
                     <th className="text-left py-2.5 px-2 font-semibold">Plan/Item</th>
@@ -534,8 +534,8 @@ export default function Dashboard() {
                             {t.avatar}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-white font-medium truncate max-w-[80px]">{t.name}</p>
-                            <p className="text-white/50 text-[10px]">{t.date}</p>
+                            <p className="text-foreground font-medium truncate max-w-[80px]">{t.name}</p>
+                            <p className="text-muted-foreground text-[10px]">{t.date}</p>
                           </div>
                         </div>
                       </td>
@@ -549,8 +549,8 @@ export default function Dashboard() {
                           {t.type === 'coin_purchase' ? 'Coins' : 'Sub'}
                         </span>
                       </td>
-                      <td className="py-2.5 px-2 text-white/75 truncate max-w-[70px]">{t.plan}</td>
-                      <td className="py-2.5 px-2 text-white font-semibold text-right whitespace-nowrap">{t.amount}</td>
+                      <td className="py-2.5 px-2 text-muted-foreground truncate max-w-[70px]">{t.plan}</td>
+                      <td className="py-2.5 px-2 text-foreground font-semibold text-right whitespace-nowrap">{t.amount}</td>
                     </tr>
                   ))}
                 </tbody>

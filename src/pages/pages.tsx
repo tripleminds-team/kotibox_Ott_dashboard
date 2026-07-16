@@ -108,18 +108,18 @@ export default function PagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Pages</span>
+        <span className="text-foreground font-medium">Pages</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
@@ -134,12 +134,12 @@ export default function PagesPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button
@@ -162,23 +162,23 @@ export default function PagesPage() {
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Name</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Slug</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Order</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Name</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Slug</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Order</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/65 py-10">
+                <TableCell colSpan={6} className="text-center text-foreground/65 py-10">
                   Loading pages...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/65 py-10">
+                <TableCell colSpan={6} className="text-center text-foreground/65 py-10">
                   No pages yet
                 </TableCell>
               </TableRow>
@@ -192,8 +192,8 @@ export default function PagesPage() {
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
-                  <TableCell className="text-white font-medium text-sm">{page.title}</TableCell>
-                  <TableCell className="text-white/70 text-sm">{page.slug}</TableCell>
+                  <TableCell className="text-foreground font-medium text-sm">{page.title}</TableCell>
+                  <TableCell className="text-foreground/70 text-sm">{page.slug}</TableCell>
                   <TableCell>
                     <Switch
                       checked={page.status === "published"}
@@ -201,12 +201,12 @@ export default function PagesPage() {
                       className="data-[state=checked]:bg-primary"
                     />
                   </TableCell>
-                  <TableCell className="text-white/75 text-sm">{page.order}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{page.order}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleCopySlug(page.slug)}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted/15 text-white/70 hover:bg-muted/30 transition-colors"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted/15 text-foreground/70 hover:bg-muted/30 transition-colors"
                         title="Copy URL"
                       >
                         {copiedSlug === page.slug ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -234,7 +234,7 @@ export default function PagesPage() {
       </div>
 
       {!isLoading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between text-sm text-white/70">
+        <div className="flex items-center justify-between text-sm text-foreground/70">
           <span>
             Showing {((pagination.page - 1) * pagination.limit) + 1}–
             {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
@@ -243,7 +243,7 @@ export default function PagesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={pagination.page === 1}
-              className="h-8 px-3 rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Previous
             </button>
@@ -254,7 +254,7 @@ export default function PagesPage() {
                 className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                   pagination.page === i + 1
                     ? "bg-primary text-white"
-                    : "bg-muted border border-border text-white/75 hover:bg-muted"
+                    : "bg-muted border border-border text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {i + 1}
@@ -263,7 +263,7 @@ export default function PagesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
               disabled={pagination.page === pagination.pages}
-              className="h-8 px-3 rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Next
             </button>
@@ -272,15 +272,15 @@ export default function PagesPage() {
       )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Page</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to delete "{confirmDelete?.title}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">

@@ -83,10 +83,10 @@ export default function GenreFormPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Genre" : "New Genre"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Genre" : "New Genre"}</span>
       </div>
 
       {/* Back */}
@@ -103,7 +103,7 @@ export default function GenreFormPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left — Image upload */}
           <div className="space-y-2">
-            <Label className="text-white font-medium">Image</Label>
+            <Label className="text-foreground font-medium">Image</Label>
             <Button
               type="button"
               variant="outline"
@@ -118,8 +118,8 @@ export default function GenreFormPage() {
                 />
               ) : (
                 <div className="flex flex-col items-center gap-3 py-10 px-6 text-center select-none">
-                  <ImageIcon className="h-10 w-10 text-white/75" />
-                  <p className="text-sm text-white/65">Select from Library or Upload</p>
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-foreground/65">Select from Library or Upload</p>
                 </div>
               )}
             </Button>
@@ -141,7 +141,7 @@ export default function GenreFormPage() {
           <div className="space-y-6">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="genre-name" className="text-white font-medium">
+              <Label htmlFor="genre-name" className="text-foreground font-medium">
                 Name <span className="text-primary">*</span>
               </Label>
               <Input
@@ -149,15 +149,15 @@ export default function GenreFormPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Action Movie"
-                className="bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-11 rounded-lg"
+                className="bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-11 rounded-lg"
               />
             </div>
 
             {/* Status */}
             <div className="space-y-2">
-              <Label className="text-white font-medium">Status</Label>
+              <Label className="text-foreground font-medium">Status</Label>
               <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card">
-                <span className="text-sm text-white font-medium">Active</span>
+                <span className="text-sm text-foreground font-medium">Active</span>
                 <Switch
                   checked={active}
                   onCheckedChange={setActive}

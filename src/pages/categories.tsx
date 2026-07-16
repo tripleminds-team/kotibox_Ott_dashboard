@@ -112,18 +112,18 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/75">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-muted-foreground">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Categories</span>
+        <span className="text-foreground font-medium">Categories</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
@@ -138,12 +138,12 @@ export default function CategoriesPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/75 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button
@@ -166,23 +166,23 @@ export default function CategoriesPage() {
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-white/75 font-semibold text-sm">Category</TableHead>
-              <TableHead className="text-white/75 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-white/75 font-semibold text-sm">Content</TableHead>
-              <TableHead className="text-white/75 font-semibold text-sm">Order</TableHead>
-              <TableHead className="text-white/75 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-sm">Category</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-sm">Content</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-sm">Order</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/75 py-10">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                   Loading categories...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white/75 py-10">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
                   No categories found
                 </TableCell>
               </TableRow>
@@ -208,16 +208,16 @@ export default function CategoriesPage() {
                       )}
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="text-white font-medium text-sm">{category.name}</p>
+                          <p className="text-foreground font-medium text-sm">{category.name}</p>
                           {category.isFeatured && (
                             <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
                           )}
                         </div>
                         {category.description && (
-                          <p className="text-white/75 text-xs mt-0.5 line-clamp-1">{category.description}</p>
+                          <p className="text-muted-foreground text-xs mt-0.5 line-clamp-1">{category.description}</p>
                         )}
                         {category.slug && (
-                          <p className="text-white/75 text-xs mt-0.5">{category.slug}</p>
+                          <p className="text-muted-foreground text-xs mt-0.5">{category.slug}</p>
                         )}
                       </div>
                       {category.color && (
@@ -236,11 +236,11 @@ export default function CategoriesPage() {
                       disabled={updatingId === category.id}
                       className="data-[state=checked]:bg-primary"
                     />
-                    <span className="text-sm text-white">{category.isActive ? "Active" : "Inactive"}</span>
+                    <span className="text-sm text-foreground">{category.isActive ? "Active" : "Inactive"}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-white text-sm">{category.contentCount}</TableCell>
-                  <TableCell className="text-white text-sm">{category.order}</TableCell>
+                  <TableCell className="text-foreground text-sm">{category.contentCount}</TableCell>
+                  <TableCell className="text-foreground text-sm">{category.order}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <button
@@ -273,7 +273,7 @@ export default function CategoriesPage() {
       </div>
 
       {!isLoading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between text-sm text-white/75">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
             Showing {((pagination.page - 1) * pagination.limit) + 1}–
             {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
@@ -282,7 +282,7 @@ export default function CategoriesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={pagination.page === 1}
-              className="h-8 px-3 rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Previous
             </button>
@@ -293,7 +293,7 @@ export default function CategoriesPage() {
                 className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                   pagination.page === i + 1
                     ? "bg-primary text-white"
-                    : "bg-muted border border-border text-white/75 hover:bg-muted"
+                    : "bg-muted border border-border text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {i + 1}
@@ -302,7 +302,7 @@ export default function CategoriesPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
               disabled={pagination.page === pagination.pages}
-              className="h-8 px-3 rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Next
             </button>
@@ -311,15 +311,15 @@ export default function CategoriesPage() {
       )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/75">
+            <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete "{confirmDelete?.name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">

@@ -108,7 +108,7 @@ export default function TVShowDetailPage() {
   const firstEp = apiEpisodes[0];
 
   return (
-    <div className="min-h-screen bg-[#030306] text-white">
+    <div className="min-h-screen bg-[#030306] text-foreground">
       <PublicHeader
         activeTab={activeTab}
         setActiveTab={(t) => { setActiveTab(t); setLocation("/"); }}
@@ -132,7 +132,7 @@ export default function TVShowDetailPage() {
         {/* Back button */}
         <button
           onClick={() => setLocation("/")}
-          className="absolute top-20 left-6 sm:left-10 flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold transition-colors z-10"
+          className="absolute top-20 left-6 sm:left-10 flex items-center gap-2 text-foreground/80 hover:text-foreground text-sm font-semibold transition-colors z-10"
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
@@ -145,7 +145,7 @@ export default function TVShowDetailPage() {
               {isDrama ? <Smartphone className="w-3 h-3" /> : <Tv className="w-3 h-3" />} {isDrama ? "Short Drama" : "TV Series"}
             </span>
             {genres.slice(0, 2).map((g) => (
-              <span key={g} className="text-white text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
+              <span key={g} className="text-foreground text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
             ))}
           </div>
 
@@ -158,14 +158,14 @@ export default function TVShowDetailPage() {
               </span>
             )}
             {ageRating && (
-              <span className="px-1.5 py-0.5 text-xs font-bold border border-white/10 text-white bg-black/40 rounded">{ageRating}</span>
+              <span className="px-1.5 py-0.5 text-xs font-bold border border-white/10 text-foreground bg-black/40 rounded">{ageRating}</span>
             )}
-            {year && <span className="text-white/80 font-semibold">{year}</span>}
-            <span className="text-white/80 font-semibold">{seasons} Season{seasons !== 1 ? "s" : ""}</span>
-            <span className="text-white/80 font-semibold">{totalEps} Episodes</span>
+            {year && <span className="text-foreground/80 font-semibold">{year}</span>}
+            <span className="text-foreground/80 font-semibold">{seasons} Season{seasons !== 1 ? "s" : ""}</span>
+            <span className="text-foreground/80 font-semibold">{totalEps} Episodes</span>
           </div>
 
-          <p className="text-white text-sm leading-relaxed mb-6 max-w-lg line-clamp-3">{description}</p>
+          <p className="text-foreground text-sm leading-relaxed mb-6 max-w-lg line-clamp-3">{description}</p>
 
           <div className="flex items-center gap-3 flex-wrap">
             <button
@@ -212,7 +212,7 @@ export default function TVShowDetailPage() {
                   <button
                     key={s}
                     onClick={() => setSelectedSeason(s)}
-                    className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-all ${selectedSeason === s ? "bg-red-600 border-red-600 text-white" : "bg-transparent border-zinc-700 text-white/80 hover:border-zinc-500 hover:text-white"}`}
+                    className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-all ${selectedSeason === s ? "bg-red-600 border-red-600 text-white" : "bg-transparent border-zinc-700 text-foreground/80 hover:border-zinc-500 hover:text-foreground"}`}
                   >
                     S{s}
                   </button>
@@ -222,7 +222,7 @@ export default function TVShowDetailPage() {
           </div>
 
           {seasonEpisodes.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-white text-sm">
+            <div className="flex items-center justify-center py-16 text-foreground text-sm">
               No episodes available yet.
             </div>
           ) : (
@@ -248,15 +248,15 @@ export default function TVShowDetailPage() {
                         <img src={epThumb} alt={ep.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Film className="w-5 h-5 text-white/80" />
+                          <Film className="w-5 h-5 text-foreground/80" />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                         {isLocked ? (
-                          <Lock className="w-5 h-5 text-white/80" />
+                          <Lock className="w-5 h-5 text-foreground/80" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-red-600/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all scale-90 group-hover:scale-100">
-                            <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                            <Play className="w-4 h-4 text-foreground fill-white ml-0.5" />
                           </div>
                         )}
                       </div>
@@ -267,18 +267,18 @@ export default function TVShowDetailPage() {
 
                     <div className="flex-1 min-w-0 py-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-white text-xs font-bold">EP {epNum}</span>
+                        <span className="text-foreground text-xs font-bold">EP {epNum}</span>
                         {ep.isFree && !isSubscribed && <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-600/20 text-emerald-400 rounded">FREE</span>}
                         {isLocked && <span className="text-[9px] font-bold px-1.5 py-0.5 bg-amber-600/20 text-amber-400 rounded flex items-center gap-0.5"><Lock className="w-2.5 h-2.5" /> PREMIUM</span>}
                       </div>
-                      <p className="text-white text-sm font-semibold leading-tight truncate group-hover:text-red-400 transition-colors">{ep.title || `Episode ${epNum}`}</p>
+                      <p className="text-foreground text-sm font-semibold leading-tight truncate group-hover:text-red-400 transition-colors">{ep.title || `Episode ${epNum}`}</p>
                       {ep.description && (
-                        <p className="text-white text-xs mt-1 line-clamp-2 leading-relaxed">{ep.description}</p>
+                        <p className="text-foreground text-xs mt-1 line-clamp-2 leading-relaxed">{ep.description}</p>
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDownloadEpisode(ep); }}
                         disabled={downloadingEp === (ep._id || ep.id)}
-                        className="mt-2 flex items-center gap-1 text-[10px] font-bold text-white hover:text-emerald-400 transition-colors disabled:opacity-50"
+                        className="mt-2 flex items-center gap-1 text-[10px] font-bold text-foreground hover:text-emerald-400 transition-colors disabled:opacity-50"
                       >
                         {downloadingEp === (ep._id || ep.id) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
                         {downloadingEp === (ep._id || ep.id) ? "Adding..." : "Download"}
@@ -294,29 +294,29 @@ export default function TVShowDetailPage() {
         {/* About / Description */}
         <div className="mb-12 max-w-3xl">
           <h2 className="text-xl font-bold mb-4">About</h2>
-          <p className="text-white text-sm leading-relaxed">{description || "No description available."}</p>
+          <p className="text-foreground text-sm leading-relaxed">{description || "No description available."}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             {year && (
               <div>
-                <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Year</p>
-                <p className="text-white text-sm font-semibold">{year}</p>
+                <p className="text-foreground text-xs font-bold uppercase tracking-wider mb-1">Year</p>
+                <p className="text-foreground text-sm font-semibold">{year}</p>
               </div>
             )}
             {genres.length > 0 && (
               <div>
-                <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Genres</p>
-                <p className="text-white text-sm font-semibold">{genres.slice(0, 3).join(", ")}</p>
+                <p className="text-foreground text-xs font-bold uppercase tracking-wider mb-1">Genres</p>
+                <p className="text-foreground text-sm font-semibold">{genres.slice(0, 3).join(", ")}</p>
               </div>
             )}
             {totalEps > 0 && (
               <div>
-                <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Episodes</p>
-                <p className="text-white text-sm font-semibold">{totalEps} Episodes</p>
+                <p className="text-foreground text-xs font-bold uppercase tracking-wider mb-1">Episodes</p>
+                <p className="text-foreground text-sm font-semibold">{totalEps} Episodes</p>
               </div>
             )}
             {imdbRating && (
               <div>
-                <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Rating</p>
+                <p className="text-foreground text-xs font-bold uppercase tracking-wider mb-1">Rating</p>
                 <p className="text-amber-400 text-sm font-bold flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400" />{imdbRating}</p>
               </div>
             )}
@@ -338,13 +338,13 @@ export default function TVShowDetailPage() {
                       {actorImg ? (
                         <img src={actorImg} alt={actorName} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/80 text-lg font-bold">
+                        <div className="w-full h-full flex items-center justify-center text-foreground/80 text-lg font-bold">
                           {actorName?.[0] || "?"}
                         </div>
                       )}
                     </div>
-                    <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{actorName}</p>
-                    {c.character && <p className="text-white text-[10px] mt-0.5 truncate">{c.character}</p>}
+                    <p className="text-foreground text-[11px] font-semibold leading-tight line-clamp-2">{actorName}</p>
+                    {c.character && <p className="text-foreground text-[10px] mt-0.5 truncate">{c.character}</p>}
                   </div>
                 );
               })}

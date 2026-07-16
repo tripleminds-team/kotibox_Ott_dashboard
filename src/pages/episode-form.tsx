@@ -45,7 +45,7 @@ const getId = (item: any): string =>
 function ImageBox({ label, preview, onOpen }: { label: string; preview: string; onOpen: () => void }) {
   return (
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-white mb-2">{label}</p>
+      <p className="text-sm font-medium text-foreground mb-2">{label}</p>
       <div
         onClick={onOpen}
         className="border-2 border-dashed border-border rounded-xl aspect-[4/3] flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden"
@@ -53,7 +53,7 @@ function ImageBox({ label, preview, onOpen }: { label: string; preview: string; 
         {preview ? (
           <img src={preview} alt={label} className="h-full w-full object-contain" />
         ) : (
-          <ImageIcon className="h-10 w-10 text-white/75" />
+          <ImageIcon className="h-10 w-10 text-muted-foreground" />
         )}
       </div>
     </div>
@@ -365,7 +365,7 @@ export default function EpisodeForm() {
     placeholder?: string;
   }) => (
     <div className="space-y-1.5">
-      <Label className="text-white text-sm font-medium">
+      <Label className="text-foreground text-sm font-medium">
         {label} {required && <span className="text-primary">*</span>}
       </Label>
       <div className="space-y-2">
@@ -375,8 +375,8 @@ export default function EpisodeForm() {
               const item = items.find((i: any) => getId(i) === itemId);
               return (
                 <div key={itemId} className="flex items-center gap-1 bg-muted border border-border rounded-lg px-2.5 py-1 text-xs">
-                  <span className="text-white">{item?.name || itemId}</span>
-                  <button type="button" onClick={() => onRemove(itemId)} className="text-white/75 hover:text-primary">
+                  <span className="text-foreground">{item?.name || itemId}</span>
+                  <button type="button" onClick={() => onRemove(itemId)} className="text-muted-foreground hover:text-primary">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -385,10 +385,10 @@ export default function EpisodeForm() {
           </div>
         )}
         <Select value="" onValueChange={(v) => { if (v && !selected.includes(v)) onAdd(v); }}>
-          <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
             <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-white max-h-60">
+          <SelectContent className="bg-popover border-border text-foreground max-h-60">
             {items
               .filter((i: any) => !selected.includes(getId(i)))
               .map((item: any) => (
@@ -404,14 +404,14 @@ export default function EpisodeForm() {
 
   return (
     <div className="space-y-5 pb-8">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <button onClick={() => setLocation("/dashboard")} className="hover:text-white transition-colors">Dashboard</button>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <button onClick={() => setLocation("/dashboard")} className="hover:text-foreground transition-colors">Dashboard</button>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Episode" : "New Episode"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Episode" : "New Episode"}</span>
       </div>
 
       <button onClick={() => setLocation("/episodes")}
-        className="flex items-center gap-1 text-sm text-white/75 hover:text-white transition-colors font-medium">
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">
         «&nbsp;Back
       </button>
 
@@ -424,7 +424,7 @@ export default function EpisodeForm() {
             className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${
               activeTab === tab
                 ? "bg-primary text-white shadow-sm"
-                : "bg-card border border-border text-white/75 hover:text-white hover:bg-muted"
+                : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             {tab}
@@ -437,7 +437,7 @@ export default function EpisodeForm() {
         {/* ===== EPISODE DETAILS TAB ===== */}
         {activeTab === "Episode Details" && (
           <div className="p-6 space-y-6">
-            <p className="text-base font-semibold text-white">Episode Details</p>
+            <p className="text-base font-semibold text-foreground">Episode Details</p>
 
             {/* Thumbnail */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -455,14 +455,14 @@ export default function EpisodeForm() {
             {/* Show, Season, Episode */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">
+                <Label className="text-foreground text-sm font-medium">
                   TV Show <span className="text-primary">*</span>
                 </Label>
                 <Select value={showId} onValueChange={setShowId} disabled={loadingShows}>
-                  <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue placeholder={loadingShows ? "Loading…" : "Select TV Show"} />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     {tvShows.length === 0
                       ? <SelectItem value="_none" disabled>No TV shows found</SelectItem>
                       : tvShows.map((s) => <SelectItem key={s._id} value={s._id}>{s.title}</SelectItem>)
@@ -472,14 +472,14 @@ export default function EpisodeForm() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">
+                <Label className="text-foreground text-sm font-medium">
                   Season <span className="text-primary">*</span>
                 </Label>
                 <Select value={seasonNumber} onValueChange={setSeasonNumber}>
-                  <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue placeholder="Season" />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     {availableSeasons.length > 0
                       ? availableSeasons.map((s: any) => (
                           <SelectItem key={s.seasonId} value={String(s.season)}>Season {s.season}</SelectItem>
@@ -493,7 +493,7 @@ export default function EpisodeForm() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">
+                <Label className="text-foreground text-sm font-medium">
                   Episode Number <span className="text-primary">*</span>
                 </Label>
                 <Input
@@ -501,28 +501,28 @@ export default function EpisodeForm() {
                   min="1"
                   value={episodeNumber}
                   onChange={(e) => setEpisodeNumber(e.target.value)}
-                  className="bg-muted border-border text-white h-10 rounded-lg text-sm"
+                  className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
                 />
               </div>
             </div>
 
             {/* Title */}
             <div className="space-y-1.5">
-              <Label className="text-white text-sm font-medium">
+              <Label className="text-foreground text-sm font-medium">
                 Episode Title <span className="text-primary">*</span>
               </Label>
               <Input
                 placeholder="e.g. The Beginning"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
               />
             </div>
 
             {/* Description */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-white text-sm font-medium">Description</Label>
+                <Label className="text-foreground text-sm font-medium">Description</Label>
                 <button className="text-xs text-primary hover:text-red-300 flex items-center gap-1.5 transition-colors">
                   <Sparkles className="h-3.5 w-3.5" /> Generate with AI
                 </button>
@@ -532,19 +532,19 @@ export default function EpisodeForm() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={5}
-                className="bg-muted border-border text-white placeholder:text-white/75 rounded-lg text-sm resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
               />
             </div>
 
             {/* Video Source */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Video Upload Type</Label>
+                <Label className="text-foreground text-sm font-medium">Video Upload Type</Label>
                 <Select value={videoUploadType} onValueChange={setVideoUploadType}>
-                  <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="url">External URL</SelectItem>
                     <SelectItem value="hls">HLS / M3U8 URL</SelectItem>
                     <SelectItem value="local">Local (Media Library)</SelectItem>
@@ -552,16 +552,16 @@ export default function EpisodeForm() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Video</Label>
+                <Label className="text-foreground text-sm font-medium">Video</Label>
                 {videoUploadType === "local" ? (
                   <div onClick={() => setVideoPickerOpen(true)}
                     className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full">
                     {videoFilePath ? (
-                      <span className="text-sm text-white truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
+                      <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
                         {getImageUrl(videoFilePath)}
                       </span>
                     ) : (
-                      <span className="text-sm text-white/75">Click to select from media library</span>
+                      <span className="text-sm text-muted-foreground">Click to select from media library</span>
                     )}
                   </div>
                 ) : (
@@ -569,7 +569,7 @@ export default function EpisodeForm() {
                     placeholder={videoUploadType === "hls" ? "https://cdn.example.com/video.m3u8" : "https://..."}
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 )}
               </div>
@@ -577,12 +577,12 @@ export default function EpisodeForm() {
 
             {/* Trailer URL */}
             <div className="space-y-1.5">
-              <Label className="text-white text-sm font-medium">Trailer URL</Label>
+              <Label className="text-foreground text-sm font-medium">Trailer URL</Label>
               <Input
                 placeholder="https://..."
                 value={trailerUrl}
                 onChange={(e) => setTrailerUrl(e.target.value)}
-                className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
               />
             </div>
 
@@ -590,25 +590,25 @@ export default function EpisodeForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
                 <div>
-                  <p className="text-sm font-medium text-white">Free Episode</p>
-                  <p className="text-xs text-white/75 mt-0.5">Watchable without subscription</p>
+                  <p className="text-sm font-medium text-foreground">Free Episode</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Watchable without subscription</p>
                 </div>
                 <Switch checked={isFree} onCheckedChange={(v) => { setIsFree(v); if (v) setIsLocked(false); }} className="data-[state=checked]:bg-primary" />
               </div>
               <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
                 <div>
-                  <p className="text-sm font-medium text-white">Locked</p>
-                  <p className="text-xs text-white/75 mt-0.5">Requires subscription to unlock</p>
+                  <p className="text-sm font-medium text-foreground">Locked</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Requires subscription to unlock</p>
                 </div>
                 <Switch checked={isLocked && !isFree} onCheckedChange={setIsLocked} disabled={isFree} className="data-[state=checked]:bg-primary" />
               </div>
               <div className={`col-span-full rounded-xl border-2 p-4 transition-colors ${isFree ? 'border-border/40 opacity-50' : 'border-yellow-500/40 bg-yellow-500/5'}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-white flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-2">
                       🪙 Coins Required to Unlock
                     </p>
-                    <p className="text-xs text-white/60 mt-1">
+                    <p className="text-xs text-muted-foreground/80 mt-1">
                       Set the coin price for this episode.
                       {isFree
                         ? " Disabled because this episode is marked as Free."
@@ -622,10 +622,10 @@ export default function EpisodeForm() {
                       value={coinsRequired}
                       onChange={(e) => setCoinsRequired(e.target.value)}
                       disabled={isFree}
-                      className="bg-muted border-yellow-500/30 focus:border-yellow-400 w-28 text-white h-10 rounded-lg text-sm text-right font-semibold"
+                      className="bg-muted border-yellow-500/30 focus:border-yellow-400 w-28 text-foreground h-10 rounded-lg text-sm text-right font-semibold"
                       placeholder="0"
                     />
-                    <span className="text-xs text-white/50">0 = free with subscription only</span>
+                    <span className="text-xs text-muted-foreground">0 = free with subscription only</span>
                   </div>
                 </div>
               </div>
@@ -636,23 +636,23 @@ export default function EpisodeForm() {
         {/* ===== BASIC INFO TAB ===== */}
         {activeTab === "Basic Info" && (
           <div className="p-6 space-y-6">
-            <p className="text-base font-semibold text-white">Basic Info</p>
+            <p className="text-base font-semibold text-foreground">Basic Info</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Air Date</Label>
+                <Label className="text-foreground text-sm font-medium">Air Date</Label>
                 <Input
                   type="date"
                   value={airDate}
                   onChange={(e) => setAirDate(e.target.value)}
-                  className="bg-muted border-border text-white h-10 rounded-lg text-sm"
+                  className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Duration</Label>
+                <Label className="text-foreground text-sm font-medium">Duration</Label>
                 <Input type="time" step="1" value={duration} onChange={(e) => setDuration(e.target.value)}
-                  className="bg-muted border-border text-white h-10 rounded-lg text-sm" />
-                <p className="text-xs text-white/75">Format: HH:MM:SS</p>
+                  className="bg-muted border-border text-foreground h-10 rounded-lg text-sm" />
+                <p className="text-xs text-muted-foreground">Format: HH:MM:SS</p>
               </div>
             </div>
 
@@ -666,18 +666,18 @@ export default function EpisodeForm() {
               />
               <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
                 <div>
-                  <p className="text-sm font-medium text-white">Allow Download</p>
-                  <p className="text-xs text-white/75 mt-0.5">Users can download this episode</p>
+                  <p className="text-sm font-medium text-foreground">Allow Download</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Users can download this episode</p>
                 </div>
                 <Switch checked={downloadAllowed} onCheckedChange={setDownloadAllowed} className="data-[state=checked]:bg-primary" />
               </div>
             </div>
 
             {/* Quality Variants */}
-            <p className="text-sm font-semibold text-white">Quality Variants</p>
+            <p className="text-sm font-semibold text-foreground">Quality Variants</p>
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-white">Enable quality-specific video files</p>
+                <p className="text-sm text-foreground">Enable quality-specific video files</p>
                 <Switch checked={qualityEnabled} onCheckedChange={setQualityEnabled} className="data-[state=checked]:bg-primary" />
               </div>
               {qualityEnabled && (
@@ -685,24 +685,24 @@ export default function EpisodeForm() {
                   {qualityRows.map((row) => (
                     <div key={row.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                       <div className="space-y-1.5">
-                        <Label className="text-white text-sm font-medium">Upload Type</Label>
+                        <Label className="text-foreground text-sm font-medium">Upload Type</Label>
                         <Select value={row.type} onValueChange={(v) => updateQualityRow(row.id, "type", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white">
+                          <SelectContent className="bg-popover border-border text-foreground">
                             <SelectItem value="url">External URL</SelectItem>
                             <SelectItem value="local">Local</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="flex-1 space-y-1.5">
-                        <Label className="text-white text-sm font-medium">Quality</Label>
+                        <Label className="text-foreground text-sm font-medium">Quality</Label>
                         <Select value={row.quality} onValueChange={(v) => updateQualityRow(row.id, "quality", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white">
+                          <SelectContent className="bg-popover border-border text-foreground">
                             {["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"].map((q) => (
                               <SelectItem key={q} value={q}>{q}</SelectItem>
                             ))}
@@ -711,15 +711,15 @@ export default function EpisodeForm() {
                       </div>
                       <div className="flex gap-2">
                         <div className="flex-1 space-y-1.5">
-                          <Label className="text-white text-sm font-medium">File</Label>
+                          <Label className="text-foreground text-sm font-medium">File</Label>
                           {row.type === "local" ? (
                             <div onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
-                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden px-3 text-sm text-white truncate min-w-0 w-full animate-none">
+                              className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden px-3 text-sm text-foreground truncate min-w-0 w-full animate-none">
                               {row.filePath || "Select file..."}
                             </div>
                           ) : (
                             <Input placeholder="https://..." value={row.url} onChange={(e) => updateQualityRow(row.id, "url", e.target.value)}
-                              className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm" />
+                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm" />
                           )}
                         </div>
                         <button type="button" onClick={() => removeQualityRow(row.id)}
@@ -744,7 +744,7 @@ export default function EpisodeForm() {
         {/* ===== SUBTITLE INFO TAB ===== */}
         {activeTab === "Subtitle Info" && (
           <div className="p-6 space-y-5">
-            <p className="text-base font-semibold text-white">Subtitle Languages</p>
+            <p className="text-base font-semibold text-foreground">Subtitle Languages</p>
             <div className="rounded-xl border border-border bg-muted/10 p-5">
               <MultiSelect
                 label="Subtitle Languages"
@@ -753,13 +753,13 @@ export default function EpisodeForm() {
                 onAdd={(v) => setSelectedSubtitleLanguages((p) => [...p, v])}
                 onRemove={(v) => setSelectedSubtitleLanguages((p) => p.filter((x) => x !== v))}
               />
-              <p className="text-xs text-white/75 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Select the subtitle languages available for this episode.
               </p>
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-base font-semibold text-white">Subtitle Files</p>
+              <p className="text-base font-semibold text-foreground">Subtitle Files</p>
               <Button type="button"
                 onClick={() => setSubtitleRows((p) => [...p, { id: Date.now().toString(), language: "", filePath: "" }])}
                 className="bg-primary hover:bg-primary/90 text-white h-9 gap-2 rounded-lg px-4 text-sm font-semibold">
@@ -769,23 +769,23 @@ export default function EpisodeForm() {
 
             {subtitleRows.length === 0 ? (
               <div className="rounded-xl border-2 border-dashed border-border bg-muted/10 py-12 flex flex-col items-center gap-3">
-                <UploadIcon className="h-9 w-9 text-white/60" />
-                <p className="text-sm text-white/75">No subtitle files added. Click "Add Subtitle" to upload .srt or .vtt files.</p>
+                <UploadIcon className="h-9 w-9 text-muted-foreground/80" />
+                <p className="text-sm text-muted-foreground">No subtitle files added. Click "Add Subtitle" to upload .srt or .vtt files.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {subtitleRows.map((row) => (
                   <div key={row.id} className="rounded-xl border border-border bg-muted/10 p-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div className="space-y-1.5">
-                      <Label className="text-white text-sm font-medium">Language</Label>
+                      <Label className="text-foreground text-sm font-medium">Language</Label>
                       <Select
                         value={row.language}
                         onValueChange={(v) => setSubtitleRows((p) => p.map((r) => r.id === row.id ? { ...r, language: v } : r))}
                       >
-                        <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                        <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                           <SelectValue placeholder="Select Language" />
                         </SelectTrigger>
-                        <SelectContent className="bg-popover border-border text-white max-h-60">
+                        <SelectContent className="bg-popover border-border text-foreground max-h-60">
                           {languagesList.map((lang: any) => (
                             <SelectItem key={getId(lang)} value={getId(lang)}>{lang.name}</SelectItem>
                           ))}
@@ -794,17 +794,17 @@ export default function EpisodeForm() {
                     </div>
                     <div className="flex gap-3 items-end min-w-0">
                       <div className="flex-1 space-y-1.5 min-w-0">
-                        <Label className="text-white text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
+                        <Label className="text-foreground text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
                         <div
                           onClick={() => { setCurrentSubtitleRowId(row.id); setSubtitlePickerOpen(true); }}
                           className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                         >
                           {row.filePath ? (
-                            <span className="text-sm text-white truncate px-3 w-full text-center block" title={row.filePath}>
+                            <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={row.filePath}>
                               {row.filePath}
                             </span>
                           ) : (
-                            <span className="text-sm text-white/75">Click to select subtitle file</span>
+                            <span className="text-sm text-muted-foreground">Click to select subtitle file</span>
                           )}
                         </div>
                       </div>

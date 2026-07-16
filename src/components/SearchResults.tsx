@@ -37,7 +37,7 @@ export default function SearchResults({ query, type = 'movie', onItemClick }: Se
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
               activeType === t.key
                 ? 'bg-primary text-white'
-                : 'bg-zinc-800/60 text-white/70 hover:bg-zinc-800 hover:text-white'
+                : 'bg-zinc-800/60 text-foreground/70 hover:bg-zinc-800 hover:text-foreground'
             }`}
           >
             {t.icon}
@@ -47,7 +47,7 @@ export default function SearchResults({ query, type = 'movie', onItemClick }: Se
       </div>
 
       {!query.trim() && (
-        <div className="flex flex-col items-center justify-center py-16 text-white/65">
+        <div className="flex flex-col items-center justify-center py-16 text-foreground/65">
           <Search className="w-10 h-10 mb-3 opacity-20" />
           <p className="text-sm font-medium">Start typing to search titles...</p>
         </div>
@@ -60,10 +60,10 @@ export default function SearchResults({ query, type = 'movie', onItemClick }: Se
       )}
 
       {!isLoading && query.trim() && items.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-white/65">
+        <div className="flex flex-col items-center justify-center py-16 text-foreground/65">
           <Search className="w-10 h-10 mb-3 opacity-20" />
           <p className="text-sm font-medium">No results found for "{query}"</p>
-          <p className="text-xs text-white/60 mt-1">Try a different keyword or check spelling.</p>
+          <p className="text-xs text-muted-foreground/80 mt-1">Try a different keyword or check spelling.</p>
         </div>
       )}
 

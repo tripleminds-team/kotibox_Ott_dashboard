@@ -146,7 +146,7 @@ export default function CoinPackagesPage() {
             ))}
             {packages.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-white/75">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No coin packages found.
                 </TableCell>
               </TableRow>

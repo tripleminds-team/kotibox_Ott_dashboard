@@ -23,8 +23,8 @@ const DURATION_OPTIONS = ["Day", "Week", "Month", "Year"];
 const DEVICE_OPTIONS = ["mobile", "tablet", "tv", "desktop"];
 
 const inputCls =
-  "bg-muted border-border text-white placeholder:text-white/65 focus:border-primary h-11 rounded-lg text-sm";
-const labelCls = "text-white text-sm font-medium";
+  "bg-muted border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-11 rounded-lg text-sm";
+const labelCls = "text-foreground text-sm font-medium";
 
 export default function PlanFormPage() {
   const [, setLocation] = useLocation();
@@ -204,16 +204,16 @@ export default function PlanFormPage() {
   return (
     <div className="space-y-5 pb-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <button onClick={() => setLocation("/plans")} className="hover:text-white transition-colors">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <button onClick={() => setLocation("/plans")} className="hover:text-foreground transition-colors">
           Dashboard
         </button>
         <span>/</span>
-        <button onClick={() => setLocation("/plans")} className="hover:text-white transition-colors">
+        <button onClick={() => setLocation("/plans")} className="hover:text-foreground transition-colors">
           Plans
         </button>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Plan" : "New Plan"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Plan" : "New Plan"}</span>
       </div>
 
       {/* Back */}
@@ -226,7 +226,7 @@ export default function PlanFormPage() {
 
       {/* ─── Plan Details ─── */}
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-        <p className="text-base font-semibold text-white">Plan Details</p>
+        <p className="text-base font-semibold text-foreground">Plan Details</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Name */}
@@ -243,10 +243,10 @@ export default function PlanFormPage() {
               Duration Type <span className="text-primary">*</span>
             </Label>
             <Select value={duration} onValueChange={setDuration}>
-              <SelectTrigger className="bg-muted border-border text-white h-11 rounded-lg text-sm">
+              <SelectTrigger className="bg-muted border-border text-foreground h-11 rounded-lg text-sm">
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-white">
+              <SelectContent className="bg-popover border-border text-foreground">
                 {DURATION_OPTIONS.map((d) => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
@@ -287,13 +287,13 @@ export default function PlanFormPage() {
             <Input type="number" min="0" max="100" step="0.01" value={discount}
               onChange={(e) => setDiscount(e.target.value)}
               placeholder="0" className={inputCls} />
-            <p className="text-xs text-white/75">Enter 0–100 (percentage)</p>
+            <p className="text-xs text-muted-foreground">Enter 0–100 (percentage)</p>
           </div>
           {/* Total Price — computed, read-only */}
           <div className="space-y-1.5">
             <Label className={labelCls}>Total Price (after discount)</Label>
             <div className="h-11 px-4 rounded-lg border border-border bg-muted/50 flex items-center">
-              <span className="text-white font-semibold text-base">
+              <span className="text-foreground font-semibold text-base">
                 {formatCurrency(totalPrice)}
               </span>
               {parseFloat(discount) > 0 && (
@@ -307,7 +307,7 @@ export default function PlanFormPage() {
           <div className="space-y-1.5">
             <Label className={labelCls}>Status</Label>
             <div className="h-11 px-4 rounded-lg border border-border bg-muted flex items-center justify-between">
-              <span className="text-sm text-white font-medium">
+              <span className="text-sm text-foreground font-medium">
                 {status ? "Active" : "Inactive"}
               </span>
               <Switch checked={status} onCheckedChange={setStatus}
@@ -321,14 +321,14 @@ export default function PlanFormPage() {
           <Label className={labelCls}>Description</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Write a description for this plan..."
-            className="bg-muted border-border text-white placeholder:text-white/65 focus:border-primary rounded-lg resize-none text-sm"
+            className="bg-muted border-border text-foreground placeholder:text-foreground/65 focus:border-primary rounded-lg resize-none text-sm"
             rows={3} />
         </div>
       </div>
 
       {/* ─── Plan Limits ─── */}
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-        <p className="text-base font-semibold text-white">Plan Limits</p>
+        <p className="text-base font-semibold text-foreground">Plan Limits</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Ads */}
@@ -345,10 +345,10 @@ export default function PlanFormPage() {
               checked={deviceLimit} onChange={setDeviceLimit} />
             {deviceLimit && (
               <div className="flex items-center gap-3 pl-4">
-                <Label className="text-sm text-white/75 whitespace-nowrap">Max devices:</Label>
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Max devices:</Label>
                 <Input type="number" min="1" value={deviceLimitCount}
                   onChange={(e) => setDeviceLimitCount(e.target.value)}
-                  className="w-24 bg-muted border-border text-white h-9 rounded-lg text-sm" />
+                  className="w-24 bg-muted border-border text-foreground h-9 rounded-lg text-sm" />
               </div>
             )}
           </div>
@@ -359,10 +359,10 @@ export default function PlanFormPage() {
               checked={profileLimit} onChange={setProfileLimit} />
             {profileLimit && (
               <div className="flex items-center gap-3 pl-4">
-                <Label className="text-sm text-white/75 whitespace-nowrap">Max profiles:</Label>
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Max profiles:</Label>
                 <Input type="number" min="1" value={profileLimitCount}
                   onChange={(e) => setProfileLimitCount(e.target.value)}
-                  className="w-24 bg-muted border-border text-white h-9 rounded-lg text-sm" />
+                  className="w-24 bg-muted border-border text-foreground h-9 rounded-lg text-sm" />
               </div>
             )}
           </div>
@@ -378,7 +378,7 @@ export default function PlanFormPage() {
                     className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all capitalize ${
                       supportedDevices.includes(device)
                         ? "border-primary/70 bg-primary/25 text-red-300"
-                        : "border-border bg-card text-white/75 hover:border-primary/40"
+                        : "border-border bg-card text-muted-foreground hover:border-primary/40"
                     }`}>
                     {device}
                   </button>
@@ -392,8 +392,8 @@ export default function PlanFormPage() {
       {/* ─── Download Quality Options ─── */}
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
         <div>
-          <p className="text-base font-semibold text-white">Download Quality Options</p>
-          <p className="text-sm text-white/75 mt-0.5">
+          <p className="text-base font-semibold text-foreground">Download Quality Options</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Select which video qualities subscribers on this plan can download.
           </p>
         </div>
@@ -413,7 +413,7 @@ export default function PlanFormPage() {
                   : "border-border bg-card hover:border-primary/30"
               }`}
               onClick={() => setter(!state)}>
-              <span className={`text-sm font-semibold ${state ? "text-red-300" : "text-white"}`}>
+              <span className={`text-sm font-semibold ${state ? "text-red-300" : "text-foreground"}`}>
                 {label}
               </span>
               <Switch checked={state} onCheckedChange={setter}
@@ -448,8 +448,8 @@ function LimitToggle({
       onClick={() => onChange(!checked)}
     >
       <div>
-        <p className="text-sm font-medium text-white">{label}</p>
-        {description && <p className="text-xs text-white/75 mt-0.5">{description}</p>}
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <Switch checked={checked} onCheckedChange={onChange}
         className="data-[state=checked]:bg-primary" />

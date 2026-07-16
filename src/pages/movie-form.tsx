@@ -49,7 +49,7 @@ const getId = (item: any): string =>
 function ImageBox({ label, preview, onOpen }: { label: string; preview: string; onOpen: () => void }) {
   return (
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-white mb-2">{label}</p>
+      <p className="text-sm font-medium text-foreground mb-2">{label}</p>
       <div
         onClick={onOpen}
         className="border-2 border-dashed border-border rounded-xl aspect-[4/3] flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden"
@@ -57,7 +57,7 @@ function ImageBox({ label, preview, onOpen }: { label: string; preview: string; 
         {preview ? (
           <img src={preview} alt={label} className="h-full w-full object-contain" />
         ) : (
-          <ImageIcon className="h-10 w-10 text-white/75" />
+          <ImageIcon className="h-10 w-10 text-muted-foreground" />
         )}
       </div>
     </div>
@@ -493,13 +493,13 @@ export default function MovieForm() {
 
   /* ---- Reusable ---- */
   const SectionHeading = ({ title: t }: { title: string }) => (
-    <p className="text-base font-semibold text-white">{t}</p>
+    <p className="text-base font-semibold text-foreground">{t}</p>
   );
 
   const EmptyState = ({ message }: { message: string }) => (
     <div className="rounded-xl border-2 border-dashed border-border bg-muted/10 py-16 flex flex-col items-center gap-3">
-      <UploadIcon className="h-9 w-9 text-white/60" />
-      <p className="text-sm text-white/75">{message}</p>
+      <UploadIcon className="h-9 w-9 text-muted-foreground/80" />
+      <p className="text-sm text-muted-foreground">{message}</p>
     </div>
   );
 
@@ -512,7 +512,7 @@ export default function MovieForm() {
     placeholder?: string;
   }) => (
     <div className="space-y-1.5">
-      <Label className="text-white text-sm font-medium">
+      <Label className="text-foreground text-sm font-medium">
         {label} {required && <span className="text-primary">*</span>}
       </Label>
       <div className="space-y-2">
@@ -522,8 +522,8 @@ export default function MovieForm() {
               const item = items.find((i: any) => getId(i) === itemId);
               return (
                 <div key={itemId} className="flex items-center gap-1 bg-muted border border-border rounded-lg px-2.5 py-1 text-xs">
-                  <span className="text-white">{item?.name || itemId}</span>
-                  <button type="button" onClick={() => onRemove(itemId)} className="text-white/75 hover:text-primary">
+                  <span className="text-foreground">{item?.name || itemId}</span>
+                  <button type="button" onClick={() => onRemove(itemId)} className="text-muted-foreground hover:text-primary">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -532,10 +532,10 @@ export default function MovieForm() {
           </div>
         )}
         <Select value="" onValueChange={(v) => { if (v && !selected.includes(v)) onAdd(v); }}>
-          <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
             <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-white max-h-60">
+          <SelectContent className="bg-popover border-border text-foreground max-h-60">
             {items
               .filter((i: any) => !selected.includes(getId(i)))
               .map((item: any) => (
@@ -552,16 +552,16 @@ export default function MovieForm() {
   return (
     <div className="space-y-5 pb-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <button onClick={() => setLocation("/movies")} className="hover:text-white transition-colors">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <button onClick={() => setLocation("/movies")} className="hover:text-foreground transition-colors">
           Dashboard
         </button>
         <span>/</span>
-        <button onClick={() => setLocation("/movies")} className="hover:text-white transition-colors">
+        <button onClick={() => setLocation("/movies")} className="hover:text-foreground transition-colors">
           Movies
         </button>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Movie" : "New Movie"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Movie" : "New Movie"}</span>
       </div>
 
       {/* Tab Navigation */}
@@ -573,7 +573,7 @@ export default function MovieForm() {
             className={`px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${
               activeTab === tab
                 ? "bg-primary text-white shadow-sm"
-                : "bg-card border border-border text-white/75 hover:text-white hover:bg-muted"
+                : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             {tab}
@@ -601,23 +601,23 @@ export default function MovieForm() {
             {/* Title + Original Title */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">
+                <Label className="text-foreground text-sm font-medium">
                   Title <span className="text-primary">*</span>
                 </Label>
                 <Input
                   placeholder="e.g. Avengers: Endgame"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Original Title</Label>
+                <Label className="text-foreground text-sm font-medium">Original Title</Label>
                 <Input
                   placeholder="Original language title (optional)"
                   value={originalTitle}
                   onChange={(e) => setOriginalTitle(e.target.value)}
-                  className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                 />
               </div>
             </div>
@@ -625,12 +625,12 @@ export default function MovieForm() {
             {/* Trailer */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Trailer URL Type</Label>
+                <Label className="text-foreground text-sm font-medium">Trailer URL Type</Label>
                 <Select value={trailerUrlType} onValueChange={setTrailerUrlType}>
-                  <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="url">External URL</SelectItem>
                     <SelectItem value="local">Local (Media Library)</SelectItem>
                   </SelectContent>
@@ -639,28 +639,28 @@ export default function MovieForm() {
               <div className="space-y-1.5">
                 {trailerUrlType === "local" ? (
                   <>
-                    <Label className="text-white text-sm font-medium">Trailer Video</Label>
+                    <Label className="text-foreground text-sm font-medium">Trailer Video</Label>
                     <div
                       onClick={() => setTrailerPickerOpen(true)}
                       className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                     >
                       {trailerFilePath ? (
-                        <span className="text-sm text-white truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(trailerFilePath)}>
                           {getImageUrl(trailerFilePath)}
                         </span>
                       ) : (
-                        <span className="text-sm text-white/75">Click to select from media library</span>
+                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
                     </div>
                   </>
                 ) : (
                   <>
-                    <Label className="text-white text-sm font-medium">Trailer URL</Label>
+                    <Label className="text-foreground text-sm font-medium">Trailer URL</Label>
                     <Input
                       placeholder="https://..."
                       value={trailerUrl}
                       onChange={(e) => setTrailerUrl(e.target.value)}
-                      className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                     />
                   </>
                 )}
@@ -670,7 +670,7 @@ export default function MovieForm() {
             {/* Description */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-white text-sm font-medium">
+                <Label className="text-foreground text-sm font-medium">
                   Description <span className="text-primary">*</span>
                 </Label>
                 <button className="text-xs text-primary hover:text-red-300 flex items-center gap-1.5 transition-colors">
@@ -683,33 +683,33 @@ export default function MovieForm() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={5}
-                className="bg-muted border-border text-white placeholder:text-white/75 rounded-lg text-sm resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
               />
             </div>
 
             {/* Short Description */}
             <div className="space-y-1.5">
-              <Label className="text-white text-sm font-medium">Short Description</Label>
+              <Label className="text-foreground text-sm font-medium">Short Description</Label>
               <Textarea
                 placeholder="Brief summary shown in listings..."
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
                 rows={2}
-                className="bg-muted border-border text-white placeholder:text-white/75 rounded-lg text-sm resize-none"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
               />
             </div>
 
             {/* Plan + Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">
+                <Label className="text-foreground text-sm font-medium">
                   Plan Required <span className="text-primary">*</span>
                 </Label>
                 <Select value={planRequired} onValueChange={(v) => setPlanRequired(v as any)}>
-                  <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="free">Free</SelectItem>
                     <SelectItem value="basic">Basic</SelectItem>
                     <SelectItem value="standard">Standard</SelectItem>
@@ -718,12 +718,12 @@ export default function MovieForm() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Status</Label>
+                <Label className="text-foreground text-sm font-medium">Status</Label>
                 <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-                  <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                  <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
                     <SelectItem value="processing">Processing</SelectItem>
@@ -736,7 +736,7 @@ export default function MovieForm() {
 
             {/* Home Sections */}
             <div className="space-y-1.5">
-              <Label className="text-white text-sm font-medium">Home Categories (Sections)</Label>
+              <Label className="text-foreground text-sm font-medium">Home Categories (Sections)</Label>
               {sectionOptions.length > 0 ? (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {sectionOptions.map((sec: any) => (
@@ -747,7 +747,7 @@ export default function MovieForm() {
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         selectedSections.includes(sec.id)
                           ? 'bg-primary text-primary-foreground border border-primary'
-                          : 'bg-muted/50 text-white/75 border border-border hover:bg-muted hover:text-white'
+                          : 'bg-muted/50 text-muted-foreground border border-border hover:bg-muted hover:text-foreground'
                       }`}
                     >
                       {sec.title}
@@ -755,9 +755,9 @@ export default function MovieForm() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-white/75 bg-muted/50 p-3 rounded-lg border border-border">No home sections available. Create some in Home Layout Builder.</p>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border">No home sections available. Create some in Home Layout Builder.</p>
               )}
-              <p className="text-xs text-white/75 pt-1">Select the categories where this movie should be manually displayed.</p>
+              <p className="text-xs text-muted-foreground pt-1">Select the categories where this movie should be manually displayed.</p>
             </div>
           </div>
         )}
@@ -802,15 +802,15 @@ export default function MovieForm() {
                   onRemove={(v) => setSelectedCategories((p) => p.filter((x) => x !== v))}
                 />
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Country</Label>
+                  <Label className="text-foreground text-sm font-medium">Country</Label>
                   <Select
                     value={country}
                     onValueChange={setCountry}
                   >
-                    <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                    <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                       <SelectValue placeholder="Select Country" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-white max-h-60 overflow-y-auto">
+                    <SelectContent className="bg-popover border-border text-foreground max-h-60 overflow-y-auto">
                       {(country && !countries.some((c: any) => c.name === country)
                         ? [{ id: "temp-saved", name: country }, ...countries]
                         : countries
@@ -823,20 +823,20 @@ export default function MovieForm() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Year</Label>
+                  <Label className="text-foreground text-sm font-medium">Year</Label>
                   <Input
                     type="number"
                     placeholder="e.g. 2024"
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">IMDb Rating</Label>
+                  <Label className="text-foreground text-sm font-medium">IMDb Rating</Label>
                   <Input
                     type="number"
                     placeholder="0.0 – 10.0"
@@ -845,34 +845,34 @@ export default function MovieForm() {
                     step="0.1"
                     value={imdbRating}
                     onChange={(e) => setImdbRating(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Content Rating</Label>
+                  <Label className="text-foreground text-sm font-medium">Content Rating</Label>
                   <Input
                     placeholder="e.g. PG-13, U/A, R"
                     value={rating}
                     onChange={(e) => setRating(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Age Rating</Label>
+                  <Label className="text-foreground text-sm font-medium">Age Rating</Label>
                   <Input
                     type="number"
                     placeholder="e.g. 0, 13, 18"
                     min="0"
                     value={ageRating}
                     onChange={(e) => setAgeRating(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">
+                  <Label className="text-foreground text-sm font-medium">
                     Duration <span className="text-primary">*</span>
                   </Label>
                   <Input
@@ -880,44 +880,44 @@ export default function MovieForm() {
                     step="1"
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    className="bg-muted border-border text-white h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
                   />
-                  <p className="text-xs text-white/75">Format: HH:MM:SS</p>
+                  <p className="text-xs text-muted-foreground">Format: HH:MM:SS</p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">
+                  <Label className="text-foreground text-sm font-medium">
                     Release Date <span className="text-primary">*</span>
                   </Label>
                   <Input
                     type="date"
                     value={releaseDate}
                     onChange={(e) => setReleaseDate(e.target.value)}
-                    className="bg-muted border-border text-white h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Producer</Label>
+                  <Label className="text-foreground text-sm font-medium">Producer</Label>
                   <Input
                     placeholder="Producer name"
                     value={producer}
                     onChange={(e) => setProducer(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Studio</Label>
+                  <Label className="text-foreground text-sm font-medium">Studio</Label>
                   <Input
                     placeholder="Production studio"
                     value={studio}
                     onChange={(e) => setStudio(e.target.value)}
-                    className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Maturity Content</Label>
+                  <Label className="text-foreground text-sm font-medium">Maturity Content</Label>
                   <div
                     className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
                     onClick={() => document.getElementById("maturity-input")?.focus()}
@@ -936,7 +936,7 @@ export default function MovieForm() {
                       onChange={(e) => setMaturityInput(e.target.value)}
                       onKeyDown={handleMaturityKeyDown}
                       placeholder={maturityContent.length === 0 ? "e.g. Violence, Language" : ""}
-                      className="flex-1 min-w-[140px] bg-transparent text-white text-sm outline-none placeholder:text-white/75"
+                      className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
                     />
                   </div>
                 </div>
@@ -951,7 +951,7 @@ export default function MovieForm() {
                   { label: "Exclusive", value: isExclusive, setter: setIsExclusive },
                 ].map(({ label, value, setter }) => (
                   <div key={label} className="flex items-center justify-between p-3 rounded-xl border border-border bg-card">
-                    <p className="text-sm font-medium text-white">{label}</p>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
                     <Switch checked={value} onCheckedChange={setter} className="data-[state=checked]:bg-primary" />
                   </div>
                 ))}
@@ -959,8 +959,8 @@ export default function MovieForm() {
 
               <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                 <div>
-                  <p className="text-sm font-medium text-white">Download Allowed</p>
-                  <p className="text-xs text-white/75 mt-0.5">Allow users to download this content</p>
+                  <p className="text-sm font-medium text-foreground">Download Allowed</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Allow users to download this content</p>
                 </div>
                 <Switch checked={downloadAllowed} onCheckedChange={setDownloadAllowed} className="data-[state=checked]:bg-primary" />
               </div>
@@ -973,24 +973,24 @@ export default function MovieForm() {
               {/* Cast */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white">Cast (Actors)</p>
+                  <p className="text-sm font-semibold text-foreground">Cast (Actors)</p>
                   <Button type="button" onClick={addCastItem}
                     className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
                     <Plus className="h-3.5 w-3.5" /> Add Actor
                   </Button>
                 </div>
                 {castItems.length === 0 ? (
-                  <p className="text-sm text-white/75">No cast added yet.</p>
+                  <p className="text-sm text-muted-foreground">No cast added yet.</p>
                 ) : (
                   castItems.map((item) => (
                     <div key={item.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end p-3 rounded-xl border border-border bg-card">
                       <div className="space-y-1">
-                        <Label className="text-white text-xs font-medium">Actor</Label>
+                        <Label className="text-foreground text-xs font-medium">Actor</Label>
                         <Select value={item.actorId} onValueChange={(v) => updateCastItem(item.id, "actorId", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-9 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue placeholder="Select actor..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white max-h-60">
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
                             {actorsList.map((a: any) => (
                               <SelectItem key={getId(a)} value={getId(a)}>{a.name}</SelectItem>
                             ))}
@@ -998,21 +998,21 @@ export default function MovieForm() {
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-white text-xs font-medium">Character</Label>
+                        <Label className="text-foreground text-xs font-medium">Character</Label>
                         <Input
                           placeholder="Character name"
                           value={item.character}
                           onChange={(e) => updateCastItem(item.id, "character", e.target.value)}
-                          className="bg-muted border-border text-white placeholder:text-white/75 h-9 rounded-lg text-sm"
+                          className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 rounded-lg text-sm"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-white text-xs font-medium">Role</Label>
+                        <Label className="text-foreground text-xs font-medium">Role</Label>
                         <Select value={item.role} onValueChange={(v) => updateCastItem(item.id, "role", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-9 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white">
+                          <SelectContent className="bg-popover border-border text-foreground">
                             <SelectItem value="Actor">Actor</SelectItem>
                             <SelectItem value="Lead">Lead</SelectItem>
                             <SelectItem value="Supporting">Supporting</SelectItem>
@@ -1033,24 +1033,24 @@ export default function MovieForm() {
               {/* Crew */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white">Crew (Directors)</p>
+                  <p className="text-sm font-semibold text-foreground">Crew (Directors)</p>
                   <Button type="button" onClick={addCrewItem}
                     className="bg-primary hover:bg-primary/90 text-white h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold">
                     <Plus className="h-3.5 w-3.5" /> Add Director
                   </Button>
                 </div>
                 {crewItems.length === 0 ? (
-                  <p className="text-sm text-white/75">No crew added yet.</p>
+                  <p className="text-sm text-muted-foreground">No crew added yet.</p>
                 ) : (
                   crewItems.map((item) => (
                     <div key={item.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end p-3 rounded-xl border border-border bg-card">
                       <div className="space-y-1">
-                        <Label className="text-white text-xs font-medium">Director</Label>
+                        <Label className="text-foreground text-xs font-medium">Director</Label>
                         <Select value={item.directorId} onValueChange={(v) => updateCrewItem(item.id, "directorId", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-9 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue placeholder="Select director..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white max-h-60">
+                          <SelectContent className="bg-popover border-border text-foreground max-h-60">
                             {directorsList.map((d: any) => (
                               <SelectItem key={getId(d)} value={getId(d)}>{d.name}</SelectItem>
                             ))}
@@ -1058,12 +1058,12 @@ export default function MovieForm() {
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-white text-xs font-medium">Role</Label>
+                        <Label className="text-foreground text-xs font-medium">Role</Label>
                         <Select value={item.role} onValueChange={(v) => updateCrewItem(item.id, "role", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-9 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-9 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white">
+                          <SelectContent className="bg-popover border-border text-foreground">
                             <SelectItem value="Director">Director</SelectItem>
                             <SelectItem value="Co-Director">Co-Director</SelectItem>
                             <SelectItem value="Executive Producer">Executive Producer</SelectItem>
@@ -1091,30 +1091,30 @@ export default function MovieForm() {
             <div className="rounded-xl border border-border bg-muted/10 p-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Video Upload Type</Label>
+                  <Label className="text-foreground text-sm font-medium">Video Upload Type</Label>
                   <Select value={videoUploadType} onValueChange={setVideoUploadType}>
-                    <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                    <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-white">
+                    <SelectContent className="bg-popover border-border text-foreground">
                       <SelectItem value="url">External URL</SelectItem>
                       <SelectItem value="local">Local (Media Library)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">Video</Label>
+                  <Label className="text-foreground text-sm font-medium">Video</Label>
                   {videoUploadType === "local" ? (
                     <div
                       onClick={() => setVideoPickerOpen(true)}
                       className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                     >
                       {videoFilePath ? (
-                        <span className="text-sm text-white truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
+                        <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(videoFilePath)}>
                           {getImageUrl(videoFilePath)}
                         </span>
                       ) : (
-                        <span className="text-sm text-white/75">Click to select from media library</span>
+                        <span className="text-sm text-muted-foreground">Click to select from media library</span>
                       )}
                     </div>
                   ) : (
@@ -1122,7 +1122,7 @@ export default function MovieForm() {
                       placeholder={videoUploadType === "hls" ? "https://cdn.example.com/video.m3u8" : "https://..."}
                       value={videoUrl}
                       onChange={(e) => setVideoUrl(e.target.value)}
-                      className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                     />
                   )}
                 </div>
@@ -1132,7 +1132,7 @@ export default function MovieForm() {
             <SectionHeading title="Quality Variants" />
             <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-white">Enable quality-specific video files</p>
+                <p className="text-sm text-foreground">Enable quality-specific video files</p>
                 <Switch checked={qualityEnabled} onCheckedChange={setQualityEnabled} className="data-[state=checked]:bg-primary" />
               </div>
 
@@ -1141,24 +1141,24 @@ export default function MovieForm() {
                   {qualityRows.map((row) => (
                     <div key={row.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                       <div className="space-y-1.5">
-                        <Label className="text-white text-sm font-medium">Upload Type</Label>
+                        <Label className="text-foreground text-sm font-medium">Upload Type</Label>
                         <Select value={row.type} onValueChange={(v) => updateQualityRow(row.id, "type", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white">
+                          <SelectContent className="bg-popover border-border text-foreground">
                             <SelectItem value="url">External URL</SelectItem>
                             <SelectItem value="local">Local</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-white text-sm font-medium">Quality</Label>
+                        <Label className="text-foreground text-sm font-medium">Quality</Label>
                         <Select value={row.quality} onValueChange={(v) => updateQualityRow(row.id, "quality", v)}>
-                          <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                          <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-popover border-border text-white">
+                          <SelectContent className="bg-popover border-border text-foreground">
                             <SelectItem value="144p">144p</SelectItem>
                             <SelectItem value="240p">240p</SelectItem>
                             <SelectItem value="360p">360p</SelectItem>
@@ -1171,18 +1171,18 @@ export default function MovieForm() {
                       </div>
                       <div className="flex gap-2 items-end min-w-0">
                         <div className="flex-1 space-y-1.5 min-w-0">
-                          <Label className="text-white text-sm font-medium">Video File / URL</Label>
+                          <Label className="text-foreground text-sm font-medium">Video File / URL</Label>
                           {row.type === "local" ? (
                             <div
                               onClick={() => { setCurrentQualityRowId(row.id); setQualityPickerOpen(true); }}
                               className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                             >
                               {row.filePath ? (
-                                <span className="text-sm text-white truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
+                                <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
                                   {getImageUrl(row.filePath)}
                                 </span>
                               ) : (
-                                <span className="text-sm text-white/75">Click to select</span>
+                                <span className="text-sm text-muted-foreground">Click to select</span>
                               )}
                             </div>
                           ) : (
@@ -1190,7 +1190,7 @@ export default function MovieForm() {
                               placeholder="https://..."
                               value={row.url}
                               onChange={(e) => updateQualityRow(row.id, "url", e.target.value)}
-                              className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                             />
                           )}
                         </div>
@@ -1245,15 +1245,15 @@ export default function MovieForm() {
                 {subtitleRows.map((row) => (
                   <div key={row.id} className="rounded-xl border border-border bg-muted/10 p-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div className="space-y-1.5">
-                      <Label className="text-white text-sm font-medium">Language</Label>
+                      <Label className="text-foreground text-sm font-medium">Language</Label>
                       <Select
                         value={row.language}
                         onValueChange={(v) => setSubtitleRows((p) => p.map((r) => r.id === row.id ? { ...r, language: v } : r))}
                       >
-                        <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
+                        <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
                           <SelectValue placeholder="Select Language" />
                         </SelectTrigger>
-                        <SelectContent className="bg-popover border-border text-white max-h-60">
+                        <SelectContent className="bg-popover border-border text-foreground max-h-60">
                           {languagesList.map((lang: any) => (
                             <SelectItem key={getId(lang)} value={getId(lang)}>{lang.name}</SelectItem>
                           ))}
@@ -1262,17 +1262,17 @@ export default function MovieForm() {
                     </div>
                     <div className="flex gap-3 items-end min-w-0">
                       <div className="flex-1 space-y-1.5 min-w-0">
-                        <Label className="text-white text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
+                        <Label className="text-foreground text-sm font-medium">Subtitle File (.srt, .vtt)</Label>
                         <div
                           onClick={() => { setCurrentSubtitleRowId(row.id); setSubtitlePickerOpen(true); }}
                           className="border-2 border-dashed border-border rounded-lg h-10 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-muted/20 transition-colors overflow-hidden w-full"
                         >
                           {row.filePath ? (
-                            <span className="text-sm text-white truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
+                            <span className="text-sm text-foreground truncate px-3 w-full text-center block" title={getImageUrl(row.filePath)}>
                               {getImageUrl(row.filePath)}
                             </span>
                           ) : (
-                            <span className="text-sm text-white/75">Click to select subtitle file</span>
+                            <span className="text-sm text-muted-foreground">Click to select subtitle file</span>
                           )}
                         </div>
                       </div>
@@ -1296,7 +1296,7 @@ export default function MovieForm() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* SEO Image */}
                 <div className="space-y-1.5">
-                  <Label className="text-white text-sm font-medium">SEO Image</Label>
+                  <Label className="text-foreground text-sm font-medium">SEO Image</Label>
                   <div
                     onClick={() => setSeoImagePickerOpen(true)}
                     className="border-2 border-dashed border-border rounded-xl h-40 flex items-center justify-center cursor-pointer hover:border-primary/40 bg-card transition-colors overflow-hidden"
@@ -1304,38 +1304,38 @@ export default function MovieForm() {
                     {seoImage.preview ? (
                       <img src={seoImage.preview} alt="SEO" className="h-full w-full object-contain" />
                     ) : (
-                      <ImageIcon className="h-10 w-10 text-white/75" />
+                      <ImageIcon className="h-10 w-10 text-muted-foreground" />
                     )}
                   </div>
                 </div>
 
                 <div className="md:col-span-2 space-y-5">
                   <div className="space-y-1.5">
-                    <Label className="text-white text-sm font-medium">URL Slug</Label>
+                    <Label className="text-foreground text-sm font-medium">URL Slug</Label>
                     <Input
                       placeholder="e.g. avengers-endgame"
                       value={slug}
                       onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                      className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <Label className="text-white text-sm font-medium">Meta Title</Label>
-                      <span className="text-xs text-white/75">{metaTitle.length}/100</span>
+                      <Label className="text-foreground text-sm font-medium">Meta Title</Label>
+                      <span className="text-xs text-muted-foreground">{metaTitle.length}/100</span>
                     </div>
                     <Input
                       placeholder="Enter meta title"
                       value={metaTitle}
                       onChange={(e) => setMetaTitle(e.target.value.slice(0, 100))}
-                      className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-white text-sm font-medium">Tags / Keywords</Label>
+                <Label className="text-foreground text-sm font-medium">Tags / Keywords</Label>
                 <div
                   className="min-h-[42px] bg-muted border border-border rounded-lg px-3 py-2 flex flex-wrap gap-1.5 cursor-text"
                   onClick={() => document.getElementById("tag-input")?.focus()}
@@ -1354,22 +1354,22 @@ export default function MovieForm() {
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
                     placeholder={tags.length === 0 ? "Type and press Enter" : ""}
-                    className="flex-1 min-w-[140px] bg-transparent text-white text-sm outline-none placeholder:text-white/75"
+                    className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <Label className="text-white text-sm font-medium">Meta Description</Label>
-                  <span className="text-xs text-white/75">{metaDescription.length}/200</span>
+                  <Label className="text-foreground text-sm font-medium">Meta Description</Label>
+                  <span className="text-xs text-muted-foreground">{metaDescription.length}/200</span>
                 </div>
                 <Textarea
                   placeholder="Enter meta description"
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value.slice(0, 200))}
                   rows={4}
-                  className="bg-muted border-border text-white placeholder:text-white/75 rounded-lg text-sm resize-none"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
                 />
               </div>
             </div>

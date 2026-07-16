@@ -140,7 +140,7 @@ function ProfileSelectScreen({ mainUserName, profileLimitCount, userId, onSelect
   const canAddMore = profiles.length < profileLimitCount;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12 font-sans relative overflow-hidden">
+    <div className="dark min-h-screen bg-background text-foreground flex flex-col items-center justify-center px-6 py-12 font-sans relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-radial from-primary/10 via-primary/3 to-transparent rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-gradient-radial from-violet-500/8 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -459,7 +459,7 @@ export default function UserProfilePage() {
     const hasToken = typeof window !== "undefined" && !!localStorage.getItem("appAccessToken");
     if (hasToken) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>;
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-6 font-sans">
+      <div className="dark min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-6 p-6 font-sans">
         <div className="text-center">
           <h2 className="text-foreground font-black text-xl mb-2">You're not signed in</h2>
           <div className="flex items-center gap-3 justify-center mt-6">
@@ -487,7 +487,7 @@ export default function UserProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 pb-20 lg:pb-0">
+    <div className="dark min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 pb-20 lg:pb-0">
       
       {/* ── Top bar ── */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-border/40">

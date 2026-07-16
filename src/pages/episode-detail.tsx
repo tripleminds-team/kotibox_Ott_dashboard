@@ -36,7 +36,7 @@ function AdOverlay({ ad, onSkip }: { ad: any; onSkip: () => void }) {
         <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: ad.mediaUrl }} />
       )}
       <div className="absolute bottom-4 right-4 flex items-center gap-3">
-        <span className="text-white/80 text-xs bg-black/60 px-2 py-1 rounded">Advertisement</span>
+        <span className="text-foreground/80 text-xs bg-black/60 px-2 py-1 rounded">Advertisement</span>
         {countdown > 0 ? (
           <span className="bg-black/70 text-white text-xs px-3 py-1.5 rounded-lg font-bold border border-zinc-700">Skip in {countdown}s</span>
         ) : (
@@ -550,7 +550,7 @@ function VideoPlayer({
             onClick={(e) => { e.stopPropagation(); skip(-10); }}
             className="w-11 h-11 rounded-full bg-black/40 border border-white/10 flex items-center justify-center hover:bg-black/60 transition-all duration-200 active:scale-90"
           >
-            <RotateCcw className="w-4 h-4 text-white" />
+            <RotateCcw className="w-4 h-4 text-foreground" />
           </button>
 
           {/* Play/Pause */}
@@ -561,8 +561,8 @@ function VideoPlayer({
             }`}
           >
             {playing
-              ? <Pause className="w-6 h-6 text-white fill-white" />
-              : <Play  className="w-6 h-6 text-white fill-white ml-1" />
+              ? <Pause className="w-6 h-6 text-foreground fill-white" />
+              : <Play  className="w-6 h-6 text-foreground fill-white ml-1" />
             }
           </button>
 
@@ -571,7 +571,7 @@ function VideoPlayer({
             onClick={(e) => { e.stopPropagation(); skip(10); }}
             className="w-11 h-11 rounded-full bg-black/40 border border-white/10 flex items-center justify-center hover:bg-black/60 transition-all duration-200 active:scale-90"
           >
-            <RotateCw className="w-4 h-4 text-white" />
+            <RotateCw className="w-4 h-4 text-foreground" />
           </button>
         </div>
       </div>
@@ -604,7 +604,7 @@ function VideoPlayer({
         <div className="px-3 mt-1 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Play/Pause */}
-            <button onClick={togglePlay} className="text-white hover:text-red-500 transition-colors p-1">
+            <button onClick={togglePlay} className="text-foreground hover:text-red-500 transition-colors p-1">
               {playing ? <Pause className="w-[16px] h-[16px] fill-current" /> : <Play className="w-[16px] h-[16px] fill-current ml-px" />}
             </button>
 
@@ -612,7 +612,7 @@ function VideoPlayer({
             {onNext && (
               <button
                 onClick={onNext}
-                className="text-white hover:text-red-500 p-1 transition-colors"
+                className="text-foreground hover:text-red-500 p-1 transition-colors"
                 title="Next Episode (N)"
               >
                 <SkipForward className="w-[14px] h-[14px]" />
@@ -620,7 +620,7 @@ function VideoPlayer({
             )}
 
             {/* Timestamp */}
-            <span className="text-white text-[11px] tabular-nums select-none px-1">
+            <span className="text-foreground text-[11px] tabular-nums select-none px-1">
               {fmtTime(currentTime)} / {fmtTime(duration)}
             </span>
           </div>
@@ -629,7 +629,7 @@ function VideoPlayer({
           <div className="flex items-center gap-3">
             {/* Volume */}
             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-              <button onClick={toggleMute} className="text-white hover:text-red-500 transition-colors p-1" title="Mute (M)">
+              <button onClick={toggleMute} className="text-foreground hover:text-red-500 transition-colors p-1" title="Mute (M)">
                 <VolumeIcon className="w-[15px] h-[15px]" />
               </button>
               <div className="relative w-12 h-4 hidden sm:flex items-center">
@@ -650,22 +650,22 @@ function VideoPlayer({
                   setSettingsOpen(!settingsOpen);
                   setCurrentMenu("main");
                 }}
-                className={`text-white hover:text-red-500 transition-all duration-300 ${settingsOpen ? "text-red-500 rotate-45 scale-110" : ""}`}
+                className={`text-foreground hover:text-red-500 transition-all duration-300 ${settingsOpen ? "text-red-500 rotate-45 scale-110" : ""}`}
               >
                 <Settings className="w-[15px] h-[15px]" />
               </button>
 
               {settingsOpen && (
-                <div className="absolute bottom-8 right-0 z-50 bg-[#0d0d16]/95 border border-white/10 backdrop-blur-md rounded-xl p-2.5 w-48 text-xs text-white shadow-2xl flex flex-col gap-1">
+                <div className="absolute bottom-8 right-0 z-50 bg-[#0d0d16]/95 border border-white/10 backdrop-blur-md rounded-xl p-2.5 w-48 text-xs text-foreground shadow-2xl flex flex-col gap-1">
                   {currentMenu === "main" && (
                     <>
-                      <div className="text-[9px] uppercase font-bold text-white tracking-wider px-1.5 pb-1 border-b border-white/5">Settings</div>
+                      <div className="text-[9px] uppercase font-bold text-foreground tracking-wider px-1.5 pb-1 border-b border-white/5">Settings</div>
                       <button
                         onClick={() => setCurrentMenu("quality")}
                         className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                       >
                         <span>Quality</span>
-                        <span className="text-[10px] text-white/80 flex items-center gap-0.5">
+                        <span className="text-[10px] text-foreground/80 flex items-center gap-0.5">
                           {videoSettings && videoSettings.find(q => q.key === currentQuality)?.label || "Auto"}
                           <ChevronRight className="w-3 h-3" />
                         </span>
@@ -675,7 +675,7 @@ function VideoPlayer({
                         className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                       >
                         <span>Speed</span>
-                        <span className="text-[10px] text-white/80 flex items-center gap-0.5">
+                        <span className="text-[10px] text-foreground/80 flex items-center gap-0.5">
                           {speed === 1.0 ? "Normal" : `${speed}x`}
                           <ChevronRight className="w-3 h-3" />
                         </span>
@@ -687,11 +687,11 @@ function VideoPlayer({
                     <>
                       <button
                         onClick={() => setCurrentMenu("main")}
-                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-white/80 hover:text-white transition-colors mb-0.5 font-bold"
+                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-foreground/80 hover:text-foreground transition-colors mb-0.5 font-bold"
                       >
                         <ChevronLeft className="w-2.5 h-2.5" /> Back
                       </button>
-                      <div className="text-[9px] uppercase font-bold text-white tracking-wider px-1.5 pb-1 border-b border-white/5">Quality</div>
+                      <div className="text-[9px] uppercase font-bold text-foreground tracking-wider px-1.5 pb-1 border-b border-white/5">Quality</div>
                       <div className="max-h-32 overflow-y-auto mt-1 flex flex-col gap-0.5">
                         <button
                           onClick={() => {
@@ -701,7 +701,7 @@ function VideoPlayer({
                           }}
                           className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                         >
-                          <span className={currentQuality === "auto" ? "text-red-500 font-bold" : "text-white"}>Auto</span>
+                          <span className={currentQuality === "auto" ? "text-red-500 font-bold" : "text-foreground"}>Auto</span>
                           {currentQuality === "auto" && <Check className="w-3 h-3 text-red-500" />}
                         </button>
                         {videoSettings && videoSettings.filter(q => q.key !== 'auto').map((q) => (
@@ -714,8 +714,8 @@ function VideoPlayer({
                             className="flex items-start justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                           >
                             <div className="flex flex-col gap-0.5">
-                              <span className={currentQuality === q.key ? "text-red-500 font-bold text-[11px]" : "text-white text-[11px]"}>{q.label}</span>
-                              {q.description && <span className="text-white/80 text-[9px] leading-tight">{q.description}</span>}
+                              <span className={currentQuality === q.key ? "text-red-500 font-bold text-[11px]" : "text-foreground text-[11px]"}>{q.label}</span>
+                              {q.description && <span className="text-foreground/80 text-[9px] leading-tight">{q.description}</span>}
                             </div>
                             {currentQuality === q.key && <Check className="w-3 h-3 text-red-500 flex-shrink-0 mt-0.5" />}
                           </button>
@@ -729,11 +729,11 @@ function VideoPlayer({
                     <>
                       <button
                         onClick={() => setCurrentMenu("main")}
-                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-white/80 hover:text-white transition-colors mb-0.5 font-bold"
+                        className="flex items-center gap-0.5 w-full px-1.5 py-0.5 text-[10px] text-foreground/80 hover:text-foreground transition-colors mb-0.5 font-bold"
                       >
                         <ChevronLeft className="w-2.5 h-2.5" /> Back
                       </button>
-                      <div className="text-[9px] uppercase font-bold text-white tracking-wider px-1.5 pb-1 border-b border-white/5">Speed</div>
+                      <div className="text-[9px] uppercase font-bold text-foreground tracking-wider px-1.5 pb-1 border-b border-white/5">Speed</div>
                       <div className="flex flex-col gap-0.5 mt-1">
                         {[0.75, 1.0, 1.25, 1.5, 2.0].map((s) => (
                           <button
@@ -744,7 +744,7 @@ function VideoPlayer({
                             }}
                             className="flex items-center justify-between w-full px-1.5 py-1 rounded-lg hover:bg-white/10 text-left transition-colors"
                           >
-                            <span className={speed === s ? "text-red-500 font-bold" : "text-white"}>{s === 1.0 ? "Normal" : `${s}x`}</span>
+                            <span className={speed === s ? "text-red-500 font-bold" : "text-foreground"}>{s === 1.0 ? "Normal" : `${s}x`}</span>
                             {speed === s && <Check className="w-3 h-3 text-red-500" />}
                           </button>
                         ))}
@@ -756,7 +756,7 @@ function VideoPlayer({
             </div>
 
             {/* Fullscreen */}
-            <button onClick={toggleFullscreen} className="text-white hover:text-red-500 transition-colors p-1">
+            <button onClick={toggleFullscreen} className="text-foreground hover:text-red-500 transition-colors p-1">
               <FsIcon className="w-[15px] h-[15px]" />
             </button>
           </div>
@@ -809,14 +809,14 @@ function EpisodeGrid({
             key={t.label} onClick={() => setActiveTab(i)}
             className={[
               "text-xs sm:text-sm font-semibold px-3 py-2.5 border-b-2 -mb-px transition-colors whitespace-nowrap",
-              activeTab === i ? "text-[#E50914] border-[#E50914]" : "text-white border-transparent hover:text-white/75",
+              activeTab === i ? "text-[#E50914] border-[#E50914]" : "text-foreground border-transparent hover:text-muted-foreground",
             ].join(" ")}
           >
             {t.label}
           </button>
         ))}
         <div className="flex-1" />
-        <button className="flex items-center gap-0.5 text-white hover:text-white text-[11px] px-2 transition-colors whitespace-nowrap">
+        <button className="flex items-center gap-0.5 text-foreground hover:text-foreground text-[11px] px-2 transition-colors whitespace-nowrap">
           All Episodes <ChevronRight className="w-3 h-3" />
         </button>
       </div>
@@ -853,16 +853,16 @@ function EpisodeGrid({
               title={isLocked ? "Unlock to watch" : isTrailer ? "Watch Trailer" : `Episode ${n}`}
               className={[
                 "group relative h-11 flex items-center justify-center text-xs font-bold rounded-sm transition-all select-none",
-                isActive  ? "bg-[#E50914] text-white shadow-[0_0_12px_rgba(229,9,20,0.4)]"
+                isActive  ? "bg-[#E50914] text-foreground shadow-[0_0_12px_rgba(229,9,20,0.4)]"
                 : isLocked ? "bg-zinc-900 text-white/80 cursor-pointer hover:bg-zinc-800"
-                           : "bg-zinc-800 hover:bg-zinc-700 text-white hover:text-white",
+                           : "bg-zinc-800 hover:bg-zinc-700 text-foreground hover:text-foreground",
               ].join(" ")}
             >
               {isTrailer ? <span className="text-[9px] font-black leading-tight text-center px-0.5">Trailer</span> : n}
 
               {isLocked && (
                 <span className="absolute top-0.5 right-0.5 w-[14px] h-[14px] bg-[#E50914] rounded-full flex items-center justify-center">
-                  <Lock className="w-[7px] h-[7px] text-white" strokeWidth={3} />
+                  <Lock className="w-[7px] h-[7px] text-foreground" strokeWidth={3} />
                 </span>
               )}
 
@@ -878,12 +878,12 @@ function EpisodeGrid({
                   className={[
                     "absolute top-0.5 right-0.5 w-[14px] h-[14px] rounded-full flex items-center justify-center transition-all cursor-pointer",
                     isEpDownloaded
-                      ? "bg-emerald-500 text-white"
-                      : "bg-zinc-700/80 hover:bg-zinc-600 text-white opacity-0 group-hover:opacity-100 hover:scale-110",
+                      ? "bg-emerald-500 text-foreground"
+                      : "bg-zinc-700/80 hover:bg-zinc-600 text-foreground opacity-0 group-hover:opacity-100 hover:scale-110",
                   ].join(" ")}
                 >
                   {isEpDownloaded ? (
-                    <Check className="w-[8px] h-[8px] text-white font-bold" strokeWidth={4} />
+                    <Check className="w-[8px] h-[8px] text-foreground font-bold" strokeWidth={4} />
                   ) : (
                     <Download className="w-[8px] h-[8px]" strokeWidth={3} />
                   )}
@@ -973,19 +973,19 @@ function LockPopup({ episodeNum, onClose, onSubscribed }: { episodeNum: number; 
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 sticky top-0 bg-[#111111] z-10">
-          <span className="text-white font-extrabold text-sm flex items-center gap-1.5">
+          <span className="text-foreground font-extrabold text-sm flex items-center gap-1.5">
             <Crown className="w-4 h-4 text-amber-500 fill-amber-500" /> Choose Subscription Plan
           </span>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-white/80 hover:text-white transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-foreground/80 hover:text-foreground transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          <p className="text-white/80 text-xs text-center leading-relaxed">
+          <p className="text-foreground/80 text-xs text-center leading-relaxed">
             Episode {episodeNum} is locked. Subscribe to one of our premium plans to unlock the entire library!
           </p>
 
@@ -1005,15 +1005,15 @@ function LockPopup({ episodeNum, onClose, onSubscribed }: { episodeNum: number; 
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h4 className="text-amber-400 font-bold text-sm uppercase tracking-wide">{plan.name}</h4>
-                        <p className="text-white text-[11px] mt-0.5">{plan.description}</p>
+                        <p className="text-foreground text-[11px] mt-0.5">{plan.description}</p>
                       </div>
                       <div className="text-right">
-                        <span className="text-white font-black text-lg">₹{plan.totalPrice || plan.price}</span>
-                        <span className="text-white/80 text-[10px] block">/ {plan.duration || 'month'}</span>
+                        <span className="text-foreground font-black text-lg">₹{plan.totalPrice || plan.price}</span>
+                        <span className="text-foreground/80 text-[10px] block">/ {plan.duration || 'month'}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800 text-[11px] text-white/80">
-                      <span>Valid: <strong className="text-white">{plan.durationValue} {plan.duration}</strong></span>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800 text-[11px] text-foreground/80">
+                      <span>Valid: <strong className="text-foreground">{plan.durationValue} {plan.duration}</strong></span>
                       {plan.discount > 0 && <span className="text-amber-400 font-bold">{plan.discount}% off</span>}
                       <button
                         onClick={() => handleSubscribe(plan)}
@@ -1332,7 +1332,7 @@ export default function EpisodeDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white">
+    <div className="min-h-screen bg-[#09090b] text-foreground">
       <PublicHeader
         activeTab={
           showData?.contentType === "movie"
@@ -1351,14 +1351,14 @@ export default function EpisodeDetailPage() {
         user={user}
       />
 
-      <main className="pt-[68px] pb-16 bg-[#09090b] text-white">
+      <main className="pt-[68px] pb-16 bg-[#09090b] text-foreground">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Back button row */}
           <div className="pt-4 pb-4">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-semibold transition-colors"
+              className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground text-sm font-semibold transition-colors"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
@@ -1398,27 +1398,27 @@ export default function EpisodeDetailPage() {
             {/* 1. Main Info Block */}
             <div className="bg-zinc-900/20 border border-zinc-900/50 rounded-2xl p-5 sm:p-6 shadow-md">
               {/* Breadcrumb */}
-              <nav className="flex items-center flex-wrap gap-1 text-xs text-white/75 mb-3 select-none">
-                <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-white transition-colors">
+              <nav className="flex items-center flex-wrap gap-1 text-xs text-muted-foreground mb-3 select-none">
+                <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-foreground transition-colors">
                   <Home className="w-3.5 h-3.5" /> Home
                 </button>
                 <ChevronRight className="w-3 h-3 flex-shrink-0" />
-                <button onClick={() => window.history.back()} className="hover:text-white transition-colors truncate max-w-[180px]">
+                <button onClick={() => window.history.back()} className="hover:text-foreground transition-colors truncate max-w-[180px]">
                   {title}
                 </button>
                 <ChevronRight className="w-3 h-3 flex-shrink-0" />
-                <span className="text-white/70">{epLabel}</span>
+                <span className="text-foreground/70">{epLabel}</span>
               </nav>
 
               {/* Title */}
-              <h1 className="text-white font-black text-xl sm:text-2xl lg:text-3xl leading-tight mb-4">
+              <h1 className="text-foreground font-black text-xl sm:text-2xl lg:text-3xl leading-tight mb-4">
                 {epTitle}
               </h1>
 
               {/* Plot */}
               <div className="mb-5">
-                <h2 className="text-white font-bold text-sm mb-2">{plotTitle}</h2>
-                <p className="text-white/80 text-sm leading-relaxed">
+                <h2 className="text-foreground font-bold text-sm mb-2">{plotTitle}</h2>
+                <p className="text-foreground/80 text-sm leading-relaxed">
                   {expanded ? detail.description : `${detail.description.slice(0, 130)}...`}
                   {" "}
                   <button
@@ -1433,7 +1433,7 @@ export default function EpisodeDetailPage() {
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-5">
                 {detail.tags.map(tag => (
-                  <button key={tag} className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-white/75 hover:text-white hover:border-zinc-500 transition-all bg-zinc-950/30">
+                  <button key={tag} className="px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-muted-foreground hover:text-foreground hover:border-zinc-500 transition-all bg-zinc-950/30">
                     {tag}
                   </button>
                 ))}
@@ -1456,7 +1456,7 @@ export default function EpisodeDetailPage() {
                   }}
                   disabled={toggleLikeMutation.isPending}
                   className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 ${
-                    isLiked ? "text-[#E50914]" : "text-white/80 hover:text-white"
+                    isLiked ? "text-[#E50914]" : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   {toggleLikeMutation.isPending ? (
@@ -1484,7 +1484,7 @@ export default function EpisodeDetailPage() {
                   }}
                   disabled={toggleWishlistMutation.isPending}
                   className={`flex flex-col items-center gap-1 px-4 py-2 transition-all active:scale-95 ${
-                    inWatchlist ? "text-[#E50914]" : "text-white/80 hover:text-white"
+                    inWatchlist ? "text-[#E50914]" : "text-foreground/80 hover:text-foreground"
                   }`}
                 >
                   {toggleWishlistMutation.isPending ? (
@@ -1501,7 +1501,7 @@ export default function EpisodeDetailPage() {
                 <button
                   onClick={() => handleDownloadToggle(currentEp)}
                   disabled={requestDownloadMutation.isPending || removeDownloadMutation.isPending}
-                  className="flex flex-col items-center gap-1 px-4 py-2 text-white/80 hover:text-white transition-all active:scale-95 disabled:opacity-70"
+                  className="flex flex-col items-center gap-1 px-4 py-2 text-foreground/80 hover:text-foreground transition-all active:scale-95 disabled:opacity-70"
                 >
                   {requestDownloadMutation.isPending || removeDownloadMutation.isPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -1519,7 +1519,7 @@ export default function EpisodeDetailPage() {
               {/* Cast & Crew Section */}
               {((showData?.cast && showData.cast.length > 0) || (showData?.crew && showData.crew.length > 0) || (showData?.crewMembers && showData.crewMembers.length > 0)) && (
                 <div className="border-t border-zinc-900/80 pt-5 mt-5">
-                  <h3 className="text-white font-bold text-sm mb-3">Cast & Crew</h3>
+                  <h3 className="text-foreground font-bold text-sm mb-3">Cast & Crew</h3>
                   <div
                     className="flex gap-5 overflow-x-auto pb-2"
                     style={{ scrollbarWidth: "none" } as React.CSSProperties}
@@ -1536,8 +1536,8 @@ export default function EpisodeDetailPage() {
                             }}
                           />
                         </div>
-                        <h4 className="text-white font-semibold text-[10px] sm:text-xs mt-2 line-clamp-1 group-hover:text-white transition-colors">{c.name}</h4>
-                        <p className="text-white/80 text-[9px] sm:text-[10px] mt-0.5 line-clamp-1 font-semibold">{c.character || c.role || 'Cast'}</p>
+                        <h4 className="text-foreground font-semibold text-[10px] sm:text-xs mt-2 line-clamp-1 group-hover:text-foreground transition-colors">{c.name}</h4>
+                        <p className="text-foreground/80 text-[9px] sm:text-[10px] mt-0.5 line-clamp-1 font-semibold">{c.character || c.role || 'Cast'}</p>
                       </div>
                     ))}
                   </div>
@@ -1551,13 +1551,13 @@ export default function EpisodeDetailPage() {
                 
                 {/* Header with Season Dropdown */}
                 <div className="flex items-center justify-between gap-4 mb-6 border-b border-zinc-900/80 pb-4">
-                  <h3 className="text-white font-bold text-base sm:text-lg">Episodes</h3>
+                  <h3 className="text-foreground font-bold text-base sm:text-lg">Episodes</h3>
                   
                   {uniqueSeasons.length > 1 && (
                     <div className="relative">
                       <button
                         onClick={() => setSeasonDropdownOpen(o => !o)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white rounded-lg text-xs font-bold hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-200"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-foreground rounded-lg text-xs font-bold hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-200"
                       >
                         <span>Season {selectedSeason}</span>
                         <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${seasonDropdownOpen ? "rotate-90" : ""}`} />
@@ -1574,7 +1574,7 @@ export default function EpisodeDetailPage() {
                               className={`w-full px-3 py-2 text-left text-xs font-bold transition-colors ${
                                 selectedSeason === seasonNum
                                   ? "text-red-500 bg-red-500/10"
-                                  : "text-white hover:text-white hover:bg-zinc-800"
+                                  : "text-foreground hover:text-foreground hover:bg-zinc-800"
                               }`}
                             >
                                 Season {seasonNum}
@@ -1618,11 +1618,11 @@ export default function EpisodeDetailPage() {
                             <div className="absolute inset-0 bg-black/45 group-hover/ep:bg-black/30 transition-all flex items-center justify-center">
                               {isLocked ? (
                                 <div className="w-8 h-8 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg">
-                                  <Lock className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                                  <Lock className="w-3.5 h-3.5 text-foreground" strokeWidth={3} />
                                 </div>
                               ) : (
                                 <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shadow-lg transform scale-90 group-hover/ep:scale-100 transition-all opacity-0 group-hover/ep:opacity-100">
-                                  <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+                                  <Play className="w-3.5 h-3.5 text-foreground fill-white ml-0.5" />
                                 </div>
                               )}
                             </div>
@@ -1635,7 +1635,7 @@ export default function EpisodeDetailPage() {
                                 <h4
                                   onClick={() => isLocked ? handleLocked(ep.globalIndex) : goToEpisode(ep.globalIndex)}
                                   className={`font-bold text-xs sm:text-sm cursor-pointer line-clamp-1 transition-colors ${
-                                    isActive ? "text-red-500" : "text-white group-hover/ep:text-red-500"
+                                    isActive ? "text-red-500" : "text-foreground group-hover/ep:text-red-500"
                                   }`}
                                 >
                                   {ep.episode || ep.episodeNumber || ep.number}. {ep.title}
@@ -1650,7 +1650,7 @@ export default function EpisodeDetailPage() {
                                     className={`p-1.5 rounded-full transition-all flex-shrink-0 ${
                                       isEpDownloaded
                                         ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                                        : "bg-zinc-800 text-white/80 hover:bg-zinc-700 hover:text-white"
+                                        : "bg-zinc-800 text-foreground/80 hover:bg-zinc-700 hover:text-foreground"
                                     }`}
                                   >
                                     {isEpDownloaded ? (
@@ -1661,10 +1661,10 @@ export default function EpisodeDetailPage() {
                                   </button>
                                 )}
                               </div>
-                              <p className="text-[10px] sm:text-xs text-white/70 mt-0.5 font-semibold">
+                              <p className="text-[10px] sm:text-xs text-foreground/70 mt-0.5 font-semibold">
                                 {ep.duration ? `${Math.round(ep.duration / 60)} min` : "45 min"}
                               </p>
-                              <p className="text-[11px] sm:text-xs text-white/75 mt-1 line-clamp-2 leading-relaxed">
+                              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                                 {ep.description || "No description available."}
                               </p>
                             </div>
@@ -1682,7 +1682,7 @@ export default function EpisodeDetailPage() {
             <div className="px-4 sm:px-6 lg:px-10 mt-12 border-t border-zinc-900 pt-10">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ background: "#e50914" }} />
-                <h2 className="text-white font-black text-lg sm:text-xl tracking-tight">More Like This</h2>
+                <h2 className="text-foreground font-black text-lg sm:text-xl tracking-tight">More Like This</h2>
                 <div className="flex-1" />
                 {detail.tags.length > 0 && (
                   <button
@@ -1691,7 +1691,7 @@ export default function EpisodeDetailPage() {
                       const contentType = showData?.contentType === 'movie' ? 'movie' : 'show';
                       window.open(`/browse/${contentType}?genre=${encodeURIComponent(firstGenre)}`, "_blank");
                     }}
-                    className="text-white hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
+                    className="text-foreground hover:text-primary text-xs transition-colors flex items-center gap-0.5 font-semibold"
                   >
                     See all <ChevronRight className="w-3.5 h-3.5" />
                   </button>

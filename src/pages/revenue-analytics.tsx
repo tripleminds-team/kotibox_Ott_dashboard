@@ -270,7 +270,7 @@ export default function RevenueAnalyticsPage() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold text-foreground">Revenue Over Time</CardTitle>
             <Select value={revPeriod} onValueChange={setRevPeriod}>
-              <SelectTrigger className="w-24 bg-input border-border text-foreground h-8 rounded-lg text-xs">
+              <SelectTrigger className="w-24 bg-background border-border text-foreground h-8 rounded-lg text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border text-foreground">

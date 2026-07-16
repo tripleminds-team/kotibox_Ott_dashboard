@@ -282,8 +282,8 @@ export default function InfluencersPage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">Role-Based Access</h1>
-              <p className="text-sm text-white/75 mt-1">Manage team members and their permissions</p>
+              <h1 className="text-2xl font-bold text-foreground">Role-Based Access</h1>
+              <p className="text-sm text-muted-foreground mt-1">Manage team members and their permissions</p>
             </div>
             <Button
               onClick={handleCreateInfluencer}
@@ -300,19 +300,19 @@ export default function InfluencersPage() {
       <div className="container mx-auto px-6 py-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/75" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-muted border-border text-white"
+              className="pl-10 bg-muted border-border text-foreground"
             />
           </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full md:w-48 bg-muted border-border text-white">
+            <SelectTrigger className="w-full md:w-48 bg-muted border-border text-foreground">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="superadmin">Super Admin</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
@@ -321,10 +321,10 @@ export default function InfluencersPage() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-48 bg-muted border-border text-white">
+            <SelectTrigger className="w-full md:w-48 bg-muted border-border text-foreground">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-white">
+            <SelectContent className="bg-popover border-border text-foreground">
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
@@ -340,19 +340,19 @@ export default function InfluencersPage() {
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/75 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/75 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/75 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/75 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-white/75 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -360,13 +360,13 @@ export default function InfluencersPage() {
               <tbody className="divide-y divide-border">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-white/75">
+                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                       Loading...
                     </td>
                   </tr>
                 ) : influencers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-white/75">
+                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                       No users found
                     </td>
                   </tr>
@@ -379,8 +379,8 @@ export default function InfluencersPage() {
                             <UserIcon className="h-5 w-5 text-red-600" />
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-white">{influencer.name}</div>
-                            <div className="text-sm text-white/75">{influencer.email}</div>
+                            <div className="text-sm font-medium text-foreground">{influencer.name}</div>
+                            <div className="text-sm text-muted-foreground">{influencer.email}</div>
                           </div>
                         </div>
                       </td>
@@ -409,7 +409,7 @@ export default function InfluencersPage() {
                           )}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/75">
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
                         {new Date(influencer.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -418,7 +418,7 @@ export default function InfluencersPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEditInfluencer(influencer)}
-                            className="text-white hover:text-primary"
+                            className="text-foreground hover:text-primary"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -426,7 +426,7 @@ export default function InfluencersPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleResetPassword(influencer)}
-                            className="text-white hover:text-primary"
+                            className="text-foreground hover:text-primary"
                           >
                             <Mail className="h-4 w-4" />
                           </Button>
@@ -434,7 +434,7 @@ export default function InfluencersPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleToggleStatus(influencer)}
-                            className="text-white hover:text-primary"
+                            className="text-foreground hover:text-primary"
                           >
                             {influencer.isActive ? (
                               <Lock className="h-4 w-4" />
@@ -446,7 +446,7 @@ export default function InfluencersPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteInfluencer(influencer)}
-                            className="text-white hover:text-primary"
+                            className="text-foreground hover:text-primary"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -466,49 +466,49 @@ export default function InfluencersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border">
-              <h2 className="text-xl font-semibold text-white">Add New User</h2>
+              <h2 className="text-xl font-semibold text-foreground">Add New User</h2>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Name *</Label>
+                  <Label className="text-foreground">Name *</Label>
                   <Input
                     placeholder="Full name"
-                    className="bg-muted border-border text-white"
+                    className="bg-muted border-border text-foreground"
                     value={createForm.name}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white">Email *</Label>
+                  <Label className="text-foreground">Email *</Label>
                   <Input
                     type="email"
                     placeholder="email@example.com"
-                    className="bg-muted border-border text-white"
+                    className="bg-muted border-border text-foreground"
                     value={createForm.email}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Phone</Label>
+                <Label className="text-foreground">Phone</Label>
                 <Input
                   placeholder="+1234567890"
-                  className="bg-muted border-border text-white"
+                  className="bg-muted border-border text-foreground"
                   value={createForm.phone}
                   onChange={(e) => setCreateForm(prev => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Role *</Label>
+                <Label className="text-foreground">Role *</Label>
                 <Select
                   value={createForm.role}
                   onValueChange={(value) => setCreateForm(prev => ({ ...prev, role: value }))}
                 >
-                  <SelectTrigger className="bg-muted border-border text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="influencer">Influencer</SelectItem>
                     <SelectItem value="moderator">Moderator</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
@@ -517,12 +517,12 @@ export default function InfluencersPage() {
               </div>
 
               <div className="space-y-4 pt-4 border-t border-border">
-                <h3 className="font-semibold text-white">Module Permissions</h3>
+                <h3 className="font-semibold text-foreground">Module Permissions</h3>
 
                 {Object.keys(defaultModulePermissions).map((module) => (
                   <div key={module} className="space-y-2 p-4 rounded-lg border border-border bg-muted/20">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-white capitalize">{module}</span>
+                      <span className="font-medium text-foreground capitalize">{module}</span>
                     </div>
                     <div className="grid grid-cols-4 gap-4">
                       {module === 'mediaLibrary' ? (
@@ -542,7 +542,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-view`} className="text-sm text-white/75">View</Label>
+                            <Label htmlFor={`${module}-view`} className="text-sm text-muted-foreground">View</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -559,7 +559,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-upload`} className="text-sm text-white/75">Upload</Label>
+                            <Label htmlFor={`${module}-upload`} className="text-sm text-muted-foreground">Upload</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -576,7 +576,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-delete`} className="text-sm text-white/75">Delete</Label>
+                            <Label htmlFor={`${module}-delete`} className="text-sm text-muted-foreground">Delete</Label>
                           </div>
                         </>
                       ) : (
@@ -596,7 +596,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-view`} className="text-sm text-white/75">View</Label>
+                            <Label htmlFor={`${module}-view`} className="text-sm text-muted-foreground">View</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -613,7 +613,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-create`} className="text-sm text-white/75">Create</Label>
+                            <Label htmlFor={`${module}-create`} className="text-sm text-muted-foreground">Create</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -630,7 +630,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-edit`} className="text-sm text-white/75">Edit</Label>
+                            <Label htmlFor={`${module}-edit`} className="text-sm text-muted-foreground">Edit</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -647,7 +647,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-delete`} className="text-sm text-white/75">Delete</Label>
+                            <Label htmlFor={`${module}-delete`} className="text-sm text-muted-foreground">Delete</Label>
                           </div>
                         </>
                       )}
@@ -660,7 +660,7 @@ export default function InfluencersPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="border-border text-white hover:bg-muted"
+                className="border-border text-foreground hover:bg-muted"
               >
                 Cancel
               </Button>
@@ -682,48 +682,48 @@ export default function InfluencersPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border">
-              <h2 className="text-xl font-semibold text-white">Edit User</h2>
+              <h2 className="text-xl font-semibold text-foreground">Edit User</h2>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Name *</Label>
+                  <Label className="text-foreground">Name *</Label>
                   <Input
                     placeholder="Full name"
-                    className="bg-muted border-border text-white"
+                    className="bg-muted border-border text-foreground"
                     value={editForm.name}
                     onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white">Email *</Label>
+                  <Label className="text-foreground">Email *</Label>
                   <Input
                     type="email"
                     placeholder="email@example.com"
-                    className="bg-muted/50 text-white/75 border-border"
+                    className="bg-muted/50 text-muted-foreground border-border"
                     value={editForm.email} readOnly
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Phone</Label>
+                <Label className="text-foreground">Phone</Label>
                 <Input
                   placeholder="+1234567890"
-                  className="bg-muted border-border text-white"
+                  className="bg-muted border-border text-foreground"
                   value={editForm.phone}
                   onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-white">Role *</Label>
+                <Label className="text-foreground">Role *</Label>
                 <Select
                   value={editForm.role}
                   onValueChange={(value) => setEditForm(prev => ({ ...prev, role: value }))}
                 >
-                  <SelectTrigger className="bg-muted border-border text-white">
+                  <SelectTrigger className="bg-muted border-border text-foreground">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border text-white">
+                  <SelectContent className="bg-popover border-border text-foreground">
                     <SelectItem value="influencer">Influencer</SelectItem>
                     <SelectItem value="moderator">Moderator</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
@@ -732,12 +732,12 @@ export default function InfluencersPage() {
               </div>
 
               <div className="space-y-4 pt-4 border-t border-border">
-                <h3 className="font-semibold text-white">Module Permissions</h3>
+                <h3 className="font-semibold text-foreground">Module Permissions</h3>
 
                 {Object.keys(defaultModulePermissions).map((module) => (
                   <div key={module} className="space-y-2 p-4 rounded-lg border border-border bg-muted/20">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-white capitalize">{module}</span>
+                      <span className="font-medium text-foreground capitalize">{module}</span>
                     </div>
                     <div className="grid grid-cols-4 gap-4">
                       {module === 'mediaLibrary' ? (
@@ -757,7 +757,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-view`} className="text-sm text-white/75">View</Label>
+                            <Label htmlFor={`${module}-view`} className="text-sm text-muted-foreground">View</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -774,7 +774,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-upload`} className="text-sm text-white/75">Upload</Label>
+                            <Label htmlFor={`${module}-upload`} className="text-sm text-muted-foreground">Upload</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -791,7 +791,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-delete`} className="text-sm text-white/75">Delete</Label>
+                            <Label htmlFor={`${module}-delete`} className="text-sm text-muted-foreground">Delete</Label>
                           </div>
                         </>
                       ) : (
@@ -811,7 +811,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-view`} className="text-sm text-white/75">View</Label>
+                            <Label htmlFor={`${module}-view`} className="text-sm text-muted-foreground">View</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -828,7 +828,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-create`} className="text-sm text-white/75">Create</Label>
+                            <Label htmlFor={`${module}-create`} className="text-sm text-muted-foreground">Create</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -845,7 +845,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-edit`} className="text-sm text-white/75">Edit</Label>
+                            <Label htmlFor={`${module}-edit`} className="text-sm text-muted-foreground">Edit</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Switch
@@ -862,7 +862,7 @@ export default function InfluencersPage() {
                                 }
                               }))}
                             />
-                            <Label htmlFor={`${module}-delete`} className="text-sm text-white/75">Delete</Label>
+                            <Label htmlFor={`${module}-delete`} className="text-sm text-muted-foreground">Delete</Label>
                           </div>
                         </>
                       )}
@@ -875,7 +875,7 @@ export default function InfluencersPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsEditModalOpen(false)}
-                className="border-border text-white hover:bg-muted"
+                className="border-border text-foreground hover:bg-muted"
               >
                 Cancel
               </Button>
@@ -902,8 +902,8 @@ export default function InfluencersPage() {
                   <KeyRound className="h-5 w-5 text-green-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-white">Login Credentials</h2>
-                  <p className="text-sm text-white/75">Share these with {newCredentials.name}</p>
+                  <h2 className="text-xl font-semibold text-foreground">Login Credentials</h2>
+                  <p className="text-sm text-muted-foreground">Share these with {newCredentials.name}</p>
                 </div>
               </div>
             </div>
@@ -919,11 +919,11 @@ export default function InfluencersPage() {
 
               {/* Email / Login ID */}
               <div className="space-y-2">
-                <Label className="text-white text-sm font-medium">Login ID (Email)</Label>
+                <Label className="text-foreground text-sm font-medium">Login ID (Email)</Label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-muted border border-border">
-                    <Mail className="h-4 w-4 text-white/75" />
-                    <span className="text-white font-medium">{newCredentials.email}</span>
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-foreground font-medium">{newCredentials.email}</span>
                   </div>
                   <Button
                     variant="outline"
@@ -938,11 +938,11 @@ export default function InfluencersPage() {
 
               {/* Password */}
               <div className="space-y-2">
-                <Label className="text-white text-sm font-medium">Password</Label>
+                <Label className="text-foreground text-sm font-medium">Password</Label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-muted border border-border">
-                    <KeyRound className="h-4 w-4 text-white/75" />
-                    <span className="text-white font-mono font-medium">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-foreground font-mono font-medium">
                       {showPassword ? newCredentials.password : '•'.repeat(newCredentials.password.length)}
                     </span>
                   </div>
@@ -968,7 +968,7 @@ export default function InfluencersPage() {
               {/* Copy All */}
               <Button
                 variant="outline"
-                className="w-full border-border text-white hover:bg-muted"
+                className="w-full border-border text-foreground hover:bg-muted"
                 onClick={() => handleCopy(
                   `Login ID: ${newCredentials.email}\nPassword: ${newCredentials.password}`,
                   'all'

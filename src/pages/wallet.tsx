@@ -336,7 +336,7 @@ export default function WalletPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div className="dark min-h-screen bg-background text-foreground font-sans">
       
       {/* ═════════════════════════════════════════════════════════════════════
           HEADER — Web-friendly top bar

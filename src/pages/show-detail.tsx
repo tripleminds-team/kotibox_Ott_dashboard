@@ -219,7 +219,7 @@ export default function ShowDetail() {
           <h1 className="text-3xl font-bold tracking-tight">
             {showData?.content?.title || "Show Details"}
           </h1>
-          <p className="text-white/75 mt-1">
+          <p className="text-muted-foreground mt-1">
             {episodes.length} {episodes.length === 1 ? "episode" : "episodes"}
           </p>
         </div>
@@ -259,7 +259,7 @@ export default function ShowDetail() {
           </CardHeader>
           <CardContent>
             {filteredEpisodes.length === 0 ? (
-              <div className="py-12 text-center text-white/75">No episodes yet</div>
+              <div className="py-12 text-center text-muted-foreground">No episodes yet</div>
             ) : (
               <>
                 <Table>
@@ -290,7 +290,7 @@ export default function ShowDetail() {
                             <div>
                               <div>{episode.title}</div>
                               {episode.description && (
-                                <div className="text-xs text-white/75 truncate max-w-xs">
+                                <div className="text-xs text-muted-foreground truncate max-w-xs">
                                   {episode.description}
                                 </div>
                               )}
@@ -363,7 +363,7 @@ export default function ShowDetail() {
         <Card className="rounded-lg shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Film className="h-5 w-5 text-white/75" />
+              <Film className="h-5 w-5 text-muted-foreground" />
               <CardTitle>Add More Episodes</CardTitle>
             </div>
             <CardDescription>Upload another video to add more episodes</CardDescription>
@@ -407,7 +407,7 @@ export default function ShowDetail() {
                 <div className="flex items-center justify-between rounded-md border border-border p-3">
                   <div>
                     <Label htmlFor="lockEpisodes">Lock Episodes</Label>
-                    <p className="text-xs text-white/75">Lock episodes after free ones</p>
+                    <p className="text-xs text-muted-foreground">Lock episodes after free ones</p>
                   </div>
                   <input
                     type="checkbox"
@@ -457,7 +457,7 @@ export default function ShowDetail() {
                       />
                       {videoFile && (
                         <div className="flex items-center gap-3">
-                          <span className="text-sm text-white/75">{videoFile.name} ({formatBytes(videoFile.size)})</span>
+                          <span className="text-sm text-muted-foreground">{videoFile.name} ({formatBytes(videoFile.size)})</span>
                           <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
                             <X className="h-4 w-4" />
                           </Button>

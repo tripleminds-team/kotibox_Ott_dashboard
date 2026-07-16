@@ -23,8 +23,8 @@ import {
 const DEVICE_OPTIONS = ["mobile", "tablet", "tv", "desktop"];
 
 const inputCls =
-  "bg-card border-border text-white placeholder:text-white/60 focus:border-primary h-11 rounded-lg";
-const labelCls = "text-white text-sm font-medium";
+  "bg-card border-border text-foreground placeholder:text-muted-foreground/80 focus:border-primary h-11 rounded-lg";
+const labelCls = "text-foreground text-sm font-medium";
 
 export default function PlanLimitFormPage() {
   const [, setLocation] = useLocation();
@@ -144,17 +144,17 @@ export default function PlanLimitFormPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
         <span
-          className="text-white/75 hover:text-white cursor-pointer transition-colors"
+          className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           onClick={() => setLocation("/plan-limits")}
         >
           Plan Limits
         </span>
         <span>/</span>
-        <span className="text-white font-medium">{isEdit ? "Edit Plan Limit" : "New Plan Limit"}</span>
+        <span className="text-foreground font-medium">{isEdit ? "Edit Plan Limit" : "New Plan Limit"}</span>
       </div>
 
       {/* Back */}
@@ -174,12 +174,12 @@ export default function PlanLimitFormPage() {
             Plan <span className="text-primary">*</span>
           </Label>
           <Select value={form.planId} onValueChange={(v) => set("planId", v)}>
-            <SelectTrigger className="bg-card border-border text-white h-11 rounded-lg">
+            <SelectTrigger className="bg-card border-border text-foreground h-11 rounded-lg">
               <SelectValue placeholder="Select plan">
                 {selectedPlan?.name}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-muted border-border text-white">
+            <SelectContent className="bg-muted border-border text-foreground">
               {plans.map((p: any) => (
                 <SelectItem key={p.id || p._id} value={String(p.id || p._id)}>
                   {p.name}
@@ -192,12 +192,12 @@ export default function PlanLimitFormPage() {
 
       {/* Plan Limits */}
       <div className="rounded-xl border border-border bg-card/50 p-6">
-        <h3 className="text-base font-semibold text-white mb-5">Plan Limits</h3>
+        <h3 className="text-base font-semibold text-foreground mb-5">Plan Limits</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Ads */}
           <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-            <span className="text-sm text-white font-medium">Ads</span>
+            <span className="text-sm text-foreground font-medium">Ads</span>
             <Switch
               checked={form.ads}
               onCheckedChange={(v) => set("ads", v)}
@@ -208,7 +208,7 @@ export default function PlanLimitFormPage() {
           {/* Device Limit with count */}
           <div className="space-y-2">
             <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-white font-medium">Device Limit</span>
+              <span className="text-sm text-foreground font-medium">Device Limit</span>
               <Switch
                 checked={form.deviceLimit}
                 onCheckedChange={(v) => set("deviceLimit", v)}
@@ -222,14 +222,14 @@ export default function PlanLimitFormPage() {
                 value={form.deviceLimitCount}
                 onChange={(e) => set("deviceLimitCount", e.target.value)}
                 placeholder="Number of devices"
-                className="bg-card border-border text-white focus:border-primary h-10 rounded-lg text-sm"
+                className="bg-card border-border text-foreground focus:border-primary h-10 rounded-lg text-sm"
               />
             )}
           </div>
 
           {/* Download Status */}
           <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-            <span className="text-sm text-white font-medium">Download Status</span>
+            <span className="text-sm text-foreground font-medium">Download Status</span>
             <Switch
               checked={form.downloadStatus}
               onCheckedChange={(v) => set("downloadStatus", v)}
@@ -240,7 +240,7 @@ export default function PlanLimitFormPage() {
           {/* Supported Device Type with options */}
           <div className="space-y-2 md:col-span-2">
             <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-white font-medium">Supported Device Type</span>
+              <span className="text-sm text-foreground font-medium">Supported Device Type</span>
               <Switch
                 checked={form.supportedDeviceType}
                 onCheckedChange={(v) => set("supportedDeviceType", v)}
@@ -257,7 +257,7 @@ export default function PlanLimitFormPage() {
                     className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
                       form.supportedDevices.includes(device)
                         ? "border-primary/60 bg-primary/20 text-red-300"
-                        : "border-border bg-card text-white/75 hover:border-border"
+                        : "border-border bg-card text-muted-foreground hover:border-border"
                     }`}
                   >
                     {device}
@@ -270,7 +270,7 @@ export default function PlanLimitFormPage() {
           {/* Profile Limit with count */}
           <div className="space-y-2">
             <div className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-white font-medium">Profile Limit</span>
+              <span className="text-sm text-foreground font-medium">Profile Limit</span>
               <Switch
                 checked={form.profileLimit}
                 onCheckedChange={(v) => set("profileLimit", v)}
@@ -284,7 +284,7 @@ export default function PlanLimitFormPage() {
                 value={form.profileLimitCount}
                 onChange={(e) => set("profileLimitCount", e.target.value)}
                 placeholder="Number of profiles"
-                className="bg-card border-border text-white focus:border-primary h-10 rounded-lg text-sm"
+                className="bg-card border-border text-foreground focus:border-primary h-10 rounded-lg text-sm"
               />
             )}
           </div>
@@ -293,7 +293,7 @@ export default function PlanLimitFormPage() {
 
       {/* Download Quality Options */}
       <div className="rounded-xl border border-border bg-card/50 p-6">
-        <h3 className="text-base font-semibold text-white mb-5">Download Quality Option</h3>
+        <h3 className="text-base font-semibold text-foreground mb-5">Download Quality Option</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
             { key: "q480p" as const, label: "480p" },
@@ -307,7 +307,7 @@ export default function PlanLimitFormPage() {
               key={key}
               className="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-card"
             >
-              <span className="text-sm text-white font-medium">{label}</span>
+              <span className="text-sm text-foreground font-medium">{label}</span>
               <Switch
                 checked={form[key]}
                 onCheckedChange={(v) => set(key, v)}

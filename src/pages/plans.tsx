@@ -122,20 +122,20 @@ export default function PlansPage() {
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Subscription Plans</span>
+        <span className="text-foreground font-medium">Subscription Plans</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Bulk action */}
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-white">
+          <SelectContent className="bg-popover border-border text-foreground">
             <SelectItem value="delete">Delete Selected</SelectItem>
           </SelectContent>
         </Select>
@@ -148,10 +148,10 @@ export default function PlansPage() {
 
         {/* Status filter */}
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-          <SelectTrigger className="w-28 bg-card border-border text-white h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-white">
+          <SelectContent className="bg-popover border-border text-foreground">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
@@ -160,11 +160,11 @@ export default function PlansPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search plans..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg text-sm" />
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg text-sm" />
         </div>
 
         {/* New button */}
@@ -184,27 +184,27 @@ export default function PlansPage() {
                   <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll}
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                 </TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Name</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Duration</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Level</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Price</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Discount</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Total</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide min-w-[160px]">Description</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
-                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide text-right pr-5">Action</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Name</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Duration</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Level</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Price</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Discount</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Total</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide min-w-[160px]">Description</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-foreground/70 font-semibold text-xs uppercase tracking-wide text-right pr-5">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow className="border-border">
-                  <TableCell colSpan={10} className="text-center text-white/65 py-14">
+                  <TableCell colSpan={10} className="text-center text-foreground/65 py-14">
                     Loading plans...
                   </TableCell>
                 </TableRow>
               ) : paginated.length === 0 ? (
                 <TableRow className="border-border">
-                  <TableCell colSpan={10} className="text-center text-white/65 py-14">
+                  <TableCell colSpan={10} className="text-center text-foreground/65 py-14">
                     {searchQuery || statusFilter !== "all"
                       ? "No plans match your filters"
                       : "No plans yet. Click New Plan to create one."}
@@ -219,17 +219,17 @@ export default function PlansPage() {
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                     </TableCell>
                     <TableCell>
-                      <span className="font-semibold text-white text-sm">{plan.name}</span>
+                      <span className="font-semibold text-foreground text-sm">{plan.name}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="px-2.5 py-1 rounded-full bg-muted text-white text-xs font-medium border border-border">
+                      <span className="px-2.5 py-1 rounded-full bg-muted text-foreground text-xs font-medium border border-border">
                         {durationLabel(plan)}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-white/75 font-medium text-sm">{plan.level}</span>
+                      <span className="text-muted-foreground font-medium text-sm">{plan.level}</span>
                     </TableCell>
-                    <TableCell className="text-white/75 text-sm">
+                    <TableCell className="text-muted-foreground text-sm">
                       {formatCurrency(plan.price)}
                     </TableCell>
                     <TableCell>
@@ -238,17 +238,17 @@ export default function PlansPage() {
                           {plan.discount}%
                         </span>
                       ) : (
-                        <span className="text-white/60 text-sm">—</span>
+                        <span className="text-muted-foreground/80 text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-foreground font-semibold text-sm">
                         {formatCurrency(plan.totalPrice)}
                       </span>
                     </TableCell>
                     <TableCell className="max-w-[200px]">
-                      <p className="text-white/70 text-xs truncate" title={plan.description}>
-                        {plan.description || <span className="text-white/60">—</span>}
+                      <p className="text-foreground/70 text-xs truncate" title={plan.description}>
+                        {plan.description || <span className="text-muted-foreground/80">—</span>}
                       </p>
                     </TableCell>
                     <TableCell>
@@ -280,7 +280,7 @@ export default function PlansPage() {
 
       {/* Footer */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-white/65">
+        <p className="text-sm text-foreground/65">
           Showing {Math.min(paginated.length, PAGE_SIZE)} of {filtered.length} plan{filtered.length !== 1 ? "s" : ""}
           {selectedIds.length > 0 && (
             <span className="ml-2 text-primary font-medium">· {selectedIds.length} selected</span>
@@ -292,7 +292,7 @@ export default function PlansPage() {
               disabled={page === 1} className="h-8 w-8 p-0 border-border">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-white/75">
+            <span className="text-sm text-muted-foreground">
               {page} / {totalPages}
             </span>
             <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -305,17 +305,17 @@ export default function PlansPage() {
 
       {/* Delete Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
-        <AlertDialogContent className="bg-card border border-border text-white">
+        <AlertDialogContent className="bg-card border border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Plan</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/75">
+            <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-white/80">"{confirmDelete?.name}"</span>?
+              <span className="font-semibold text-foreground/80">"{confirmDelete?.name}"</span>?
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteAction}

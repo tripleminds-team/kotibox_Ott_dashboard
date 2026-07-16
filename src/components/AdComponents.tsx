@@ -30,8 +30,8 @@ export function HomeBannerAd({ adId }: { adId?: string }) {
     if (process.env.NODE_ENV === 'development') {
       return (
         <div className="mx-4 sm:mx-8 lg:mx-12 mb-10 h-[100px] bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-700/50 flex flex-col items-center justify-center shadow-lg">
-          <p className="text-white/60 font-bold text-sm">Ad Banner Placeholder</p>
-          <p className="text-white/40 text-[10px] mt-1">No active ads with placement "Home Page" found in database.</p>
+          <p className="text-muted-foreground/80 font-bold text-sm">Ad Banner Placeholder</p>
+          <p className="text-muted-foreground/60 text-[10px] mt-1">No active ads with placement "Home Page" found in database.</p>
         </div>
       );
     }
@@ -47,7 +47,7 @@ export function HomeBannerAd({ adId }: { adId?: string }) {
     return (
       <div className="mx-4 sm:mx-8 lg:mx-12 mb-10">
         <div className="relative rounded-2xl overflow-hidden bg-zinc-900/50 border border-zinc-800/60 shadow-lg">
-          <div className="absolute top-2 right-2 z-10 text-[9px] font-bold text-white/40 bg-black/60 px-1.5 py-0.5 rounded uppercase tracking-widest">Ad</div>
+          <div className="absolute top-2 right-2 z-10 text-[9px] font-bold text-muted-foreground/60 bg-black/60 px-1.5 py-0.5 rounded uppercase tracking-widest">Ad</div>
           <div
             dangerouslySetInnerHTML={{ __html: ad.mediaUrl }}
             className="w-full min-h-[90px] flex items-center justify-center"
@@ -61,7 +61,7 @@ export function HomeBannerAd({ adId }: { adId?: string }) {
     return (
       <div className="mx-4 sm:mx-8 lg:mx-12 mb-10">
         <div className="relative rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800/60 cursor-pointer group shadow-lg transition-transform duration-300 hover:scale-[1.01]" onClick={handleClick}>
-          <div className="absolute top-2 right-2 z-10 text-[9px] font-bold text-white/40 bg-black/60 px-1.5 py-0.5 rounded uppercase tracking-widest">Sponsored</div>
+          <div className="absolute top-2 right-2 z-10 text-[9px] font-bold text-muted-foreground/60 bg-black/60 px-1.5 py-0.5 rounded uppercase tracking-widest">Sponsored</div>
           <video
             src={getImageUrl(ad.mediaUrl)}
             autoPlay muted loop playsInline
@@ -70,7 +70,7 @@ export function HomeBannerAd({ adId }: { adId?: string }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           {ad.redirectUrl && (
             <div className="absolute bottom-4 left-4 flex items-center gap-2">
-              <span className="text-white text-xs font-bold bg-red-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md">
+              <span className="text-foreground text-xs font-bold bg-red-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md">
                 <ExternalLink className="w-3 h-3" /> Learn More
               </span>
             </div>
@@ -87,7 +87,7 @@ export function HomeBannerAd({ adId }: { adId?: string }) {
         className="relative rounded-2xl overflow-hidden border border-zinc-800/60 cursor-pointer group shadow-lg transition-transform duration-300 hover:scale-[1.01]"
         onClick={handleClick}
       >
-        <div className="absolute top-2 right-2 z-10 text-[9px] font-bold text-white/40 bg-black/60 px-1.5 py-0.5 rounded uppercase tracking-widest">Sponsored</div>
+        <div className="absolute top-2 right-2 z-10 text-[9px] font-bold text-muted-foreground/60 bg-black/60 px-1.5 py-0.5 rounded uppercase tracking-widest">Sponsored</div>
         <img
           src={getImageUrl(ad.mediaUrl)}
           alt={ad.adName}
@@ -97,7 +97,7 @@ export function HomeBannerAd({ adId }: { adId?: string }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         {ad.redirectUrl && (
           <div className="absolute bottom-4 left-4">
-            <span className="text-white text-xs font-bold bg-red-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md">
+            <span className="text-foreground text-xs font-bold bg-red-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-md">
               <ExternalLink className="w-3 h-3" /> Learn More
             </span>
           </div>
@@ -132,8 +132,8 @@ export function GoogleAdsenseBanner() {
     if (process.env.NODE_ENV === 'development') {
       return (
         <div className="mx-4 sm:mx-8 lg:mx-12 mb-10 h-[100px] bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-700/50 flex flex-col items-center justify-center shadow-lg">
-          <p className="text-white/60 font-bold text-sm">Google AdSense Placeholder</p>
-          <p className="text-white/40 text-[10px] mt-1">Ad Network is disabled or Publisher ID is missing in Settings.</p>
+          <p className="text-muted-foreground/80 font-bold text-sm">Google AdSense Placeholder</p>
+          <p className="text-muted-foreground/60 text-[10px] mt-1">Ad Network is disabled or Publisher ID is missing in Settings.</p>
         </div>
       );
     }
@@ -143,7 +143,7 @@ export function GoogleAdsenseBanner() {
   return (
     <div className="mx-4 sm:mx-8 lg:mx-12 mb-10">
       <div className="relative rounded-2xl overflow-hidden border border-zinc-800/40 bg-zinc-900/30 p-2 min-h-[90px] flex items-center justify-center shadow-lg">
-        <div className="absolute top-1 right-2 text-[9px] font-bold text-white/30 uppercase tracking-widest">Ad</div>
+        <div className="absolute top-1 right-2 text-[9px] font-bold text-foreground/30 uppercase tracking-widest">Ad</div>
         <div ref={containerRef} className="w-full">
           <ins
             className="adsbygoogle"
@@ -221,7 +221,7 @@ export function PlayerPrerollAd({ onFinished }: { onFinished: () => void }) {
       <div className="absolute inset-0 bg-black z-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 opacity-60">
           <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          <span className="text-white/40 text-[10px] uppercase tracking-widest">Loading…</span>
+          <span className="text-muted-foreground/60 text-[10px] uppercase tracking-widest">Loading…</span>
         </div>
       </div>
     );
@@ -249,7 +249,7 @@ export function PlayerPrerollAd({ onFinished }: { onFinished: () => void }) {
     return (
       <div className="absolute inset-0 bg-black z-50 flex items-center justify-center">
         <iframe src={vastUrl} className="w-full h-full border-0" title="Ad" allow="autoplay" />
-        <div className="absolute top-4 left-4 text-[10px] text-white/50 uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Ad</div>
+        <div className="absolute top-4 left-4 text-[10px] text-muted-foreground uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Ad</div>
         {SkipBtn}
       </div>
     );
@@ -259,7 +259,7 @@ export function PlayerPrerollAd({ onFinished }: { onFinished: () => void }) {
   if (ad.adType === 'Custom') {
     return (
       <div className="absolute inset-0 bg-black z-50 flex items-center justify-center">
-        <div className="absolute top-4 left-4 text-[10px] text-white/50 uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Advertisement</div>
+        <div className="absolute top-4 left-4 text-[10px] text-muted-foreground uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Advertisement</div>
         <div
           className="w-full h-full flex items-center justify-center p-6 overflow-hidden"
           dangerouslySetInnerHTML={{ __html: ad.mediaUrl }}
@@ -273,7 +273,7 @@ export function PlayerPrerollAd({ onFinished }: { onFinished: () => void }) {
   if (ad.adType === 'Image') {
     return (
       <div className="absolute inset-0 bg-black z-50 flex items-center justify-center cursor-pointer group" onClick={handleAdClick}>
-        <div className="absolute top-4 left-4 text-[10px] text-white/50 uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Advertisement</div>
+        <div className="absolute top-4 left-4 text-[10px] text-muted-foreground uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Advertisement</div>
         <img
           src={getImageUrl(ad.mediaUrl)}
           alt={ad.adName || 'Ad'}
@@ -304,7 +304,7 @@ export function PlayerPrerollAd({ onFinished }: { onFinished: () => void }) {
         onClick={handleAdClick}
         onEnded={() => setCanSkip(true)}
       />
-      <div className="absolute top-4 left-4 text-[10px] text-white/50 uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Advertisement</div>
+      <div className="absolute top-4 left-4 text-[10px] text-muted-foreground uppercase tracking-widest bg-black/60 px-2 py-1 rounded z-10">Advertisement</div>
       <button
         onClick={() => setMuted(m => !m)}
         className="absolute top-4 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 border border-white/10 text-white hover:bg-black/80 transition-all z-10"

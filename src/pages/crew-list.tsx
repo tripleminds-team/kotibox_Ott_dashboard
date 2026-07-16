@@ -88,18 +88,18 @@ export default function CrewListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-white/75">
-        <span className="text-white/65">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-foreground/65">Dashboard</span>
         <span>/</span>
-        <span className="text-white font-medium">Crew</span>
+        <span className="text-foreground font-medium">Crew</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-white">
+          <SelectContent className="bg-muted border-border text-foreground">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
@@ -110,12 +110,12 @@ export default function CrewListPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search crew..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-foreground/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button onClick={() => setLocation("/crew/new")} className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold">
@@ -131,20 +131,20 @@ export default function CrewListPage() {
                 <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll}
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
               </TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Crew Member</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Designation</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Crew Member</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Designation</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-foreground/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-white/65 py-10">Loading...</TableCell>
+                <TableCell colSpan={5} className="text-center text-foreground/65 py-10">Loading...</TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-white/65 py-10">
+                <TableCell colSpan={5} className="text-center text-foreground/65 py-10">
                   {searchQuery ? "No crew members match your search" : "No crew members yet. Click New to add one."}
                 </TableCell>
               </TableRow>
@@ -162,13 +162,13 @@ export default function CrewListPage() {
                           className="h-10 w-10 rounded-lg object-cover shrink-0 bg-muted" />
                       ) : (
                         <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <User className="h-5 w-5 text-white/65" />
+                          <User className="h-5 w-5 text-foreground/65" />
                         </div>
                       )}
-                      <p className="text-white font-medium text-sm">{crew.name}</p>
+                      <p className="text-foreground font-medium text-sm">{crew.name}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-white/70 text-sm">{crew.designation || "—"}</TableCell>
+                  <TableCell className="text-foreground/70 text-sm">{crew.designation || "—"}</TableCell>
                   <TableCell>
                     <Switch checked={crew.status} onCheckedChange={() => toggleStatus(crew.id, crew.status)}
                       className="data-[state=checked]:bg-primary" />
@@ -193,15 +193,15 @@ export default function CrewListPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Crew Member</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to delete "{confirmDelete?.name}"?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

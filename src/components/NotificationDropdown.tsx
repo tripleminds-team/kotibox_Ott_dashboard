@@ -30,7 +30,7 @@ export function NotificationDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
       >
-        <Bell className="w-5 h-5 text-white/75 hover:text-white transition-colors" />
+        <Bell className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
         {unreadCount > 0 && (
           <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-primary rounded-full border border-background shadow-lg shadow-primary/50 animate-pulse"></span>
         )}
@@ -63,8 +63,8 @@ export function NotificationDropdown() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-foreground mb-1">{notif.title}</h4>
-                    <p className="text-xs text-white/70 leading-snug">{notif.body}</p>
-                    <span className="text-[10px] text-white/65 mt-2 block font-semibold uppercase tracking-wider">
+                    <p className="text-xs text-foreground/70 leading-snug">{notif.body}</p>
+                    <span className="text-[10px] text-foreground/65 mt-2 block font-semibold uppercase tracking-wider">
                       {new Date(notif.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -72,9 +72,9 @@ export function NotificationDropdown() {
               ))
             ) : (
               <div className="text-center p-6">
-                <Bell className="w-8 h-8 text-white/60 mx-auto mb-2 opacity-50" />
-                <p className="text-sm font-bold text-white/65">No Notifications</p>
-                <p className="text-xs text-white/60 mt-1">You're all caught up!</p>
+                <Bell className="w-8 h-8 text-muted-foreground/80 mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-bold text-foreground/65">No Notifications</p>
+                <p className="text-xs text-muted-foreground/80 mt-1">You're all caught up!</p>
               </div>
             )}
           </div>

@@ -92,19 +92,19 @@ const SortableSection = ({ section, onToggle, onEdit, onDelete }: SortableSectio
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-white/75 hover:text-white p-1"
+            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1"
           >
             <GripVertical className="h-5 w-5" />
           </div>
           
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-white">{section.title}</p>
+              <p className="text-sm font-bold text-foreground">{section.title}</p>
               {!section.isActive && (
-                <Badge variant="outline" className="text-[10px] py-0 border-border text-white/75">Hidden</Badge>
+                <Badge variant="outline" className="text-[10px] py-0 border-border text-muted-foreground">Hidden</Badge>
               )}
             </div>
-            <div className="flex items-center gap-3 text-xs text-white/75">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-md">
                 {getLayoutIcon(section.layout)} {section.layout}
               </span>
@@ -126,7 +126,7 @@ const SortableSection = ({ section, onToggle, onEdit, onDelete }: SortableSectio
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-white/75 hover:bg-muted hover:text-white"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
             onClick={() => onEdit(section)}
           >
             <Edit2 className="h-4 w-4" />
@@ -350,8 +350,8 @@ export default function WebHomeSections() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Web Home Layout Builder</h1>
-          <p className="text-sm text-white/75 mt-1">Design and manage the dynamic sections of your web app's home screen. Drag to reorder.</p>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Web Home Layout Builder</h1>
+          <p className="text-sm text-muted-foreground mt-1">Design and manage the dynamic sections of your web app's home screen. Drag to reorder.</p>
         </div>
         <Button onClick={openAdd} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20">
           <Plus className="h-4 w-4 mr-2" /> Add Section
@@ -360,12 +360,12 @@ export default function WebHomeSections() {
 
       <div className="bg-card border-border rounded-xl p-4">
         {isLoading ? (
-          <div className="text-center py-10 text-white/65">Loading layout...</div>
+          <div className="text-center py-10 text-muted-foreground/85">Loading layout...</div>
         ) : localSections.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-border dark:border-zinc-800 rounded-xl">
-            <LayoutGrid className="w-8 h-8 text-white/75 opacity-60 mx-auto mb-3" />
-            <p className="text-white font-semibold mb-1">No sections configured</p>
-            <p className="text-sm text-white/75">The app will use fallback sections until you create some here.</p>
+            <LayoutGrid className="w-8 h-8 text-muted-foreground opacity-60 mx-auto mb-3" />
+            <p className="text-foreground font-semibold mb-1">No sections configured</p>
+            <p className="text-sm text-muted-foreground">The app will use fallback sections until you create some here.</p>
             <Button onClick={openAdd} variant="outline" className="mt-4 bg-transparent border-border dark:border-zinc-700 hover:bg-muted dark:hover:bg-white/5">
               Create First Section
             </Button>
@@ -388,7 +388,7 @@ export default function WebHomeSections() {
       </div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-card border-border text-white sm:max-w-lg">
+        <DialogContent className="bg-card border-border text-foreground sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingSection ? 'Edit Section' : 'Create Section'}</DialogTitle>
           </DialogHeader>
@@ -405,7 +405,7 @@ export default function WebHomeSections() {
             
             <div className="grid gap-2 mt-2">
               <Label>Fallback Category (Optional)</Label>
-              <p className="text-[10px] text-white/50 mb-1">Set to one of the default keys (e.g. trendingNow, newReleases) to map to existing data.</p>
+              <p className="text-[10px] text-muted-foreground mb-1">Set to one of the default keys (e.g. trendingNow, newReleases) to map to existing data.</p>
               <Input
                 placeholder="e.g. trendingNow"
                 value={formData.category}
@@ -463,7 +463,7 @@ export default function WebHomeSections() {
             {formData.layout === 'ad' && formData.itemType === 'home-banner' && (
               <div className="grid gap-2 mt-2">
                 <Label>Select Specific Ad (Optional)</Label>
-                <p className="text-[10px] text-white/50 mb-1">Leave empty to show a random ad from the 'Home Page' placement.</p>
+                <p className="text-[10px] text-muted-foreground mb-1">Leave empty to show a random ad from the 'Home Page' placement.</p>
                 <Select value={selectedItems[0] || 'random'} onValueChange={(v) => {
                   setSelectedItems(v === 'random' ? [] : [v]);
                 }}>
@@ -519,7 +519,7 @@ export default function WebHomeSections() {
                   </div>
               {formData.contentSelection !== 'manual' && (
                 <>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-white/75 mt-4 mb-2">Dynamic Data Source</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Dynamic Data Source</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label className="text-xs">Filter By (Field)</Label>
@@ -645,8 +645,8 @@ export default function WebHomeSections() {
             <DialogTitle>Delete Section</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-white/75 text-sm">
-              Are you sure you want to delete <span className="font-bold text-white">{confirmDelete?.title}</span>? This will instantly remove the row from the web app.
+            <p className="text-muted-foreground text-sm">
+              Are you sure you want to delete <span className="font-bold text-foreground">{confirmDelete?.title}</span>? This will instantly remove the row from the web app.
             </p>
           </div>
           <DialogFooter>

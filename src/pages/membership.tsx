@@ -185,7 +185,7 @@ export default function MembershipPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div className="dark min-h-screen bg-background text-foreground font-sans">
       
       {/* Background Orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">

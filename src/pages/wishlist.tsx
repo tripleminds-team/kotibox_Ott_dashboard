@@ -48,7 +48,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-[#030306]">
+    <div className="min-h-screen text-foreground flex flex-col bg-[#030306]">
       <PublicHeader
         activeTab="home"
         setActiveTab={(tab) => {
@@ -68,17 +68,17 @@ export default function WishlistPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setLocation("/")}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/75 hover:text-white transition-all"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-2">
               <Bookmark className="w-5 h-5 text-primary" />
-              <h1 className="text-white font-black text-2xl tracking-tight">My Wishlist</h1>
+              <h1 className="text-foreground font-black text-2xl tracking-tight">My Wishlist</h1>
             </div>
           </div>
           {wishlistItems.length > 0 && (
-            <span className="text-white/70 text-sm font-semibold">
+            <span className="text-foreground/70 text-sm font-semibold">
               {wishlistItems.length} {wishlistItems.length === 1 ? "title" : "titles"}
             </span>
           )}
@@ -87,15 +87,15 @@ export default function WishlistPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            <p className="text-white/70 text-sm mt-3 font-medium">Loading your wishlist…</p>
+            <p className="text-foreground/70 text-sm mt-3 font-medium">Loading your wishlist…</p>
           </div>
         ) : wishlistItems.length === 0 ? (
           <div className="text-center py-24 bg-white/[0.02] border border-white/5 rounded-2xl p-8">
             <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <Bookmark className="w-8 h-8 text-white/65" />
+              <Bookmark className="w-8 h-8 text-foreground/65" />
             </div>
-            <h3 className="text-white font-bold text-lg mb-2">Your wishlist is empty</h3>
-            <p className="text-white/70 text-sm max-w-sm mx-auto mb-6">
+            <h3 className="text-foreground font-bold text-lg mb-2">Your wishlist is empty</h3>
+            <p className="text-foreground/70 text-sm max-w-sm mx-auto mb-6">
               Tap the bookmark icon on any movie or drama to save it here and watch later.
             </p>
             <button
@@ -157,8 +157,8 @@ export default function WishlistPage() {
 
                     {/* Title */}
                     <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                      <p className="text-white text-xs font-bold leading-tight line-clamp-2">{item.title}</p>
-                      {item.year && <p className="text-white/70 text-[10px] mt-0.5">{item.year}</p>}
+                      <p className="text-foreground text-xs font-bold leading-tight line-clamp-2">{item.title}</p>
+                      {item.year && <p className="text-foreground/70 text-[10px] mt-0.5">{item.year}</p>}
                     </div>
                   </div>
                 </div>

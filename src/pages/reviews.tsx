@@ -81,8 +81,8 @@ export default function Reviews() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Reviews Management</h1>
-          <p className="text-sm text-white/75 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Reviews Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Moderate website experience reviews from users
           </p>
         </div>
@@ -105,12 +105,12 @@ export default function Reviews() {
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-white font-semibold">User</TableHead>
-                <TableHead className="text-white font-semibold">Rating</TableHead>
-                <TableHead className="text-white font-semibold min-w-[250px]">Comment</TableHead>
-                <TableHead className="text-white font-semibold">Date</TableHead>
-                <TableHead className="text-white font-semibold">Status</TableHead>
-                <TableHead className="text-white font-semibold text-right">Actions</TableHead>
+                <TableHead className="text-foreground font-semibold">User</TableHead>
+                <TableHead className="text-foreground font-semibold">Rating</TableHead>
+                <TableHead className="text-foreground font-semibold min-w-[250px]">Comment</TableHead>
+                <TableHead className="text-foreground font-semibold">Date</TableHead>
+                <TableHead className="text-foreground font-semibold">Status</TableHead>
+                <TableHead className="text-foreground font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -127,34 +127,34 @@ export default function Reviews() {
                 ))
               ) : reviews.length === 0 ? (
                   <TableRow className="border-border">
-                  <TableCell colSpan={6} className="h-32 text-center text-white/75">
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                     No reviews found.
                   </TableCell>
                 </TableRow>
               ) : (
                 reviews.map((review: any) => (
                   <TableRow key={review._id} className="border-border hover:bg-muted/30">
-                    <TableCell className="font-medium text-white">
+                    <TableCell className="font-medium text-foreground">
                       {review.userId?.name || "Unknown"}
-                      <div className="text-xs text-white/75 font-normal">{review.userId?.email}</div>
+                      <div className="text-xs text-muted-foreground font-normal">{review.userId?.email}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        <span className="text-sm font-bold text-white">{review.rating}</span>
+                        <span className="text-sm font-bold text-foreground">{review.rating}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm text-white/75 line-clamp-2 max-w-[300px]" title={review.comment}>
+                      <p className="text-sm text-muted-foreground line-clamp-2 max-w-[300px]" title={review.comment}>
                         {review.comment || <span className="italic opacity-50">No comment</span>}
                       </p>
                     </TableCell>
-                    <TableCell className="text-sm text-white/75 whitespace-nowrap">
+                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                       {new Date(review.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       <Badge variant={review.status === "published" ? "default" : "secondary"} className={
-                        review.status === "published" ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25 border-emerald-500/30" : "bg-zinc-500/15 text-white/65 hover:bg-zinc-500/25 border-zinc-500/30"
+                        review.status === "published" ? "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/25 border-emerald-500/30" : "bg-zinc-500/15 text-foreground/65 hover:bg-zinc-500/25 border-zinc-500/30"
                       }>
                         {review.status}
                       </Badge>
@@ -165,7 +165,7 @@ export default function Reviews() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleStatusToggle(review._id, review.status)}
-                          className="h-8 w-8 text-white/75 hover:text-white"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
                           title={review.status === "published" ? "Hide Review" : "Publish Review"}
                         >
                           {review.status === "published" ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -190,7 +190,7 @@ export default function Reviews() {
 
         {pagination?.totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-            <span className="text-sm text-white/75">
+            <span className="text-sm text-muted-foreground">
               Showing page {page} of {pagination.totalPages}
             </span>
             <div className="flex gap-2">
@@ -199,7 +199,7 @@ export default function Reviews() {
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="border-border text-white hover:bg-muted"
+                className="border-border text-foreground hover:bg-muted"
               >
                 Previous
               </Button>
@@ -208,7 +208,7 @@ export default function Reviews() {
                 size="sm"
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 disabled={page === pagination.totalPages}
-                className="border-border text-white hover:bg-muted"
+                className="border-border text-foreground hover:bg-muted"
               >
                 Next
               </Button>
@@ -220,13 +220,13 @@ export default function Reviews() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Review</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/75">
+            <AlertDialogTitle className="text-foreground">Delete Review</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete this review? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-transparent border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>

@@ -193,17 +193,17 @@ export default function UserDetail() {
                 <AvatarFallback className="text-2xl bg-secondary text-secondary-foreground">{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <h2 className="text-xl font-bold">{user.name}</h2>
-              <div className="flex items-center text-sm text-white/75 mt-1">
+              <div className="flex items-center text-sm text-muted-foreground mt-1">
                 <Mail className="h-3 w-3 mr-1" /> {user.email}
               </div>
               <div className="w-full flex items-center justify-between text-sm mt-6 pt-4 border-t border-border">
                 <div className="flex flex-col items-center">
                   <span className="font-bold">{user.watchlistCount || 0}</span>
-                  <span className="text-xs text-white/75">Watchlist</span>
+                  <span className="text-xs text-muted-foreground">Watchlist</span>
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="font-bold">{Math.round((user.totalWatchTime || 0) / 60)}h</span>
-                  <span className="text-xs text-white/75">Watched</span>
+                  <span className="text-xs text-muted-foreground">Watched</span>
                 </div>
               </div>
             </CardContent>
@@ -215,17 +215,17 @@ export default function UserDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-white/75" />
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">Joined</span>
-                  <span className="text-xs text-white/75">{format(new Date(user.createdAt), 'MMMM d, yyyy')}</span>
+                  <span className="text-xs text-muted-foreground">{format(new Date(user.createdAt), 'MMMM d, yyyy')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <History className="h-4 w-4 text-white/75" />
+                <History className="h-4 w-4 text-muted-foreground" />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">Last Login</span>
-                  <span className="text-xs text-white/75">
+                  <span className="text-xs text-muted-foreground">
                     {user.lastLogin ? formatDistanceToNow(new Date(user.lastLogin), { addSuffix: true }) : 'Never'}
                   </span>
                 </div>
@@ -243,7 +243,7 @@ export default function UserDetail() {
               <form onSubmit={handleUpdate} className="space-y-6">
                 {/* Section 1: Personal Information */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white/75 uppercase tracking-wider">Personal Information</h4>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Personal Information</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="userName">Full Name</Label>
@@ -253,7 +253,7 @@ export default function UserDetail() {
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Full Name"
                         required
-                        className="bg-background border-border text-white"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
@@ -265,7 +265,7 @@ export default function UserDetail() {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         placeholder="Email Address"
                         required
-                        className="bg-background border-border text-white"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                     <div className="space-y-2 md:col-span-2">
@@ -275,7 +275,7 @@ export default function UserDetail() {
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder="Phone Number (Optional)"
-                        className="bg-background border-border text-white"
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                   </div>
@@ -285,7 +285,7 @@ export default function UserDetail() {
 
                 {/* Section 2: Subscription Settings */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white/75 uppercase tracking-wider">Subscription Settings</h4>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Subscription Settings</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="plan">Plan</Label>
@@ -293,7 +293,7 @@ export default function UserDetail() {
                         <SelectTrigger className="bg-background border-border">
                           <SelectValue placeholder="Select plan" />
                         </SelectTrigger>
-                        <SelectContent className="bg-muted border-border text-white">
+                        <SelectContent className="bg-muted border-border text-foreground">
                           <SelectItem value="free">Free</SelectItem>
                           <SelectItem value="basic">Basic</SelectItem>
                           <SelectItem value="standard">Standard</SelectItem>
@@ -307,7 +307,7 @@ export default function UserDetail() {
                         <SelectTrigger className="bg-background border-border">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
-                        <SelectContent className="bg-muted border-border text-white">
+                        <SelectContent className="bg-muted border-border text-foreground">
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="inactive">Inactive</SelectItem>
                           <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -322,7 +322,7 @@ export default function UserDetail() {
 
                 {/* Section 3: Account Access Status */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white/75 uppercase tracking-wider">Account Access & Status</h4>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Account Access & Status</h4>
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="accountStatus">Account Status</Label>
@@ -330,7 +330,7 @@ export default function UserDetail() {
                         <SelectTrigger className="bg-background border-border">
                           <SelectValue placeholder="Select account status" />
                         </SelectTrigger>
-                        <SelectContent className="bg-muted border-border text-white">
+                        <SelectContent className="bg-muted border-border text-foreground">
                           <SelectItem value="active">Active (Normal Access)</SelectItem>
                           <SelectItem value="suspended">Suspended (Temporary Block)</SelectItem>
                           <SelectItem value="banned">Banned (Permanent Block)</SelectItem>
@@ -346,7 +346,7 @@ export default function UserDetail() {
                           onChange={(e) => setFormData({ ...formData, banReason: e.target.value })}
                           placeholder="Provide the reason for suspension or banning (e.g. Terms violation, payment dispute...)"
                           required
-                          className="bg-background border-border text-white min-h-[80px]"
+                          className="bg-background border-border text-foreground min-h-[80px]"
                         />
                       </div>
                     )}
@@ -366,7 +366,7 @@ export default function UserDetail() {
               <CardTitle className="text-lg">Watch History (Mock)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-center h-32 border-2 border-dashed border-border rounded-md text-white/75 text-sm">
+              <div className="flex items-center justify-center h-32 border-2 border-dashed border-border rounded-md text-muted-foreground text-sm">
                 Watch history data visualization would appear here
               </div>
             </CardContent>
