@@ -13,6 +13,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useGetAds, useUpdateAd, useDeleteAd, useBulkDeleteAds, getImageUrl } from "@/lib/api-client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GoogleAdsPage from "./google-ads";
 
 type AdRow = {
   _id: string;
@@ -43,7 +45,7 @@ function StatusBadge({ status }: { status: string }) {
   const isActive = status === "active";
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-      isActive ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : "bg-zinc-500/15 border-zinc-500/30 text-zinc-400"
+      isActive ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : "bg-zinc-500/15 border-zinc-500/30 text-white/70"
     }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-400" : "bg-zinc-500"}`} />
       {isActive ? "Active" : "Inactive"}
@@ -154,30 +156,39 @@ export default function AdsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 -m-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background text-white p-6 -m-6 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <span>Dashboard</span><span>/</span><span className="text-foreground">Custom Ads</span>
+          <div className="flex items-center gap-2 text-xs text-white/75 mb-1">
+            <span>Dashboard</span><span>/</span><span className="text-white">Ads Management</span>
           </div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Custom Ads</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Manage your ad campaigns and placements</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Ads Management</h1>
+          <p className="text-white/75 text-sm mt-0.5">Manage your custom ad campaigns and Google Ads</p>
         </div>
-        <button
-          onClick={() => setLocation("/ads/new")}
-          className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95"
-        >
-          <Plus className="w-4 h-4" /> New Ad
-        </button>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Tabs defaultValue="manual" className="space-y-6">
+        <TabsList className="bg-card border border-border h-auto p-1 grid grid-cols-2 w-full max-w-md">
+          <TabsTrigger value="manual" className="py-2.5 data-[state=active]:bg-primary data-[state=active]:text-white">Manual Ads</TabsTrigger>
+          <TabsTrigger value="google" className="py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Google Ads</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="manual" className="space-y-6 m-0 border-none p-0 outline-none">
+          <div className="flex items-center justify-end">
+            <button
+              onClick={() => setLocation("/ads/new")}
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95"
+            >
+              <Plus className="w-4 h-4" /> New Custom Ad
+            </button>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Ads", value: stats.total, icon: <Activity className="w-5 h-5" />, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
           { label: "Active", value: stats.active, icon: <CheckCircle2 className="w-5 h-5" />, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-          { label: "Inactive", value: stats.inactive, icon: <XCircle className="w-5 h-5" />, color: "text-zinc-400", bg: "bg-zinc-500/10 border-zinc-500/20" },
+          { label: "Inactive", value: stats.inactive, icon: <XCircle className="w-5 h-5" />, color: "text-white/70", bg: "bg-zinc-500/10 border-zinc-500/20" },
           { label: "Expired", value: stats.expired, icon: <Clock className="w-5 h-5" />, color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-5 flex items-center gap-4 ${s.bg}`}>
@@ -195,19 +206,19 @@ export default function AdsPage() {
       {/* Filters + toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/75" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search ads..."
-            className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-muted-foreground"
+            className="w-full pl-9 pr-4 py-2.5 bg-muted border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring placeholder:text-white/75"
           />
         </div>
 
         <select
           value={filterType}
           onChange={e => setFilterType(e.target.value)}
-          className="px-3 py-2.5 bg-muted border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring"
+          className="px-3 py-2.5 bg-muted border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring"
         >
           <option value="all">All Types</option>
           <option value="Video">Video</option>
@@ -218,7 +229,7 @@ export default function AdsPage() {
         <select
           value={filterPlacement}
           onChange={e => setFilterPlacement(e.target.value)}
-          className="px-3 py-2.5 bg-muted border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring"
+          className="px-3 py-2.5 bg-muted border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring"
         >
           <option value="all">All Placements</option>
           <option value="Player">Player</option>
@@ -229,7 +240,7 @@ export default function AdsPage() {
         <select
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="px-3 py-2.5 bg-muted border border-border text-foreground text-sm rounded-xl focus:outline-none focus:border-ring"
+          className="px-3 py-2.5 bg-muted border border-border text-white text-sm rounded-xl focus:outline-none focus:border-ring"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -249,7 +260,7 @@ export default function AdsPage() {
           )}
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-muted border border-border text-muted-foreground text-sm font-semibold rounded-xl hover:bg-accent transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-muted border border-border text-white/75 text-sm font-semibold rounded-xl hover:bg-accent transition-colors"
           >
             <Download className="w-4 h-4" /> Export
           </button>
@@ -268,7 +279,7 @@ export default function AdsPage() {
             onChange={e => setSelectedIds(e.target.checked ? filtered.map(a => a._id) : [])}
           />
           {["Ad Name", "Type", "Placement", "Target", "Schedule", "Status", "Actions"].map(h => (
-            <span key={h} className="text-muted-foreground text-xs font-bold uppercase tracking-wider">{h}</span>
+            <span key={h} className="text-white/75 text-xs font-bold uppercase tracking-wider">{h}</span>
           ))}
         </div>
 
@@ -276,16 +287,16 @@ export default function AdsPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">Loading ads...</p>
+            <p className="text-white/75 text-sm">Loading ads...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <div className="w-16 h-16 rounded-2xl bg-muted border border-border flex items-center justify-center">
-              <TrendingUp className="w-8 h-8 text-muted-foreground" />
+              <TrendingUp className="w-8 h-8 text-white/75" />
             </div>
             <div className="text-center">
-              <p className="text-foreground font-bold text-lg">No ads found</p>
-              <p className="text-muted-foreground text-sm mt-1">
+              <p className="text-white font-bold text-lg">No ads found</p>
+              <p className="text-white/75 text-sm mt-1">
                 {search || filterType !== "all" || filterStatus !== "all"
                   ? "Try adjusting your filters"
                   : "Create your first ad campaign to get started"}
@@ -340,9 +351,9 @@ export default function AdsPage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-foreground font-semibold text-sm truncate">{ad.adName}</p>
+                    <p className="text-white font-semibold text-sm truncate">{ad.adName}</p>
                     {ad.redirectUrl && (
-                      <p className="text-muted-foreground text-xs truncate max-w-[140px]">{ad.redirectUrl}</p>
+                      <p className="text-white/75 text-xs truncate max-w-[140px]">{ad.redirectUrl}</p>
                     )}
                   </div>
                 </div>
@@ -353,18 +364,18 @@ export default function AdsPage() {
                 </span>
 
                 {/* Placement */}
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border border-border bg-muted text-muted-foreground w-fit">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border border-border bg-muted text-white/75 w-fit">
                   {pc?.icon} {pc?.label || ad.placement}
                 </span>
 
                 {/* Target */}
-                <span className="text-muted-foreground text-sm truncate">{ad.targetContentType || "—"}</span>
+                <span className="text-white/75 text-sm truncate">{ad.targetContentType || "—"}</span>
 
                 {/* Schedule */}
-                <div className="text-xs text-muted-foreground space-y-0.5">
-                  <p className="flex items-center gap-1"><span className="text-muted-foreground/60">From</span> {startFmt}</p>
+                <div className="text-xs text-white/75 space-y-0.5">
+                  <p className="flex items-center gap-1"><span className="text-white/75/60">From</span> {startFmt}</p>
                   <p className={`flex items-center gap-1 ${expired ? "text-rose-400" : ""}`}>
-                    <span className="text-muted-foreground/60">To</span> {endFmt}
+                    <span className="text-white/75/60">To</span> {endFmt}
                     {expired && <span className="text-[10px] px-1.5 py-0.5 bg-rose-500/20 border border-rose-500/30 rounded text-rose-400 font-bold ml-1">Expired</span>}
                   </p>
                 </div>
@@ -406,30 +417,38 @@ export default function AdsPage() {
         {/* Footer */}
         {filtered.length > 0 && (
           <div className="px-5 py-3 border-t border-border bg-muted/40 flex items-center justify-between">
-            <p className="text-muted-foreground text-xs">
-              Showing <span className="text-foreground font-semibold">{filtered.length}</span> of <span className="text-foreground font-semibold">{ads.length}</span> ads
+            <p className="text-white/75 text-xs">
+              Showing <span className="text-white font-semibold">{filtered.length}</span> of <span className="text-white font-semibold">{ads.length}</span> ads
             </p>
             {selectedIds.length > 0 && (
-              <p className="text-muted-foreground text-xs"><span className="text-primary font-bold">{selectedIds.length}</span> selected</p>
+              <p className="text-white/75 text-xs"><span className="text-primary font-bold">{selectedIds.length}</span> selected</p>
             )}
           </div>
         )}
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Delete Ad</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
-              Are you sure you want to delete <span className="text-foreground font-semibold">"{confirmDelete?.adName}"</span>? This action cannot be undone.
+            <AlertDialogTitle className="text-white">Delete Ad</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/75">
+              Are you sure you want to delete <span className="text-white font-semibold">"{confirmDelete?.adName}"</span>? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-accent">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700 text-white border-0">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </TabsContent>
+
+        <TabsContent value="google" className="m-0 border-none p-0 outline-none">
+          <div className="-mx-6 -mt-6">
+            <GoogleAdsPage />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

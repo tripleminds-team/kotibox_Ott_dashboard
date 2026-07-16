@@ -1,18 +1,20 @@
-import { useState, useEffect, useRef, Fragment, useMemo } from "react";
+import { useState, useEffect, useRef, Fragment, useMemo, useCallback } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTheme } from "next-themes";
-import { getImageUrl } from "@/lib/api-client";
+import { getImageUrl, useGetPublicAds, recordAdInteraction } from "@/lib/api-client";
+import { HomeBannerAd, GoogleAdsenseBanner, PlayerPrerollAd } from "@/components/AdComponents";
 import {
   Play, Pause, Search, ChevronLeft, ChevronRight, X,
   ChevronDown, User, Star, Plus, Info, Film, Tv,
   TrendingUp, Flame, Sparkles, Smartphone, Lock, Crown, Bell,
-  Loader2, Clock, Check, EyeOff, AlertCircle, ListPlus, Send, Eye, Clapperboard, Bookmark
+  Loader2, Clock, Check, EyeOff, AlertCircle, ListPlus, Send, Eye, Clapperboard, Bookmark,
+  Volume2, VolumeX, ExternalLink, SkipForward,
 } from "lucide-react";
 import {
   useGetWebHome, useGetWebBrowse, loginClient, registerClient, useGetPages,
   useGetGenres, useGetPublicNotifications, useGetWebSubscriptionPlans,
-  useGetWatchHistory,
+  useGetWatchHistory, useGetSections, useGetMovies, useGetContentList,
 } from "@/lib/api-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WebsiteReviews } from "@/components/WebsiteReviews";
@@ -140,13 +142,13 @@ function SectionHeader({ title, icon, onSeeAll, count }: { title: string; icon?:
       {icon && <div className="text-red-500">{icon}</div>}
       <h2 className="text-white font-bold text-lg sm:text-xl tracking-tight">{title}</h2>
       {count !== undefined && count > 0 && (
-        <span className="text-[10px] font-bold px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-full">
+        <span className="text-[10px] font-bold px-2 py-0.5 bg-zinc-800 border border-zinc-700 text-white/80 rounded-full">
           {count}
         </span>
       )}
       <div className="flex-1" />
       {onSeeAll && (
-        <button onClick={onSeeAll} className="text-zinc-200 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 group">
+        <button onClick={onSeeAll} className="text-white/80 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1 group">
           See all <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform text-red-500" />
         </button>
       )}
@@ -172,7 +174,7 @@ const DRAMA_BADGE_MAP: Record<string, string> = {
   EXCLUSIVE: "bg-purple-600 text-white",
 };
 
-function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => void }) {
+function ShortDramaCard({ drama, onClick, fullWidth }: { drama: ShortDrama; onClick: () => void; fullWidth?: boolean }) {
   const isSubscribed = (() => {
     try {
       const stored = localStorage.getItem("appUser");
@@ -186,8 +188,8 @@ function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => 
 
   return (
     <div
-      className="group relative flex-shrink-0 cursor-pointer"
-      style={{ width: "clamp(160px, 20vw, 200px)" }}
+      className={`group relative flex-shrink-0 cursor-pointer ${fullWidth ? "w-full" : ""}`}
+      style={fullWidth ? {} : { width: "clamp(160px, 20vw, 200px)" }}
       onClick={onClick}
     >
       <div
@@ -224,7 +226,7 @@ function ShortDramaCard({ drama, onClick }: { drama: ShortDrama; onClick: () => 
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-2">
           <p className="text-white text-[11px] font-bold leading-tight line-clamp-2">{drama.title}</p>
-          <p className="text-zinc-200 text-[10px] mt-0.5">{drama.totalEpisodes} EPs</p>
+          <p className="text-white/80 text-[10px] mt-0.5">{drama.totalEpisodes} EPs</p>
         </div>
       </div>
     </div>
@@ -316,6 +318,8 @@ function ShortDramaRow({ title, icon, items, onSelect, onSeeAll }: {
   );
 }
 
+
+
 /* ─── HERO BANNER ─── */
 function Hero({ activeTab, onPlay, onSubscribeClick, isSubscribed }: { activeTab: Tab; onPlay: (item: ContentItem) => void; onSubscribeClick: () => void; isSubscribed?: boolean }) {
   const { data: homeData, isLoading } = useGetWebHome();
@@ -404,8 +408,8 @@ function Hero({ activeTab, onPlay, onSubscribeClick, isSubscribed }: { activeTab
               {item.type === "movie" ? <Film className="w-3 h-3" /> : item.contentType === "drama" ? <Smartphone className="w-3 h-3" /> : <Tv className="w-3 h-3" />}
               {item.type === "movie" ? "Movie" : item.contentType === "drama" ? "Short Drama" : "TV Show"}
             </span>
-            {[...new Set(item.genres || [])].slice(0, 2).map((g) => (
-              <span key={g} className="text-zinc-100 text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
+            {[...new Set<string>(item.genres || [])].slice(0, 2).map((g) => (
+              <span key={g} className="text-white text-xs bg-zinc-900/80 border border-zinc-800 px-2 py-1 rounded-lg font-semibold">{g}</span>
             ))}
           </div>
 
@@ -416,12 +420,12 @@ function Hero({ activeTab, onPlay, onSubscribeClick, isSubscribed }: { activeTab
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <ImdbBadge rating={item.imdbRating} />
             <AgeBadge rating={item.ageRating} />
-            {item.duration && <span className="text-zinc-200 text-xs font-semibold">{item.duration}</span>}
-            {item.year && <span className="text-zinc-200 text-xs font-semibold">{item.year}</span>}
-            {item.language && <span className="text-zinc-100 text-xs font-semibold">{item.language}</span>}
+            {item.duration && <span className="text-white/80 text-xs font-semibold">{item.duration}</span>}
+            {item.year && <span className="text-white/80 text-xs font-semibold">{item.year}</span>}
+            {item.language && <span className="text-white text-xs font-semibold">{item.language}</span>}
           </div>
 
-          <p className="text-zinc-100 text-sm sm:text-base leading-relaxed mb-6 max-w-lg line-clamp-3">
+          <p className="text-white text-sm sm:text-base leading-relaxed mb-6 max-w-lg line-clamp-3">
             {item.description}
           </p>
 
@@ -487,7 +491,7 @@ function GenreFilter({ active, onChange }: { active: string; onChange: (g: strin
           className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
             active === g
               ? "bg-red-600 border-red-600 text-white"
-              : "bg-transparent border-zinc-700 text-zinc-200 hover:border-zinc-500 hover:text-white"
+              : "bg-transparent border-zinc-700 text-white/80 hover:border-zinc-500 hover:text-white"
           }`}
         >
           {g}
@@ -527,16 +531,16 @@ function SubscribeBanner({ onSubscribeClick }: { onSubscribeClick: () => void })
             <span className="text-red-500 font-bold text-sm uppercase tracking-wider">Premium Plan</span>
           </div>
           <h3 className="text-white font-bold text-xl sm:text-2xl mb-1">Unlock All Premium Content</h3>
-          <p className="text-zinc-200 text-sm">4K Ultra HD · No Ads · Download & Watch · Multi-Screen</p>
+          <p className="text-white/80 text-sm">4K Ultra HD · No Ads · Download & Watch · Multi-Screen</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           {cheapest && (
             <div className="text-right">
               {cheapest.originalPrice && cheapest.originalPrice > cheapest.price && (
-                <p className="text-zinc-100 text-xs line-through">{formatCurrency(cheapest.originalPrice)}</p>
+                <p className="text-white text-xs line-through">{formatCurrency(cheapest.originalPrice)}</p>
               )}
               <p className="text-white font-bold text-xl">
-                {formatCurrency(cheapest.price)}<span className="text-zinc-200 text-sm font-normal">/{cheapest.interval || "mo"}</span>
+                {formatCurrency(cheapest.price)}<span className="text-white/80 text-sm font-normal">/{cheapest.interval || "mo"}</span>
               </p>
             </div>
           )}
@@ -562,7 +566,7 @@ function MoviesTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
     <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-6">
         <h2 className="text-white font-bold text-2xl tracking-tight">Movies</h2>
-        <p className="text-zinc-100 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} movies available`}</p>
+        <p className="text-white text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} movies available`}</p>
       </div>
       <GenreFilter active={activeGenre} onChange={setActiveGenre} />
       {isLoading ? (
@@ -588,7 +592,7 @@ function TVShowsTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
     <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-6">
         <h2 className="text-white font-bold text-2xl tracking-tight">TV Shows</h2>
-        <p className="text-zinc-100 text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} shows available`}</p>
+        <p className="text-white text-xs sm:text-sm mt-1">{isLoading ? "Loading..." : `${browseData?.pagination?.total || 0} shows available`}</p>
       </div>
       <GenreFilter active={activeGenre} onChange={setActiveGenre} />
       {isLoading ? (
@@ -607,11 +611,24 @@ function TVShowsTab({ onPlay }: { onPlay: (item: ContentItem) => void }) {
 /* ─── NEW & HOT TAB ─── */
 function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void; showToast?: (msg: string) => void }) {
   const { data: homeData, isLoading } = useGetWebHome();
-  const [reminders, setReminders] = useState<Record<string, boolean>>({});
+  const [reminders, setReminders] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem("streamvault_reminders");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
 
   const toggleReminder = (id: string, title: string) => {
     const active = !reminders[id];
-    setReminders((prev) => ({ ...prev, [id]: active }));
+    setReminders((prev) => {
+      const next = { ...prev, [id]: active };
+      try {
+        localStorage.setItem("streamvault_reminders", JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
     if (showToast) {
       showToast(active ? `Reminder set for "${title}"` : `Reminder cancelled for "${title}"`);
     }
@@ -635,16 +652,17 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
     <div className="pt-6 max-w-4xl mx-auto px-4 pb-20">
       <div className="mb-10 text-center sm:text-left">
         <h2 className="text-white font-bold text-2xl sm:text-3xl tracking-tight">New & Hot</h2>
-        <p className="text-zinc-100 text-xs sm:text-sm mt-1.5 font-medium">Follow the latest titles and trending releases.</p>
+        <p className="text-white text-xs sm:text-sm mt-1.5 font-medium">Follow the latest titles and trending releases.</p>
       </div>
 
       <div className="relative border-l border-zinc-800 ml-4 sm:ml-10 pl-6 sm:pl-10 space-y-12">
         {allItems.map((item: any) => {
           const id = item.id || item._id || "";
           const hasReminder = !!reminders[id];
-          const releaseDate = item.releaseDate || item.year;
-          const month = releaseDate ? new Date(releaseDate).toLocaleString("default", { month: "short" }).toUpperCase() : "";
-          const day = releaseDate ? new Date(releaseDate).getDate() : "";
+          const releaseDate = item.releaseDate || item.year || item.createdAt || new Date().toISOString();
+          const parsedDate = new Date(releaseDate);
+          const month = parsedDate.toLocaleString("default", { month: "short" }).toUpperCase();
+          const day = parsedDate.getDate();
 
           return (
             <div key={id} className="relative group/timeline">
@@ -654,12 +672,15 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
 
               {month && (
                 <div className="absolute -left-[95px] sm:-left-[125px] top-1 text-center w-16">
-                  <p className="text-zinc-100 text-[10px] font-bold tracking-widest">{month}</p>
+                  <p className="text-white text-[10px] font-bold tracking-widest">{month}</p>
                   <p className="text-white text-xl sm:text-2xl font-bold leading-none mt-0.5">{day}</p>
                 </div>
               )}
 
-              <div className="rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800/60 flex flex-col md:flex-row gap-5 p-4 sm:p-5 hover:border-zinc-700/60 transition-colors">
+              <div 
+                onClick={() => onPlay(item)}
+                className="rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800/60 flex flex-col md:flex-row gap-5 p-4 sm:p-5 hover:border-zinc-700/60 transition-colors cursor-pointer group-hover/timeline:bg-zinc-900/70"
+              >
                 <div
                   className={`relative md:w-64 w-full flex-shrink-0 rounded-xl overflow-hidden bg-black ${item.contentType === 'drama' ? 'aspect-[9/16] md:w-36' : 'aspect-[16/9]'}`}
                 >
@@ -671,11 +692,14 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                       <h3 className="text-white text-base sm:text-lg font-bold truncate">{item.title}</h3>
                       <button
-                        onClick={() => toggleReminder(id, item.title)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleReminder(id, item.title);
+                        }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
                           hasReminder
                             ? "bg-emerald-600/15 border-emerald-600/30 text-emerald-400"
-                            : "bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-zinc-100"
+                            : "bg-zinc-900 border-zinc-800 hover:border-zinc-700 text-white"
                         }`}
                       >
                         {hasReminder ? <Check className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
@@ -683,15 +707,15 @@ function NewHotTab({ onPlay, showToast }: { onPlay: (item: ContentItem) => void;
                       </button>
                     </div>
                     {item.description && (
-                      <p className="text-zinc-100 text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
+                      <p className="text-white text-xs sm:text-[13px] leading-relaxed mt-2.5 line-clamp-3">{item.description}</p>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 flex-wrap">
-                    <span className="text-zinc-200 text-[10px] font-bold tracking-wider uppercase">{item.badge || 'NEW'}</span>
-                    <span className="text-zinc-100 text-[10px]">·</span>
+                    <span className="text-white/80 text-[10px] font-bold tracking-wider uppercase">{item.badge || 'NEW'}</span>
+                    <span className="text-white text-[10px]">·</span>
                     {(item.genres || []).slice(0, 2).map((g: string) => (
-                      <span key={g} className="text-[10px] font-bold px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-full uppercase tracking-wider">{g}</span>
+                      <span key={g} className="text-[10px] font-bold px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 text-white/80 rounded-full uppercase tracking-wider">{g}</span>
                     ))}
                   </div>
                 </div>
@@ -715,7 +739,7 @@ function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
     <div className="pt-6 pb-20">
       <div className="px-4 sm:px-8 lg:px-12 mb-8">
         <h2 className="text-white font-bold text-2xl tracking-tight">Short Drama</h2>
-        <p className="text-zinc-100 text-sm mt-1">{allDramas.length} series · Portrait 9:16 · Episode-based</p>
+        <p className="text-white text-sm mt-1">{allDramas.length} series · Portrait 9:16 · Episode-based</p>
       </div>
 
       <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-10">
@@ -736,7 +760,7 @@ function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
               <div className="w-9 h-9 rounded-xl bg-zinc-800/80 flex items-center justify-center flex-shrink-0">{icon}</div>
               <div>
                 <p className="text-white font-bold text-sm">{label}</p>
-                <p className="text-zinc-200 text-xs mt-0.5">{desc}</p>
+                <p className="text-white/80 text-xs mt-0.5">{desc}</p>
               </div>
             </div>
           ))}
@@ -744,6 +768,53 @@ function ShortDramaTab({ onSelect }: { onSelect: (d: ShortDrama) => void }) {
       </div>
     </div>
   );
+}
+
+function getSectionItems(section: any, movies: any[], dramas: any[], homeData: any) {
+  if (section.content && section.content.length > 0) return section.content;
+  if (section.category && homeData && homeData[section.category] && homeData[section.category].length > 0) return homeData[section.category];
+  
+  let sourceItems = section.contentType === 'movie' ? movies : section.contentType === 'drama' ? dramas : [...movies, ...dramas];
+  
+  let filteredItems = [...sourceItems];
+  if (section.contentSelection === 'dynamic' || section.contentSelection === 'mixed') {
+    if (section.filterKey && section.filterKey !== 'none') {
+       const fKey = section.filterKey;
+       const fVal = section.filter?.[fKey] || section.filterValue; // Fallback to raw filterValue if filter obj is missing
+       if (fKey === 'genres') {
+          filteredItems = filteredItems.filter(i => i.genres?.includes(fVal));
+       } else if (fKey === 'isNewContent' || fKey === 'trending' || fKey === 'featured') {
+          filteredItems = filteredItems.filter(i => i[fKey] === (fVal === 'true' || fVal === true));
+       } else {
+          filteredItems = filteredItems.filter(i => i[fKey] === fVal);
+       }
+    }
+  }
+
+  if (section.contentSelection === 'manual') {
+    filteredItems = sourceItems.filter(item => section.manualContentIds?.includes(item._id));
+  } else if (section.contentSelection === 'mixed') {
+    const manualItems = sourceItems.filter(item => section.manualContentIds?.includes(item._id));
+    // Combine manual items with filtered items, avoiding duplicates
+    const manualIds = new Set(manualItems.map(i => i._id));
+    filteredItems = [...manualItems, ...filteredItems.filter(i => !manualIds.has(i._id))];
+  }
+
+  if (section.sortBy) {
+    const sKey = Object.keys(section.sortBy)[0] || section.sortKey;
+    const sDir = section.sortBy[sKey] || section.sortDir || -1;
+    filteredItems = [...filteredItems].sort((a, b) => {
+       if (a[sKey] < b[sKey]) return -1 * sDir;
+       if (a[sKey] > b[sKey]) return 1 * sDir;
+       return 0;
+    });
+  }
+
+  if (section.limit) {
+    filteredItems = filteredItems.slice(0, section.limit);
+  }
+
+  return filteredItems;
 }
 
 /* ─── HOME TAB ─── */
@@ -754,16 +825,23 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
   isSubscribed?: boolean;
 }) {
   const [, setLocation] = useLocation();
-  const { data: homeData, isLoading } = useGetWebHome();
+  const { data: homeData, isLoading: isHomeLoading } = useGetWebHome();
   const { data: watchHistoryData } = useGetWatchHistory({ limit: 10 });
-  const cw = watchHistoryData?.items || [];
+  const { data: sectionsData, isLoading: isSectionsLoading } = useGetSections({ platform: 'web', activeOnly: true });
+  const { data: moviesRes, isLoading: isMoviesLoading } = useGetMovies({ limit: 500 });
+  const { data: dramasRes, isLoading: isDramasLoading } = useGetContentList({ limit: 500 });
 
-  if (isLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
+  const cw = watchHistoryData?.items || [];
+  const webSections = (sectionsData?.data || []).sort((a: any, b: any) => (a.position || 0) - (b.position || 0));
+  const movies = moviesRes?.data || [];
+  const dramas = dramasRes?.data || [];
+
+  if (isHomeLoading || isSectionsLoading || isMoviesLoading || isDramasLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
 
   return (
-    <div className="px-4 sm:px-8 lg:px-12 pb-20 space-y-12 pt-8">
+    <div className="pb-20 space-y-12 pt-8">
       {cw.length > 0 && (
-        <section>
+        <section className="px-4 sm:px-8 lg:px-12">
           <SectionHeader title="Continue Watching" icon={<Clock className="w-4 h-4" />} />
           <div className="flex gap-4 overflow-x-auto pb-3" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
             {cw.map((item: any) => (
@@ -794,7 +872,7 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
                       {item.showTitle || item.title}
                     </p>
                     {item.showTitle && (
-                      <p className="text-zinc-200 text-[11px] truncate mt-0.5">
+                      <p className="text-white/80 text-[11px] truncate mt-0.5">
                         {item.title}
                       </p>
                     )}
@@ -810,33 +888,110 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
         </section>
       )}
 
-      {homeData.featuredDramas?.length > 0 && (
-        <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
-      )}
-      {homeData.newDramas?.length > 0 && (
-        <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
-      )}
-      {homeData.trendingNow?.length > 0 && (
-        <FeaturedRow title="Trending Now" icon={<TrendingUp className="w-4 h-4" />} items={homeData.trendingNow} onPlay={onPlay} onSeeAll={() => setLocation("/browse?trending")} />
-      )}
-      {homeData.newReleases?.length > 0 && (
-        <FeaturedRow title="New Releases" icon={<Sparkles className="w-4 h-4" />} items={homeData.newReleases} onPlay={onPlay} onSeeAll={() => setLocation("/browse?new")} />
+      {webSections.length > 0 ? (
+        webSections.map((section: any, index: number) => {
+          if (section.layout === 'ad') {
+            return (
+              <Fragment key={section._id || index}>
+                {section.itemType === 'google-adsense' ? <GoogleAdsenseBanner /> : <HomeBannerAd adId={section.manualContentIds?.[0]} />}
+              </Fragment>
+            );
+          }
+
+          let rowContent = null;
+          const items = getSectionItems(section, movies, dramas, homeData);
+          
+          if (items.length === 0) return null;
+
+          if (section.layout === 'grid') {
+            rowContent = (
+              <div className="mb-10">
+                <SectionHeader title={section.title} onSeeAll={() => setLocation(`/browse?section=${section._id}`)} count={items.length} />
+                <div className="px-4 sm:px-8 lg:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 pt-2">
+                  {items.map((item: any) => (
+                    <Fragment key={item.id || item._id}>
+                      {section.itemType === 'landscape' ? (
+                        <LandscapeCard item={item} onClick={() => onPlay(item)} fullWidth />
+                      ) : section.itemType === 'drama' ? (
+                        <ShortDramaCard drama={item} onClick={() => onSelectDrama(item)} fullWidth />
+                      ) : (
+                        <PortraitCard item={item} onClick={() => onPlay(item)} fullWidth />
+                      )}
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+            );
+          } else {
+            if (section.itemType === 'landscape') {
+              rowContent = <FeaturedRow title={section.title} items={items} onPlay={onPlay} onSeeAll={() => setLocation(`/browse?section=${section._id}`)} />;
+            } else if (section.itemType === 'drama') {
+              rowContent = <ShortDramaRow title={section.title} items={items} onSelect={onSelectDrama} onSeeAll={() => setLocation(`/browse?section=${section._id}`)} />;
+            } else {
+              rowContent = <ContentRow title={section.title} items={items} onPlay={onPlay} size="lg" onSeeAll={() => setLocation(`/browse?section=${section._id}`)} />;
+            }
+          }
+          
+          return (
+            <Fragment key={section._id || index}>
+              {rowContent}
+            </Fragment>
+          );
+        })
+      ) : (
+        <>
+          {/* HARDCODED FALLBACK START */}
+          {homeData.featuredDramas?.length > 0 && (
+            <ShortDramaRow title="Short Drama — Hot Now" icon={<Smartphone className="w-4 h-4" />} items={homeData.featuredDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
+          )}
+          {homeData.newDramas?.length > 0 && (
+            <ShortDramaRow title="New Short Drama" icon={<Crown className="w-4 h-4" />} items={homeData.newDramas} onSelect={onSelectDrama} onSeeAll={() => setLocation("/browse?short-drama")} />
+          )}
+          {homeData.trendingNow?.length > 0 && (
+            <FeaturedRow title="Trending Now" icon={<TrendingUp className="w-4 h-4" />} items={homeData.trendingNow} onPlay={onPlay} onSeeAll={() => setLocation("/browse?trending")} />
+          )}
+
+          {/* ── HOME PAGE AD BANNER ── */}
+          <HomeBannerAd />
+
+          {homeData.newReleases?.length > 0 && (
+            <FeaturedRow title="New Releases" icon={<Sparkles className="w-4 h-4" />} items={homeData.newReleases} onPlay={onPlay} onSeeAll={() => setLocation("/browse?new")} />
+          )}
+
+          {/* ── GOOGLE ADSENSE BANNER ── */}
+          <GoogleAdsenseBanner />
+
+          {!isSubscribed && <SubscribeBanner onSubscribeClick={onSubscribeClick} />}
+
+          {homeData.topRated?.length > 0 && (
+            <ContentRow title="Top Rated Movies" icon={<Star className="w-4 h-4" />} items={homeData.topRated} onPlay={onPlay} size="lg" onSeeAll={() => setLocation("/browse?top-rated")} />
+          )}
+          {homeData.tvShows?.length > 0 && (
+            <FeaturedRow title="Popular TV Shows" icon={<Tv className="w-4 h-4" />} items={homeData.tvShows.slice(0, 10)} onPlay={onPlay} onSeeAll={() => setLocation("/browse?tv")} />
+          )}
+
+          {/* ── SECOND AD BANNER (mid-content) ── */}
+          <HomeBannerAd />
+
+          {homeData.actionMovies?.length > 0 && (
+            <FeaturedRow title="Action & Adventure" icon={<Flame className="w-4 h-4" />} items={homeData.actionMovies} onPlay={onPlay} onSeeAll={() => setLocation("/browse?action")} />
+          )}
+          
+          {/* ── SECOND GOOGLE ADSENSE BANNER ── */}
+          <GoogleAdsenseBanner />
+
+          {homeData.dramaShows?.length > 0 && (
+            <FeaturedRow title="Drama Series" icon={<Film className="w-4 h-4" />} items={homeData.dramaShows} onPlay={onPlay} onSeeAll={() => setLocation("/browse?drama-series")} />
+          )}
+
+          {/* ── THIRD AD BANNER (bottom) ── */}
+          <HomeBannerAd />
+          {/* HARDCODED FALLBACK END */}
+        </>
       )}
 
-      {!isSubscribed && <SubscribeBanner onSubscribeClick={onSubscribeClick} />}
-
-      {homeData.topRated?.length > 0 && (
-        <ContentRow title="Top Rated Movies" icon={<Star className="w-4 h-4" />} items={homeData.topRated} onPlay={onPlay} size="lg" onSeeAll={() => setLocation("/browse?top-rated")} />
-      )}
-      {homeData.tvShows?.length > 0 && (
-        <FeaturedRow title="Popular TV Shows" icon={<Tv className="w-4 h-4" />} items={homeData.tvShows.slice(0, 10)} onPlay={onPlay} onSeeAll={() => setLocation("/browse?tv")} />
-      )}
-      {homeData.actionMovies?.length > 0 && (
-        <FeaturedRow title="Action & Adventure" icon={<Flame className="w-4 h-4" />} items={homeData.actionMovies} onPlay={onPlay} onSeeAll={() => setLocation("/browse?action")} />
-      )}
-      {homeData.dramaShows?.length > 0 && (
-        <FeaturedRow title="Drama Series" icon={<Film className="w-4 h-4" />} items={homeData.dramaShows} onPlay={onPlay} onSeeAll={() => setLocation("/browse?drama-series")} />
-      )}
+      {/* Subscribe Banner if there are dynamic sections, to ensure it always renders at bottom if not shown in hardcoded fallback */}
+      {webSections.length > 0 && !isSubscribed && <SubscribeBanner onSubscribeClick={onSubscribeClick} />}
     </div>
   );
 }
@@ -864,7 +1019,7 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
             <p className="text-white font-bold text-sm truncate leading-none">{user ? user.name || "User" : "Guest User"}</p>
             {user && <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />}
           </div>
-          <p className="text-zinc-100 text-[11px] truncate mt-1 leading-none font-medium">
+          <p className="text-white text-[11px] truncate mt-1 leading-none font-medium">
             {user ? "Premium Member" : "Sign in for full access"}
           </p>
         </div>
@@ -879,7 +1034,7 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
           <button
             key={opt.label}
             onClick={() => setLocation(opt.href)}
-            className="w-full flex items-center gap-3 px-3 py-2 text-zinc-200 hover:text-white hover:bg-white/5 rounded-xl text-left text-xs font-semibold transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded-xl text-left text-xs font-semibold transition-all"
           >
             {opt.icon}
             {opt.label}
@@ -891,7 +1046,7 @@ function UserDropdown({ onSignIn, onSignOut, user }: { onSignIn: () => void; onS
         {user ? (
           <button
             onClick={onSignOut}
-            className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-100 hover:text-white font-bold rounded-xl text-xs transition-all text-center"
+            className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white hover:text-white font-bold rounded-xl text-xs transition-all text-center"
           >
             Sign Out
           </button>
@@ -1006,17 +1161,17 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 <span className="text-white font-bold text-[15px] tracking-tight mt-2">{settings.platformName || "StreamIT"}</span>
               </>
             )}
-            <p className="text-[10px] text-zinc-200 text-center font-medium mt-3 leading-relaxed">Your portal to premium cinematic experiences.</p>
+            <p className="text-[10px] text-white/80 text-center font-medium mt-3 leading-relaxed">Your portal to premium cinematic experiences.</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col p-8 overflow-y-auto">
-          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-zinc-100 hover:text-white hover:bg-white/5 transition-all z-10">
+          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-white hover:text-white hover:bg-white/5 transition-all z-10">
             <X className="w-4 h-4" />
           </button>
 
           <h2 className="text-white font-bold text-xl sm:text-2xl tracking-tight mb-1 pr-6">{isLogin ? "Welcome Back" : "Create Account"}</h2>
-          <p className="text-zinc-100 text-xs sm:text-sm mb-6 font-medium">
+          <p className="text-white text-xs sm:text-sm mb-6 font-medium">
             {isLogin ? "New to the platform? " : "Already have an account? "}
             <button onClick={() => setIsLogin(!isLogin)} className="text-red-500 hover:underline font-bold transition-all">
               {isLogin ? "Sign Up Free" : "Log In"}
@@ -1031,12 +1186,12 @@ function SignInModal({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 onClick={() => setUsePhone(false)}
-                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!usePhone ? "bg-red-600 text-white" : "text-zinc-100 hover:text-white"}`}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!usePhone ? "bg-red-600 text-white" : "text-white hover:text-white"}`}
               >Email</button>
               <button
                 type="button"
                 onClick={() => setUsePhone(true)}
-                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${usePhone ? "bg-red-600 text-white" : "text-zinc-100 hover:text-white"}`}
+                className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${usePhone ? "bg-red-600 text-white" : "text-white hover:text-white"}`}
               >Phone</button>
             </div>
           )}
@@ -1049,7 +1204,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-white/80 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
 
@@ -1061,7 +1216,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-white/80 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
 
@@ -1073,7 +1228,7 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={isLogin ? "Phone Number" : "Phone Number (optional — links app account)"}
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-white/80 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all"
               />
             )}
 
@@ -1085,12 +1240,12 @@ function SignInModal({ onClose }: { onClose: () => void }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-200 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all pr-10"
+                className="w-full bg-zinc-900 border border-zinc-800 text-white placeholder:text-white/80 px-4 py-3 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-100 hover:text-white transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white hover:text-white transition-colors"
               >
                 {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
@@ -1101,23 +1256,23 @@ function SignInModal({ onClose }: { onClose: () => void }) {
           </form>
 
           <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-3 text-zinc-200 text-[10px] font-bold uppercase tracking-widest">
+            <div className="flex items-center gap-3 text-white/80 text-[10px] font-bold uppercase tracking-widest">
               <div className="flex-1 h-px bg-zinc-800" />
               <span>Or connect with</span>
               <div className="flex-1 h-px bg-zinc-800" />
             </div>
             <div className="flex items-center gap-2">
-              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-white/80 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
                 Google
               </button>
-              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-zinc-200 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-zinc-950 border border-zinc-800 text-white/80 hover:text-white rounded-xl text-[11px] font-bold transition-all hover:bg-zinc-900 flex items-center justify-center gap-1.5">
                 Apple
               </button>
             </div>
           </div>
 
-          <p className="text-zinc-200 text-[10px] text-center leading-relaxed mt-6 font-medium">
-            By continuing, you accept our <a href="#" className="text-zinc-200 hover:underline">Terms of Service</a> & <a href="#" className="text-zinc-200 hover:underline">Privacy Policy</a>.
+          <p className="text-white/80 text-[10px] text-center leading-relaxed mt-6 font-medium">
+            By continuing, you accept our <a href="#" className="text-white/80 hover:underline">Terms of Service</a> & <a href="#" className="text-white/80 hover:underline">Privacy Policy</a>.
           </p>
         </div>
       </div>
@@ -1247,7 +1402,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative flex items-center gap-1.5 px-3.5 py-2 text-[13.5px] font-bold rounded-lg transition-all duration-200 ${activeTab === tab ? "text-white" : "text-zinc-200 hover:text-white hover:bg-white/5"}`}
+                    className={`relative flex items-center gap-1.5 px-3.5 py-2 text-[13.5px] font-bold rounded-lg transition-all duration-200 text-white hover:bg-white/10`}
                   >
                     {icon}
                     {label}
@@ -1262,7 +1417,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
             <div className="flex items-center gap-1.5 sm:gap-2.5" id="public-search-container">
               <div className="relative flex items-center">
                 <div className={`flex items-center overflow-hidden transition-all duration-300 rounded-full border ${searchOpen ? "w-44 sm:w-52 bg-black/80 border-zinc-800" : "w-9 h-9 border-transparent"}`}>
-                  {searchOpen && <Search className="absolute left-3 w-3.5 h-3.5 text-zinc-200 pointer-events-none" />}
+                  {searchOpen && <Search className="absolute left-3 w-3.5 h-3.5 text-white/80 pointer-events-none" />}
                   {searchOpen ? (
                     <input
                       autoFocus
@@ -1270,21 +1425,21 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                       onChange={handleSearchChange}
                       onKeyDown={handleSearchKeyDown}
                       placeholder="Search titles..."
-                      className="w-full bg-transparent text-white text-xs pl-8 pr-7 py-2 focus:outline-none placeholder:text-zinc-100"
+                      className="w-full bg-transparent text-white text-xs pl-8 pr-7 py-2 focus:outline-none placeholder:text-white"
                     />
                   ) : (
-                    <button onClick={() => { setSearchOpen(true); setLocation("/browse"); }} className="w-9 h-9 flex items-center justify-center text-zinc-100 hover:text-white transition-colors rounded-full hover:bg-white/5">
+                    <button onClick={() => { setSearchOpen(true); setLocation("/browse"); }} className="w-9 h-9 flex items-center justify-center text-white hover:text-white transition-colors rounded-full hover:bg-white/5">
                       <Search className="w-[17px] h-[17px]" />
                     </button>
                   )}
-                  {searchOpen && <button onMouseDown={handleClearSearch} className="absolute right-2.5 text-zinc-100 hover:text-white"><X className="w-3 h-3" /></button>}
+                  {searchOpen && <button onMouseDown={handleClearSearch} className="absolute right-2.5 text-white hover:text-white"><X className="w-3 h-3" /></button>}
                 </div>
               </div>
 
               <div className="relative" ref={notificationsRef}>
                 <button
                   onClick={handleToggleNotifications}
-                  className="relative w-9 h-9 flex items-center justify-center text-zinc-100 hover:text-white rounded-full hover:bg-white/5 transition-all"
+                  className="relative w-9 h-9 flex items-center justify-center text-white hover:text-white rounded-full hover:bg-white/5 transition-all"
                 >
                   <Bell className="w-[17px] h-[17px]" />
                   {unreadCount > 0 && (
@@ -1294,11 +1449,11 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                   )}
                 </button>
                 {notificationsOpen && (
-                  <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-[#0a0a10] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-3.5 border-b border-zinc-800 flex items-center justify-between">
+                  <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-[#0a0a0a] border border-border rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-3.5 border-b border-border flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-white font-bold text-sm">Notifications</span>
-                        {unreadCount > 0 && <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
+                        {unreadCount > 0 && <span className="bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount} new</span>}
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -1306,18 +1461,18 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                             const allIds = new Set(notifications.map((n: any) => n._id || n.id));
                             setReadNotifications(allIds);
                           }}
-                          className="text-zinc-100 hover:text-white text-[10px] font-medium px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                          className="text-white/70 hover:text-white text-[10px] font-medium px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
                         >
                           Mark all as read
                         </button>
-                        <button onClick={() => setNotificationsOpen(false)} className="text-zinc-100 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setNotificationsOpen(false)} className="text-white/70 hover:text-white"><X className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
-                    <div className="max-h-[300px] overflow-y-auto divide-y divide-zinc-800/60">
+                    <div className="max-h-[300px] overflow-y-auto divide-y divide-border/60">
                       {notifications.length === 0 ? (
                         <div className="p-6 text-center">
-                          <Bell className="w-8 h-8 text-zinc-200 mx-auto mb-2" />
-                          <p className="text-zinc-100 text-xs font-medium">No notifications yet</p>
+                          <Bell className="w-8 h-8 text-white/60 mx-auto mb-2" />
+                          <p className="text-white/70 text-xs font-medium">No notifications yet</p>
                         </div>
                       ) : (
                         notifications.map((n: any) => {
@@ -1325,11 +1480,11 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                           const isRead = readNotifications.has(nid);
                           const timeStr = formatRelativeTime(n.createdAt);
                           return (
-                            <div key={nid} className={`p-3.5 transition-colors cursor-pointer ${isRead ? "hover:bg-zinc-900/30" : "bg-red-500/5 hover:bg-red-500/10"}`} onClick={() => setNotificationsOpen(false)}>
-                              {!isRead && <span className="inline-block w-1.5 h-1.5 bg-red-600 rounded-full mr-1.5 mb-0.5 align-middle" />}
+                            <div key={nid} className={`p-3.5 transition-colors cursor-pointer ${isRead ? "hover:bg-white/5" : "bg-primary/5 hover:bg-primary/10"}`} onClick={() => setNotificationsOpen(false)}>
+                              {!isRead && <span className="inline-block w-1.5 h-1.5 bg-primary rounded-full mr-1.5 mb-0.5 align-middle" />}
                               <p className="text-white text-xs font-bold leading-tight inline">{n.title}</p>
-                              {n.text && <p className="text-zinc-200 text-[11px] mt-1 leading-relaxed line-clamp-2">{n.text}</p>}
-                              {timeStr && <p className="text-zinc-200 text-[10px] mt-1.5 font-medium">{timeStr}</p>}
+                              {n.text && <p className="text-white/70 text-[11px] mt-1 leading-relaxed line-clamp-2">{n.text}</p>}
+                              {timeStr && <p className="text-white/65 text-[10px] mt-1.5 font-medium">{timeStr}</p>}
                             </div>
                           );
                         })
@@ -1367,12 +1522,12 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
                       {user ? user.name?.[0] || "U" : <User className="w-4 h-4 text-white" />}
                     </div>
                   )}
-                  <ChevronDown className={`w-3 h-3 text-zinc-200 hidden sm:block transition-transform duration-200 ${userDropdownOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3 h-3 text-white/80 hidden sm:block transition-transform duration-200 ${userDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
                 {userDropdownOpen && <UserDropdown onSignIn={onSignIn} onSignOut={onSignOut} user={user} />}
               </div>
 
-              <button className="lg:hidden ml-0.5 w-9 h-9 flex items-center justify-center text-zinc-100 hover:text-white rounded-full hover:bg-white/5 transition-all" onClick={() => setMobileOpen(!mobileOpen)}>
+              <button className="lg:hidden ml-0.5 w-9 h-9 flex items-center justify-center text-white hover:text-white rounded-full hover:bg-white/5 transition-all" onClick={() => setMobileOpen(!mobileOpen)}>
                 <div className="flex flex-col gap-[5px] w-5">
                   <span className={`block h-[1.5px] bg-current rounded-full transition-all duration-300 ${mobileOpen ? "rotate-45 translate-y-[6.5px]" : ""}`} />
                   <span className={`block h-[1.5px] bg-current rounded-full transition-all duration-300 ${mobileOpen ? "opacity-0 scale-x-0" : ""}`} />
@@ -1389,7 +1544,7 @@ export function PublicHeader({ activeTab, setActiveTab, onSignIn, onSignOut, use
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setMobileOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? "bg-red-600/15 text-white" : "text-zinc-200 hover:text-white hover:bg-white/5"}`}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? "bg-red-600/15 text-white" : "text-white hover:bg-white/10"}`}
               >
                 {activeTab === tab && <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />}
                 {icon}
@@ -1456,10 +1611,10 @@ export function PublicFooter() {
                 </>
               )}
             </div>
-            <p className="text-zinc-100 text-xs leading-relaxed max-w-xs">{settings.siteDescription || "Your premium OTT destination for movies, TV shows, and exclusive short dramas."}</p>
+            <p className="text-white text-xs leading-relaxed max-w-xs">{settings.siteDescription || "Your premium OTT destination for movies, TV shows, and exclusive short dramas."}</p>
             <div className="flex items-center gap-2 pt-2">
               {socialLinks.map((s) => (
-                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-100 hover:text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-800 text-white hover:border-red-600 hover:bg-red-600/5 transition-all">
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                     <path d={s.d} />
                   </svg>
@@ -1478,7 +1633,7 @@ export function PublicFooter() {
                 { label: "New & Hot", href: "/browse" },
               ].map((itm) => (
                 <li key={itm.label}>
-                  <button onClick={() => setLocation(itm.href)} className="text-zinc-100 hover:text-white text-xs font-semibold transition-colors text-left">{itm.label}</button>
+                  <button onClick={() => setLocation(itm.href)} className="text-white hover:text-white text-xs font-semibold transition-colors text-left">{itm.label}</button>
                 </li>
               ))}
             </ul>
@@ -1497,34 +1652,34 @@ export function PublicFooter() {
                         setLocation(`/page/${p.slug}`);
                       }
                     }} 
-                    className="text-zinc-100 hover:text-white text-xs font-semibold transition-colors text-left truncate max-w-full" 
+                    className="text-white hover:text-white text-xs font-semibold transition-colors text-left truncate max-w-full" 
                     title={p.title}
                   >
                     {p.title}
                   </button>
                 </li>
               )) : (
-                <li className="text-zinc-200 text-xs col-span-2">No pages available</li>
+                <li className="text-white text-xs col-span-2">No pages available</li>
               )}
             </ul>
           </div>
 
           <div className="space-y-4">
             <h4 className="text-white font-bold text-[11px] tracking-widest uppercase">Contact Info</h4>
-            <ul className="space-y-3 text-zinc-100 text-xs">
+            <ul className="space-y-3 text-white text-xs">
               {settings.contactNo && (
                 <li className="flex flex-col gap-0.5">
-                  <span className="text-zinc-300 font-semibold uppercase tracking-wider text-[9px]">Phone</span>
-                  <span className="font-medium text-zinc-200 text-[11px]">{settings.contactNo}</span>
+                  <span className="text-white/75 font-semibold uppercase tracking-wider text-[9px]">Phone</span>
+                  <span className="font-medium text-white/80 text-[11px]">{settings.contactNo}</span>
                 </li>
               )}
               {settings.inquiryEmail && (
                 <li className="flex flex-col gap-0.5">
-                  <span className="text-zinc-300 font-semibold uppercase tracking-wider text-[9px]">Email</span>
-                  <a href={`mailto:${settings.inquiryEmail}`} className="font-medium text-zinc-200 text-[11px] hover:text-primary transition-colors truncate block max-w-full">{settings.inquiryEmail}</a>
+                  <span className="text-white/75 font-semibold uppercase tracking-wider text-[9px]">Email</span>
+                  <a href={`mailto:${settings.inquiryEmail}`} className="font-medium text-white/80 text-[11px] hover:text-primary transition-colors truncate block max-w-full">{settings.inquiryEmail}</a>
                 </li>
               )}
-              <li className="text-zinc-100 text-[10px] mt-2 font-medium leading-relaxed pt-2 border-t border-zinc-900">
+              <li className="text-white text-[10px] mt-2 font-medium leading-relaxed pt-2 border-t border-zinc-900">
                 Support Hours:<br />
                 Mon - Sat: 9:00 AM - 6:00 PM
               </li>
@@ -1533,7 +1688,7 @@ export function PublicFooter() {
         </div>
 
         <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-zinc-200 text-xs font-medium">{settings.copyrightText || "2025 StreamIT. All Rights Reserved."}</p>
+          <p className="text-white/80 text-xs font-medium">{settings.copyrightText || "2025 StreamIT. All Rights Reserved."}</p>
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2">
             {pages.map((p: any) => (
               <button 
@@ -1545,7 +1700,7 @@ export function PublicFooter() {
                     setLocation(`/page/${p.slug}`);
                   }
                 }} 
-                className="text-zinc-200 hover:text-white text-[11px] font-bold transition-colors whitespace-nowrap"
+                className="text-white/80 hover:text-white text-[11px] font-bold transition-colors whitespace-nowrap"
               >
                 {p.title}
               </button>
@@ -1565,6 +1720,13 @@ export default function StreamingHomePage() {
   const [user, setUser] = useState<any>(null);
   const [toastMsg, setToastMsg] = useState("");
   const [plansModalOpen, setPlansModalOpen] = useState(false);
+  const [pendingPlay, setPendingPlay] = useState<any>(null);
+  const [showPreroll, setShowPreroll] = useState(false);
+
+  // Prefetch player ads so we know if pre-roll exists before showing it
+  const { data: playerAdsData } = useGetPublicAds({ placement: 'Player' });
+  const { settings } = useSettings();
+  const hasPlayerAds = (playerAdsData?.data?.length ?? 0) > 0 || !!settings?.vastPrerollUrl;
 
   const { data: homeData } = useGetWebHome();
   const rawBanners = homeData?.heroContent || [];
@@ -1605,20 +1767,15 @@ export default function StreamingHomePage() {
 
   const isSubscribed = user?.subscriptionStatus === "active" && user?.subscriptionPlan !== "free";
 
-  const handlePlay = (item: any) => {
+  const navigateToContent = useCallback((item: any) => {
     const id = item.contentId || item.id || item._id;
     const contentType = (item.contentType || "").toLowerCase();
     const type = (item.type || "").toLowerCase();
-    // Check contentType first — short dramas have type="show" but contentType="drama"
     const isDrama = contentType === "drama";
     const isMovie = type === "movie" || contentType === "movie";
     const isShow = type === "show" || type === "series" || contentType === "series";
     if (isDrama) {
-      if (item.trailerUrl) {
-        setLocation(`/drama/${id}/episode/0`);
-      } else {
-        setLocation(`/drama/${id}/episode/1`);
-      }
+      setLocation(item.trailerUrl ? `/drama/${id}/episode/0` : `/drama/${id}/episode/1`);
     } else if (isMovie) {
       setLocation(`/movie/${id}`);
     } else if (isShow) {
@@ -1626,15 +1783,35 @@ export default function StreamingHomePage() {
     } else {
       setLocation(`/movie/${id}`);
     }
-  };
+  }, [setLocation]);
 
-  const handleSelectDrama = (drama: any) => {
-    if (drama.trailerUrl) {
-      setLocation(`/drama/${drama.id || drama._id}/episode/0`);
+  const handlePlay = useCallback((item: any) => {
+    // Show pre-roll ad before navigation (only for non-subscribers)
+    if (hasPlayerAds && !isSubscribed) {
+      setPendingPlay(item);
+      setShowPreroll(true);
     } else {
-      setLocation(`/drama/${drama.id || drama._id}/episode/1`);
+      navigateToContent(item);
     }
-  };
+  }, [hasPlayerAds, isSubscribed, navigateToContent]);
+
+  const handlePrerollFinished = useCallback(() => {
+    setShowPreroll(false);
+    if (pendingPlay) {
+      navigateToContent(pendingPlay);
+      setPendingPlay(null);
+    }
+  }, [pendingPlay, navigateToContent]);
+
+  const handleSelectDrama = useCallback((drama: any) => {
+    const id = drama.id || drama._id;
+    if (hasPlayerAds && !isSubscribed) {
+      setPendingPlay({ ...drama, contentType: 'drama', trailerUrl: drama.trailerUrl });
+      setShowPreroll(true);
+    } else {
+      setLocation(drama.trailerUrl ? `/drama/${id}/episode/0` : `/drama/${id}/episode/1`);
+    }
+  }, [hasPlayerAds, isSubscribed, setLocation]);
 
   return (
     <div className="min-h-screen bg-[#030306] font-sans selection:bg-red-600/30 text-white pb-20 sm:pb-0">
@@ -1664,11 +1841,16 @@ export default function StreamingHomePage() {
           <ShortDramaTab onSelect={handleSelectDrama} />
         )}
         {activeTab === "new" && <NewHotTab onPlay={handlePlay} showToast={showToast} />}
-
-
       </main>
 
       <PublicFooter />
+
+      {/* ── PRE-ROLL AD OVERLAY ── */}
+      {showPreroll && (
+        <div className="fixed inset-0 z-[400] bg-black">
+          <PlayerPrerollAd onFinished={handlePrerollFinished} />
+        </div>
+      )}
 
       {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
 

@@ -226,7 +226,7 @@ export default function CategoryShowForm() {
           <h1 className="text-3xl font-bold tracking-tight">
             Add New Show
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-white/75 mt-1">
             Upload a video to create a new show with episodes
           </p>
         </div>
@@ -356,7 +356,7 @@ export default function CategoryShowForm() {
         <Card className="rounded-lg shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Film className="h-5 w-5 text-muted-foreground" />
+              <Film className="h-5 w-5 text-white/75" />
               <CardTitle>Episode Settings</CardTitle>
             </div>
             <CardDescription>Configure how your video is split into episodes.</CardDescription>
@@ -399,7 +399,7 @@ export default function CategoryShowForm() {
               <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <div>
                   <Label htmlFor="lockEpisodes">Lock Episodes</Label>
-                  <p className="text-xs text-muted-foreground">Lock episodes after free ones</p>
+                  <p className="text-xs text-white/75">Lock episodes after free ones</p>
                 </div>
                 <Switch id="lockEpisodes" checked={formData.lockEpisodes} onCheckedChange={(checked) => setFormData({ ...formData, lockEpisodes: checked })} />
               </div>
@@ -410,7 +410,7 @@ export default function CategoryShowForm() {
         <Card className="rounded-lg shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              <ImageIcon className="h-5 w-5 text-white/75" />
               <CardTitle>Artwork</CardTitle>
             </div>
             <CardDescription>Add thumbnail for your show.</CardDescription>
@@ -468,7 +468,7 @@ export default function CategoryShowForm() {
         <Card className="rounded-lg shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Film className="h-5 w-5 text-muted-foreground" />
+              <Film className="h-5 w-5 text-white/75" />
               <CardTitle>Video</CardTitle>
             </div>
             <CardDescription>Upload your show video to split into episodes.</CardDescription>
@@ -501,7 +501,7 @@ export default function CategoryShowForm() {
                   />
                   {videoFile && (
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">{videoFile.name} ({formatBytes(videoFile.size)})</span>
+                      <span className="text-sm text-white/75">{videoFile.name} ({formatBytes(videoFile.size)})</span>
                       <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
                         <X className="h-4 w-4" />
                       </Button>

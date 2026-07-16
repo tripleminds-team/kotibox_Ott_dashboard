@@ -232,7 +232,7 @@ export default function ShowForm() {
   if (!isCreate && isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Loading show...</p>
+        <p className="text-white/75">Loading show...</p>
       </div>
     );
   }
@@ -248,7 +248,7 @@ export default function ShowForm() {
           <h1 className="text-3xl font-bold tracking-tight">
             {isCreate ? "Add New Show" : "Edit Show"}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-white/75 mt-1">
             {isCreate
               ? "Upload a video to create a new show with episodes"
               : `Edit "${formData.title}" and assign it to categories`}
@@ -308,7 +308,7 @@ export default function ShowForm() {
                     <div className="flex items-center justify-between rounded-md border border-border p-3">
                       <div>
                         <Label htmlFor="status">Active</Label>
-                        <p className="text-xs text-muted-foreground">Set show as active</p>
+                        <p className="text-xs text-white/75">Set show as active</p>
                       </div>
                       <Switch
                         id="status"
@@ -353,7 +353,7 @@ export default function ShowForm() {
             <Card className="rounded-lg shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  <ImageIcon className="h-5 w-5 text-white/75" />
                   <CardTitle>Artwork</CardTitle>
                 </div>
                 <CardDescription>Thumbnail and banner image for your show</CardDescription>
@@ -382,7 +382,7 @@ export default function ShowForm() {
                       onClick={() => setThumbnailPickerOpen(true)}
                       className="h-40 w-28 rounded-md border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/20"
                     >
-                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                      <ImageIcon className="h-8 w-8 text-white/75/40" />
                     </div>
                   )}
                   <Button
@@ -427,7 +427,7 @@ export default function ShowForm() {
                       onClick={() => setBannerPickerOpen(true)}
                       className="h-28 w-64 rounded-md border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/20"
                     >
-                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                      <ImageIcon className="h-8 w-8 text-white/75/40" />
                     </div>
                   )}
                   <Button
@@ -456,7 +456,7 @@ export default function ShowForm() {
                 <Card className="rounded-lg shadow-sm">
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <Film className="h-5 w-5 text-muted-foreground" />
+                      <Film className="h-5 w-5 text-white/75" />
                       <CardTitle>Episode Settings</CardTitle>
                     </div>
                     <CardDescription>
@@ -524,7 +524,7 @@ export default function ShowForm() {
                       <div className="flex items-center justify-between rounded-md border border-border p-3">
                         <div>
                           <Label htmlFor="lockEpisodes">Lock Episodes</Label>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-white/75">
                             Lock episodes after free ones
                           </p>
                         </div>
@@ -546,7 +546,7 @@ export default function ShowForm() {
                 <Card className="rounded-lg shadow-sm">
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <Film className="h-5 w-5 text-muted-foreground" />
+                      <Film className="h-5 w-5 text-white/75" />
                       <CardTitle>Video</CardTitle>
                     </div>
                     <CardDescription>
@@ -590,7 +590,7 @@ export default function ShowForm() {
                           />
                           {videoFile && (
                             <div className="flex items-center gap-3">
-                              <span className="text-sm text-muted-foreground">
+                              <span className="text-sm text-white/75">
                                 {videoFile.name} ({formatBytes(videoFile.size)})
                               </span>
                               <Button

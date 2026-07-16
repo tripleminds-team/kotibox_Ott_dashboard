@@ -19,6 +19,7 @@ type UploadProgress = {
 
 type ApiOptions = RequestInit & {
   onUploadProgress?: (progress: UploadProgress) => void;
+  useAdminToken?: boolean;
 };
 
 export const getImageUrl = (filePath) => {
@@ -62,6 +63,11 @@ const api = async (
     finalEndpoint.startsWith("/api/wishlist") ||
     finalEndpoint.startsWith("/api/views/") ||
     finalEndpoint.startsWith("/api/share/") ||
+    finalEndpoint.startsWith("/api/wallet/balance") ||
+    finalEndpoint.startsWith("/api/wallet/topup") ||
+    finalEndpoint.startsWith("/api/wallet/razorpay") ||
+    finalEndpoint.startsWith("/api/wallet/unlocked-episodes") ||
+    finalEndpoint.startsWith("/api/wallet/packages") === false && finalEndpoint.startsWith("/api/wallet/") || // fallback if needed, but specific ones are better
     finalEndpoint.startsWith("/api/web/") ||
     finalEndpoint.startsWith("/api/web-") ||
     finalEndpoint.startsWith("/web-") ||
@@ -71,8 +77,17 @@ const api = async (
     finalEndpoint.startsWith("/search") ||
     finalEndpoint.startsWith("/api/home") ||
     finalEndpoint.startsWith("/home");
-  const tokenKey = isAppRoute ? "appAccessToken" : "adminAccessToken";
-  const token = localStorage.getItem(tokenKey);
+  
+  // Choose token based on route prefix, unless explicitly overridden
+  const defaultTokenKey = isAppRoute ? "appAccessToken" : "adminAccessToken";
+  const tokenKey = options.useAdminToken ? "adminAccessToken" : defaultTokenKey;
+  
+  let token = localStorage.getItem(tokenKey);
+  if (!token) {
+    // Fallback if the primary token is missing (useful for testing app routes in admin panel)
+    token = localStorage.getItem(tokenKey === "appAccessToken" ? "adminAccessToken" : "appAccessToken");
+  }
+
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -1663,6 +1678,27 @@ export const useBulkDeleteAds = () => {
   });
 };
 
+export const getAdAnalytics = async () => api('/ads/analytics');
+
+export const useGetAdAnalytics = () => {
+  return useQuery({
+    queryKey: ['ad-analytics'],
+    queryFn: getAdAnalytics,
+    staleTime: 2 * 60 * 1000,
+    retry: false,
+  });
+};
+
+export const recordAdInteraction = async (id: string, action: 'click' | 'impression') => {
+  return api(`/app/ads/${id}/interaction`, {
+    method: 'POST',
+    body: JSON.stringify({ action }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+
+
 // Settings
 export const getSettings = async () => {
   const response = await api("/settings");
@@ -1912,10 +1948,11 @@ export const getAllMediaFiles = async (options?: {
 };
 
 // Sections API
-export const getSections = async (params?: { contentType?: string; activeOnly?: boolean }) => {
+export const getSections = async (params?: { contentType?: string; activeOnly?: boolean; platform?: string }) => {
   const query = new URLSearchParams();
   if (params?.contentType) query.append('contentType', params.contentType);
   if (params?.activeOnly) query.append('activeOnly', 'true');
+  if (params?.platform) query.append('platform', params.platform);
   return api(`/sections?${query.toString()}`);
 };
 
@@ -1952,7 +1989,7 @@ export const reorderSections = async (updates: { id: string, position: number }[
 };
 
 // Sections Hooks
-export const useGetSections = (params?: { contentType?: string; activeOnly?: boolean }) => {
+export const useGetSections = (params?: { contentType?: string; activeOnly?: boolean; platform?: string }) => {
   return useQuery({
     queryKey: ['sections', params],
     queryFn: () => getSections(params),
@@ -3865,4 +3902,377 @@ export const removeOfflineVideo = async (contentId: string, episodeId?: string) 
     const cacheKey = episodeId ? `episode-${episodeId}` : `movie-${contentId}`;
     await cache.delete(cacheKey);
   } catch {}
+};
+
+// --- COIN PACKAGES (Admin) ---
+
+export const useGetCoinPackages = () => {
+  return useQuery({
+    queryKey: ["/wallet/packages"],
+    queryFn: () => api("/wallet/packages"),
+  });
+};
+
+export const useCreateCoinPackage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api("/wallet/packages", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/wallet/packages"] });
+    },
+  });
+};
+
+export const useUpdateCoinPackage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: any) =>
+      api(`/wallet/packages/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/wallet/packages"] });
+    },
+  });
+};
+
+export const useDeleteCoinPackage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api(`/wallet/packages/${id}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/wallet/packages"] });
+    },
+  });
+};
+
+export const useUnlockEpisode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { episodeId: string }) =>
+      api("/wallet/unlock-episode", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wallet-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/wallet/balance"] });
+      queryClient.invalidateQueries(); 
+    },
+  });
+};
+
+export const useGetWalletData = () => {
+  return useQuery({
+    queryKey: ["/wallet/balance"],
+    queryFn: () => api("/wallet/balance"),
+  });
+};
+
+export const useDeleteTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api(`/wallet/transactions/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/wallet/balance"] });
+    },
+  });
+};
+
+export const useClearTransactions = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api("/wallet/transactions", { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/wallet/balance"] });
+    },
+  });
+};
+
+export const useTopUpWallet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { packageId: string; transactionId: string }) =>
+      api("/wallet/topup", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/wallet/balance"] });
+    },
+  });
+};
+
+// ── Razorpay Wallet Top-up ───────────────────────────────────────────────────
+
+export const createWalletRazorpayOrder = async (data: { packageId: string }) => {
+  return api('/wallet/razorpay/order', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const verifyWalletRazorpayPayment = async (data: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  packageId: string;
+}) => {
+  return api('/wallet/razorpay/verify', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const useCreateWalletRazorpayOrder = () => {
+  return useMutation({
+    mutationFn: createWalletRazorpayOrder,
+  });
+};
+
+export const useVerifyWalletRazorpayPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: verifyWalletRazorpayPayment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/wallet/balance'] });
+    },
+  });
+};
+
+// ── Razorpay Subscription Purchase ──────────────────────────────────────────
+
+export const createSubscriptionRazorpayOrder = async (data: { planId: string; userId?: string }) => {
+  return api('/app/subscription/razorpay/order', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const verifySubscriptionRazorpayPayment = async (data: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  planId: string;
+  userId?: string;
+}) => {
+  return api('/app/subscription/razorpay/verify', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const useCreateSubscriptionRazorpayOrder = () => {
+  return useMutation({
+    mutationFn: createSubscriptionRazorpayOrder,
+  });
+};
+
+export const useVerifySubscriptionRazorpayPayment = () => {
+  return useMutation({
+    mutationFn: verifySubscriptionRazorpayPayment,
+  });
+};
+
+// ── Razorpay Script Loader ───────────────────────────────────────────────────
+
+export const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
+export interface RazorpayOptions {
+  keyId: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  prefill?: { name?: string; email?: string; contact?: string };
+  theme?: { color?: string };
+  onSuccess: (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => void;
+  onDismiss?: () => void;
+}
+
+export const openRazorpayCheckout = async (opts: RazorpayOptions): Promise<void> => {
+  const loaded = await loadRazorpayScript();
+  if (!loaded) throw new Error('Razorpay SDK failed to load');
+  const rzp = new (window as any).Razorpay({
+    key: opts.keyId,
+    order_id: opts.orderId,
+    amount: opts.amount,
+    currency: opts.currency || 'INR',
+    name: opts.name,
+    description: opts.description,
+    prefill: opts.prefill || {},
+    theme: opts.theme || { color: '#E50000' },
+    handler: (response: any) => opts.onSuccess(response),
+    modal: {
+      ondismiss: () => opts.onDismiss?.(),
+    },
+  });
+  rzp.open();
+};
+
+// ─── App Notifications & Rewards ───────────────────────────────────────────────
+
+export const useGetAppNotifications = () => {
+  return useQuery({
+    queryKey: ['appNotifications'],
+    queryFn: async () => {
+      const res = await api('/app/notifications');
+      return res?.data || [];
+    },
+    staleTime: 60 * 1000,
+  });
+};
+
+export const useGetRewardStatus = () => {
+  return useQuery({
+    queryKey: ['rewardStatus'],
+    queryFn: async () => {
+      const res = await api('/app/rewards/status');
+      return res?.data || { canClaim: false, nextClaimTime: null };
+    },
+    staleTime: 60 * 1000, // 1 minute
+  });
+};
+
+export const useClaimDailyReward = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      return api('/app/rewards/claim-daily', { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rewardStatus'] });
+      queryClient.invalidateQueries({ queryKey: ['walletData'] });
+    },
+  });
+};
+
+// ─── Reward Definitions (Admin) ───────────────────────────────────────────────
+
+export const useGetAdminRewardDefinitions = () => {
+  return useQuery({
+    queryKey: ['adminRewardDefinitions'],
+    queryFn: async () => {
+      const res = await api('/app/rewards/admin', { useAdminToken: true });
+      return res?.data || [];
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
+export const useCreateRewardDefinition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      title: string;
+      description: string;
+      type: string;
+      coinsReward: number;
+      requiredCount?: number;
+      isActive: boolean;
+      isOneTime: boolean;
+      iconUrl?: string;
+      order?: number;
+    }) => {
+      return api('/app/rewards/admin', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        useAdminToken: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminRewardDefinitions'] });
+    },
+  });
+};
+
+export const useUpdateRewardDefinition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; [key: string]: any }) => {
+      return api(`/app/rewards/admin/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+        useAdminToken: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminRewardDefinitions'] });
+    },
+  });
+};
+
+export const useDeleteRewardDefinition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return api(`/app/rewards/admin/${id}`, {
+        method: 'DELETE',
+        useAdminToken: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminRewardDefinitions'] });
+    },
+  });
+};
+
+export const useGetPublicRewardDefinitions = () => {
+  return useQuery({
+    queryKey: ['publicRewardDefinitions'],
+    queryFn: async () => {
+      const res = await api('/app/rewards');
+      return res?.data || [];
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
+export const useClaimRewardById = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (rewardId: string) => {
+      return api(`/app/rewards/claim/${rewardId}`, {
+        method: 'POST',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['publicRewardDefinitions'] });
+      queryClient.invalidateQueries({ queryKey: ['walletData'] });
+    },
+  });
+};
+
+// ─── Unlocked Episodes ────────────────────────────────────────────────────────
+
+export const useGetUnlockedEpisodes = () => {
+  return useQuery({
+    queryKey: ['unlockedEpisodes'],
+    queryFn: async () => {
+      const res = await api('/wallet/unlocked-episodes');
+      return res?.data || [];
+    },
+    staleTime: 60 * 1000,
+  });
 };

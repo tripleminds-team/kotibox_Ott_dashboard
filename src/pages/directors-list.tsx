@@ -168,29 +168,29 @@ export default function DirectorsListPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span>
         <span>/</span>
-        <span className="text-foreground font-medium">Directors</span>
+        <span className="text-white font-medium">Directors</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleApply} className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold">
+        <Button onClick={handleApply} className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold">
           Apply
         </Button>
-        <Button variant="outline" onClick={handleExport} className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg">
+        <Button variant="outline" onClick={handleExport} className="border-border text-white hover:bg-muted hover:text-white h-10 gap-2 rounded-lg">
           <Download className="h-4 w-4" />Export
         </Button>
-        <Button variant="outline" onClick={() => importRef.current?.click()} className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg">
+        <Button variant="outline" onClick={() => importRef.current?.click()} className="border-border text-white hover:bg-muted hover:text-white h-10 gap-2 rounded-lg">
           <Upload className="h-4 w-4" />Import
         </Button>
         <input ref={importRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
@@ -198,15 +198,15 @@ export default function DirectorsListPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
-        <Button onClick={() => setLocation("/directors/new")} className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold">
+        <Button onClick={() => setLocation("/directors/new")} className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold">
           <Plus className="h-4 w-4" />New
         </Button>
       </div>
@@ -219,17 +219,17 @@ export default function DirectorsListPage() {
               <TableHead className="w-10">
                 <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
               </TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Directors</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Date Of Birth</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Birth Place</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Directors</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Date Of Birth</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Birth Place</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-zinc-500 py-10">No directors found</TableCell>
+                <TableCell colSpan={6} className="text-center text-white/65 py-10">No directors found</TableCell>
               </TableRow>
             ) : (
               filtered.map((director) => (
@@ -243,17 +243,17 @@ export default function DirectorsListPage() {
                         <img src={getImageUrl(director.image)} alt={director.name} className="h-12 w-12 rounded-lg object-contain shrink-0 bg-gray-800" />
                       ) : (
                         <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <User className="h-5 w-5 text-zinc-500" />
+                          <User className="h-5 w-5 text-white/65" />
                         </div>
                       )}
                       <div>
-                        <p className="text-foreground font-semibold text-sm">{director.name}</p>
-                        <p className="text-zinc-500 text-xs mt-0.5">{director.designation}</p>
+                        <p className="text-white font-semibold text-sm">{director.name}</p>
+                        <p className="text-white/65 text-xs mt-0.5">{director.designation}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{director.dateOfBirth}</TableCell>
-                  <TableCell className="text-zinc-300 text-sm whitespace-nowrap">{director.birthPlace}</TableCell>
+                  <TableCell className="text-white/75 text-sm whitespace-nowrap">{director.dateOfBirth}</TableCell>
+                  <TableCell className="text-white/75 text-sm whitespace-nowrap">{director.birthPlace}</TableCell>
                   <TableCell>
                     <Switch checked={director.status} onCheckedChange={() => toggleStatus(director.id, director.status)} className="data-[state=checked]:bg-primary" />
                   </TableCell>
@@ -275,16 +275,16 @@ export default function DirectorsListPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Director</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               Are you sure you want to delete "{confirmDelete?.name}"?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">Delete</AlertDialogAction>
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

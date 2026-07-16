@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Globe, Smartphone, MonitorPlay, Save } from "lucide-react";
+import { Globe, Smartphone, MonitorPlay, Save, Info, TrendingUp, Eye, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,16 +62,13 @@ export default function GoogleAdsPage() {
   };
 
   return (
-    <div className="space-y-6 text-foreground bg-background min-h-screen p-6 -m-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Dashboard</span>
-          <span>/</span>
-          <span>Ads</span>
-          <span>/</span>
-          <span className="text-foreground font-medium">Ad Networks</span>
+    <div className="space-y-6 text-white bg-transparent">
+      <div className="flex items-center justify-between bg-card border border-border rounded-xl p-4 px-6 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-white">Google Ads Settings</h2>
+          <p className="text-white/70 text-sm">Configure AdSense & AdMob integration</p>
         </div>
-        <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white" disabled={updateSettingsMutation.isPending}>
+        <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20" disabled={updateSettingsMutation.isPending}>
           <Save className="mr-2 h-4 w-4" />
           {updateSettingsMutation.isPending ? "Saving..." : "Save Settings"}
         </Button>
@@ -86,7 +83,7 @@ export default function GoogleAdsPage() {
                 <Globe className="h-5 w-5 text-blue-500" />
                 Global Ad Networks
               </h2>
-              <p className="text-sm text-zinc-400 mt-1">Enable or disable third-party automated ad networks across the entire platform.</p>
+              <p className="text-sm text-white/70 mt-1">Enable or disable third-party automated ad networks across the entire platform.</p>
             </div>
             <Switch checked={formData.adNetworkEnabled} onCheckedChange={handleToggle} />
           </div>
@@ -95,57 +92,88 @@ export default function GoogleAdsPage() {
         {/* Google AdMob Settings */}
         <div className={`space-y-6 transition-opacity duration-200 ${!formData.adNetworkEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
           <div className="bg-card border border-border rounded-xl p-6">
-            <h3 className="text-lg font-medium text-foreground flex items-center gap-2 mb-6">
+            <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-6">
               <Smartphone className="h-5 w-5 text-emerald-500" />
               Google AdMob (Mobile Apps)
             </h3>
             
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Publisher ID</Label>
+                <Label className="text-white/75">Publisher ID</Label>
                 <Input 
                   name="adMobPublisherId" 
                   value={formData.adMobPublisherId} 
                   onChange={handleChange} 
                   placeholder="pub-xxxxxxxxxxxxxxxx" 
-                  className="bg-background border-border text-foreground" 
+                  className="bg-background border-border text-white" 
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Android App ID</Label>
-                  <Input name="adMobAppIdAndroid" value={formData.adMobAppIdAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-background border-border text-foreground" />
+                  <Label className="text-white/75">Android App ID</Label>
+                  <Input name="adMobAppIdAndroid" value={formData.adMobAppIdAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-background border-border text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">iOS App ID</Label>
-                  <Input name="adMobAppIdIos" value={formData.adMobAppIdIos} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-background border-border text-foreground" />
+                  <Label className="text-white/75">iOS App ID</Label>
+                  <Input name="adMobAppIdIos" value={formData.adMobAppIdIos} onChange={handleChange} placeholder="ca-app-pub-xxx~xxx" className="bg-background border-border text-white" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Android Banner Ad Unit</Label>
-                  <Input name="adMobBannerAndroid" value={formData.adMobBannerAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
+                  <Label className="text-white/75">Android Banner Ad Unit</Label>
+                  <Input name="adMobBannerAndroid" value={formData.adMobBannerAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">iOS Banner Ad Unit</Label>
-                  <Input name="adMobBannerIos" value={formData.adMobBannerIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
+                  <Label className="text-white/75">iOS Banner Ad Unit</Label>
+                  <Input name="adMobBannerIos" value={formData.adMobBannerIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-white" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Android Interstitial Ad Unit</Label>
-                  <Input name="adMobInterstitialAndroid" value={formData.adMobInterstitialAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
+                  <Label className="text-white/75">Android Interstitial Ad Unit</Label>
+                  <Input name="adMobInterstitialAndroid" value={formData.adMobInterstitialAndroid} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-white" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">iOS Interstitial Ad Unit</Label>
-                  <Input name="adMobInterstitialIos" value={formData.adMobInterstitialIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-foreground" />
+                  <Label className="text-white/75">iOS Interstitial Ad Unit</Label>
+                  <Input name="adMobInterstitialIos" value={formData.adMobInterstitialIos} onChange={handleChange} placeholder="ca-app-pub-xxx/xxx" className="bg-background border-border text-white" />
                 </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-border">
+                <Label className="text-white/75 flex items-center gap-2">
+                  <MonitorPlay className="w-4 h-4 text-purple-500" />
+                  VAST Pre-roll URL (Video Player Ads)
+                </Label>
+                <Input 
+                  name="vastPrerollUrl" 
+                  value={formData.vastPrerollUrl} 
+                  onChange={handleChange} 
+                  placeholder="https://..." 
+                  className="bg-background border-border text-white" 
+                />
+                <p className="text-xs text-white/50 mt-1">Provide a VAST URL to show automated pre-roll ads in the video player before content starts.</p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Setup Guide */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-4">
+            <Info className="h-5 w-5 text-blue-400" />
+            Google AdSense Setup Guide
+          </h3>
+          <ol className="list-decimal list-inside space-y-3 text-sm text-white/80">
+            <li>Create a Google AdSense account at <a href="https://adsense.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">adsense.google.com</a>.</li>
+            <li>Add your streaming platform website to your AdSense account and wait for approval.</li>
+            <li>Once approved, go to <strong>Ads &gt; By ad unit</strong> and create a Display ad.</li>
+            <li>Copy your Publisher ID (format: <code>pub-xxxxxxxxxxxxxxxx</code>) and paste it in the field above.</li>
+            <li>Enable the <strong>Global Ad Networks</strong> switch at the top of this page and click Save.</li>
+            <li>Ads will automatically appear on the streaming home page.</li>
+          </ol>
         </div>
       </div>
     </div>

@@ -123,7 +123,7 @@ export default function Branding() {
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
           Branding
         </h1>
-        <p className="text-muted-foreground mt-2 text-lg">Customize your platform branding and login experience</p>
+        <p className="text-white/75 mt-2 text-lg">Customize your platform branding and login experience</p>
       </div>
 
       <Card className="border-border/50 bg-gradient-to-br from-card/80 to-card/50 backdrop-blur-xl hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden">
@@ -208,7 +208,7 @@ export default function Branding() {
                         className="h-full w-full object-contain p-4"
                       />
                     ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2 text-white/75">
                         <ImageIcon className="h-10 w-10 opacity-50" />
                         <span className="text-sm font-medium">Preview</span>
                       </div>
@@ -257,7 +257,7 @@ export default function Branding() {
                         className="h-full w-full object-contain p-4"
                       />
                     ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2 text-white/75">
                         <ImageIcon className="h-10 w-10 opacity-50" />
                         <span className="text-sm font-medium">Preview</span>
                       </div>

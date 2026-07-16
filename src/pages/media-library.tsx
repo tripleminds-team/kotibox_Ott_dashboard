@@ -270,10 +270,10 @@ export default function MediaLibraryPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+          <div className="flex items-center gap-2 text-sm text-white/75 mb-1">
             <button
               onClick={() => handleBreadcrumbClick(-1)}
-              className="hover:text-foreground transition-colors font-medium"
+              className="hover:text-white transition-colors font-medium"
             >
               Media Library
             </button>
@@ -282,8 +282,8 @@ export default function MediaLibraryPage() {
                 <span>/</span>
                 <button
                   onClick={() => handleBreadcrumbClick(idx)}
-                  className={`hover:text-foreground transition-colors font-medium ${
-                    idx === folderPath.length - 1 ? "text-foreground font-semibold" : ""
+                  className={`hover:text-white transition-colors font-medium ${
+                    idx === folderPath.length - 1 ? "text-white font-semibold" : ""
                   }`}
                 >
                   {folder.name}
@@ -294,7 +294,7 @@ export default function MediaLibraryPage() {
           <h1 className="text-3xl font-bold tracking-tight">
             {selectedFolder ? folderPath[folderPath.length - 1]?.name : "Media Library"}
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="text-white/75 mt-1 text-sm">
             {selectedFolder
               ? `${folderPath[folderPath.length - 1]?.name} — ${currentFiles.length} files`
               : viewMode === "all"
@@ -307,7 +307,7 @@ export default function MediaLibraryPage() {
             <Button
               variant="outline"
               onClick={() => setCreateFolderOpen(true)}
-              className="border-border text-foreground hover:bg-muted gap-2"
+              className="border-border text-white hover:bg-muted gap-2"
             >
               <FolderPlus className="h-4 w-4" />
               New Folder
@@ -345,7 +345,7 @@ export default function MediaLibraryPage() {
             className={`pb-2 text-sm font-semibold border-b-2 transition-colors capitalize ${
               viewMode === m
                 ? "text-primary border-primary"
-                : "text-muted-foreground border-transparent hover:text-foreground"
+                : "text-white/75 border-transparent hover:text-white"
             }`}
           >
             {m === "folders" ? "Folders" : "All Media"}
@@ -368,8 +368,8 @@ export default function MediaLibraryPage() {
             onClick={() => setCreateFolderOpen(true)}
             className="group flex flex-col items-center justify-center gap-3 p-5 bg-muted/20 border-2 border-dashed border-border rounded-xl hover:border-primary/40 hover:bg-muted/30 transition-all duration-200 cursor-pointer"
           >
-            <FolderPlus className="h-10 w-10 text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">New Folder</span>
+            <FolderPlus className="h-10 w-10 text-white/75 group-hover:text-primary transition-colors" />
+            <span className="text-xs font-semibold text-white/75 group-hover:text-white transition-colors">New Folder</span>
           </button>
 
           {folders.map((folder: any) => (
@@ -379,10 +379,10 @@ export default function MediaLibraryPage() {
               className="group flex flex-col items-center justify-center gap-3 p-5 bg-card border border-border rounded-xl hover:border-primary/50 hover:bg-muted transition-all duration-200 cursor-pointer"
             >
               <Folder className="h-11 w-11 text-primary fill-red-500/20 group-hover:fill-red-500/40 transition-all duration-200" />
-              <span className="text-sm font-medium text-foreground group-hover:text-primary transition-all duration-200 text-center leading-tight">
+              <span className="text-sm font-medium text-white group-hover:text-primary transition-all duration-200 text-center leading-tight">
                 {folder.name}
               </span>
-              <span className="text-xs text-muted-foreground">{folder.count || 0} files</span>
+              <span className="text-xs text-white/75">{folder.count || 0} files</span>
             </button>
           ))}
         </div>
@@ -393,18 +393,18 @@ export default function MediaLibraryPage() {
         <div className="space-y-4">
           {/* Top bar */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <h2 className="text-xl font-bold text-foreground">
+            <h2 className="text-xl font-bold text-white">
               {selectedFolder ? (folderPath[folderPath.length - 1]?.name || "") : "All Media"}
             </h2>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
                 <Input
                   placeholder="Search files..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-48 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-9 rounded-lg text-sm"
+                  className="pl-9 w-48 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-9 rounded-lg text-sm"
                 />
               </div>
 
@@ -415,11 +415,11 @@ export default function MediaLibraryPage() {
                     value={sourceFilter || "all"}
                     onValueChange={(v) => { setSourceFilter(v === "all" ? "" : v); setAllMediaPage(1); }}
                   >
-                    <SelectTrigger className="w-36 bg-card border-border text-foreground h-9 rounded-lg text-sm">
-                      <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <SelectTrigger className="w-36 bg-card border-border text-white h-9 rounded-lg text-sm">
+                      <Filter className="h-3.5 w-3.5 mr-1.5 text-white/75" />
                       <SelectValue placeholder="Source" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-foreground">
+                    <SelectContent className="bg-popover border-border text-white">
                       {SOURCE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
@@ -430,10 +430,10 @@ export default function MediaLibraryPage() {
                     value={fileTypeFilter || "all"}
                     onValueChange={(v) => { setFileTypeFilter(v === "all" ? "" : v); setAllMediaPage(1); }}
                   >
-                    <SelectTrigger className="w-32 bg-card border-border text-foreground h-9 rounded-lg text-sm">
+                    <SelectTrigger className="w-32 bg-card border-border text-white h-9 rounded-lg text-sm">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-foreground">
+                    <SelectContent className="bg-popover border-border text-white">
                       <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="image">
                         <span className="flex items-center gap-2"><ImageIcon className="h-3.5 w-3.5" />Images</span>
@@ -450,13 +450,13 @@ export default function MediaLibraryPage() {
               <div className="flex bg-muted border border-border rounded-lg p-0.5">
                 <button
                   onClick={() => setGridView("grid")}
-                  className={`p-1.5 rounded-md transition-colors ${gridView === "grid" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`p-1.5 rounded-md transition-colors ${gridView === "grid" ? "bg-primary text-white" : "text-white/75 hover:text-white"}`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => setGridView("list")}
-                  className={`p-1.5 rounded-md transition-colors ${gridView === "list" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`p-1.5 rounded-md transition-colors ${gridView === "list" ? "bg-primary text-white" : "text-white/75 hover:text-white"}`}
                 >
                   <List className="h-3.5 w-3.5" />
                 </button>
@@ -468,7 +468,7 @@ export default function MediaLibraryPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleBack}
-                  className="border-border text-foreground hover:bg-muted h-9 gap-1.5"
+                  className="border-border text-white hover:bg-muted h-9 gap-1.5"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Back
@@ -480,7 +480,7 @@ export default function MediaLibraryPage() {
           {/* Subfolders Grid if inside a parent folder */}
           {selectedFolder && folders.length > 0 && (
             <div className="space-y-2 pb-4 border-b border-border">
-              <h3 className="text-sm font-semibold text-muted-foreground">Subfolders</h3>
+              <h3 className="text-sm font-semibold text-white/75">Subfolders</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {folders.map((folder: any) => (
                   <button
@@ -489,10 +489,10 @@ export default function MediaLibraryPage() {
                     className="group flex flex-col items-center justify-center gap-2 p-4 bg-muted/40 border border-border rounded-xl hover:border-primary/50 hover:bg-muted/70 transition-all duration-200 cursor-pointer"
                   >
                     <Folder className="h-8 w-8 text-primary fill-red-500/20 group-hover:fill-red-500/40 transition-all duration-200" />
-                    <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-all duration-200 text-center leading-tight truncate w-full px-1">
+                    <span className="text-xs font-semibold text-white group-hover:text-primary transition-all duration-200 text-center leading-tight truncate w-full px-1">
                       {folder.name}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">{folder.count || 0} files</span>
+                    <span className="text-[10px] text-white/75">{folder.count || 0} files</span>
                   </button>
                 ))}
               </div>
@@ -501,7 +501,7 @@ export default function MediaLibraryPage() {
 
           {/* Empty state */}
           {currentFiles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-4">
+            <div className="flex flex-col items-center justify-center py-24 text-white/75 gap-4">
               <ImageIcon className="h-12 w-12 opacity-20" />
               <p className="text-sm font-medium">
                 {searchQuery || sourceFilter || fileTypeFilter
@@ -573,7 +573,7 @@ export default function MediaLibraryPage() {
 
                   {/* File info */}
                   <div className="px-0.5 space-y-0.5">
-                    <p className="text-xs text-foreground truncate font-medium leading-tight" title={file.name}>
+                    <p className="text-xs text-white truncate font-medium leading-tight" title={file.name}>
                       {file.name}
                     </p>
                     {file.contentName && (
@@ -582,9 +582,9 @@ export default function MediaLibraryPage() {
                       </p>
                     )}
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">{file.size}</p>
+                      <p className="text-xs text-white/75">{file.size}</p>
                       {file.source && (
-                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded capitalize">
+                        <span className="text-[10px] text-white/75 bg-muted px-1.5 py-0.5 rounded capitalize">
                           {file.source}
                         </span>
                       )}
@@ -599,11 +599,11 @@ export default function MediaLibraryPage() {
               <table className="w-full text-sm">
                 <thead className="bg-muted border-b border-border">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">File</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Source</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Size</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-right">Actions</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/75">File</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/75 hidden sm:table-cell">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/75 hidden md:table-cell">Source</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/75 hidden md:table-cell">Size</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-white/75 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -619,34 +619,34 @@ export default function MediaLibraryPage() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-xs font-medium text-foreground truncate max-w-[160px]" title={file.name}>{file.name}</span>
+                            <span className="text-xs font-medium text-white truncate max-w-[160px]" title={file.name}>{file.name}</span>
                             {file.contentName && (
                               <span className="text-[10px] text-primary truncate max-w-[160px] font-semibold">🎬 {file.contentName}</span>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell capitalize">
+                      <td className="px-4 py-3 text-xs text-white/75 hidden sm:table-cell capitalize">
                         {file.fileType?.startsWith("video") ? "Video" : "Image"}
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         {file.source && (
-                          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded capitalize">{file.source}</span>
+                          <span className="text-xs text-white/75 bg-muted px-2 py-0.5 rounded capitalize">{file.source}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{file.size || "—"}</td>
+                      <td className="px-4 py-3 text-xs text-white/75 hidden md:table-cell">{file.size || "—"}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 justify-end">
                           <button
                             onClick={() => handleCopyUrl(file)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            className="p-1.5 rounded-lg text-white/75 hover:text-white hover:bg-muted transition-colors"
                             title="Copy URL"
                           >
                             {copiedId === file._id ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                           <button
                             onClick={() => setPreviewMedia(file)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            className="p-1.5 rounded-lg text-white/75 hover:text-white hover:bg-muted transition-colors"
                             title="Preview File"
                           >
                             <Eye className="h-3.5 w-3.5" />
@@ -670,7 +670,7 @@ export default function MediaLibraryPage() {
           {/* Pagination (All Media view only) */}
           {viewMode === "all" && allFilesTotalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/75">
                 Page {allMediaPage} of {allFilesTotalPages} · {allFilesTotal} total files
               </p>
               <div className="flex items-center gap-2">
@@ -696,7 +696,7 @@ export default function MediaLibraryPage() {
                       className={`w-8 h-8 rounded-lg text-sm font-semibold transition-colors ${
                         page === allMediaPage
                           ? "bg-primary text-white"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          : "text-white/75 hover:bg-muted hover:text-white"
                       }`}
                     >
                       {page}
@@ -721,17 +721,17 @@ export default function MediaLibraryPage() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
-        <AlertDialogContent className="bg-card border border-border text-foreground">
+        <AlertDialogContent className="bg-card border border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {confirmDelete?.type}</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
+            <AlertDialogDescription className="text-white/75">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-gray-200">"{confirmDelete?.name}"</span>?{" "}
+              <span className="font-semibold text-white/80">"{confirmDelete?.name}"</span>?{" "}
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-primary hover:bg-primary/90 border-0">
               Delete
             </AlertDialogAction>
@@ -741,10 +741,10 @@ export default function MediaLibraryPage() {
 
       {/* Duplicate File Dialog */}
       <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
-        <DialogContent className="bg-card border border-border text-foreground">
+        <DialogContent className="bg-card border border-border text-white">
           <DialogHeader>
             <DialogTitle>Duplicate Files Detected</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription className="text-white/75">
               These files already exist in the folder:
             </DialogDescription>
           </DialogHeader>
@@ -758,7 +758,7 @@ export default function MediaLibraryPage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{existing.name}</p>
-                  <p className="text-xs text-gray-500">New: {newFile.type}</p>
+                  <p className="text-xs text-white/65">New: {newFile.type}</p>
                 </div>
               </div>
             ))}
@@ -772,10 +772,10 @@ export default function MediaLibraryPage() {
 
       {/* Create Folder Dialog */}
       <Dialog open={createFolderOpen} onOpenChange={setCreateFolderOpen}>
-        <DialogContent className="bg-card border border-border text-foreground max-w-sm">
+        <DialogContent className="bg-card border border-border text-white max-w-sm">
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription className="text-white/75">
               Enter a name for the new media folder.
             </DialogDescription>
           </DialogHeader>
@@ -785,7 +785,7 @@ export default function MediaLibraryPage() {
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-              className="bg-muted border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-11"
+              className="bg-muted border-border text-white placeholder:text-white/65 focus:border-primary h-11"
               autoFocus
             />
           </div>
@@ -806,10 +806,10 @@ export default function MediaLibraryPage() {
       </Dialog>
       {/* File Preview Dialog */}
       <Dialog open={!!previewMedia} onOpenChange={(open) => { if (!open) setPreviewMedia(null); }}>
-        <DialogContent className="bg-card border border-border text-foreground max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="bg-card border border-border text-white max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
             <DialogTitle className="text-lg font-bold truncate pr-6">{previewMedia?.name}</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+            <DialogDescription className="text-xs text-white/75 mt-0.5">
               Uploaded on {previewMedia?.createdAt ? new Date(previewMedia.createdAt).toLocaleString() : '—'}
             </DialogDescription>
           </DialogHeader>
@@ -838,26 +838,26 @@ export default function MediaLibraryPage() {
                 {/* Metadata Details */}
                 <div className="grid grid-cols-2 gap-3 text-xs p-4 bg-muted/30 border border-border rounded-xl">
                   <div>
-                    <p className="text-muted-foreground font-medium">File Size</p>
-                    <p className="font-semibold text-foreground mt-0.5">{previewMedia.size || '—'}</p>
+                    <p className="text-white/75 font-medium">File Size</p>
+                    <p className="font-semibold text-white mt-0.5">{previewMedia.size || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground font-medium">File Type</p>
-                    <p className="font-semibold text-foreground mt-0.5 capitalize">{previewMedia.fileType || '—'}</p>
+                    <p className="text-white/75 font-medium">File Type</p>
+                    <p className="font-semibold text-white mt-0.5 capitalize">{previewMedia.fileType || '—'}</p>
                   </div>
                   {previewMedia.contentName && (
                     <div className="col-span-2">
-                      <p className="text-muted-foreground font-medium">Associated Content</p>
+                      <p className="text-white/75 font-medium">Associated Content</p>
                       <p className="font-bold text-primary mt-0.5">🎬 {previewMedia.contentName} ({previewMedia.contentType || 'unknown'})</p>
                     </div>
                   )}
                   <div className="col-span-2">
-                    <p className="text-muted-foreground font-medium">Relative File Path</p>
-                    <p className="font-mono bg-muted/60 p-1.5 rounded border border-border/40 text-[10px] text-foreground break-all mt-0.5">{previewMedia.filePath}</p>
+                    <p className="text-white/75 font-medium">Relative File Path</p>
+                    <p className="font-mono bg-muted/60 p-1.5 rounded border border-border/40 text-[10px] text-white break-all mt-0.5">{previewMedia.filePath}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-muted-foreground font-medium">Full URL</p>
-                    <p className="font-mono bg-muted/60 p-1.5 rounded border border-border/40 text-[10px] text-foreground break-all mt-0.5">{getImageUrl(previewMedia.filePath || previewMedia.url)}</p>
+                    <p className="text-white/75 font-medium">Full URL</p>
+                    <p className="font-mono bg-muted/60 p-1.5 rounded border border-border/40 text-[10px] text-white break-all mt-0.5">{getImageUrl(previewMedia.filePath || previewMedia.url)}</p>
                   </div>
                 </div>
               </div>
@@ -867,7 +867,7 @@ export default function MediaLibraryPage() {
                 <Button
                   variant="outline"
                   onClick={() => handleCopyUrl(previewMedia)}
-                  className="border-border text-foreground hover:bg-muted"
+                  className="border-border text-white hover:bg-muted"
                 >
                   {copiedId === previewMedia._id ? (
                     <span className="flex items-center gap-1.5 text-green-400 font-semibold"><Check className="h-4 w-4" /> Copied!</span>

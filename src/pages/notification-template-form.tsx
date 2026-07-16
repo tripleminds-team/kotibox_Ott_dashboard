@@ -259,45 +259,45 @@ type TemplateFormData = {
   emailTemplate: string;
 };
 
-const labelCls = "text-foreground text-sm font-medium";
-const inputCls = "bg-muted border-border text-foreground placeholder:text-gray-600 focus:border-primary h-10 rounded-lg";
+const labelCls = "text-white text-sm font-medium";
+const inputCls = "bg-muted border-border text-white placeholder:text-white/60 focus:border-primary h-10 rounded-lg";
 
 function RichEditor({ value, onChange, label }: { value: string; onChange: (v: string) => void; label?: string }) {
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/80 flex-wrap">
         {["File", "Edit", "View", "Insert", "Format"].map((m) => (
-          <button key={m} type="button" className="flex items-center gap-0.5 px-2 py-1 text-xs text-zinc-300 hover:bg-muted rounded transition-colors">
+          <button key={m} type="button" className="flex items-center gap-0.5 px-2 py-1 text-xs text-white/75 hover:bg-muted rounded transition-colors">
             {m} <span className="text-[9px] opacity-70">▾</span>
           </button>
         ))}
       </div>
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border bg-muted/80 flex-wrap">
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Undo className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Redo className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Undo className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Redo className="h-3.5 w-3.5" /></button>
         <div className="w-px h-4 bg-muted mx-1" />
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Bold className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Italic className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Strikethrough className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Link2 className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Bold className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Italic className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Strikethrough className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Link2 className="h-3.5 w-3.5" /></button>
         <div className="w-px h-4 bg-muted mx-1" />
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><AlignLeft className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><AlignCenter className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><AlignRight className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><AlignJustify className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><AlignLeft className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><AlignCenter className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><AlignRight className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><AlignJustify className="h-3.5 w-3.5" /></button>
         <div className="w-px h-4 bg-muted mx-1" />
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><Code className="h-3.5 w-3.5" /></button>
-        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-zinc-400"><ImageIcon className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><Code className="h-3.5 w-3.5" /></button>
+        <button type="button" className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-white/70"><ImageIcon className="h-3.5 w-3.5" /></button>
       </div>
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={8}
         placeholder={label === "email" ? "Enter HTML email body (e.g. <p>Hello <strong>[[ user_name ]]</strong>...</p>)" : "Enter notification body..."}
-        className="rounded-none border-0 bg-card text-foreground placeholder:text-zinc-600 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-y text-sm leading-relaxed font-mono"
+        className="rounded-none border-0 bg-card text-white placeholder:text-white/60 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-y text-sm leading-relaxed font-mono"
       />
       <div className="px-3 py-1 bg-muted/80 border-t border-border text-right">
-        <span className="text-[10px] text-muted-foreground tracking-wide">HTML / TEMPLATE</span>
+        <span className="text-[10px] text-white/75 tracking-wide">HTML / TEMPLATE</span>
       </div>
     </div>
   );
@@ -406,20 +406,20 @@ export default function NotificationTemplateFormPage() {
   if (isEdit && isLoadingExisting) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-zinc-500">Loading...</p>
+        <p className="text-white/65">Loading...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span><span>/</span>
-        <span className="cursor-pointer hover:text-foreground transition-colors" onClick={() => setLocation("/notification-templates")}>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span><span>/</span>
+        <span className="cursor-pointer hover:text-white transition-colors" onClick={() => setLocation("/notification-templates")}>
           Notification Templates
         </span>
         <span>/</span>
-        <span className="text-foreground font-medium">{isEdit ? "Edit Template" : "New Template"}</span>
+        <span className="text-white font-medium">{isEdit ? "Edit Template" : "New Template"}</span>
       </div>
 
       <button onClick={() => setLocation("/notification-templates")}
@@ -433,8 +433,8 @@ export default function NotificationTemplateFormPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Load a Preset</span>
-              <span className="text-xs text-muted-foreground">(pre-fills form with ready-to-use HTML)</span>
+              <span className="text-sm font-medium text-white">Load a Preset</span>
+              <span className="text-xs text-white/75">(pre-fills form with ready-to-use HTML)</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {EMAIL_PRESETS.map((preset) => (
@@ -442,7 +442,7 @@ export default function NotificationTemplateFormPage() {
                   key={preset.type}
                   type="button"
                   onClick={() => applyPreset(preset)}
-                  className="px-3 py-1.5 rounded-lg border border-border text-xs text-zinc-300 hover:bg-primary/80/10 hover:border-primary/50 hover:text-red-300 transition-colors font-medium"
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs text-white/75 hover:bg-primary/80/10 hover:border-primary/50 hover:text-red-300 transition-colors font-medium"
                 >
                   {preset.label}
                 </button>
@@ -457,13 +457,13 @@ export default function NotificationTemplateFormPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Reset to Preset</span>
+              <span className="text-sm font-medium text-white">Reset to Preset</span>
             </div>
             <Select onValueChange={(label) => { const p = EMAIL_PRESETS.find((x) => x.label === label); if (p) applyPreset(p); }}>
-              <SelectTrigger className="w-52 h-9 bg-muted border-border text-foreground text-sm rounded-lg">
+              <SelectTrigger className="w-52 h-9 bg-muted border-border text-white text-sm rounded-lg">
                 <SelectValue placeholder="Choose a preset…" />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-foreground">
+              <SelectContent className="bg-popover border-border text-white">
                 {EMAIL_PRESETS.map((p) => (
                   <SelectItem key={p.type} value={p.label}>{p.label}</SelectItem>
                 ))}
@@ -480,17 +480,17 @@ export default function NotificationTemplateFormPage() {
             <Label className={labelCls}>Type <span className="text-primary">*</span></Label>
             <Input value={form.type} onChange={(e) => set("type", e.target.value)} placeholder="e.g. Registration"
               className={inputCls} readOnly={isEdit} />
-            {isEdit && <p className="text-xs text-zinc-500">Template type cannot be changed after creation.</p>}
+            {isEdit && <p className="text-xs text-white/65">Template type cannot be changed after creation.</p>}
           </div>
 
           <div className="space-y-3">
             <Label className={labelCls}>Notification Parameters</Label>
-            <p className="text-xs text-zinc-500">Click to copy — paste in your template where needed.</p>
+            <p className="text-xs text-white/65">Click to copy — paste in your template where needed.</p>
             <div className="flex flex-wrap gap-1.5">
               {NOTIFICATION_PARAMS.map((param) => (
                 <button key={param} type="button" onClick={() => handleParamClick(param)}
                   title={`Copy [[ ${param.toLowerCase().replace(/[\s'/]+/g, "_")} ]]`}
-                  className="px-2.5 py-1 rounded bg-primary hover:bg-primary text-foreground text-xs font-medium transition-colors">
+                  className="px-2.5 py-1 rounded bg-primary hover:bg-primary text-white text-xs font-medium transition-colors">
                   {param}
                 </button>
               ))}
@@ -500,8 +500,8 @@ export default function NotificationTemplateFormPage() {
           <div className="space-y-2">
             <Label className={labelCls}>User Type <span className="text-primary">*</span></Label>
             <Select value={form.userType} onValueChange={(v) => set("userType", v)}>
-              <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-muted border-border text-foreground">
+              <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-muted border-border text-white">
                 <SelectItem value="user">User</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="all">All</SelectItem>
@@ -513,7 +513,7 @@ export default function NotificationTemplateFormPage() {
             <Label className={labelCls}>Recipients</Label>
             <div className="min-h-[42px] px-2 py-2 rounded-lg border border-border bg-muted flex flex-wrap gap-2 items-center">
               {form.recipients.map((r) => (
-                <span key={r} className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-primary text-foreground text-xs rounded font-medium">
+                <span key={r} className="flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-primary text-white text-xs rounded font-medium">
                   {r}
                   <button type="button" onClick={() => removeRecipient(r)} className="ml-0.5 hover:text-red-200 transition-colors flex items-center">
                     <X className="h-3 w-3" />
@@ -522,10 +522,10 @@ export default function NotificationTemplateFormPage() {
               ))}
               {availableRecipients.length > 0 && (
                 <Select key={recipientSelectKey} onValueChange={addRecipient}>
-                  <SelectTrigger className="h-7 w-auto min-w-[60px] border border-dashed border-border bg-transparent text-zinc-400 hover:text-foreground text-xs rounded px-2 gap-1 shadow-none focus:ring-0">
+                  <SelectTrigger className="h-7 w-auto min-w-[60px] border border-dashed border-border bg-transparent text-white/70 hover:text-white text-xs rounded px-2 gap-1 shadow-none focus:ring-0">
                     <Plus className="h-3 w-3" /><span>Add</span>
                   </SelectTrigger>
-                  <SelectContent className="bg-muted border-border text-foreground">
+                  <SelectContent className="bg-muted border-border text-white">
                     {availableRecipients.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -536,7 +536,7 @@ export default function NotificationTemplateFormPage() {
           <div className="space-y-2">
             <Label className={labelCls}>Status</Label>
             <div className="flex items-center justify-between h-10 px-4 rounded-lg border border-border bg-muted">
-              <span className="text-sm text-foreground font-medium">{form.status ? "Active" : "Inactive"}</span>
+              <span className="text-sm text-white font-medium">{form.status ? "Active" : "Inactive"}</span>
               <Switch checked={form.status} onCheckedChange={(v) => set("status", v)} className="data-[state=checked]:bg-primary" />
             </div>
           </div>
@@ -559,8 +559,8 @@ export default function NotificationTemplateFormPage() {
           {/* Notification Template */}
           <div className="rounded-xl border border-border bg-card/50 p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-foreground font-semibold text-base">In-App Notification</h3>
-              <span className="text-xs text-zinc-500 px-2 py-0.5 rounded bg-muted border border-border">Push / In-app</span>
+              <h3 className="text-white font-semibold text-base">In-App Notification</h3>
+              <span className="text-xs text-white/65 px-2 py-0.5 rounded bg-muted border border-border">Push / In-app</span>
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Subject</Label>
@@ -576,8 +576,8 @@ export default function NotificationTemplateFormPage() {
           {/* Email Template */}
           <div className="rounded-xl border border-border bg-card/50 p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-foreground font-semibold text-base">Email Template</h3>
-              <span className="text-xs text-zinc-500 px-2 py-0.5 rounded bg-muted border border-border">HTML body</span>
+              <h3 className="text-white font-semibold text-base">Email Template</h3>
+              <span className="text-xs text-white/65 px-2 py-0.5 rounded bg-muted border border-border">HTML body</span>
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Subject</Label>
@@ -586,7 +586,7 @@ export default function NotificationTemplateFormPage() {
             </div>
             <div className="space-y-2">
               <Label className={labelCls}>Body (HTML)</Label>
-              <p className="text-xs text-zinc-500">Write the body HTML — the branded header/footer wrapper is added automatically.</p>
+              <p className="text-xs text-white/65">Write the body HTML — the branded header/footer wrapper is added automatically.</p>
               <RichEditor value={form.emailTemplate} onChange={(v) => set("emailTemplate", v)} label="email" />
             </div>
           </div>
@@ -595,7 +595,7 @@ export default function NotificationTemplateFormPage() {
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving}
-          className="bg-primary hover:bg-primary/90 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]">
+          className="bg-primary hover:bg-primary/90 text-white h-11 px-10 rounded-lg font-semibold min-w-[100px]">
           {saving ? "Saving..." : "Save Template"}
         </Button>
       </div>
@@ -605,21 +605,21 @@ export default function NotificationTemplateFormPage() {
         <DialogContent className="bg-card border-border max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-foreground">
+              <DialogTitle className="text-white">
                 {previewTarget === "email" ? "Email Preview" : "Notification Preview"}
               </DialogTitle>
               <div className="flex gap-2 mr-8">
                 <button onClick={() => setPreviewTarget("notif")}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${previewTarget === "notif" ? "bg-primary text-white" : "text-zinc-400 hover:text-foreground"}`}>
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${previewTarget === "notif" ? "bg-primary text-white" : "text-white/70 hover:text-white"}`}>
                   Notification
                 </button>
                 <button onClick={() => setPreviewTarget("email")}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${previewTarget === "email" ? "bg-primary text-white" : "text-zinc-400 hover:text-foreground"}`}>
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${previewTarget === "email" ? "bg-primary text-white" : "text-white/70 hover:text-white"}`}>
                   Email
                 </button>
               </div>
             </div>
-            <p className="text-xs text-zinc-500 mt-1">Variables are replaced with sample values for preview.</p>
+            <p className="text-xs text-white/65 mt-1">Variables are replaced with sample values for preview.</p>
           </DialogHeader>
           <div className="flex-1 overflow-auto rounded-lg border border-border bg-white min-h-[400px]">
             <iframe

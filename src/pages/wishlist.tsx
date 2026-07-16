@@ -68,7 +68,7 @@ export default function WishlistPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setLocation("/")}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-300 hover:text-white transition-all"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/75 hover:text-white transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -78,7 +78,7 @@ export default function WishlistPage() {
             </div>
           </div>
           {wishlistItems.length > 0 && (
-            <span className="text-zinc-400 text-sm font-semibold">
+            <span className="text-white/70 text-sm font-semibold">
               {wishlistItems.length} {wishlistItems.length === 1 ? "title" : "titles"}
             </span>
           )}
@@ -87,15 +87,15 @@ export default function WishlistPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            <p className="text-zinc-400 text-sm mt-3 font-medium">Loading your wishlist…</p>
+            <p className="text-white/70 text-sm mt-3 font-medium">Loading your wishlist…</p>
           </div>
         ) : wishlistItems.length === 0 ? (
           <div className="text-center py-24 bg-white/[0.02] border border-white/5 rounded-2xl p-8">
             <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <Bookmark className="w-8 h-8 text-zinc-500" />
+              <Bookmark className="w-8 h-8 text-white/65" />
             </div>
             <h3 className="text-white font-bold text-lg mb-2">Your wishlist is empty</h3>
-            <p className="text-zinc-400 text-sm max-w-sm mx-auto mb-6">
+            <p className="text-white/70 text-sm max-w-sm mx-auto mb-6">
               Tap the bookmark icon on any movie or drama to save it here and watch later.
             </p>
             <button
@@ -132,7 +132,7 @@ export default function WishlistPage() {
 
                     {/* Type badge */}
                     <div className="absolute top-2 left-2">
-                      <span className="text-[9px] font-black tracking-widest px-1.5 py-0.5 rounded bg-black/60 text-zinc-200 uppercase">
+                      <span className="text-[9px] font-black tracking-widest px-1.5 py-0.5 rounded bg-black/60 text-white/80 uppercase">
                         {typeBadge}
                       </span>
                     </div>
@@ -158,7 +158,7 @@ export default function WishlistPage() {
                     {/* Title */}
                     <div className="absolute bottom-0 left-0 right-0 p-2.5">
                       <p className="text-white text-xs font-bold leading-tight line-clamp-2">{item.title}</p>
-                      {item.year && <p className="text-zinc-400 text-[10px] mt-0.5">{item.year}</p>}
+                      {item.year && <p className="text-white/70 text-[10px] mt-0.5">{item.year}</p>}
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Plus, Trash2, Download, Search, Filter } from "lucide-react";
+import { Plus, Trash2, Download, Search, Filter, DollarSign, TrendingUp, Users, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -147,29 +147,56 @@ export default function SubscriptionsListPage() {
   const { settings } = useSettings();
   const fmt = (n: number) => settings.currencyPosition === "before" ? `${settings.currencySymbol}${n.toFixed(settings.decimalPlaces)}` : `${n.toFixed(settings.decimalPlaces)} ${settings.currencySymbol}`;
 
+  // Computed stats from subscriptions
+  const activeCount = subscriptions.filter((s) => s.status === "active").length;
+  const totalRevenue = subscriptions.reduce((acc, s) => acc + (s.totalAmount || 0), 0);
+  const activeRevenue = subscriptions.filter((s) => s.status === "active").reduce((acc, s) => acc + (s.totalAmount || 0), 0);
+
+  const summaryStats = [
+    { label: "Total Subscriptions", value: subscriptions.length, icon: Users, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { label: "Active", value: activeCount, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
+    { label: "Total Revenue", value: fmt(totalRevenue), icon: DollarSign, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Active Revenue", value: fmt(activeRevenue), icon: CreditCard, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/60">
+        <span className="text-white/40">Dashboard</span>
         <span>/</span>
-        <span className="text-foreground font-medium">Subscriptions</span>
+        <span className="text-white font-medium">Subscriptions</span>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {summaryStats.map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${stat.bg}`}>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </div>
+            <div>
+              <p className="text-xs text-white/50">{stat.label}</p>
+              <p className="text-lg font-black text-white">{stat.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Bulk Action */}
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -178,7 +205,7 @@ export default function SubscriptionsListPage() {
         <Button
           variant="outline"
           onClick={handleExport}
-          className="border-border text-foreground hover:bg-muted hover:text-foreground h-10 gap-2 rounded-lg"
+          className="border-border text-white hover:bg-muted hover:text-white h-10 gap-2 rounded-lg"
         >
           <Download className="h-4 w-4" />
           Export
@@ -186,10 +213,10 @@ export default function SubscriptionsListPage() {
 
         {/* Plan Filter */}
         <Select value={planFilter} onValueChange={setPlanFilter}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             {planOptions.map((p: string) => (
               <SelectItem key={p} value={p}>{p}</SelectItem>
             ))}
@@ -202,21 +229,21 @@ export default function SubscriptionsListPage() {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm"
+            className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm"
           />
-          <span className="text-zinc-500 text-sm">—</span>
+          <span className="text-white/65 text-sm">—</span>
           <Input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm"
+            className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm"
           />
         </div>
 
         {/* Filter Button */}
         <Button
           onClick={() => {}}
-          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-4"
+          className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-4"
         >
           <Filter className="h-4 w-4" />
           Filter
@@ -226,19 +253,19 @@ export default function SubscriptionsListPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
         {/* New Button */}
         <Button
           onClick={() => setLocation("/subscriptions/new")}
-          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -258,25 +285,25 @@ export default function SubscriptionsListPage() {
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                   />
                 </TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">User</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Plan</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Duration</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Payment Method</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Start Date</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">End Date</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Price</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Discount</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Coupon Discount</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Tax</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Total Amount</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Status</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-sm whitespace-nowrap">Action</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">User</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Plan</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Duration</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Payment Method</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Start Date</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">End Date</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Price</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Discount</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Coupon Discount</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Tax</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Total Amount</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Status</TableHead>
+                <TableHead className="text-white/70 font-semibold text-sm whitespace-nowrap">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={14} className="text-center text-zinc-500 py-10">
+                  <TableCell colSpan={14} className="text-center text-white/65 py-10">
                     No subscriptions found
                   </TableCell>
                 </TableRow>
@@ -290,17 +317,17 @@ export default function SubscriptionsListPage() {
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                       />
                     </TableCell>
-                    <TableCell className="text-foreground font-medium whitespace-nowrap">{sub.userName || sub.userEmail}</TableCell>
-                    <TableCell className="text-foreground font-medium whitespace-nowrap">{sub.plan}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{sub.durationLabel}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{sub.paymentMethod}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{sub.startDate}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{sub.endDate}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{fmt(sub.price)}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{fmt(sub.discount)}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{fmt(sub.couponDiscount)}</TableCell>
-                    <TableCell className="text-zinc-300 whitespace-nowrap">{fmt(sub.tax)}</TableCell>
-                    <TableCell className="text-foreground font-semibold whitespace-nowrap">{fmt(sub.totalAmount)}</TableCell>
+                    <TableCell className="text-white font-medium whitespace-nowrap">{sub.userName || sub.userEmail}</TableCell>
+                    <TableCell className="text-white font-medium whitespace-nowrap">{sub.plan}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{sub.durationLabel}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{sub.paymentMethod}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{sub.startDate}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{sub.endDate}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{fmt(sub.price)}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{fmt(sub.discount)}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{fmt(sub.couponDiscount)}</TableCell>
+                    <TableCell className="text-white/75 whitespace-nowrap">{fmt(sub.tax)}</TableCell>
+                    <TableCell className="text-white font-semibold whitespace-nowrap">{fmt(sub.totalAmount)}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -340,20 +367,20 @@ export default function SubscriptionsListPage() {
 
       {/* Delete Confirm Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               Are you sure you want to delete this subscription? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-primary hover:bg-primary/90 text-foreground"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               Delete
             </AlertDialogAction>

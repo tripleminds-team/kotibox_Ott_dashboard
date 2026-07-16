@@ -168,8 +168,8 @@ function AddSeasonForm({
         <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center">
           <Film className="w-3.5 h-3.5 text-primary" />
         </div>
-        <span className="text-sm font-bold text-foreground">Add Season {nextSeason}</span>
-        <span className="text-xs text-muted-foreground ml-1">· max {MAX_EPISODE_MINUTES} min per episode</span>
+        <span className="text-sm font-bold text-white">Add Season {nextSeason}</span>
+        <span className="text-xs text-white/75 ml-1">· max {MAX_EPISODE_MINUTES} min per episode</span>
       </div>
 
       {durationError && (
@@ -192,7 +192,7 @@ function AddSeasonForm({
         <Input
           type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} required
           placeholder="https://example.com/video.mp4"
-          className="w-full bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+          className="w-full bg-card border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
         />
       ) : (
         <div className="space-y-4">
@@ -201,11 +201,11 @@ function AddSeasonForm({
             accept="video/*"
             onChange={handleFileChange}
             required
-            className="bg-card border-border text-foreground"
+            className="bg-card border-border text-white"
           />
           {videoFile && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">{videoFile.name}</span>
+              <span className="text-sm text-white/75">{videoFile.name}</span>
               <Button variant="ghost" size="icon" type="button" onClick={() => setVideoFile(null)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -216,18 +216,18 @@ function AddSeasonForm({
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Label className="text-sm font-medium text-foreground whitespace-nowrap">Free Episodes</Label>
+          <Label className="text-sm font-medium text-white whitespace-nowrap">Free Episodes</Label>
           <Input type="number" min={0} value={freeEp} onChange={(e) => setFreeEp(Number(e.target.value))}
-            className="w-20 bg-card border-border text-foreground text-center h-9" />
+            className="w-20 bg-card border-border text-white text-center h-9" />
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-white/75">
           <Clock className="w-3.5 h-3.5" /> Each episode ≤ {MAX_EPISODE_MINUTES} min
         </div>
       </div>
 
       {appendMutation.isPending && (
         <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs text-white/75">
             <span>Uploading…</span>
             <span>{progress}%{speed ? ` · ${speed}` : ""}</span>
           </div>
@@ -325,7 +325,7 @@ export default function ShortDramaDetail() {
           <h1 className="text-3xl font-bold tracking-tight">
             {content?.title || "Short Drama Details"}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-white/75 mt-1">
             {seasons.length} {seasons.length === 1 ? "season" : "seasons"} · {allEpisodes.length} {allEpisodes.length === 1 ? "episode" : "episodes"}
             <span className="ml-2 text-primary font-semibold">· max {MAX_EPISODE_MINUTES} min per episode</span>
           </p>
@@ -357,12 +357,12 @@ export default function ShortDramaDetail() {
 
       {/* ── Empty state ── */}
       {seasons.length === 0 && !addingSeasonForm && (
-        <Card className="rounded-lg border-dashed border-2 p-12 text-center text-muted-foreground">
+        <Card className="rounded-lg border-dashed border-2 p-12 text-center text-white/75">
           <div className="flex flex-col items-center gap-4">
-            <Film className="h-10 w-10 text-muted-foreground" />
+            <Film className="h-10 w-10 text-white/75" />
             <div>
               <p className="text-sm font-semibold">No seasons yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Upload the first video to create Season 1</p>
+              <p className="text-xs text-white/75 mt-1">Upload the first video to create Season 1</p>
             </div>
             <Button onClick={() => setAddingSeasonForm(true)}>
               <Plus className="w-4 h-4 mr-2" /> Add Season 1
@@ -388,12 +388,12 @@ export default function ShortDramaDetail() {
                   <span className="text-primary font-bold text-sm">S{seasonNum}</span>
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-bold text-foreground">Season {seasonNum}</p>
-                  <p className="text-xs text-muted-foreground">{eps.length} episodes</p>
+                  <p className="text-sm font-bold text-white">Season {seasonNum}</p>
+                  <p className="text-xs text-white/75">{eps.length} episodes</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{eps.filter(e => e.processingStatus === "ready").length}/{eps.length} ready</Badge>
-                  {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  {expanded ? <ChevronUp className="w-4 h-4 text-white/75" /> : <ChevronDown className="w-4 h-4 text-white/75" />}
                 </div>
               </button>
 
@@ -426,16 +426,16 @@ export default function ShortDramaDetail() {
                                   {ep.thumbnail ? (
                                     <img src={getImageUrl(ep.thumbnail)} alt="" className="h-full w-full object-cover" />
                                   ) : (
-                                    <Film className="h-4 w-4 text-muted-foreground" />
+                                    <Film className="h-4 w-4 text-white/75" />
                                   )}
                                 </div>
-                                <span className="font-medium text-sm text-foreground">
+                                <span className="font-medium text-sm text-white">
                                   {ep.title || `Episode ${ep.episode}`}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell text-center">
-                              <span className={`inline-flex items-center gap-1 text-xs font-semibold ${overLimit ? "text-primary" : "text-muted-foreground"}`}>
+                              <span className={`inline-flex items-center gap-1 text-xs font-semibold ${overLimit ? "text-primary" : "text-white/75"}`}>
                                 {fmt(ep.duration)}
                                 {overLimit && <AlertTriangle className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
                               </span>
@@ -472,7 +472,7 @@ export default function ShortDramaDetail() {
                                   ) : ep.isLocked ? (
                                     <Lock className="h-4 w-4 text-amber-500" />
                                   ) : (
-                                    <Unlock className="h-4 w-4 text-muted-foreground" />
+                                    <Unlock className="h-4 w-4 text-white/75" />
                                   )}
                                 </Button>
                                 <Button
@@ -499,15 +499,15 @@ export default function ShortDramaDetail() {
 
       {/* ── Delete Episode Confirm ── */}
       <AlertDialog open={!!confirmDeleteEp} onOpenChange={() => setConfirmDeleteEp(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Episode</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-200">
+            <AlertDialogDescription className="text-white/80">
               Are you sure you want to delete Episode {confirmDeleteEp?.episode} of Season {confirmDeleteEp?.season}? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteEpisode} className="bg-primary hover:bg-primary/90 text-white border-0">

@@ -310,17 +310,17 @@ export default function PromotionForm() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span>
         <span>/</span>
         <button
           onClick={() => setLocation("/promotions")}
-          className="text-gray-500 hover:text-foreground transition-colors"
+          className="text-white/65 hover:text-white transition-colors"
         >
           Promotions
         </button>
         <span>/</span>
-        <span className="text-foreground font-medium">{isEdit ? "Edit Promotion" : "New Promotion"}</span>
+        <span className="text-white font-medium">{isEdit ? "Edit Promotion" : "New Promotion"}</span>
       </div>
       <div className="max-w-3xl">
 
@@ -437,7 +437,7 @@ export default function PromotionForm() {
         </div>
 
         <div className="space-y-4">
-          <Label>Video <span className="text-muted-foreground">(Max 4 minutes)</span></Label>
+          <Label>Video <span className="text-white/75">(Max 4 minutes)</span></Label>
           <Tabs value={videoMode} onValueChange={(val) => setVideoMode(val)}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="url">
@@ -666,14 +666,14 @@ export default function PromotionForm() {
             type="button"
             variant="outline"
             onClick={() => setLocation("/promotions")}
-            className="bg-muted border-border text-foreground hover:bg-muted px-6 h-11"
+            className="bg-muted border-border text-white hover:bg-muted px-6 h-11"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={createMutation.isPending || updateMutation.isPending || isUploading}
-            className="bg-primary hover:bg-primary/90 text-foreground px-6 h-11 font-semibold"
+            className="bg-primary hover:bg-primary/90 text-white px-6 h-11 font-semibold"
           >
             {isEdit ? "Update Promotion" : "Create Promotion"}
           </Button>

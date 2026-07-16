@@ -17,8 +17,8 @@ import {
 import { useSettings } from "@/contexts/SettingsContext";
 
 const inputCls =
-  "bg-muted border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-11 rounded-lg text-sm";
-const labelCls = "text-foreground text-sm font-medium";
+  "bg-muted border-border text-white placeholder:text-white/65 focus:border-primary h-11 rounded-lg text-sm";
+const labelCls = "text-white text-sm font-medium";
 
 const addDuration = (start: string, dur: string, val: number): string => {
   const d = new Date(start);
@@ -171,16 +171,16 @@ export default function SubscriptionFormPage() {
   return (
     <div className="space-y-5 pb-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <button onClick={() => setLocation("/subscriptions")} className="hover:text-foreground transition-colors">
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <button onClick={() => setLocation("/subscriptions")} className="hover:text-white transition-colors">
           Dashboard
         </button>
         <span>/</span>
-        <button onClick={() => setLocation("/subscriptions")} className="hover:text-foreground transition-colors">
+        <button onClick={() => setLocation("/subscriptions")} className="hover:text-white transition-colors">
           Subscriptions
         </button>
         <span>/</span>
-        <span className="text-foreground font-medium">
+        <span className="text-white font-medium">
           {isEdit ? "Edit Subscription" : "New Subscription"}
         </span>
       </div>
@@ -192,7 +192,7 @@ export default function SubscriptionFormPage() {
 
       <form onSubmit={handleSubmit}>
         <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-          <p className="text-base font-semibold text-foreground">Subscription Details</p>
+          <p className="text-base font-semibold text-white">Subscription Details</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* User */}
@@ -204,7 +204,7 @@ export default function SubscriptionFormPage() {
                 <SelectTrigger className={inputCls}>
                   <SelectValue placeholder="Select User" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                <SelectContent className="bg-popover border-border text-white max-h-60">
                   {users.map((u: any) => (
                     <SelectItem key={u.id || u._id} value={String(u.id || u._id)}>
                       {u.name ? `${u.name} (${u.email})` : u.email}
@@ -223,7 +223,7 @@ export default function SubscriptionFormPage() {
                 <SelectTrigger className={inputCls}>
                   <SelectValue placeholder="Select Plan" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground max-h-60">
+                <SelectContent className="bg-popover border-border text-white max-h-60">
                   {plans.map((p: any) => (
                     <SelectItem key={p.id || p._id} value={String(p.id || p._id)}>
                       {p.name} — {settings?.currencyPosition === "before" ? `${settings?.currencySymbol || '₹'}${Number(p.totalPrice ?? p.price).toFixed(settings?.decimalPlaces ?? 2)}` : `${Number(p.totalPrice ?? p.price).toFixed(settings?.decimalPlaces ?? 2)} ${settings?.currencySymbol || '₹'}`} / {p.durationValue} {p.duration}
@@ -240,7 +240,7 @@ export default function SubscriptionFormPage() {
                 <SelectTrigger className={inputCls}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-white">
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
@@ -254,7 +254,7 @@ export default function SubscriptionFormPage() {
                 <SelectTrigger className={inputCls}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-white">
                   <SelectItem value="Day">Day</SelectItem>
                   <SelectItem value="Week">Week</SelectItem>
                   <SelectItem value="Month">Month</SelectItem>
@@ -297,7 +297,7 @@ export default function SubscriptionFormPage() {
                 onChange={(e) => { setEndDate(e.target.value); setEndDateOverridden(true); }}
                 className={inputCls} />
               {!endDateOverridden && (
-                <p className="text-xs text-muted-foreground">Auto-calculated from start date + duration</p>
+                <p className="text-xs text-white/75">Auto-calculated from start date + duration</p>
               )}
             </div>
 
@@ -348,7 +348,7 @@ export default function SubscriptionFormPage() {
                 )}
               </div>
               {!totalOverridden && (
-                <p className="text-xs text-muted-foreground">price − discount − coupon + tax</p>
+                <p className="text-xs text-white/75">price − discount − coupon + tax</p>
               )}
             </div>
           </div>

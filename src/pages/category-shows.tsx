@@ -94,7 +94,7 @@ export default function CategoryShowsPage() {
             <h1 className="text-3xl font-bold tracking-tight">
               {categoryData?.name || "Loading..."}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-white/75 mt-1">
               {shows.length} {shows.length === 1 ? "show" : "shows"}
             </p>
           </div>
@@ -112,10 +112,10 @@ export default function CategoryShowsPage() {
         </CardHeader>
         <CardContent>
           {showsLoading ? (
-            <div className="py-12 text-center text-muted-foreground">Loading shows...</div>
+            <div className="py-12 text-center text-white/75">Loading shows...</div>
           ) : shows.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground mb-4">No shows yet</p>
+              <p className="text-white/75 mb-4">No shows yet</p>
               <Button onClick={() => setLocation(`/categories/${categoryId}/shows/new`)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Show
@@ -148,9 +148,9 @@ export default function CategoryShowsPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium truncate">{show.title}</p>
-                            <p className="text-sm text-muted-foreground truncate">{show.subtitle}</p>
+                            <p className="text-sm text-white/75 truncate">{show.subtitle}</p>
                             {show.description ? (
-                              <p className="text-xs text-muted-foreground mt-1 truncate">{show.description}</p>
+                              <p className="text-xs text-white/75 mt-1 truncate">{show.description}</p>
                             ) : null}
                           </div>
                         </div>

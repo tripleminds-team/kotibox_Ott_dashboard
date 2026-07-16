@@ -79,12 +79,12 @@ const SortableSetting = ({ setting, onToggle, onEditItems, onEditMeta, onDelete 
               ...attributes,
               ...listeners,
             }}
-            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+            className="cursor-grab active:cursor-grabbing text-white/75 hover:text-white"
           >
             <GripVertical className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">{setting.name}</p>
+            <p className="text-sm font-medium text-white">{setting.name}</p>
             {setting.type === 'select' && setting.selectedItems?.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {setting.selectedItems.map((item: string, idx: number) => (
@@ -107,7 +107,7 @@ const SortableSetting = ({ setting, onToggle, onEditItems, onEditMeta, onDelete 
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="h-9 w-9 rounded-lg text-white/75 hover:bg-muted hover:text-white"
               onClick={() => onEditItems(setting)}
             >
               <Edit2 className="h-4 w-4" />
@@ -117,7 +117,7 @@ const SortableSetting = ({ setting, onToggle, onEditItems, onEditMeta, onDelete 
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="h-9 w-9 rounded-lg text-white/75 hover:bg-muted hover:text-white"
             onClick={() => onEditMeta(setting)}
           >
             <Edit2 className="h-4 w-4" />
@@ -258,7 +258,7 @@ export default function AppManagement() {
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto py-10 flex items-center justify-center">
-        <p className="text-muted-foreground">Loading settings...</p>
+        <p className="text-white/75">Loading settings...</p>
       </div>
     );
   }
@@ -268,7 +268,7 @@ export default function AppManagement() {
   return (
     <div className="max-w-4xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">App Management</h1>
+        <h1 className="text-2xl font-bold text-white">App Management</h1>
         <Dialog open={addSettingOpen} onOpenChange={setAddSettingOpen}>
           <DialogTrigger asChild>
             <Button variant="default" className="bg-primary hover:bg-primary/90 text-white">
@@ -276,22 +276,22 @@ export default function AppManagement() {
               Add Setting
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-popover border-border text-foreground">
+          <DialogContent className="sm:max-w-[425px] bg-popover border-border text-white">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Add New Setting</DialogTitle>
+              <DialogTitle className="text-white">Add New Setting</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label className="text-foreground">Name <span className="text-primary">*</span></Label>
+                <Label className="text-white">Name <span className="text-primary">*</span></Label>
                 <Input
                   value={newSettingName}
                   onChange={(e) => setNewSettingName(e.target.value)}
-                  className="bg-input border-border text-foreground"
+                  className="bg-input border-border text-white"
                   placeholder="e.g., New Feature"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-foreground">Type <span className="text-primary">*</span></Label>
+                <Label className="text-white">Type <span className="text-primary">*</span></Label>
                 <div className="flex gap-2">
                   <Button
                     variant={newSettingType === 'simple' ? 'default' : 'ghost'}
@@ -319,7 +319,7 @@ export default function AppManagement() {
                 Cancel
               </Button>
               <Button
-                className="bg-primary hover:bg-primary/90 text-foreground"
+                className="bg-primary hover:bg-primary/90 text-white"
                 onClick={handleAddSetting}
               >
                 Add
@@ -368,29 +368,29 @@ export default function AppManagement() {
           if (!open) setEditingSetting(null);
         }}
       >
-        <DialogContent className="sm:max-w-[500px] bg-popover border-border text-foreground">
+        <DialogContent className="sm:max-w-[500px] bg-popover border-border text-white">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Edit Setting Items</DialogTitle>
+            <DialogTitle className="text-white">Edit Setting Items</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-foreground">Name</Label>
+              <Label className="text-white">Name</Label>
               <Input
                 value={editingSetting?.name || ''}
                 disabled
-                className="bg-input border-border text-foreground"
+                className="bg-input border-border text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground">Type</Label>
+              <Label className="text-white">Type</Label>
               <Input
                 value="select"
                 disabled
-                className="bg-input border-border text-foreground"
+                className="bg-input border-border text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground">Selected Items</Label>
+              <Label className="text-white">Selected Items</Label>
               <div className="flex flex-wrap gap-2">
                 {tempSelectedItems.map((item, idx) => (
                   <Badge
@@ -446,7 +446,7 @@ export default function AppManagement() {
               Cancel
             </Button>
             <Button
-              className="bg-primary hover:bg-primary/90 text-foreground"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={handleSaveEdit}
             >
               Save
@@ -461,21 +461,21 @@ export default function AppManagement() {
           if (!open) setEditingSettingMeta(null);
         }}
       >
-        <DialogContent className="sm:max-w-[425px] bg-popover border-border text-foreground">
+        <DialogContent className="sm:max-w-[425px] bg-popover border-border text-white">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Edit Setting</DialogTitle>
+            <DialogTitle className="text-white">Edit Setting</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-foreground">Name <span className="text-primary">*</span></Label>
+              <Label className="text-white">Name <span className="text-primary">*</span></Label>
               <Input
                 value={editingSettingMeta?.name || ''}
                 onChange={(e) => setEditingSettingMeta({ ...editingSettingMeta, name: e.target.value })}
-                className="bg-input border-border text-foreground"
+                className="bg-input border-border text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-foreground">Type <span className="text-primary">*</span></Label>
+              <Label className="text-white">Type <span className="text-primary">*</span></Label>
               <div className="flex gap-2">
                 <Button
                   variant={editingSettingMeta?.type === 'simple' ? 'default' : 'ghost'}
@@ -503,7 +503,7 @@ export default function AppManagement() {
               Cancel
             </Button>
             <Button
-              className="bg-primary hover:bg-primary/90 text-foreground"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={handleEditSettingMeta}
             >
               Save

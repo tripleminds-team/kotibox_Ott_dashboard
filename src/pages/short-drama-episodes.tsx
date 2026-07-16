@@ -124,20 +124,20 @@ export default function ShortDramaEpisodesPage() {
   return (
     <div className="space-y-5">
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-white/75">
         <span>Dashboard</span><span>/</span>
-        <span className="text-foreground font-medium">Episodes</span>
+        <span className="text-white font-medium">Episodes</span>
         {episodes.length > 0 && (
-          <span className="text-zinc-200 text-xs">({episodes.length} total)</span>
+          <span className="text-white/80 text-xs">({episodes.length} total)</span>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-foreground">
+          <SelectContent className="bg-popover border-border text-white">
             <SelectItem value="action">Action</SelectItem>
             <SelectItem value="delete">Delete Selected</SelectItem>
           </SelectContent>
@@ -149,20 +149,20 @@ export default function ShortDramaEpisodesPage() {
         <div className="flex-1" />
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-32 bg-card border-border text-foreground h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-32 bg-card border-border text-white h-10 rounded-lg text-sm">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-foreground">
+          <SelectContent className="bg-popover border-border text-white">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="active">Ready</SelectItem>
             <SelectItem value="inactive">Processing</SelectItem>
           </SelectContent>
         </Select>
         <Select value={accessFilter} onValueChange={setAccessFilter}>
-          <SelectTrigger className="w-32 bg-card border-border text-foreground h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-32 bg-card border-border text-white h-10 rounded-lg text-sm">
             <SelectValue placeholder="Access" />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-foreground">
+          <SelectContent className="bg-popover border-border text-white">
             <SelectItem value="all">All Access</SelectItem>
             <SelectItem value="free">Free</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
@@ -170,10 +170,10 @@ export default function ShortDramaEpisodesPage() {
         </Select>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input placeholder="Search episodes..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-primary" />
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm focus:border-primary" />
         </div>
 
         <Button onClick={() => {
@@ -201,19 +201,19 @@ export default function ShortDramaEpisodesPage() {
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll}
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                 </TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Episode</TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Season</TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Short Drama</TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Duration</TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Access</TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Locked</TableHead>
-                <TableHead className="text-zinc-200 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Episode</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide">Season</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide">Short Drama</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide">Duration</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide">Access</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide">Locked</TableHead>
+                <TableHead className="text-white/80 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-zinc-100 py-14">
+                  <TableCell colSpan={8} className="text-center text-white py-14">
                     {searchQuery ? "No episodes match your search" : "No episodes found. Click New Episode to add one."}
                   </TableCell>
                 </TableRow>
@@ -232,22 +232,22 @@ export default function ShortDramaEpisodesPage() {
                             {ep.thumbnail ? (
                               <img src={getImageUrl(ep.thumbnail)} alt={ep.title} className="h-full w-full object-cover" />
                             ) : (
-                              <ImageIcon className="h-5 w-5 text-zinc-200" />
+                              <ImageIcon className="h-5 w-5 text-white/80" />
                             )}
                           </div>
                           <div>
-                            <p className="text-foreground font-medium text-sm">{ep.title}</p>
-                            <p className="text-xs text-zinc-100 mt-0.5">Ep {ep.episode}</p>
+                            <p className="text-white font-medium text-sm">{ep.title}</p>
+                            <p className="text-xs text-white mt-0.5">Ep {ep.episode}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-zinc-200 text-sm">Season {ep.season}</span>
+                        <span className="text-white/80 text-sm">Season {ep.season}</span>
                       </TableCell>
-                      <TableCell className="text-zinc-200 text-sm">
+                      <TableCell className="text-white/80 text-sm">
                         {ep.showName || (ep.contentId as any)?.title || "—"}
                       </TableCell>
-                      <TableCell className="text-zinc-200 text-sm">{fmt(ep.duration)}</TableCell>
+                      <TableCell className="text-white/80 text-sm">{fmt(ep.duration)}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${
                           ep.isFree ? "bg-green-500/20 text-green-400" : "bg-blue-500/20 text-blue-400"
@@ -286,15 +286,15 @@ export default function ShortDramaEpisodesPage() {
       )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Episode</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-200">
+            <AlertDialogDescription className="text-white/80">
               Are you sure you want to delete "{confirmDelete?.title}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

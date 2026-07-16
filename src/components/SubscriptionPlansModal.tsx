@@ -1,8 +1,18 @@
 import { useState, useEffect } from "react";
 import { X, Crown, Check, Loader2, Sparkles, Flame, Play } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useGetWebSubscriptionPlans, useCreateSubscription } from "@/lib/api-client";
+import { useGetWebSubscriptionPlans, useCreateSubscriptionRazorpayOrder, useVerifySubscriptionRazorpayPayment } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
+
+const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 interface SubscriptionPlansModalProps {
   isOpen: boolean;
@@ -14,7 +24,8 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
   const { settings } = useSettings();
   const { toast } = useToast();
   const { data: plansData, isLoading: loadingPlans } = useGetWebSubscriptionPlans();
-  const createSubMutation = useCreateSubscription();
+  const createOrderMutation = useCreateSubscriptionRazorpayOrder();
+  const verifyPaymentMutation = useVerifySubscriptionRazorpayPayment();
   const [user, setUser] = useState<any>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
@@ -54,34 +65,88 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
 
     try {
       setSelectedPlanId(plan.id || plan._id);
-      await createSubMutation.mutateAsync({
-        userId: user.id || user._id,
+
+      const orderData = await createOrderMutation.mutateAsync({
         planId: plan.id || plan._id,
-        startDate: new Date(),
-        price: plan.price || plan.totalPrice,
-        totalAmount: plan.totalPrice || plan.price,
-        paymentMethod: 'Credit Card',
-        status: 'active'
+        userId: user.id || user._id,
       });
 
-      const updatedUser = {
-        ...user,
-        subscriptionPlan: plan.name,
-        subscriptionStatus: 'active'
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      
-      // Notify components about user update
-      window.dispatchEvent(new Event("user-updated"));
+      if (orderData.isFree) {
+        // Free plan logic bypasses Razorpay popup
+        const updatedUser = {
+          ...user,
+          subscriptionPlan: plan.name,
+          subscriptionStatus: 'active'
+        };
+        localStorage.setItem("appUser", JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("user-updated"));
 
-      toast({
-        title: "Subscription Successful",
-        description: `Successfully subscribed to ${plan.name}! Full library unlocked.`,
-      });
-      if (onSubscribed) {
-        onSubscribed();
+        toast({
+          title: "Subscription Successful",
+          description: `Successfully subscribed to ${plan.name}! Full library unlocked.`,
+        });
+        if (onSubscribed) onSubscribed();
+        onClose();
+        return;
       }
-      onClose();
+
+      const res = await loadRazorpay();
+      if (!res) {
+        toast({ title: "Error", description: "Failed to load Razorpay SDK", variant: "destructive" });
+        return;
+      }
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: settings.platformName || "Platform",
+        description: `Subscription - ${plan.name}`,
+        order_id: orderData.order.id,
+        handler: async function (response: any) {
+          try {
+            await verifyPaymentMutation.mutateAsync({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId: plan.id || plan._id,
+              userId: user.id || user._id,
+            });
+
+            const updatedUser = {
+              ...user,
+              subscriptionPlan: plan.name,
+              subscriptionStatus: 'active'
+            };
+            localStorage.setItem("appUser", JSON.stringify(updatedUser));
+            window.dispatchEvent(new Event("user-updated"));
+
+            toast({
+              title: "Subscription Successful",
+              description: `Successfully subscribed to ${plan.name}! Full library unlocked.`,
+            });
+            if (onSubscribed) onSubscribed();
+            onClose();
+          } catch (verifyError: any) {
+            toast({
+              title: "Verification Failed",
+              description: verifyError?.message || "Payment verification failed",
+              variant: "destructive",
+            });
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+        },
+        theme: {
+          color: settings.primaryColor || "#e50914",
+        },
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
+
     } catch (err: any) {
       toast({
         title: "Subscription Failed",
@@ -114,7 +179,7 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
           </div>
           <button 
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-900 hover:bg-zinc-800 text-white/70 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -122,14 +187,14 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-8">
-          <p className="text-zinc-400 text-sm text-center max-w-lg mx-auto mb-8 leading-relaxed">
+          <p className="text-white/70 text-sm text-center max-w-lg mx-auto mb-8 leading-relaxed">
             Unlock unlimited access to the entire Xoto OTT library. Supercharge your streaming experience with crystal-clear 4K, Dolby Atmos, and zero ads.
           </p>
 
           {loadingPlans ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-zinc-500 text-xs">Loading plans...</p>
+              <p className="text-white/65 text-xs">Loading plans...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -164,14 +229,14 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
                       </div>
 
                       {/* Plan Description */}
-                      <p className="text-zinc-400 text-xs min-h-[36px] mb-4 leading-normal">
+                      <p className="text-white/70 text-xs min-h-[36px] mb-4 leading-normal">
                         {plan.description}
                       </p>
 
                       {/* Plan Price */}
                       <div className="flex items-baseline gap-1 mt-1 mb-2">
                         <span className="text-3xl font-black text-white">{settings?.currencyPosition === 'before' ? (settings?.currencySymbol || '₹') + (plan.totalPrice ?? plan.price) : (plan.totalPrice ?? plan.price) + ' ' + (settings?.currencySymbol || '₹')}</span>
-                        <span className="text-sm font-medium text-zinc-400">/ {plan.duration || 'month'}</span>
+                        <span className="text-sm font-medium text-white/70">/ {plan.duration || 'month'}</span>
                       </div>
 
                       {/* Plan Features */}
@@ -202,14 +267,14 @@ export default function SubscriptionPlansModal({ isOpen, onClose, onSubscribed }
                     {/* Subscribe Button */}
                     <button
                       onClick={() => handleSubscribe(plan)}
-                      disabled={createSubMutation.isPending && selectedPlanId === (plan.id || plan._id)}
+                      disabled={createOrderMutation.isPending && selectedPlanId === (plan.id || plan._id)}
                       className={`w-full py-3 rounded-xl font-bold transition-all duration-300 text-sm tracking-wide active:scale-95 flex items-center justify-center gap-2 ${
                         isPopular
                           ? "bg-primary text-white hover:bg-primary/90 shadow-[0_8px_20px_rgba(229,9,20,0.3)]"
                           : "bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"
                       } disabled:opacity-50 disabled:pointer-events-none`}
                     >
-                      {createSubMutation.isPending && selectedPlanId === (plan.id || plan._id) ? (
+                      {createOrderMutation.isPending && selectedPlanId === (plan.id || plan._id) ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Processing...

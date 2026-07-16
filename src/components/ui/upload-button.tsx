@@ -73,7 +73,7 @@ export default function UploadButton({ value, accept = "image/*", onChange, labe
             <video src={preview} className="w-full h-full object-cover" muted />
           )
         ) : (
-          <span className="text-xs text-muted-foreground">No file</span>
+          <span className="text-xs text-white/75">No file</span>
         )}
       </div>
     </div>

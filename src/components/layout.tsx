@@ -27,6 +27,7 @@ import {
   Image,
   Tags,
   CreditCard,
+  Coins,
   ScrollText,
   Gauge,
   HelpCircle,
@@ -44,6 +45,8 @@ import {
   CheckCircle,
   Flame,
   MessageSquare,
+  Gift,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -77,7 +80,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/dashboard", label: t('nav.dashboard'), icon: Home, permission: null },
         { href: "/media-library", label: t('nav.mediaLibrary'), icon: Image, permission: "mediaLibrary" },
-        { href: "/home-sections", label: "Home Layout Builder", icon: LayoutList, permission: "categories" },
+        { href: "/home-sections", label: "App Layout Builder", icon: LayoutList, permission: "categories" },
+        { href: "/web-home-sections", label: "Web Layout Builder", icon: LayoutList, permission: "categories" },
         { href: "/new-hot", label: "New & Hot", icon: Flame, permission: "promotions" },
       ],
     },
@@ -149,6 +153,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       items: [
         { href: "/subscriptions", label: t('nav.subscriptions'), icon: ScrollText, permission: "subscriptions" },
         { href: "/plans", label: t('nav.plans'), icon: CreditCard, permission: "subscriptionPlans" },
+        { href: "/coin-packages", label: "Coin Packages", icon: Coins, permission: "subscriptionPlans" },
+        { href: "/rewards-management", label: "Rewards & Tasks", icon: Gift, permission: "subscriptionPlans" },
+        { href: "/revenue-analytics", label: "Revenue Analytics", icon: TrendingUp, permission: "subscriptionPlans" },
         { href: "/plan-limits", label: t('nav.planLimits'), icon: Gauge, permission: "planLimits" },
       ],
     },
@@ -246,7 +253,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col gap-5">
       {filteredNavSections.map((section) => (
         <div key={section.label}>
-          <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-1.5 px-3">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-white/75 mb-1.5 px-3">
             {section.label}
           </p>
           <div className="flex flex-col gap-0.5">
@@ -271,7 +278,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       className={`group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                         isGroupActive
                           ? "bg-muted text-foreground"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          : "text-white/75 hover:bg-muted hover:text-foreground"
                       }`}
                     >
                       {isGroupActive && (
@@ -279,7 +286,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       )}
                       <span
                         className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
-                          isGroupActive ? "bg-primary/20 text-primary" : "text-muted-foreground group-hover:text-foreground"
+                          isGroupActive ? "bg-primary/20 text-primary" : "text-white/75 group-hover:text-foreground"
                         }`}
                       >
                         <Icon className="h-[17px] w-[17px]" />
@@ -302,12 +309,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                               className={`group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 childActive
                                   ? "bg-muted text-foreground"
-                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                  : "text-white/75 hover:bg-muted hover:text-foreground"
                               }`}
                             >
                               <span
                                 className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 transition-colors ${
-                                  childActive ? "bg-primary/20 text-primary" : "text-muted-foreground group-hover:text-foreground"
+                                  childActive ? "bg-primary/20 text-primary" : "text-white/75 group-hover:text-foreground"
                                 }`}
                               >
                                 <ChildIcon className="h-4 w-4" />
@@ -331,7 +338,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-white/75 hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {isActive && (
@@ -341,7 +348,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 transition-colors ${
                       isActive
                         ? "bg-primary/20 text-primary"
-                        : "text-muted-foreground group-hover:text-foreground"
+                        : "text-white/75 group-hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-[17px] w-[17px]" />
@@ -371,7 +378,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className={`relative flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
                     isActive
                       ? "bg-muted text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "text-white/75 hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {isActive && (
@@ -426,7 +433,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <HeaderNotifications />
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-white/75">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -437,7 +444,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   variant="ghost"
                   size="icon"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-muted-foreground rounded-lg h-8 w-8"
+                  className="text-white/75 rounded-lg h-8 w-8"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -448,7 +455,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="absolute bottom-0 left-0 right-0 px-4 py-4 border-t border-border bg-sidebar">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-3 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted px-3"
+                  className="w-full justify-start gap-3 h-10 rounded-lg text-white/75 hover:text-foreground hover:bg-muted px-3"
                   onClick={handleLogout}
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0">
@@ -477,7 +484,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <LogoComponent collapsed={sidebarCollapsed} />
           {!sidebarCollapsed && (
             <button
-              className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="h-7 w-7 flex items-center justify-center rounded-md text-white/75 hover:text-foreground hover:bg-muted transition-colors"
               onClick={() => setSidebarCollapsed(true)}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -498,7 +505,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+                    className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-white/75 hover:bg-muted hover:text-primary transition-colors"
                   >
                     <LogOut className="h-[18px] w-[18px]" />
                   </button>
@@ -512,7 +519,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <>
               <button
                 onClick={handleLogout}
-                className="group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+                className="group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white/75 hover:bg-muted hover:text-foreground transition-all duration-200"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0">
                   <LogOut className="h-[17px] w-[17px]" />
@@ -541,7 +548,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             {sidebarCollapsed && (
               <button
-                className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-white/75 hover:bg-muted hover:text-foreground transition-colors"
                 onClick={() => setSidebarCollapsed(false)}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -593,7 +600,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <p className="text-foreground font-bold text-sm truncate leading-tight">
                       {user?.name || "Admin"}
                     </p>
-                    <p className="text-muted-foreground text-xs truncate mt-0.5">
+                    <p className="text-white/75 text-xs truncate mt-0.5">
                       {user?.email || ""}
                     </p>
                     <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-md bg-primary/15 border border-primary/25 text-primary text-[10px] font-bold capitalize">
@@ -604,24 +611,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="py-1">
                   <DropdownMenuItem
                     onClick={() => setLocation("/profile")}
-                    className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
+                    className="flex items-center gap-3 px-4 py-2.5 text-white/75 hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
-                    <UserCog className="h-4 w-4 text-muted-foreground" />
+                    <UserCog className="h-4 w-4 text-white/75" />
                     {t('nav.myProfile')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setLocation("/settings")}
-                    className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
+                    className="flex items-center gap-3 px-4 py-2.5 text-white/75 hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
-                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <Settings className="h-4 w-4 text-white/75" />
                     {t('nav.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border my-1" />
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
+                    className="flex items-center gap-3 px-4 py-2.5 text-white/75 hover:text-foreground hover:bg-muted cursor-pointer focus:bg-muted focus:text-foreground"
                   >
-                    <LogOut className="h-4 w-4 text-muted-foreground" />
+                    <LogOut className="h-4 w-4 text-white/75" />
                     {t('nav.logout')}
                   </DropdownMenuItem>
                 </div>

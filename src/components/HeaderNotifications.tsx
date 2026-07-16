@@ -30,7 +30,7 @@ const getIconForType = (type: string, action?: string) => {
   if (action === "deleted") return <Trash2 className="h-4 w-4 text-primary" />;
   if (action === "updated") return <FileEdit className="h-4 w-4 text-orange-500" />;
   if (action === "created") return <Film className="h-4 w-4 text-green-500" />;
-  return <AlertCircle className="h-4 w-4 text-zinc-500" />;
+  return <AlertCircle className="h-4 w-4 text-white/65" />;
 };
 
 export function HeaderNotifications() {
@@ -50,7 +50,7 @@ export function HeaderNotifications() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted">
+        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-white/75 hover:text-foreground hover:bg-muted">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary border-2 border-background shadow-sm" />
@@ -70,7 +70,7 @@ export function HeaderNotifications() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 text-xs text-muted-foreground hover:text-foreground"
+            className="h-8 text-xs text-white/75 hover:text-foreground"
             onClick={handleMarkAllAsRead}
             disabled={unreadCount === 0 || markAsRead.isPending}
           >
@@ -81,7 +81,7 @@ export function HeaderNotifications() {
         
         <ScrollArea className="h-[350px]">
           {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-40 text-white/75">
               <Bell className="h-8 w-8 mb-2 opacity-20" />
               <p className="text-sm">No notifications yet</p>
             </div>
@@ -98,13 +98,13 @@ export function HeaderNotifications() {
                     {getIconForType(notif.type, notif.action)}
                   </div>
                   <div className="flex-1 space-y-1 overflow-hidden">
-                    <p className={`text-sm leading-tight ${!notif.isRead ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                    <p className={`text-sm leading-tight ${!notif.isRead ? "font-medium text-foreground" : "text-white/75"}`}>
                       {notif.title}
                     </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
+                    <p className="text-xs text-white/75 line-clamp-2">
                       {notif.message}
                     </p>
-                    <p className="text-[10px] text-muted-foreground/80 mt-1">
+                    <p className="text-[10px] text-white/75/80 mt-1">
                       {formatTimeAgo(notif.createdAt)}
                     </p>
                   </div>

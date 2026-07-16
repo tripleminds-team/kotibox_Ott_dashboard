@@ -132,7 +132,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 mode === "library"
                   ? "bg-primary text-white shadow-sm"
-                  : "bg-muted border border-border text-muted-foreground hover:text-foreground"
+                  : "bg-muted border border-border text-white/75 hover:text-foreground"
               }`}
             >
               <ImageIcon className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 mode === "upload"
                   ? "bg-primary text-white shadow-sm"
-                  : "bg-muted border border-border text-muted-foreground hover:text-foreground"
+                  : "bg-muted border border-border text-white/75 hover:text-foreground"
               }`}
             >
               <Upload className="h-4 w-4" />
@@ -157,13 +157,13 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
               {/* Search + File type filter */}
               <div className="flex items-center gap-3 shrink-0">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/75" />
                   <input
                     type="text"
                     placeholder="Search media..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 bg-muted border border-border text-foreground placeholder:text-zinc-500 focus:border-primary h-9 rounded-lg text-sm outline-none transition-colors"
+                    className="w-full pl-9 pr-3 bg-muted border border-border text-foreground placeholder:text-white/65 focus:border-primary h-9 rounded-lg text-sm outline-none transition-colors"
                   />
                 </div>
                 {showFileTypeTabs && (
@@ -175,7 +175,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                           fileTypeTab === t
                             ? "bg-primary text-white"
-                            : "text-muted-foreground hover:text-foreground"
+                            : "text-white/75 hover:text-foreground"
                         }`}
                       >
                         {t === "image" && <ImageIcon className="h-3.5 w-3.5" />}
@@ -189,7 +189,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
 
               {/* File count */}
               {!mediaLoading && (
-                <p className="text-xs text-zinc-500 font-medium shrink-0">
+                <p className="text-xs text-white/65 font-medium shrink-0">
                   {filteredMedia.length} file{filteredMedia.length !== 1 ? "s" : ""} found
                 </p>
               )}
@@ -201,7 +201,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : filteredMedia.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-zinc-500 gap-3">
+                  <div className="flex flex-col items-center justify-center py-20 text-white/65 gap-3">
                     <ImageIcon className="h-10 w-10 opacity-30" />
                     <p className="text-sm font-medium">
                       {searchQuery ? "No matching files found" : "No files in media library yet"}
@@ -276,9 +276,9 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{selectedMedia.name}</p>
-                    <p className="text-xs text-zinc-500">{selectedMedia.size || selectedMedia.fileType}</p>
+                    <p className="text-xs text-white/65">{selectedMedia.size || selectedMedia.fileType}</p>
                   </div>
-                  <button onClick={() => setSelectedMedia(null)} className="text-zinc-500 hover:text-primary transition-colors">
+                  <button onClick={() => setSelectedMedia(null)} className="text-white/65 hover:text-primary transition-colors">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -300,7 +300,7 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                     ) : (
                       <img src={preview} alt="Preview" className="max-h-52 mx-auto rounded-xl object-contain" />
                     )}
-                    <p className="text-sm text-zinc-400 font-medium">{selectedMedia?.name}</p>
+                    <p className="text-sm text-white/70 font-medium">{selectedMedia?.name}</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -313,19 +313,19 @@ export default function MediaPicker({ open, onClose, onSelect, source, accept = 
                 ) : (
                   <div>
                     <div className="w-16 h-16 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto mb-4">
-                      <Upload className="h-7 w-7 text-zinc-500" />
+                      <Upload className="h-7 w-7 text-white/65" />
                     </div>
                     <p className="text-sm font-semibold text-foreground mb-1">Click to choose a file</p>
-                    <p className="text-xs text-zinc-500">or drag and drop here</p>
-                    <p className="text-xs text-zinc-600 mt-3">
+                    <p className="text-xs text-white/65">or drag and drop here</p>
+                    <p className="text-xs text-white/60 mt-3">
                       {accept.includes("image") && accept.includes("video") ? "Images & Videos" : accept.includes("image") ? "Images only" : "Videos only"}
                     </p>
                   </div>
                 )}
               </div>
               <input ref={fileInputRef} type="file" accept={accept} onChange={handleFileSelect} className="hidden" />
-              <p className="text-xs text-zinc-600">
-                File will be saved to the <strong className="text-zinc-400">{source}</strong> folder in Media Library.
+              <p className="text-xs text-white/60">
+                File will be saved to the <strong className="text-white/70">{source}</strong> folder in Media Library.
               </p>
             </div>
           )}

@@ -122,7 +122,7 @@ export default function PlanLimitsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Loading plan limits...</p>
+        <p className="text-white/75">Loading plan limits...</p>
       </div>
     );
   }
@@ -130,43 +130,43 @@ export default function PlanLimitsPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span>
         <span>/</span>
-        <span className="text-foreground font-medium">Plan Limits</span>
+        <span className="text-white font-medium">Plan Limits</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Show entries */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show</span>
+          <span className="text-sm text-white/75">Show</span>
           <Select value={entriesPerPage} onValueChange={setEntriesPerPage}>
-            <SelectTrigger className="w-20 bg-card border-border text-foreground h-10 rounded-lg">
+            <SelectTrigger className="w-20 bg-card border-border text-white h-10 rounded-lg">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-muted border-border text-foreground">
+            <SelectContent className="bg-muted border-border text-white">
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="25">25</SelectItem>
               <SelectItem value="50">50</SelectItem>
               <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-muted-foreground">entries</span>
+          <span className="text-sm text-white/75">entries</span>
         </div>
 
         {/* Bulk action */}
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
         <Button
           onClick={handleApply}
-          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
@@ -175,10 +175,10 @@ export default function PlanLimitsPage() {
 
         {/* Status filter */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-28 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
@@ -187,19 +187,19 @@ export default function PlanLimitsPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/60 focus:border-primary h-10 rounded-lg"
           />
         </div>
 
         {/* New button */}
         <Button
           onClick={() => setLocation("/plan-limits/new")}
-          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -218,43 +218,43 @@ export default function PlanLimitsPage() {
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm">
+              <TableHead className="text-white font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Plan Name
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm">
+              <TableHead className="text-white font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Video Cast
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm">
+              <TableHead className="text-white font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Ads
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm">
+              <TableHead className="text-white font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Device Limit
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm">
+              <TableHead className="text-white font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Download Status
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm">
+              <TableHead className="text-white font-semibold text-sm">
                 <div className="flex items-center gap-1">
                   Profile Limit
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                  <ChevronDown className="h-3.5 w-3.5 text-white/65" />
                 </div>
               </TableHead>
-              <TableHead className="text-foreground font-semibold text-sm text-right pr-6">
+              <TableHead className="text-white font-semibold text-sm text-right pr-6">
                 Action
               </TableHead>
             </TableRow>
@@ -262,7 +262,7 @@ export default function PlanLimitsPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="border-border">
-                <TableCell colSpan={8} className="text-center text-gray-500 py-16">
+                <TableCell colSpan={8} className="text-center text-white/65 py-16">
                   No plan limits found
                 </TableCell>
               </TableRow>
@@ -279,18 +279,18 @@ export default function PlanLimitsPage() {
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-foreground">{item.planName}</TableCell>
+                  <TableCell className="font-medium text-white">{item.planName}</TableCell>
                   <TableCell>
                     <StatusPill active={item.videoCast} />
                   </TableCell>
                   <TableCell>
                     <StatusPill active={item.ads} />
                   </TableCell>
-                  <TableCell className="text-foreground">{item.deviceLimit ? item.deviceLimitCount : "—"}</TableCell>
+                  <TableCell className="text-white">{item.deviceLimit ? item.deviceLimitCount : "—"}</TableCell>
                   <TableCell>
                     <StatusPill active={item.downloadStatus} />
                   </TableCell>
-                  <TableCell className="text-foreground">{item.profileLimit ? item.profileLimitCount : "—"}</TableCell>
+                  <TableCell className="text-white">{item.profileLimit ? item.profileLimitCount : "—"}</TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex items-center justify-end gap-2">
                       <Button
@@ -319,28 +319,28 @@ export default function PlanLimitsPage() {
       </div>
 
       {/* Footer */}
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-white/65">
         Showing {filtered.length} of {limits.length} plan limits
       </p>
 
       {/* Delete Dialog */}
       <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
-        <AlertDialogContent className="bg-card border border-border text-foreground">
+        <AlertDialogContent className="bg-card border border-border text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Delete Plan Limit</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
+            <AlertDialogTitle className="text-white">Delete Plan Limit</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/75">
               Are you sure you want to delete this plan limit?
               <br />
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted hover:text-foreground">
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted hover:text-white">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteAction}
-              className="bg-primary hover:bg-primary/90 text-foreground border-0"
+              className="bg-primary hover:bg-primary/90 text-white border-0"
             >
               Delete
             </AlertDialogAction>

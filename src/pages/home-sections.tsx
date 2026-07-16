@@ -91,19 +91,19 @@ const SortableSection = ({ section, onToggle, onEdit, onDelete }: SortableSectio
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1"
+            className="cursor-grab active:cursor-grabbing text-white/75 hover:text-white p-1"
           >
             <GripVertical className="h-5 w-5" />
           </div>
           
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-foreground">{section.title}</p>
+              <p className="text-sm font-bold text-white">{section.title}</p>
               {!section.isActive && (
-                <Badge variant="outline" className="text-[10px] py-0 border-border text-muted-foreground">Hidden</Badge>
+                <Badge variant="outline" className="text-[10px] py-0 border-border text-white/75">Hidden</Badge>
               )}
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-white/75">
               <span className="flex items-center gap-1 bg-muted px-2 py-0.5 rounded-md">
                 {getLayoutIcon(section.layout)} {section.layout}
               </span>
@@ -123,7 +123,7 @@ const SortableSection = ({ section, onToggle, onEdit, onDelete }: SortableSectio
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="h-8 w-8 rounded-lg text-white/75 hover:bg-muted hover:text-white"
             onClick={() => onEdit(section)}
           >
             <Edit2 className="h-4 w-4" />
@@ -346,8 +346,8 @@ export default function HomeSections() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Home Layout Builder</h1>
-          <p className="text-sm text-muted-foreground mt-1">Design and manage the dynamic sections of your mobile app's home screen.</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Home Layout Builder</h1>
+          <p className="text-sm text-white/75 mt-1">Design and manage the dynamic sections of your mobile app's home screen.</p>
         </div>
         <Button onClick={openAdd} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20">
           <Plus className="h-4 w-4 mr-2" /> Add Section
@@ -357,13 +357,13 @@ export default function HomeSections() {
       <div className="flex gap-2 p-1.5 bg-muted/80 dark:bg-zinc-900 rounded-xl w-fit border border-border dark:border-white/5">
         <button
           onClick={() => setActiveTab('drama')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'drama' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/50 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/5'}`}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'drama' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-white/75 hover:text-white hover:bg-background/50 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/5'}`}
         >
           <MonitorPlay className="w-4 h-4" /> Short Dramas
         </button>
         <button
           onClick={() => setActiveTab('movie')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'movie' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/50 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-white/5'}`}
+          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'movie' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-white/75 hover:text-white hover:bg-background/50 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/5'}`}
         >
           <Film className="w-4 h-4" /> Movies
         </button>
@@ -371,12 +371,12 @@ export default function HomeSections() {
 
       <div className="bg-card border-border rounded-xl p-4">
         {isLoading ? (
-          <div className="text-center py-10 text-zinc-500">Loading layout...</div>
+          <div className="text-center py-10 text-white/65">Loading layout...</div>
         ) : localSections.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-border dark:border-zinc-800 rounded-xl">
-            <LayoutGrid className="w-8 h-8 text-muted-foreground opacity-60 mx-auto mb-3" />
-            <p className="text-foreground font-semibold mb-1">No sections configured</p>
-            <p className="text-sm text-muted-foreground">The app will use fallback sections until you create some here.</p>
+            <LayoutGrid className="w-8 h-8 text-white/75 opacity-60 mx-auto mb-3" />
+            <p className="text-white font-semibold mb-1">No sections configured</p>
+            <p className="text-sm text-white/75">The app will use fallback sections until you create some here.</p>
             <Button onClick={openAdd} variant="outline" className="mt-4 bg-transparent border-border dark:border-zinc-700 hover:bg-muted dark:hover:bg-white/5">
               Create First Section
             </Button>
@@ -399,7 +399,7 @@ export default function HomeSections() {
       </div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="bg-card border-border text-foreground sm:max-w-lg">
+        <DialogContent className="bg-card border-border text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingSection ? 'Edit Section' : 'Create Section'}</DialogTitle>
           </DialogHeader>
@@ -483,7 +483,7 @@ export default function HomeSections() {
 
               {formData.contentSelection !== 'manual' && (
                 <>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Dynamic Data Source</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-white/75 mt-4 mb-2">Dynamic Data Source</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label className="text-xs">Filter By (Field)</Label>
@@ -571,7 +571,7 @@ export default function HomeSections() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-6 w-6 rounded-md hover:bg-red-500/20 hover:text-red-500 text-muted-foreground"
+                              className="h-6 w-6 rounded-md hover:bg-red-500/20 hover:text-red-500 text-white/75"
                               onClick={() => setSelectedItems(selectedItems.filter(i => i !== id))}
                             >
                               <X className="h-3 w-3" />
@@ -603,8 +603,8 @@ export default function HomeSections() {
             <DialogTitle>Delete Section</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-muted-foreground text-sm">
-              Are you sure you want to delete <span className="font-bold text-foreground">{confirmDelete?.title}</span>? This will instantly remove the row from the mobile app.
+            <p className="text-white/75 text-sm">
+              Are you sure you want to delete <span className="font-bold text-white">{confirmDelete?.title}</span>? This will instantly remove the row from the mobile app.
             </p>
           </div>
           <DialogFooter>

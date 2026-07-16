@@ -85,37 +85,37 @@ export default function CountriesListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span>
         <span>/</span>
-        <span className="text-foreground font-medium">Countries</span>
+        <span className="text-white font-medium">Countries</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleApply} className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold">
+        <Button onClick={handleApply} className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold">
           Apply
         </Button>
 
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search countries..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
-        <Button onClick={() => setLocation("/countries/new")} className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold">
+        <Button onClick={() => setLocation("/countries/new")} className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold">
           <Plus className="h-4 w-4" /> New
         </Button>
       </div>
@@ -128,20 +128,20 @@ export default function CountriesListPage() {
                 <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll}
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
               </TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Country</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Code</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Active</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Country</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Code</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Active</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-zinc-500 py-10">Loading...</TableCell>
+                <TableCell colSpan={5} className="text-center text-white/65 py-10">Loading...</TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-zinc-500 py-10">
+                <TableCell colSpan={5} className="text-center text-white/65 py-10">
                   {searchQuery ? "No countries match your search" : "No countries yet. Click New to add one."}
                 </TableCell>
               </TableRow>
@@ -152,9 +152,9 @@ export default function CountriesListPage() {
                     <Checkbox checked={selectedIds.includes(country.id)} onCheckedChange={() => toggleSelect(country.id)}
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                   </TableCell>
-                  <TableCell className="text-foreground font-medium text-sm">{country.name}</TableCell>
+                  <TableCell className="text-white font-medium text-sm">{country.name}</TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-muted text-zinc-400">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-muted text-white/70">
                       {country.code}
                     </span>
                   </TableCell>
@@ -182,16 +182,16 @@ export default function CountriesListPage() {
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Country</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               Are you sure you want to delete "{confirmDelete?.name}"?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">Delete</AlertDialogAction>
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

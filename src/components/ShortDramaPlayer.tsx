@@ -309,7 +309,7 @@ export default function ShortDramaPlayer({
                 </span>
               )}
             </div>
-            <p className="text-zinc-500 text-[11px] mt-0.5">
+            <p className="text-white/65 text-[11px] mt-0.5">
               {currentEp?.number === "Trailer" ? "Trailer" : `EP ${currentEp?.number}`} · {currentEp?.duration} · {drama.language}
             </p>
           </div>
@@ -321,7 +321,7 @@ export default function ShortDramaPlayer({
           <span className="text-xs font-bold">{drama.rating}</span>
         </div>
 
-        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-white transition-colors flex-shrink-0">
+        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-white/65 hover:text-white transition-colors flex-shrink-0">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -430,7 +430,7 @@ export default function ShortDramaPlayer({
               <p className="text-white text-xs font-black">
                 {currentEp?.number === "Trailer" ? "Trailer" : `EP ${currentEp?.number}`}
               </p>
-              <p className="text-zinc-400 text-[10px] mt-0.5 truncate">{currentEp?.title}</p>
+              <p className="text-white/70 text-[10px] mt-0.5 truncate">{currentEp?.title}</p>
               {/* Progress bar */}
               <div className="mt-2 h-[3px] bg-white/20 rounded-full overflow-hidden">
                 <div
@@ -462,14 +462,14 @@ export default function ShortDramaPlayer({
                 className={`px-3 py-1.5 text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 border-b-2 ${
                   rangeStart === r.start
                     ? "text-white border-red-600"
-                    : "text-zinc-500 border-transparent hover:text-zinc-300"
+                    : "text-white/65 border-transparent hover:text-white/75"
                 }`}
               >
                 {r.label}
               </button>
             ))}
             <div className="flex-1 min-w-2" />
-            <button className="text-zinc-500 hover:text-white text-xs flex items-center gap-0.5 transition-colors flex-shrink-0">
+            <button className="text-white/65 hover:text-white text-xs flex items-center gap-0.5 transition-colors flex-shrink-0">
               All Episodes <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -490,8 +490,8 @@ export default function ShortDramaPlayer({
                       active
                         ? "bg-zinc-600 border-zinc-400 text-white shadow-md"
                         : ep.isLocked && !isSubscribed
-                          ? "bg-zinc-900 border-zinc-800 text-zinc-600 hover:border-zinc-700 cursor-pointer"
-                          : "bg-zinc-800/80 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-white hover:border-zinc-500 cursor-pointer"
+                          ? "bg-zinc-900 border-zinc-800 text-white/60 hover:border-zinc-700 cursor-pointer"
+                          : "bg-zinc-800/80 border-zinc-700/50 text-white/75 hover:bg-zinc-700 hover:text-white hover:border-zinc-500 cursor-pointer"
                     }`}
                     style={{ aspectRatio: "1", fontSize: ep.number === "Trailer" ? "9px" : "clamp(10px, 1.5vw, 13px)" }}
                   >
@@ -520,16 +520,16 @@ export default function ShortDramaPlayer({
             {/* Description card */}
             <div className="mt-4 p-3 bg-zinc-800/40 rounded-xl border border-zinc-700/30">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[11px] text-zinc-500">Now Playing</span>
+                <span className="text-[11px] text-white/65">Now Playing</span>
                 <span className="text-[11px] text-white font-bold">
                   {currentEp?.number === "Trailer" ? "Trailer" : `Episode ${currentEp?.number}`}
                 </span>
-                <span className="text-[11px] text-zinc-600">· {currentEp?.duration}</span>
+                <span className="text-[11px] text-white/60">· {currentEp?.duration}</span>
               </div>
-              <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">{currentEp?.description || "No description available."}</p>
+              <p className="text-xs text-white/70 leading-relaxed line-clamp-3">{currentEp?.description || "No description available."}</p>
               <div className="flex items-center gap-2 mt-2">
                 {drama.genres.map((g) => (
-                  <span key={g} className="text-[9px] bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded-sm">{g}</span>
+                  <span key={g} className="text-[9px] bg-zinc-700/60 text-white/70 px-1.5 py-0.5 rounded-sm">{g}</span>
                 ))}
               </div>
             </div>
@@ -538,7 +538,7 @@ export default function ShortDramaPlayer({
             {!isSubscribed && (
               <div className="flex items-center gap-2 mt-3 px-1">
                 <div className="flex-1 h-px bg-zinc-800" />
-                <span className="text-zinc-600 text-[10px] flex-shrink-0 text-center leading-snug">
+                <span className="text-white/60 text-[10px] flex-shrink-0 text-center leading-snug">
                   EP 1–{drama.freeEpisodes} FREE · Subscribe to unlock all {drama.totalEpisodes} episodes
                 </span>
                 <div className="flex-1 h-px bg-zinc-800" />
@@ -562,7 +562,7 @@ export default function ShortDramaPlayer({
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3">
                 <p className="text-white font-bold text-sm truncate">{drama.title}</p>
-                <p className="text-zinc-400 text-[10px] mt-0.5">Episode {lockedEpNum} is locked</p>
+                <p className="text-white/70 text-[10px] mt-0.5">Episode {lockedEpNum} is locked</p>
               </div>
             </div>
 
@@ -572,10 +572,10 @@ export default function ShortDramaPlayer({
               </div>
             </div>
             <h3 className="text-white font-black text-xl text-center mb-1">Premium Episode</h3>
-            <p className="text-zinc-400 text-sm text-center mb-1">
+            <p className="text-white/70 text-sm text-center mb-1">
               Episode {lockedEpNum} is locked
             </p>
-            <p className="text-zinc-500 text-xs text-center mb-6">
+            <p className="text-white/65 text-xs text-center mb-6">
               Subscribe to unlock all {drama.totalEpisodes} episodes of
               <br /><span className="text-white font-semibold">"{drama.title}"</span>
             </p>
@@ -586,7 +586,7 @@ export default function ShortDramaPlayer({
               </button>
               <button
                 onClick={() => setShowLockModal(false)}
-                className="w-full py-2.5 text-zinc-500 hover:text-white text-sm transition-colors rounded-xl hover:bg-white/5"
+                className="w-full py-2.5 text-white/65 hover:text-white text-sm transition-colors rounded-xl hover:bg-white/5"
               >
                 Maybe Later
               </button>

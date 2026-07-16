@@ -45,6 +45,9 @@ export interface AppSettings {
   appleClientId: string;
   appleTeamId: string;
   appleKeyId: string;
+  vipTitle: string;
+  vipHighlight: string;
+  vipSubtitle: string;
   primaryColor: string;
   colorTheme: string;
   navbarStyle: 'glass' | 'sticky' | 'transparent' | 'default';
@@ -162,6 +165,9 @@ const DEFAULT: AppSettings = {
   appleClientId: '',
   appleTeamId: '',
   appleKeyId: '',
+  vipTitle: "Unlock the",
+  vipHighlight: "Ultimate Experience",
+  vipSubtitle: "Get unlimited ad-free streaming, offline downloads, and exclusive access to our premium catalog.",
   primaryColor: "#e50914",
   colorTheme: "blue-green",
   navbarStyle: 'default',
@@ -280,9 +286,12 @@ function mapApiData(api: any): AppSettings {
     twoFactorAuth: api.twoFactorAuth ?? DEFAULT.twoFactorAuth,
     emailVerification: api.emailVerification ?? DEFAULT.emailVerification,
     googleClientId: api.googleClientId || '',
-    appleClientId: api.appleClientId || '',
-    appleTeamId: api.appleTeamId || '',
-    appleKeyId: api.appleKeyId || '',
+    appleClientId: api.appleClientId || "",
+    appleTeamId: api.appleTeamId || "",
+    appleKeyId: api.appleKeyId || "",
+    vipTitle: api.vipTitle || DEFAULT.vipTitle,
+    vipHighlight: api.vipHighlight || DEFAULT.vipHighlight,
+    vipSubtitle: api.vipSubtitle || DEFAULT.vipSubtitle,
     primaryColor: api.primaryColor || DEFAULT.primaryColor,
     colorTheme: api.colorTheme || DEFAULT.colorTheme,
     navbarStyle: api.navbarStyle || DEFAULT.navbarStyle,

@@ -114,37 +114,37 @@ export default function BannersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span>
         <span>/</span>
-        <span className="text-foreground font-medium">Banners</span>
+        <span className="text-white font-medium">Banners</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue placeholder="Action" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="delete">Delete</SelectItem>
           </SelectContent>
         </Select>
         <Button
           onClick={handleApply}
           disabled={bulkDeleteMutation.isPending}
-          className="bg-red-700 hover:bg-primary/80 text-foreground h-10 px-5 rounded-lg font-semibold"
+          className="bg-red-700 hover:bg-primary/80 text-white h-10 px-5 rounded-lg font-semibold"
         >
           Apply
         </Button>
 
         <div className="flex-1" />
-        <p className="text-zinc-400 text-sm">{pagination.total} total · {activeCount} active</p>
+        <p className="text-white/70 text-sm">{pagination.total} total · {activeCount} active</p>
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-40 bg-card border-border text-foreground h-10 rounded-lg">
+          <SelectTrigger className="w-40 bg-card border-border text-white h-10 rounded-lg">
             <SelectValue placeholder="Filter by Type" />
           </SelectTrigger>
-          <SelectContent className="bg-muted border-border text-foreground">
+          <SelectContent className="bg-muted border-border text-white">
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="movie">Movies</SelectItem>
             <SelectItem value="tvshow">TV Shows</SelectItem>
@@ -154,17 +154,17 @@ export default function BannersPage() {
         </Select>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary h-10 rounded-lg"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/65 focus:border-primary h-10 rounded-lg"
           />
         </div>
         <Button
           onClick={() => setLocation("/banners/new")}
-          className="bg-primary hover:bg-primary/90 text-foreground h-10 gap-2 rounded-lg px-5 font-semibold"
+          className="bg-primary hover:bg-primary/90 text-white h-10 gap-2 rounded-lg px-5 font-semibold"
         >
           <Plus className="h-4 w-4" />
           New
@@ -182,23 +182,23 @@ export default function BannersPage() {
                   className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                 />
               </TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Banner</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Episodes</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Position</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Status</TableHead>
-              <TableHead className="text-zinc-400 font-semibold text-sm">Action</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Banner</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Episodes</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Position</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Status</TableHead>
+              <TableHead className="text-white/70 font-semibold text-sm">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-zinc-500 py-10">
+                <TableCell colSpan={6} className="text-center text-white/65 py-10">
                   Loading banners...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-zinc-500 py-10">
+                <TableCell colSpan={6} className="text-center text-white/65 py-10">
                   No banners yet
                 </TableCell>
               </TableRow>
@@ -227,7 +227,7 @@ export default function BannersPage() {
                         </div>
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-foreground font-medium text-sm">{banner.title}</p>
+                            <p className="text-white font-medium text-sm">{banner.title}</p>
                             {banner.content?.contentType ? (
                               <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ${
                                 banner.content.contentType === 'movie' ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' :
@@ -245,22 +245,22 @@ export default function BannersPage() {
                             )}
                           </div>
                           {banner.subtitle && (
-                            <p className="text-zinc-500 text-xs line-clamp-1">{banner.subtitle}</p>
+                            <p className="text-white/65 text-xs line-clamp-1">{banner.subtitle}</p>
                           )}
                           {banner.content?.status && (
-                            <p className="text-muted-foreground text-xs capitalize">{banner.content.status}</p>
+                            <p className="text-white/75 text-xs capitalize">{banner.content.status}</p>
                           )}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-zinc-300 text-sm">
+                    <TableCell className="text-white/75 text-sm">
                       {banner.content?.episodeCount || 0}
                     </TableCell>
-                    <TableCell className="text-zinc-300 text-sm">{banner.position}</TableCell>
+                    <TableCell className="text-white/75 text-sm">{banner.position}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          banner.isActive ? "bg-green-500/15 text-green-400" : "bg-muted text-zinc-400"
+                          banner.isActive ? "bg-green-500/15 text-green-400" : "bg-muted text-white/70"
                         }`}
                       >
                         {banner.isActive ? "Active" : "Inactive"}
@@ -286,7 +286,7 @@ export default function BannersPage() {
                         <button
                           onClick={() => handleToggleActive(banner)}
                           disabled={updateMutation.isPending}
-                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted/50 text-zinc-400 hover:bg-muted transition-colors disabled:opacity-40"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg bg-muted/50 text-white/70 hover:bg-muted transition-colors disabled:opacity-40"
                           title={banner.isActive ? "Deactivate" : "Activate"}
                         >
                           {banner.isActive ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -309,7 +309,7 @@ export default function BannersPage() {
       </div>
 
       {!isLoading && pagination.pages > 1 && (
-        <div className="flex items-center justify-between text-sm text-zinc-400">
+        <div className="flex items-center justify-between text-sm text-white/70">
           <span>
             Showing {((pagination.page - 1) * pagination.limit) + 1}–
             {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
@@ -318,7 +318,7 @@ export default function BannersPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={pagination.page === 1}
-              className="h-8 px-3 rounded-lg bg-muted border border-border text-zinc-300 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Previous
             </button>
@@ -328,8 +328,8 @@ export default function BannersPage() {
                 onClick={() => setCurrentPage(i + 1)}
                 className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
                   pagination.page === i + 1
-                    ? "bg-primary text-foreground"
-                    : "bg-muted border border-border text-zinc-300 hover:bg-muted"
+                    ? "bg-primary text-white"
+                    : "bg-muted border border-border text-white/75 hover:bg-muted"
                 }`}
               >
                 {i + 1}
@@ -338,7 +338,7 @@ export default function BannersPage() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
               disabled={pagination.page === pagination.pages}
-              className="h-8 px-3 rounded-lg bg-muted border border-border text-zinc-300 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
+              className="h-8 px-3 rounded-lg bg-muted border border-border text-white/75 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-sm transition-colors"
             >
               Next
             </button>
@@ -347,18 +347,18 @@ export default function BannersPage() {
       )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Banner</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               Are you sure you want to delete "{confirmDelete?.title}"? This will also remove all associated episodes.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-foreground">
+            <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

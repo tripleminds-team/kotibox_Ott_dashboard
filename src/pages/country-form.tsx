@@ -7,8 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useGetCountryById, useCreateCountry, useUpdateCountry } from "../lib/api-client";
 
-const inputCls = "bg-card border-border text-foreground placeholder:text-gray-600 focus:border-primary h-11 rounded-lg";
-const labelCls = "text-foreground text-sm font-medium";
+const inputCls = "bg-card border-border text-white placeholder:text-white/60 focus:border-primary h-11 rounded-lg";
+const labelCls = "text-white text-sm font-medium";
 
 export default function CountryFormPage() {
   const [, setLocation] = useLocation();
@@ -57,14 +57,14 @@ export default function CountryFormPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="text-gray-500">Dashboard</span>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <span className="text-white/65">Dashboard</span>
         <span>/</span>
-        <button onClick={() => setLocation("/countries")} className="text-gray-500 hover:text-foreground transition-colors">
+        <button onClick={() => setLocation("/countries")} className="text-white/65 hover:text-white transition-colors">
           Countries
         </button>
         <span>/</span>
-        <span className="text-foreground font-medium">{isEdit ? "Edit Country" : "New Country"}</span>
+        <span className="text-white font-medium">{isEdit ? "Edit Country" : "New Country"}</span>
       </div>
 
       <button
@@ -94,12 +94,12 @@ export default function CountryFormPage() {
               maxLength={3}
               className={inputCls + " font-mono uppercase"}
             />
-            <p className="text-xs text-muted-foreground">ISO 3166-1 alpha-2 code (e.g. US, KR, IN)</p>
+            <p className="text-xs text-white/75">ISO 3166-1 alpha-2 code (e.g. US, KR, IN)</p>
           </div>
           <div className="space-y-2">
             <Label className={labelCls}>Status</Label>
             <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-border bg-card">
-              <span className="text-sm text-foreground font-medium">Active</span>
+              <span className="text-sm text-white font-medium">Active</span>
               <Switch checked={active} onCheckedChange={setActive} className="data-[state=checked]:bg-primary" />
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function CountryFormPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="bg-primary hover:bg-primary/90 text-foreground h-11 px-10 rounded-lg font-semibold min-w-[100px]"
+          className="bg-primary hover:bg-primary/90 text-white h-11 px-10 rounded-lg font-semibold min-w-[100px]"
         >
           {saving ? "Saving..." : "Save"}
         </Button>

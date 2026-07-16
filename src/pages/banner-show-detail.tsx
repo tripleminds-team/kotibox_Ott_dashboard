@@ -253,7 +253,7 @@ export default function BannerShowDetail() {
           <h1 className="text-3xl font-bold tracking-tight">
             {showData?.content?.title || "Banner Show Details"}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-white/75 mt-1">
             {showData?.content?.contentType === "movie" ? "Movie Preview" : `${episodes.length} ${episodes.length === 1 ? "episode" : "episodes"}`}
           </p>
         </div>
@@ -275,7 +275,7 @@ export default function BannerShowDetail() {
                   />
                 </div>
               ) : (
-                <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-xl">
+                <div className="py-12 text-center text-white/75 border border-dashed border-border rounded-xl">
                   No preview video uploaded for this movie.
                 </div>
               )}
@@ -312,7 +312,7 @@ export default function BannerShowDetail() {
               </CardHeader>
               <CardContent>
                 {filteredEpisodes.length === 0 ? (
-                  <div className="py-12 text-center text-muted-foreground">No episodes yet</div>
+                  <div className="py-12 text-center text-white/75">No episodes yet</div>
                 ) : (
                   <>
                     <Table>
@@ -344,7 +344,7 @@ export default function BannerShowDetail() {
                                 <div>
                                   <div>{episode.title}</div>
                                   {episode.description && (
-                                    <div className="text-xs text-muted-foreground truncate max-w-xs">
+                                    <div className="text-xs text-white/75 truncate max-w-xs">
                                       {episode.description}
                                     </div>
                                   )}

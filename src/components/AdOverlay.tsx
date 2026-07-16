@@ -19,7 +19,7 @@ export default function AdOverlay({ timer, canSkip, onSkip, mediaUrl, label = 'A
       <div className="absolute inset-0 bg-black/40" />
 
       <div className="relative z-10 flex flex-col items-center gap-4">
-        <div className="flex items-center gap-2 text-zinc-400 text-xs uppercase tracking-widest font-bold">
+        <div className="flex items-center gap-2 text-white/70 text-xs uppercase tracking-widest font-bold">
           <Timer className="w-3 h-3" />
           {label}
         </div>
@@ -33,7 +33,7 @@ export default function AdOverlay({ timer, canSkip, onSkip, mediaUrl, label = 'A
             Skip Ad
           </button>
         ) : (
-          <div className="px-4 py-2 bg-white/5 rounded-full text-zinc-400 text-xs font-medium">
+          <div className="px-4 py-2 bg-white/5 rounded-full text-white/70 text-xs font-medium">
             Skip in {timer}s
           </div>
         )}

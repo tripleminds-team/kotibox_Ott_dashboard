@@ -68,36 +68,36 @@ export default function SeasonForm() {
 
   return (
     <div className="space-y-5 pb-8 max-w-2xl">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <button onClick={() => setLocation("/dashboard")} className="hover:text-foreground transition-colors">Dashboard</button>
+      <div className="flex items-center gap-2 text-sm text-white/75">
+        <button onClick={() => setLocation("/dashboard")} className="hover:text-white transition-colors">Dashboard</button>
         <span>/</span>
-        <button onClick={() => setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons")} className="hover:text-foreground transition-colors">
+        <button onClick={() => setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons")} className="hover:text-white transition-colors">
           {isShortDrama ? "Short Drama Seasons" : "Seasons"}
         </button>
         <span>/</span>
-        <span className="text-foreground font-medium">New Season</span>
+        <span className="text-white font-medium">New Season</span>
       </div>
 
       <button
         onClick={() => setLocation(isShortDrama ? "/short-drama-seasons" : "/seasons")}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+        className="flex items-center gap-1 text-sm text-white/75 hover:text-white transition-colors font-medium"
       >
         «&nbsp;Back
       </button>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-        <p className="text-base font-semibold text-foreground">Season Details</p>
+        <p className="text-base font-semibold text-white">Season Details</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
-            <Label className="text-foreground text-sm font-medium">
+            <Label className="text-white text-sm font-medium">
               {isShortDrama ? "Short Drama" : "TV Show"} <span className="text-primary">*</span>
             </Label>
             <Select value={showId} onValueChange={setShowId} disabled={loadingShows}>
-              <SelectTrigger className="bg-muted border-border text-foreground h-10 rounded-lg text-sm">
+              <SelectTrigger className="bg-muted border-border text-white h-10 rounded-lg text-sm">
                 <SelectValue placeholder={loadingShows ? "Loading shows…" : (isShortDrama ? "Select a Short Drama" : "Select a TV Show")} />
               </SelectTrigger>
-              <SelectContent className="bg-popover border-border text-foreground">
+              <SelectContent className="bg-popover border-border text-white">
                 {tvShows.length === 0 ? (
                   <SelectItem value="_none" disabled>
                     {isShortDrama ? "No short dramas found. Create one first." : "No TV shows found. Create one first."}
@@ -112,7 +112,7 @@ export default function SeasonForm() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-foreground text-sm font-medium">
+            <Label className="text-white text-sm font-medium">
               Season Number <span className="text-primary">*</span>
             </Label>
             <Input
@@ -121,25 +121,25 @@ export default function SeasonForm() {
               placeholder="e.g. 1"
               value={seasonNumber}
               onChange={(e) => setSeasonNumber(e.target.value)}
-              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm"
+              className="bg-muted border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-foreground text-sm font-medium">Season Description</Label>
+          <Label className="text-white text-sm font-medium">Season Description</Label>
           <Textarea
             placeholder="Brief description of this season..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            className="bg-muted border-border text-foreground placeholder:text-muted-foreground rounded-lg text-sm resize-none"
+            className="bg-muted border-border text-white placeholder:text-white/75 rounded-lg text-sm resize-none"
           />
         </div>
 
         {/* Poster image */}
         <div className="space-y-2">
-          <Label className="text-foreground text-sm font-medium">Season Poster</Label>
+          <Label className="text-white text-sm font-medium">Season Poster</Label>
           {posterUrl ? (
             <div className="group relative inline-block">
               <img src={posterUrl} alt="Poster" className="h-40 w-28 rounded-lg object-cover border border-border" />
@@ -161,14 +161,14 @@ export default function SeasonForm() {
 
         <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
           <div>
-            <p className="text-sm font-medium text-foreground">Free Season</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Episodes will be free to watch</p>
+            <p className="text-sm font-medium text-white">Free Season</p>
+            <p className="text-xs text-white/75 mt-0.5">Episodes will be free to watch</p>
           </div>
           <Switch checked={isFree} onCheckedChange={setIsFree} className="data-[state=checked]:bg-primary" />
         </div>
       </div>
 
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-white/65">
         Creating a season will add the first episode stub. You can add more episodes from the Episodes section.
       </p>
 

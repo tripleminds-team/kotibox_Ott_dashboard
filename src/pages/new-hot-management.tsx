@@ -21,9 +21,9 @@ const FLAGS: { key: FlagKey; label: string; icon: typeof Sparkles }[] = [
 const STATUS_STYLES: Record<string, string> = {
   published: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   active:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  draft:     "bg-zinc-700/40 text-zinc-400 border-zinc-700/40",
+  draft:     "bg-zinc-700/40 text-white/70 border-zinc-700/40",
   pending:   "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  inactive:  "bg-zinc-700/40 text-zinc-400 border-zinc-700/40",
+  inactive:  "bg-zinc-700/40 text-white/70 border-zinc-700/40",
 };
 
 export default function NewHotManagement() {
@@ -129,8 +129,8 @@ export default function NewHotManagement() {
             <Flame className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-foreground tracking-tight">New &amp; Hot</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h1 className="text-xl font-black text-white tracking-tight">New &amp; Hot</h1>
+            <p className="text-xs text-white/75 mt-0.5">
               Control which content appears as New, Trending or Featured
             </p>
           </div>
@@ -164,7 +164,7 @@ export default function NewHotManagement() {
               className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-sm shadow-primary/30"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-white/75 hover:text-white"
               }`}
             >
               {tab.label}
@@ -174,13 +174,13 @@ export default function NewHotManagement() {
 
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/75" />
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder={`Search ${activeTab === "movies" ? "movies" : activeTab === "tvshows" ? "TV shows" : "short dramas"}…`}
-            className="w-full rounded-xl border border-border bg-card dark:border-zinc-900 dark:bg-zinc-950 pl-9 pr-4 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
+            className="w-full rounded-xl border border-border bg-card dark:border-zinc-900 dark:bg-zinc-950 pl-9 pr-4 py-2.5 text-xs font-medium text-white placeholder:text-white/75 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 transition-all"
           />
         </div>
       </div>
@@ -189,11 +189,11 @@ export default function NewHotManagement() {
       <div className="rounded-2xl border border-border bg-card dark:border-zinc-900 dark:bg-zinc-950/50 overflow-hidden">
         {/* Column headers */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/50 dark:border-zinc-900 dark:bg-zinc-950/70">
-          <div className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Content</div>
-          <div className="w-16 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center hidden sm:block">Year</div>
-          <div className="w-24 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center hidden md:block">Status</div>
+          <div className="flex-1 text-[10px] font-bold uppercase tracking-widest text-white/75">Content</div>
+          <div className="w-16 text-[10px] font-bold uppercase tracking-widest text-white/75 text-center hidden sm:block">Year</div>
+          <div className="w-24 text-[10px] font-bold uppercase tracking-widest text-white/75 text-center hidden md:block">Status</div>
           {FLAGS.map((f) => (
-            <div key={f.key} className="w-20 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center justify-center gap-1">
+            <div key={f.key} className="w-20 text-[10px] font-bold uppercase tracking-widest text-white/75 flex items-center justify-center gap-1">
               <f.icon className="h-3 w-3" />{f.label}
             </div>
           ))}
@@ -202,15 +202,15 @@ export default function NewHotManagement() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary/30" />
-            <p className="text-xs text-zinc-500 font-medium">Loading content…</p>
+            <p className="text-xs text-white/65 font-medium">Loading content…</p>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <div className="w-16 h-16 rounded-2xl bg-muted border border-border dark:bg-zinc-900 dark:border-zinc-800 flex items-center justify-center">
-              <Film className="h-8 w-8 text-muted-foreground opacity-60 dark:text-zinc-700" />
+              <Film className="h-8 w-8 text-white/75 opacity-60 dark:text-white/75" />
             </div>
-            <p className="text-sm font-semibold text-foreground">No content found</p>
-            {search && <p className="text-xs text-muted-foreground">Try a different search term</p>}
+            <p className="text-sm font-semibold text-white">No content found</p>
+            {search && <p className="text-xs text-white/75">Try a different search term</p>}
           </div>
         ) : (
           <div className="divide-y divide-border dark:divide-zinc-900/70">
@@ -239,18 +239,18 @@ export default function NewHotManagement() {
                         />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
-                          <Film className="h-4 w-4 text-muted-foreground opacity-60" />
+                          <Film className="h-4 w-4 text-white/75 opacity-60" />
                         </div>
                       )}
                     </div>
-                    <span className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">
+                    <span className="text-sm font-semibold text-white line-clamp-2 leading-snug">
                       {title}
                     </span>
                   </div>
 
                   {/* Year */}
                   <div className="w-16 text-center hidden sm:block">
-                    <span className="text-xs font-medium text-muted-foreground">{year}</span>
+                    <span className="text-xs font-medium text-white/75">{year}</span>
                   </div>
 
                   {/* Status */}
@@ -276,7 +276,7 @@ export default function NewHotManagement() {
                             ${isSaving ? "opacity-60 cursor-wait" : "cursor-pointer active:scale-95"}
                             ${isOn
                               ? "bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 hover:border-primary/70 shadow-sm shadow-primary/10"
-                              : "bg-card border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground hover:bg-muted dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-600 dark:hover:border-zinc-600 dark:hover:text-zinc-300 dark:hover:bg-zinc-900/60"
+                              : "bg-card border-border text-white/75 hover:border-muted-foreground hover:text-white hover:bg-muted dark:bg-zinc-950 dark:border-zinc-800 dark:text-white/60 dark:hover:border-zinc-600 dark:hover:text-white/75 dark:hover:bg-zinc-900/60"
                             }`}
                         >
                           {isSaving ? (
@@ -306,13 +306,13 @@ export default function NewHotManagement() {
       {/* ── Pagination ──────────────────────────────────────────── */}
       {!isLoading && items.length > 0 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="text-xs font-medium text-white/75">
             Page{" "}
-            <span className="text-foreground font-bold">{page}</span>
+            <span className="text-white font-bold">{page}</span>
             {" "}of{" "}
-            <span className="text-foreground font-bold">{totalPages}</span>
+            <span className="text-white font-bold">{totalPages}</span>
             &nbsp;·&nbsp;
-            <span className="text-foreground font-bold">{total}</span> items
+            <span className="text-white font-bold">{total}</span> items
           </span>
           <div className="flex items-center gap-2">
             <button

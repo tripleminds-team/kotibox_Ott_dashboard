@@ -77,17 +77,17 @@ export default function SeasonsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-white/75">
         <span>Dashboard</span><span>/</span>
-        <span className="text-foreground font-medium">Seasons</span>
+        <span className="text-white font-medium">Seasons</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-foreground">
+          <SelectContent className="bg-popover border-border text-white">
             <SelectItem value="action">Action</SelectItem>
             <SelectItem value="delete">Delete Selected</SelectItem>
           </SelectContent>
@@ -106,12 +106,12 @@ export default function SeasonsPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search TV Shows..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-primary"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm focus:border-primary"
           />
         </div>
 
@@ -136,17 +136,17 @@ export default function SeasonsPage() {
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll}
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600" />
                 </TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide min-w-[220px]">Season</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">TV Show</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Episodes</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide min-w-[220px]">Season</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">TV Show</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Episodes</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-zinc-500 py-14">
+                  <TableCell colSpan={6} className="text-center text-white/65 py-14">
                     {searchQuery ? "No seasons match your search" : "No seasons yet. Add episodes to a TV Show to create seasons."}
                   </TableCell>
                 </TableRow>
@@ -163,15 +163,15 @@ export default function SeasonsPage() {
                           {season.thumbnail ? (
                             <img src={getImageUrl(season.thumbnail)} alt="" className="h-full w-full object-cover" />
                           ) : (
-                            <ImageIcon className="h-5 w-5 text-zinc-600" />
+                            <ImageIcon className="h-5 w-5 text-white/60" />
                           )}
                         </div>
                         <div>
-                          <p className="text-foreground font-medium text-sm">Season {season.season}</p>
+                          <p className="text-white font-medium text-sm">Season {season.season}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-zinc-400 text-sm">{season.showName || "—"}</TableCell>
+                    <TableCell className="text-white/70 text-sm">{season.showName || "—"}</TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
                         <Video className="h-3 w-3" />
@@ -180,7 +180,7 @@ export default function SeasonsPage() {
                     </TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${
-                        season.status === "published" ? "bg-green-500/20 text-green-400" : "bg-zinc-700 text-zinc-400"
+                        season.status === "published" ? "bg-green-500/20 text-green-400" : "bg-zinc-700 text-white/70"
                       }`}>
                         {season.status === "published" ? "Active" : "Draft"}
                       </span>
@@ -212,15 +212,15 @@ export default function SeasonsPage() {
       )}
 
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Season {confirmDelete?.season}</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               This will delete all {confirmDelete?.episodeCount} episode(s) in Season {confirmDelete?.season} of "{confirmDelete?.showName}". This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteSeasonEpisodes}
               disabled={deletingSeasonEpisodes}

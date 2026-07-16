@@ -97,7 +97,7 @@ export default function PublicPagePage() {
           <div className="flex items-center justify-center py-40">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-zinc-300 text-sm font-medium">Loading page...</p>
+              <p className="text-white/75 text-sm font-medium">Loading page...</p>
             </div>
           </div>
         )}
@@ -106,10 +106,10 @@ export default function PublicPagePage() {
         {!isLoading && (error || !page) && (
           <div className="max-w-2xl mx-auto px-6 py-24 text-center">
             <div className="w-20 h-20 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="h-9 w-9 text-zinc-400" />
+              <AlertCircle className="h-9 w-9 text-white/70" />
             </div>
             <h1 className="text-2xl font-black text-white mb-3 tracking-tight">Page Not Found</h1>
-            <p className="text-zinc-300 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
+            <p className="text-white/75 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
               The page you're looking for doesn't exist or hasn't been published yet.
               Check back later or explore other content.
             </p>
@@ -127,15 +127,15 @@ export default function PublicPagePage() {
         {!isLoading && page && (
           <div className="max-w-3xl mx-auto px-6 sm:px-10">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-300 mb-8">
+            <nav className="flex items-center gap-2 text-xs font-semibold text-white/75 mb-8">
               <button
                 onClick={() => setLocation("/")}
                 className="hover:text-white transition-colors"
               >
                 Home
               </button>
-              <span className="text-zinc-400">/</span>
-              <span className="text-zinc-400">{page.title}</span>
+              <span className="text-white/70">/</span>
+              <span className="text-white/70">{page.title}</span>
             </nav>
 
             {/* Page header */}
@@ -144,7 +144,7 @@ export default function PublicPagePage() {
                 {page.title}
               </h1>
               {(page.updatedAt || page.createdAt) && (
-                <div className="flex items-center gap-2 text-zinc-400 text-xs font-medium">
+                <div className="flex items-center gap-2 text-white/70 text-xs font-medium">
                   <Clock className="h-3.5 w-3.5" />
                   <span>Last updated: {formatDate(page.updatedAt || page.createdAt)}</span>
                 </div>
@@ -154,26 +154,26 @@ export default function PublicPagePage() {
             {/* HTML content */}
             <div
               className="
-                text-zinc-300 text-sm sm:text-base leading-relaxed
+                text-white/75 text-sm sm:text-base leading-relaxed
                 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:text-white [&_h1]:mb-4 [&_h1]:mt-8 [&_h1]:leading-tight
                 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:mb-3 [&_h2]:mt-8
-                [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-zinc-200 [&_h3]:mb-2 [&_h3]:mt-6
-                [&_p]:text-zinc-400 [&_p]:leading-relaxed [&_p]:mb-4
+                [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-white/80 [&_h3]:mb-2 [&_h3]:mt-6
+                [&_p]:text-white/70 [&_p]:leading-relaxed [&_p]:mb-4
                 [&_a]:text-primary [&_a]:font-semibold hover:[&_a]:underline
                 [&_strong]:text-white [&_strong]:font-semibold
-                [&_em]:text-zinc-300 [&_em]:italic
+                [&_em]:text-white/75 [&_em]:italic
                 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-1.5
                 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-1.5
-                [&_li]:text-zinc-400 [&_li]:leading-relaxed
-                [&_li_strong]:text-zinc-200
+                [&_li]:text-white/70 [&_li]:leading-relaxed
+                [&_li_strong]:text-white/80
                 [&_hr]:border-zinc-800 [&_hr]:my-8
-                [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-5 [&_blockquote]:my-6 [&_blockquote]:text-zinc-400 [&_blockquote]:italic
+                [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-5 [&_blockquote]:my-6 [&_blockquote]:text-white/70 [&_blockquote]:italic
                 [&_code]:text-primary [&_code]:bg-zinc-900 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono
                 [&_pre]:bg-zinc-900 [&_pre]:border [&_pre]:border-zinc-800 [&_pre]:rounded-xl [&_pre]:p-5 [&_pre]:my-6 [&_pre]:overflow-x-auto
                 [&_img]:rounded-xl [&_img]:border [&_img]:border-zinc-800 [&_img]:my-6 [&_img]:max-w-full
                 [&_table]:w-full [&_table]:border-collapse [&_table]:my-6
                 [&_th]:border [&_th]:border-zinc-800 [&_th]:bg-zinc-900 [&_th]:text-white [&_th]:p-3 [&_th]:text-left [&_th]:font-semibold [&_th]:text-sm
-                [&_td]:border [&_td]:border-zinc-800 [&_td]:p-3 [&_td]:text-zinc-400 [&_td]:text-sm
+                [&_td]:border [&_td]:border-zinc-800 [&_td]:p-3 [&_td]:text-white/70 [&_td]:text-sm
               "
               dangerouslySetInnerHTML={{ __html: page.content || "" }}
             />
@@ -182,15 +182,15 @@ export default function PublicPagePage() {
             <div className="mt-16 pt-8 border-t border-zinc-900 flex items-center justify-between">
               <button
                 onClick={() => setLocation("/")}
-                className="inline-flex items-center gap-2 text-zinc-300 hover:text-white text-xs font-bold transition-colors"
+                className="inline-flex items-center gap-2 text-white/75 hover:text-white text-xs font-bold transition-colors"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
                 Back to Home
               </button>
-              <div className="flex items-center gap-4 text-xs text-zinc-400 font-medium">
-                <button onClick={() => setLocation("/page/privacy-policy")} className="hover:text-zinc-400 transition-colors">Privacy Policy</button>
-                <button onClick={() => setLocation("/page/terms-and-conditions")} className="hover:text-zinc-400 transition-colors">Terms</button>
-                <button onClick={() => setLocation("/page/contact")} className="hover:text-zinc-400 transition-colors">Contact</button>
+              <div className="flex items-center gap-4 text-xs text-white/70 font-medium">
+                <button onClick={() => setLocation("/page/privacy-policy")} className="hover:text-white/70 transition-colors">Privacy Policy</button>
+                <button onClick={() => setLocation("/page/terms-and-conditions")} className="hover:text-white/70 transition-colors">Terms</button>
+                <button onClick={() => setLocation("/page/contact")} className="hover:text-white/70 transition-colors">Contact</button>
               </div>
             </div>
           </div>

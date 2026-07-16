@@ -21,11 +21,11 @@ function fmtDate(d?: string) {
 }
 
 function roleBadgeColor(role?: string) {
-  if (!role) return "bg-zinc-700/40 text-zinc-400 border-zinc-700/40";
+  if (!role) return "bg-zinc-700/40 text-white/70 border-zinc-700/40";
   const r = role.toLowerCase();
   if (r === "superadmin" || r === "super_admin") return "bg-amber-500/10 text-amber-400 border-amber-500/20";
   if (r === "admin") return "bg-primary/10 text-primary border-primary/20";
-  return "bg-zinc-700/40 text-zinc-400 border-zinc-700/40";
+  return "bg-zinc-700/40 text-white/70 border-zinc-700/40";
 }
 
 export default function ProfilePage() {
@@ -171,23 +171,23 @@ export default function ProfilePage() {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-foreground font-black text-2xl tracking-tight">
+              <h1 className="text-white font-black text-2xl tracking-tight">
                 {user?.name || "Admin"}
               </h1>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg border text-[11px] font-bold capitalize ${roleBadgeColor(user?.role)}`}>
                 {user?.role || "Admin"}
               </span>
             </div>
-            <p className="text-zinc-200 text-sm font-medium flex items-center gap-1.5">
+            <p className="text-white/80 text-sm font-medium flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" /> {user?.email || "—"}
             </p>
             <div className="flex flex-wrap items-center gap-4 mt-3">
-              <span className="flex items-center gap-1.5 text-xs text-zinc-200">
+              <span className="flex items-center gap-1.5 text-xs text-white/80">
                 <CalendarDays className="w-3.5 h-3.5" />
                 Member since {fmtDate(user?.createdAt)}
               </span>
               {user?.lastLogin && (
-                <span className="flex items-center gap-1.5 text-xs text-zinc-200">
+                <span className="flex items-center gap-1.5 text-xs text-white/80">
                   <Clock className="w-3.5 h-3.5" />
                   Last login {fmtDate(user?.lastLogin)}
                 </span>
@@ -206,7 +206,7 @@ export default function ProfilePage() {
         {statCards.map((s) => (
           <div key={s.label} className={`rounded-2xl border border-border p-4 bg-card ${s.bg} flex flex-col gap-2`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-200">{s.label}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">{s.label}</span>
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
@@ -232,7 +232,7 @@ export default function ProfilePage() {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === id
                   ? "bg-primary/15 border border-primary/30 text-primary"
-                  : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                  : "bg-card border border-border text-white/75 hover:text-white hover:bg-muted"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -243,17 +243,17 @@ export default function ProfilePage() {
           {/* Permissions card */}
           {user?.permissions && user.permissions.length > 0 && (
             <div className="mt-4 p-4 rounded-xl border border-border bg-card space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/65 flex items-center gap-1.5">
                 <Shield className="w-3 h-3" /> Permissions
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {user.permissions.slice(0, 8).map((p: string) => (
-                  <span key={p} className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-zinc-400 capitalize">
+                  <span key={p} className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-white/70 capitalize">
                     {p.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                 ))}
                 {user.permissions.length > 8 && (
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-zinc-500">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-white/65">
                     +{user.permissions.length - 8} more
                   </span>
                 )}
@@ -266,7 +266,7 @@ export default function ProfilePage() {
         <div className="flex-1 rounded-2xl border border-border bg-card p-6 w-full">
           {activeTab === "personal" ? (
             <>
-              <h2 className="text-foreground font-black text-base mb-5 flex items-center gap-2">
+              <h2 className="text-white font-black text-base mb-5 flex items-center gap-2">
                 <User className="h-4 w-4 text-primary" /> Personal Information
               </h2>
 
@@ -274,30 +274,30 @@ export default function ProfilePage() {
                 {/* Form fields */}
                 <div className="flex-1 space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">
                       Display Name <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
                       <Input
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="bg-background border-border text-foreground focus:border-primary h-11 pl-10"
+                        className="bg-background border-border text-white focus:border-primary h-11 pl-10"
                         placeholder="Your display name"
                       />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">
                       Email Address <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
                       <Input
                         type="email"
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="bg-background border-border text-foreground focus:border-primary h-11 pl-10"
+                        className="bg-background border-border text-white focus:border-primary h-11 pl-10"
                         placeholder="admin@example.com"
                       />
                     </div>
@@ -311,8 +311,8 @@ export default function ProfilePage() {
                       { label: "Last Login", value: fmtDate(user?.lastLogin) },
                     ].map(({ label, value }) => (
                       <div key={label} className="p-3 rounded-xl bg-muted/40 border border-border">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-                        <p className="text-sm font-semibold text-foreground capitalize truncate">{value}</p>
+                        <p className="text-[10px] font-bold text-white/75 uppercase tracking-wider mb-1">{label}</p>
+                        <p className="text-sm font-semibold text-white capitalize truncate">{value}</p>
                       </div>
                     ))}
                   </div>
@@ -341,12 +341,12 @@ export default function ProfilePage() {
                       </>
                     ) : (
                       <div className="text-center px-3">
-                        <Camera className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
-                        <span className="text-zinc-600 text-xs font-semibold">Upload Photo</span>
+                        <Camera className="h-8 w-8 text-white/60 mx-auto mb-2" />
+                        <span className="text-white/60 text-xs font-semibold">Upload Photo</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-[10px] text-zinc-600 font-medium text-center">
+                  <p className="text-[10px] text-white/60 font-medium text-center">
                     JPG, PNG · Max 5MB
                   </p>
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
@@ -369,7 +369,7 @@ export default function ProfilePage() {
             </>
           ) : (
             <>
-              <h2 className="text-foreground font-black text-base mb-5 flex items-center gap-2">
+              <h2 className="text-white font-black text-base mb-5 flex items-center gap-2">
                 <Lock className="h-4 w-4 text-primary" /> Change Password
               </h2>
 
@@ -380,20 +380,20 @@ export default function ProfilePage() {
                   { label: "Confirm New Password", key: "confirmPassword", show: showPw.confirm, toggle: () => setShowPw(p => ({ ...p, confirm: !p.confirm })) },
                 ].map((field) => (
                   <div key={field.key} className="space-y-1.5">
-                    <Label className="text-zinc-400 text-xs font-bold uppercase tracking-widest">{field.label}</Label>
+                    <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">{field.label}</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
                       <Input
                         type={field.show ? "text" : "password"}
                         value={passwords[field.key as keyof typeof passwords]}
                         onChange={(e) => setPasswords({ ...passwords, [field.key]: e.target.value })}
-                        className="bg-background border-border text-foreground focus:border-primary h-11 pl-10 pr-10"
+                        className="bg-background border-border text-white focus:border-primary h-11 pl-10 pr-10"
                         placeholder="••••••••"
                       />
                       <button
                         type="button"
                         onClick={field.toggle}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-foreground transition-colors"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/65 hover:text-white transition-colors"
                       >
                         {field.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -401,7 +401,7 @@ export default function ProfilePage() {
                   </div>
                 ))}
 
-                <div className="p-3.5 rounded-xl bg-muted/50 border border-border text-xs text-muted-foreground flex items-start gap-2 mt-2">
+                <div className="p-3.5 rounded-xl bg-muted/50 border border-border text-xs text-white/75 flex items-start gap-2 mt-2">
                   <Shield className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
                   Use at least 6 characters with a mix of letters and numbers for a strong password.
                 </div>

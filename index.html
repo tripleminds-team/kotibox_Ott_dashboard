@@ -17,12 +17,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
-      try {
-        const theme = localStorage.getItem('theme');
-        if (theme) {
-          document.documentElement.classList.toggle('dark', theme === 'dark');
-        }
-      } catch (e) {}
+      // Force dark mode globally per user request
+      document.documentElement.classList.add('dark');
     </script>
   </head>
   <body>

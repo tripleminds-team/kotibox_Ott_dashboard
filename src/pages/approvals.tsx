@@ -75,7 +75,7 @@ export default function ApprovalsPage() {
       case 'genre': return 'bg-purple-500/10 text-purple-500';
       case 'actor': return 'bg-green-500/10 text-green-500';
       case 'director': return 'bg-orange-500/10 text-orange-500';
-      default: return 'bg-gray-500/10 text-gray-500';
+      default: return 'bg-gray-500/10 text-white/65';
     }
   };
 
@@ -86,8 +86,8 @@ export default function ApprovalsPage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Pending Approvals</h1>
-              <p className="text-sm text-muted-foreground mt-1">Review and approve or reject content submissions</p>
+              <h1 className="text-2xl font-bold text-white">Pending Approvals</h1>
+              <p className="text-sm text-white/75 mt-1">Review and approve or reject content submissions</p>
             </div>
           </div>
         </div>
@@ -97,19 +97,19 @@ export default function ApprovalsPage() {
       <div className="container mx-auto px-6 py-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/75" />
             <Input
               placeholder="Search by title or name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-muted border-border text-foreground"
+              className="pl-10 bg-muted border-border text-white"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full md:w-48 bg-muted border-border text-foreground">
+            <SelectTrigger className="w-full md:w-48 bg-muted border-border text-white">
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border text-foreground">
+            <SelectContent className="bg-popover border-border text-white">
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="movie">Movies</SelectItem>
               <SelectItem value="genre">Genres</SelectItem>
@@ -124,9 +124,9 @@ export default function ApprovalsPage() {
       <div className="container mx-auto px-6 pb-6">
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {isLoading ? (
-            <div className="p-12 text-center text-muted-foreground">Loading...</div>
+            <div className="p-12 text-center text-white/75">Loading...</div>
           ) : pendingItems.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">No pending approvals</div>
+            <div className="p-12 text-center text-white/75">No pending approvals</div>
           ) : (
             <div className="divide-y divide-border">
               {pendingItems.map((item: any) => (
@@ -138,15 +138,15 @@ export default function ApprovalsPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-foreground">{item.title || item.name}</h3>
+                          <h3 className="text-lg font-semibold text-white">{item.title || item.name}</h3>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(item.type || 'movie')}`}>
                             {item.type || 'movie'}
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
+                        <p className="text-sm text-white/75 mb-2">
                           Submitted by {item.createdBy?.name || 'Unknown'} ({item.createdBy?.email || ''})
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-white/75">
                           {new Date(item.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -182,15 +182,15 @@ export default function ApprovalsPage() {
       {isRejectModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-xl border border-border w-full max-w-md p-6">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Reject {selectedItem?.type}</h2>
-            <p className="text-sm text-muted-foreground mb-4">
+            <h2 className="text-xl font-semibold text-white mb-4">Reject {selectedItem?.type}</h2>
+            <p className="text-sm text-white/75 mb-4">
               Please provide a reason for rejecting "{selectedItem?.title || selectedItem?.name}"
             </p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Enter rejection reason..."
-              className="w-full min-h-[100px] p-3 rounded-lg border border-border bg-muted text-foreground resize-none"
+              className="w-full min-h-[100px] p-3 rounded-lg border border-border bg-muted text-white resize-none"
             />
             <div className="flex justify-end gap-3 mt-4">
               <Button
@@ -200,7 +200,7 @@ export default function ApprovalsPage() {
                   setRejectionReason("");
                   setSelectedItem(null);
                 }}
-                className="border-border text-foreground"
+                className="border-border text-white"
               >
                 Cancel
               </Button>

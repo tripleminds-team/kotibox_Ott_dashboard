@@ -310,7 +310,7 @@ export default function BannerForm() {
           <h1 className="text-3xl font-bold tracking-tight">
             {isEdit ? "Edit Banner" : "Create Banner"}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-white/75 mt-1">
             {isEdit
               ? "Update banner details and publishing settings"
               : "Select existing content and configure the banner"}
@@ -338,7 +338,7 @@ export default function BannerForm() {
                     Linked Content
                   </Badge>
                   <h3 className="font-semibold text-lg truncate">{bannerData.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                  <p className="text-sm text-white/75 line-clamp-2 mt-1">
                     {bannerData.description}
                   </p>
                 </div>
@@ -399,7 +399,7 @@ export default function BannerForm() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-10">No episodes yet.</p>
+                <p className="text-center text-white/75 py-10">No episodes yet.</p>
               )}
             </div>
           )}
@@ -419,7 +419,7 @@ export default function BannerForm() {
               const active = step === stepNum;
               return (
                 <div key={label} className="flex items-center gap-2">
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : done ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : done ? "bg-primary/15 text-primary" : "bg-muted text-white/75"}`}>
                     {done ? <CheckCircle2 className="w-4 h-4" /> : <span className="w-4 h-4 text-center">{stepNum}</span>}
                     {label}
                   </div>
@@ -432,7 +432,7 @@ export default function BannerForm() {
           {/* ===== STEP 1: Choose Content Type ===== */}
           {step === 1 && (
             <div className="space-y-4">
-              <p className="text-muted-foreground text-sm">
+              <p className="text-white/75 text-sm">
                 What kind of content do you want to feature in this banner?
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
@@ -445,7 +445,7 @@ export default function BannerForm() {
                   >
                     <div className="text-primary mb-3">{ct.icon}</div>
                     <div className="font-semibold text-base mb-1">{ct.label}</div>
-                    <div className="text-xs text-muted-foreground leading-relaxed">{ct.description}</div>
+                    <div className="text-xs text-white/75 leading-relaxed">{ct.description}</div>
                   </button>
                 ))}
               </div>
@@ -461,7 +461,7 @@ export default function BannerForm() {
                     {cfg?.icon}
                     Select a {cfg?.label}
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">
+                  <p className="text-sm text-white/75 mt-0.5">
                     Pick from your existing {cfg?.label.toLowerCase()} library
                   </p>
                 </div>
@@ -472,7 +472,7 @@ export default function BannerForm() {
 
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/75" />
                 <Input
                   placeholder={`Search ${cfg?.label.toLowerCase()}s…`}
                   className="pl-9"
@@ -484,7 +484,7 @@ export default function BannerForm() {
               {/* Content grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[420px] overflow-y-auto pr-1">
                 {(contentItems.length === 0) && (
-                  <div className="col-span-full text-center py-12 text-muted-foreground text-sm">
+                  <div className="col-span-full text-center py-12 text-white/75 text-sm">
                     {moviesQuery.isLoading || contentQuery.isLoading
                       ? "Loading…"
                       : "No content found. Try a different search."}
@@ -509,7 +509,7 @@ export default function BannerForm() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Film className="w-8 h-8 text-muted-foreground/40" />
+                            <Film className="w-8 h-8 text-white/75/40" />
                           </div>
                         )}
                         {isSelected && (
@@ -525,7 +525,7 @@ export default function BannerForm() {
                       </div>
                       <div className="p-2.5">
                         <p className="text-xs font-semibold truncate leading-tight">{item.title}</p>
-                        {item.year && <p className="text-[10px] text-muted-foreground mt-0.5">{item.year}</p>}
+                        {item.year && <p className="text-[10px] text-white/75 mt-0.5">{item.year}</p>}
                       </div>
                     </button>
                   );
@@ -567,7 +567,7 @@ export default function BannerForm() {
                       </Badge>
                       <h3 className="font-semibold text-base truncate">{selectedContent.title}</h3>
                       {selectedContent.shortDescription && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{selectedContent.shortDescription}</p>
+                        <p className="text-xs text-white/75 mt-1 line-clamp-2">{selectedContent.shortDescription}</p>
                       )}
                     </div>
                     <Button
@@ -787,7 +787,7 @@ function PublishingCard({
             <div className="flex items-center justify-between rounded-lg border border-border p-3 mt-auto">
               <div>
                 <Label htmlFor="pub-active" className="cursor-pointer">Active</Label>
-                <p className="text-xs text-muted-foreground">Show in the app</p>
+                <p className="text-xs text-white/75">Show in the app</p>
               </div>
               <Switch
                 id="pub-active"

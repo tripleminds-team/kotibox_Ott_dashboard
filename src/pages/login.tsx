@@ -95,29 +95,29 @@ export default function Login() {
             )}
           </div>
 
-          <p className="text-muted-foreground mt-2 text-lg">{settings.loginSubtitle}</p>
+          <p className="text-white/75 mt-2 text-lg">{settings.loginSubtitle}</p>
         </div>
 
         <Card className="border-border shadow-2xl bg-muted/80 rounded-3xl transition-all duration-500 hover:shadow-3xl hover:shadow-red-500/10">
           {mode === "login" ? (
             <>
               <CardHeader className="space-y-2 text-center pb-8 pt-8">
-                <CardTitle className="text-3xl font-bold text-foreground">{settings.loginTitle}</CardTitle>
-                <CardDescription className="text-base text-muted-foreground">
+                <CardTitle className="text-3xl font-bold text-white">{settings.loginTitle}</CardTitle>
+                <CardDescription className="text-base text-white/75">
                   Sign in to access your {settings.platformName || "admin"} panel
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-8">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-3">
-                    <Label htmlFor="email" className="text-sm font-medium ml-1 text-foreground">Email Address</Label>
+                    <Label htmlFor="email" className="text-sm font-medium ml-1 text-white">Email Address</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors duration-300" />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/65 group-focus-within:text-primary transition-colors duration-300" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="Enter your email"
-                        className="pl-12 h-14 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
+                        className="pl-12 h-14 bg-card border-border text-white placeholder:text-white/65 focus:border-primary focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -125,13 +125,13 @@ export default function Login() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="password" className="text-sm font-medium ml-1 text-foreground">Password</Label>
+                    <Label htmlFor="password" className="text-sm font-medium ml-1 text-white">Password</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-primary transition-colors duration-300" />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/65 group-focus-within:text-primary transition-colors duration-300" />
                       <Input
                         id="password"
                         type="password"
-                        className="pl-12 h-14 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
+                        className="pl-12 h-14 bg-card border-border text-white placeholder:text-white/65 focus:border-primary focus:ring-2 focus:ring-red-500/20 rounded-2xl transition-all duration-300"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -152,7 +152,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setMode("reset")}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 mx-auto"
+                    className="text-sm text-white/75 hover:text-primary transition-colors flex items-center gap-1.5 mx-auto"
                   >
                     <KeyRound className="h-3.5 w-3.5" />
                     Can't login? Reset admin account
@@ -163,52 +163,52 @@ export default function Login() {
           ) : (
             <>
               <CardHeader className="space-y-2 text-center pb-6 pt-8">
-                <CardTitle className="text-2xl font-bold text-foreground">Reset Admin Account</CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">
+                <CardTitle className="text-2xl font-bold text-white">Reset Admin Account</CardTitle>
+                <CardDescription className="text-sm text-white/75">
                   Use the setup key from your <code className="bg-muted px-1 rounded text-xs">.env</code> file (<code className="bg-muted px-1 rounded text-xs">ADMIN_SETUP_KEY</code>)
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-8">
                 <form onSubmit={handleResetAdmin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-foreground">Setup Key</Label>
+                    <Label className="text-sm font-medium text-white">Setup Key</Label>
                     <Input
                       type="password"
                       placeholder="ADMIN_SETUP_KEY from .env"
-                      className="h-12 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary rounded-xl"
+                      className="h-12 bg-card border-border text-white placeholder:text-white/65 focus:border-primary rounded-xl"
                       value={resetForm.setupKey}
                       onChange={(e) => setResetForm({ ...resetForm, setupKey: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-foreground">New Admin Email</Label>
+                    <Label className="text-sm font-medium text-white">New Admin Email</Label>
                     <Input
                       type="email"
                       placeholder="admin@example.com"
-                      className="h-12 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary rounded-xl"
+                      className="h-12 bg-card border-border text-white placeholder:text-white/65 focus:border-primary rounded-xl"
                       value={resetForm.email}
                       onChange={(e) => setResetForm({ ...resetForm, email: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-foreground">New Password</Label>
+                    <Label className="text-sm font-medium text-white">New Password</Label>
                     <Input
                       type="password"
                       placeholder="Minimum 6 characters"
-                      className="h-12 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary rounded-xl"
+                      className="h-12 bg-card border-border text-white placeholder:text-white/65 focus:border-primary rounded-xl"
                       value={resetForm.password}
                       onChange={(e) => setResetForm({ ...resetForm, password: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-foreground">Confirm Password</Label>
+                    <Label className="text-sm font-medium text-white">Confirm Password</Label>
                     <Input
                       type="password"
                       placeholder="Repeat new password"
-                      className="h-12 bg-card border-border text-foreground placeholder:text-gray-500 focus:border-primary rounded-xl"
+                      className="h-12 bg-card border-border text-white placeholder:text-white/65 focus:border-primary rounded-xl"
                       value={resetForm.confirmPassword}
                       onChange={(e) => setResetForm({ ...resetForm, confirmPassword: e.target.value })}
                       required
@@ -226,7 +226,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setMode("login")}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 mx-auto"
+                    className="text-sm text-white/75 hover:text-white transition-colors flex items-center gap-1.5 mx-auto"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                     Back to login

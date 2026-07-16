@@ -57,7 +57,7 @@ const ACCESS_BADGE: Record<string, { label: string; className: string }> = {
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   published: { label: "Published", className: "bg-green-500/20 text-green-400" },
-  draft: { label: "Draft", className: "bg-zinc-500/20 text-zinc-400" },
+  draft: { label: "Draft", className: "bg-zinc-500/20 text-white/70" },
   processing: { label: "Processing", className: "bg-primary/20 text-blue-400" },
   moderation: { label: "Moderation", className: "bg-amber-500/20 text-amber-400" },
   rejected: { label: "Rejected", className: "bg-primary/20 text-primary" },
@@ -244,19 +244,19 @@ export default function MoviesPage() {
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-white/75">
         <span>Dashboard</span>
         <span>/</span>
-        <span className="text-foreground font-medium">Movies</span>
+        <span className="text-white font-medium">Movies</span>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={bulkAction} onValueChange={setBulkAction}>
-          <SelectTrigger className="w-36 bg-card border-border text-foreground h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-36 bg-card border-border text-white h-10 rounded-lg text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-foreground">
+          <SelectContent className="bg-popover border-border text-white">
             <SelectItem value="action">Action</SelectItem>
             <SelectItem value="delete">Delete Selected</SelectItem>
             <SelectItem value="activate">Activate</SelectItem>
@@ -274,10 +274,10 @@ export default function MoviesPage() {
         <div className="flex-1" />
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-28 bg-card border-border text-foreground h-10 rounded-lg text-sm">
+          <SelectTrigger className="w-28 bg-card border-border text-white h-10 rounded-lg text-sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-popover border-border text-foreground">
+          <SelectContent className="bg-popover border-border text-white">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="published">Published</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
@@ -288,19 +288,19 @@ export default function MoviesPage() {
         </Select>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/75" />
           <Input
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-52 bg-card border-border text-foreground placeholder:text-muted-foreground h-10 rounded-lg text-sm focus:border-primary"
+            className="pl-9 w-52 bg-card border-border text-white placeholder:text-white/75 h-10 rounded-lg text-sm focus:border-primary"
           />
         </div>
 
         <Button
           onClick={() => setShowAdvanced(!showAdvanced)}
           variant="outline"
-          className={`bg-card border-border text-foreground h-10 gap-2 rounded-lg text-sm hover:bg-muted transition-all ${
+          className={`bg-card border-border text-white h-10 gap-2 rounded-lg text-sm hover:bg-muted transition-all ${
             showAdvanced ? "border-primary text-primary hover:text-primary bg-primary/5" : ""
           }`}
         >
@@ -322,12 +322,12 @@ export default function MoviesPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Plan Filter */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Plan</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-white/75">Plan</label>
               <Select value={planFilter} onValueChange={setPlanFilter}>
-                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                <SelectTrigger className="w-full bg-background border-border text-white h-10 rounded-lg text-sm">
                   <SelectValue placeholder="All Plans" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-white">
                   <SelectItem value="all">All Plans</SelectItem>
                   <SelectItem value="free">Free</SelectItem>
                   <SelectItem value="premium">Premium</SelectItem>
@@ -339,12 +339,12 @@ export default function MoviesPage() {
 
             {/* Language Filter */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Language</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-white/75">Language</label>
               <Select value={langFilter} onValueChange={setLangFilter}>
-                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                <SelectTrigger className="w-full bg-background border-border text-white h-10 rounded-lg text-sm">
                   <SelectValue placeholder="All Languages" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-white">
                   <SelectItem value="all">All Languages</SelectItem>
                   {languagesList.map((lang: any) => (
                     <SelectItem key={lang._id || lang.id} value={lang.name}>
@@ -357,12 +357,12 @@ export default function MoviesPage() {
 
             {/* Featured Filter */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Featured</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-white/75">Featured</label>
               <Select value={featuredFilter} onValueChange={setFeaturedFilter}>
-                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                <SelectTrigger className="w-full bg-background border-border text-white h-10 rounded-lg text-sm">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-white">
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="yes">Yes (Featured)</SelectItem>
                   <SelectItem value="no">No</SelectItem>
@@ -372,12 +372,12 @@ export default function MoviesPage() {
 
             {/* Trending Filter */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Trending</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-white/75">Trending</label>
               <Select value={trendingFilter} onValueChange={setTrendingFilter}>
-                <SelectTrigger className="w-full bg-background border-border text-foreground h-10 rounded-lg text-sm">
+                <SelectTrigger className="w-full bg-background border-border text-white h-10 rounded-lg text-sm">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-foreground">
+                <SelectContent className="bg-popover border-border text-white">
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="yes">Yes (Trending)</SelectItem>
                   <SelectItem value="no">No</SelectItem>
@@ -417,21 +417,21 @@ export default function MoviesPage() {
                     className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-red-600"
                   />
                 </TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Movie</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Like</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Watch</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Plan</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Language</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Featured</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Trending</TableHead>
-                <TableHead className="text-zinc-400 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide min-w-[200px]">Movie</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Like</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Watch</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Plan</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Language</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Featured</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Trending</TableHead>
+                <TableHead className="text-white/70 font-semibold text-xs uppercase tracking-wide">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-zinc-500 py-14">
+                  <TableCell colSpan={10} className="text-center text-white/65 py-14">
                     No movies yet
                   </TableCell>
                 </TableRow>
@@ -454,34 +454,34 @@ export default function MoviesPage() {
                             {movie.thumbnail ? (
                               <img src={getImageUrl(movie.thumbnail)} alt={movie.title} className="h-full w-full object-contain" />
                             ) : (
-                              <ImageIcon className="h-5 w-5 text-zinc-600" />
+                              <ImageIcon className="h-5 w-5 text-white/60" />
                             )}
                           </div>
                           <div>
-                            <p className="text-foreground font-medium text-sm">{movie.title}</p>
+                            <p className="text-white font-medium text-sm">{movie.title}</p>
                             <div className="flex flex-wrap gap-1 mt-0.5">
                               {movie.genres.map((g) => (
-                                <span key={g.name} className="text-xs text-zinc-500">{g.name}</span>
+                                <span key={g.name} className="text-xs text-white/65">{g.name}</span>
                               ))}
                             </div>
                             {movie.releaseDate && (
-                              <p className="text-xs text-zinc-600 mt-0.5">{new Date(movie.releaseDate).toLocaleDateString()}</p>
+                              <p className="text-xs text-white/60 mt-0.5">{new Date(movie.releaseDate).toLocaleDateString()}</p>
                             )}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-zinc-400 text-sm">{movie.likes}</TableCell>
-                      <TableCell className="text-zinc-400 text-sm">{movie.views}</TableCell>
+                      <TableCell className="text-white/70 text-sm">{movie.likes}</TableCell>
+                      <TableCell className="text-white/70 text-sm">{movie.views}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${planBadge.className}`}>
                           {planBadge.label}
                         </span>
                       </TableCell>
-                      <TableCell className="text-zinc-400 text-sm">{movie.languages[0]?.name || '-'}</TableCell>
+                      <TableCell className="text-white/70 text-sm">{movie.languages[0]?.name || '-'}</TableCell>
                       <TableCell>
                         <button
                           onClick={() => handleToggleStatus(movie.id, movie.status)}
-                          className="text-zinc-400 hover:text-foreground"
+                          className="text-white/70 hover:text-white"
                         >
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${statusBadge.className}`}>
                             {statusBadge.label}
@@ -537,15 +537,15 @@ export default function MoviesPage() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Movie</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               Are you sure you want to delete "{confirmDelete?.title}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-primary hover:bg-primary/90 text-white">
@@ -557,16 +557,16 @@ export default function MoviesPage() {
 
       {/* Bulk Delete Confirmation */}
       <AlertDialog open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
-        <AlertDialogContent className="bg-card border-border text-foreground">
+        <AlertDialogContent className="bg-card border-border text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selectedIds.length} Movie(s)</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogDescription className="text-white/70">
               Are you sure you want to delete {selectedIds.length} selected movie(s)?
               <br />This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted border-border text-foreground hover:bg-muted">
+            <AlertDialogCancel className="bg-muted border-border text-white hover:bg-muted">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmBulkDelete} className="bg-primary hover:bg-primary/90 text-white">

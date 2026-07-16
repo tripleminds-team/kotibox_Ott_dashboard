@@ -375,7 +375,7 @@ export default function VideoPlayer({
           <div className="absolute inset-0 z-[350] bg-black/80 flex items-center justify-center">
             <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm mx-4 text-center">
               <p className="text-white font-bold text-lg mb-1">Resume Watching?</p>
-              <p className="text-zinc-400 text-sm mb-5">
+              <p className="text-white/70 text-sm mb-5">
                 You left off at {formatTime(resumeTime)}. Continue from there?
               </p>
               <div className="flex gap-3">
@@ -400,7 +400,7 @@ export default function VideoPlayer({
         {showNextUp && isTvShow && onNextEpisode && (
           <div className="absolute inset-0 z-[350] bg-black/60 flex items-end justify-end p-6">
             <div className="bg-zinc-900/90 backdrop-blur-md border border-zinc-700 rounded-2xl p-4 max-w-xs w-full shadow-2xl">
-              <p className="text-zinc-400 text-[10px] uppercase tracking-widest font-bold mb-2">Next Up</p>
+              <p className="text-white/70 text-[10px] uppercase tracking-widest font-bold mb-2">Next Up</p>
               {nextEpisodePoster && (
                 <img src={nextEpisodePoster} alt="" className="w-full rounded-lg mb-3 object-cover" style={{ aspectRatio: '16/9' }} />
               )}
@@ -578,7 +578,7 @@ export default function VideoPlayer({
                   </button>
                   {showSettings && (
                     <div className="absolute bottom-8 right-0 bg-zinc-900/95 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl min-w-[120px]">
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Speed</p>
+                      <p className="text-white/65 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Speed</p>
                       {SPEEDS.map((s) => (
                         <button
                           key={s}
@@ -603,7 +603,7 @@ export default function VideoPlayer({
                     </button>
                     {showQualityMenu && (
                       <div className="absolute bottom-8 right-0 bg-zinc-900/95 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl min-w-[120px]">
-                        <p className="text-zinc-500 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Quality</p>
+                        <p className="text-white/65 text-[10px] uppercase tracking-widest px-3 pt-2 pb-1 font-semibold">Quality</p>
                         {allQualities.map((q) => (
                           <button
                             key={q.label}
