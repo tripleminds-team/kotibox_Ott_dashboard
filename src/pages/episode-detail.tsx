@@ -232,20 +232,29 @@ function VideoPlayer({
 
   /* fullscreen */
   const toggleFullscreen = useCallback(() => {
-    const c = containerRef.current;
-    if (!c) return;
-    if (!document.fullscreenElement) {
-      c.requestFullscreen?.()
-        .then(() => {
-          (screen.orientation as any)?.lock?.('portrait').catch(() => {});
-        })
-        .catch(() => {});
+    const c = containerRef.current as any;
+    const v = videoRef.current as any;
+    if (!c || !v) return;
+
+    const doc = document as any;
+    const isFull = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+
+    if (!isFull) {
+      const req = c.requestFullscreen || c.webkitRequestFullscreen || c.mozRequestFullScreen || c.msRequestFullscreen;
+      if (req) {
+        req.call(c).then(() => {
+          (screen.orientation as any)?.lock?.('landscape').catch(() => {});
+        }).catch(() => {});
+      } else if (v.webkitEnterFullscreen) {
+        v.webkitEnterFullscreen();
+      }
     } else {
-      document.exitFullscreen?.()
-        .then(() => {
+      const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+      if (exit) {
+        exit.call(doc).then(() => {
           (screen.orientation as any)?.unlock?.();
-        })
-        .catch(() => {});
+        }).catch(() => {});
+      }
     }
   }, []);
 
@@ -310,8 +319,11 @@ function VideoPlayer({
       if (v) {
         v.play().catch(() => {});
         const el = containerRef.current;
-        if (el && !document.fullscreenElement) {
-          el.requestFullscreen().catch(() => {});
+        const doc = document as any;
+        const isFull = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+        if (el && !isFull) {
+          const req = el.requestFullscreen || (el as any).webkitRequestFullscreen || (el as any).mozRequestFullScreen || (el as any).msRequestFullscreen;
+          if (req) req.call(el).catch(() => {});
         }
       }
     };
@@ -404,12 +416,20 @@ function VideoPlayer({
   /* fullscreen change */
   useEffect(() => {
     const onChange = () => {
-      const isFull = !!document.fullscreenElement;
+      const doc = document as any;
+      const isFull = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
       setIsFullscreen(isFull);
-      if (!isFull) (screen.orientation as any)?.unlock?.();
     };
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    document.addEventListener("mozfullscreenchange", onChange);
+    document.addEventListener("MSFullscreenChange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+      document.removeEventListener("mozfullscreenchange", onChange);
+      document.removeEventListener("MSFullscreenChange", onChange);
+    };
   }, []);
 
   /* keyboard shortcuts */
@@ -490,7 +510,7 @@ function VideoPlayer({
       <video
         ref={videoRef}
         poster={thumbnail}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-contain"
         preload="metadata"
         playsInline
         onClick={togglePlay}

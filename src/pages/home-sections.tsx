@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus, Trash2, Edit2, GripVertical, Check, Globe, EyeOff, LayoutGrid, List, Film, Layers, MonitorPlay, Save, X
 } from 'lucide-react';
@@ -30,6 +30,8 @@ import {
   useReorderSections,
   useGetMovies,
   useGetContentList,
+  useGetHomeTabsConfig,
+  useUpdateHomeTabsConfig,
 } from '@/lib/api-client';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -155,14 +157,36 @@ export default function HomeSections() {
   const { data: moviesRes } = useGetMovies({ limit: 500 });
   const { data: dramasRes } = useGetContentList({ limit: 500 });
 
+  const { data: tabsConfigRes } = useGetHomeTabsConfig();
+  const updateTabsMutation = useUpdateHomeTabsConfig();
+
   const [localSections, setLocalSections] = useState<any[]>([]);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [isEditingTabName, setIsEditingTabName] = useState(false);
+  const [tabNameInput, setTabNameInput] = useState('');
 
-  useMemo(() => {
+  const tabsConfig = tabsConfigRes?.data || [
+    { id: 'drama', name: 'Short Dramas' },
+    { id: 'movie', name: 'Movies & Series' }
+  ];
+  const activeTabName = tabsConfig.find((t: any) => t.id === activeTab)?.name || (activeTab === 'drama' ? 'Short Dramas' : 'Movies & Series');
+
+  const handleSaveTabName = () => {
+    if (!tabNameInput.trim()) return;
+    const newTabs = tabsConfig.map((t: any) => t.id === activeTab ? { ...t, name: tabNameInput } : t);
+    updateTabsMutation.mutate(newTabs, {
+      onSuccess: () => {
+        setIsEditingTabName(false);
+        toast({ title: 'Tab name updated' });
+      }
+    });
+  };
+
+  useEffect(() => {
     if (sectionsData?.data) {
       setLocalSections(sectionsData.data);
     }
-  }, [sectionsData]);
+  }, [sectionsData?.data]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<any>(null);
@@ -191,6 +215,7 @@ export default function HomeSections() {
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
+    if (!over) return;
     if (active.id !== over.id) {
       const oldIndex = localSections.findIndex((s) => (s.id || s._id) === active.id);
       const newIndex = localSections.findIndex((s) => (s.id || s._id) === over.id);
@@ -354,19 +379,42 @@ export default function HomeSections() {
         </Button>
       </div>
 
-      <div className="flex gap-2 p-1.5 bg-muted/80 dark:bg-zinc-900 rounded-xl w-fit border border-border dark:border-white/5">
-        <button
-          onClick={() => setActiveTab('drama')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'drama' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/50 dark:text-foreground/70 dark:hover:text-foreground dark:hover:bg-white/5'}`}
-        >
-          <MonitorPlay className="w-4 h-4" /> Short Dramas
-        </button>
-        <button
-          onClick={() => setActiveTab('movie')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'movie' ? 'bg-primary text-primary-foreground dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/50 dark:text-foreground/70 dark:hover:text-foreground dark:hover:bg-white/5'}`}
-        >
-          <Film className="w-4 h-4" /> Movies
-        </button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-muted/80 dark:bg-zinc-900/50 p-2 rounded-xl border border-border dark:border-white/5">
+        <div className="flex gap-2 p-1 bg-background dark:bg-zinc-950 rounded-lg shadow-sm">
+          <button
+            onClick={() => { setActiveTab('drama'); setIsEditingTabName(false); }}
+            className={`flex items-center gap-2 px-5 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'drama' ? 'bg-primary text-primary-foreground dark:text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted dark:text-foreground/70 dark:hover:text-foreground dark:hover:bg-white/5'}`}
+          >
+            <MonitorPlay className="w-4 h-4" /> {tabsConfig.find((t: any) => t.id === 'drama')?.name || 'Short Dramas'}
+          </button>
+          <button
+            onClick={() => { setActiveTab('movie'); setIsEditingTabName(false); }}
+            className={`flex items-center gap-2 px-5 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'movie' ? 'bg-primary text-primary-foreground dark:text-white shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted dark:text-foreground/70 dark:hover:text-foreground dark:hover:bg-white/5'}`}
+          >
+            <Film className="w-4 h-4" /> {tabsConfig.find((t: any) => t.id === 'movie')?.name || 'Movies & Series'}
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-2 px-2">
+          {isEditingTabName ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={tabNameInput}
+                onChange={(e) => setTabNameInput(e.target.value)}
+                className="h-8 w-48 text-sm"
+                placeholder="Enter tab name..."
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveTabName()}
+              />
+              <Button size="sm" onClick={handleSaveTabName} disabled={updateTabsMutation.isPending} className="h-8">Save</Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsEditingTabName(false)} className="h-8">Cancel</Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => { setTabNameInput(activeTabName); setIsEditingTabName(true); }} className="h-8 text-xs h-8">
+              <Edit2 className="w-3 h-3 mr-2" /> Rename "{activeTabName}"
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="bg-card border-border rounded-xl p-4">
@@ -497,6 +545,7 @@ export default function HomeSections() {
                           <SelectItem value="featured">Featured Status</SelectItem>
                           <SelectItem value="isNewContent">New Release</SelectItem>
                           <SelectItem value="genres">Genre Match</SelectItem>
+                          <SelectItem value="mediaType">Media Type (Movie/Series)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -554,8 +603,13 @@ export default function HomeSections() {
                       <SelectValue placeholder="Click to add a title..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {(activeTab === 'movie' ? moviesRes?.data : dramasRes?.data)?.map((item: any) => (
-                        <SelectItem key={item._id} value={item._id}>{item.title}</SelectItem>
+                      {(activeTab === 'movie' 
+                        ? [...(moviesRes?.data || []), ...(dramasRes?.data || []).filter((i:any) => i.contentType === 'series')] 
+                        : (dramasRes?.data || []).filter((i:any) => i.contentType === 'drama')
+                      ).map((item: any) => (
+                        <SelectItem key={item._id} value={item._id}>
+                          {item.title} {item.contentType === 'series' ? '(TV Show)' : (item.contentType === 'drama' ? '(Short Drama)' : '')}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -563,7 +617,9 @@ export default function HomeSections() {
                   {selectedItems.length > 0 && (
                     <div className="flex flex-col gap-2 mt-3 bg-muted/30 dark:bg-black/20 border border-border dark:border-white/5 p-2 rounded-md max-h-48 overflow-y-auto">
                       {selectedItems.map(id => {
-                        const allItems = activeTab === 'movie' ? moviesRes?.data : dramasRes?.data;
+                        const allItems = activeTab === 'movie' 
+                          ? [...(moviesRes?.data || []), ...(dramasRes?.data || []).filter((i:any) => i.contentType === 'series')]
+                          : (dramasRes?.data || []).filter((i:any) => i.contentType === 'drama');
                         const matchedItem = allItems?.find((i: any) => i._id === id);
                         return (
                           <div key={id} className="flex items-center justify-between bg-muted/50 px-3 py-2 rounded-md text-sm border border-border/50">

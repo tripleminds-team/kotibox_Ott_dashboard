@@ -25,6 +25,7 @@ import {
   useUpdateCoinPackage,
   useDeleteCoinPackage,
 } from "@/lib/api-client";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export default function CoinPackagesPage() {
   const { toast } = useToast();
@@ -32,8 +33,17 @@ export default function CoinPackagesPage() {
   const createPackage = useCreateCoinPackage();
   const updatePackage = useUpdateCoinPackage();
   const deletePackage = useDeleteCoinPackage();
+  const { settings } = useSettings();
 
   const packages = packagesData?.data || [];
+
+  const formatCurrency = (amount: number) => {
+    const sym = settings.currencySymbol || "₹";
+    const dp = settings.decimalPlaces ?? 2;
+    return settings.currencyPosition === "after"
+      ? `${amount.toFixed(dp)} ${sym}`
+      : `${sym}${amount.toFixed(dp)}`;
+  };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<any>(null);
@@ -129,7 +139,7 @@ export default function CoinPackagesPage() {
           <TableBody>
             {packages.map((pkg: any) => (
               <TableRow key={pkg._id || pkg.id} className="hover:bg-muted/50">
-                <TableCell>₹{pkg.price}</TableCell>
+                <TableCell>{formatCurrency(pkg.price)}</TableCell>
                 <TableCell>{pkg.coins}</TableCell>
                 <TableCell>{pkg.bonusCoins}</TableCell>
                 <TableCell>{pkg.label || "-"}</TableCell>
@@ -162,7 +172,7 @@ export default function CoinPackagesPage() {
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label>Price (₹)</Label>
+              <Label>Price ({settings.currencySymbol || "₹"})</Label>
               <Input
                 type="number"
                 min="0"

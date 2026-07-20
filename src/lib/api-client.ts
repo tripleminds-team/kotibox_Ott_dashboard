@@ -793,6 +793,20 @@ export const useGetWebHome = () => {
   });
 };
 
+export const getWebAllContent = async () => {
+  return api(`/web-all-content`);
+};
+
+export const useGetWebAllContent = () => {
+  return useQuery({
+    queryKey: ["web-all-content"],
+    queryFn: async () => {
+      const res = await getWebAllContent();
+      return res.data;
+    },
+  });
+};
+
 export const getWebBrowse = async (options: { type: string, genre?: string, page?: number, search?: string, limit?: number, section?: string }) => {
   const params = new URLSearchParams();
   if (options.type) params.set("type", options.type);
@@ -2048,6 +2062,36 @@ export const useReorderSections = () => {
 export const getAppSettings = async () => {
   return api('/app-settings');
 };
+
+export const getHomeTabsConfig = async () => {
+  return api('/app-settings/home-tabs');
+};
+
+export const updateHomeTabsConfig = async (tabs: { id: string; name: string }[]) => {
+  return api('/app-settings/home-tabs', {
+    method: 'PUT',
+    body: JSON.stringify({ tabs }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const useGetHomeTabsConfig = () => {
+  return useQuery({
+    queryKey: ['homeTabsConfig'],
+    queryFn: getHomeTabsConfig,
+  });
+};
+
+export const useUpdateHomeTabsConfig = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateHomeTabsConfig,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['homeTabsConfig'] });
+    },
+  });
+};
+
 
 export const updateAppSettings = async (settings: any[]) => {
   return api('/app-settings', {

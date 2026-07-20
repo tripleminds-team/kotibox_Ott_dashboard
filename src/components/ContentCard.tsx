@@ -52,13 +52,7 @@ function BadgeTop({ item }: { item: any }) {
     );
   }
 
-  if (isSubscribed) return null;
-
-  return (
-    <span className="px-1.5 py-0.5 bg-teal-500/90 text-foreground text-[9px] font-black rounded-md leading-none shadow">
-      FREE
-    </span>
-  );
+  return null;
 }
 
 function ImdbBadge({ rating }: { rating: any }) {

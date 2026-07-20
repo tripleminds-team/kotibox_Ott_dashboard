@@ -14,7 +14,7 @@ import {
 import {
   useGetWebHome, useGetWebBrowse, loginClient, registerClient, useGetPages,
   useGetGenres, useGetPublicNotifications, useGetWebSubscriptionPlans,
-  useGetWatchHistory, useGetSections, useGetMovies, useGetContentList,
+  useGetWatchHistory, useGetSections, useGetWebAllContent,
 } from "@/lib/api-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WebsiteReviews } from "@/components/WebsiteReviews";
@@ -397,7 +397,7 @@ function Hero({ activeTab, onPlay, onSubscribeClick, isSubscribed }: { activeTab
       <div className="absolute bottom-14 sm:bottom-16 left-0 px-6 sm:px-10 lg:px-14 max-w-2xl w-full">
         <div className={`transition-all duration-500 ${fading ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"}`}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            {isPremium && !isSubscribed ? <PremiumBadge /> : (!isSubscribed && <FreeBadge />)}
+            {isPremium && !isSubscribed ? <PremiumBadge /> : null}
             <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${
               item.type === "movie"
                 ? "bg-red-500/20 text-red-400 border border-red-500/30"
@@ -435,7 +435,7 @@ function Hero({ activeTab, onPlay, onSubscribeClick, isSubscribed }: { activeTab
               className="flex items-center gap-2.5 px-8 py-3.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-lg text-sm tracking-wide transition-all active:scale-95 shadow-xl"
             >
               <Play className="w-4 h-4 fill-black" />
-              {(isPremium || isSubscribed) ? "Watch Now" : "Watch Free"}
+              Watch Now
             </button>
             {isPremium && !isSubscribed && (
               <button
@@ -828,15 +828,14 @@ function HomeTab({ onPlay, onSelectDrama, onSubscribeClick, isSubscribed }: {
   const { data: homeData, isLoading: isHomeLoading } = useGetWebHome();
   const { data: watchHistoryData } = useGetWatchHistory({ limit: 10 });
   const { data: sectionsData, isLoading: isSectionsLoading } = useGetSections({ platform: 'web', activeOnly: true });
-  const { data: moviesRes, isLoading: isMoviesLoading } = useGetMovies({ limit: 500 });
-  const { data: dramasRes, isLoading: isDramasLoading } = useGetContentList({ limit: 500 });
-
+  const { data: allContentRes, isLoading: isAllContentLoading } = useGetWebAllContent();
+  
   const cw = watchHistoryData?.items || [];
   const webSections = (sectionsData?.data || []).sort((a: any, b: any) => (a.position || 0) - (b.position || 0));
-  const movies = moviesRes?.data || [];
-  const dramas = dramasRes?.data || [];
+  const movies = allContentRes?.movies || [];
+  const dramas = allContentRes?.dramas || [];
 
-  if (isHomeLoading || isSectionsLoading || isMoviesLoading || isDramasLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
+  if (isHomeLoading || isSectionsLoading || isAllContentLoading || !homeData) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-red-600" /></div>;
 
   return (
     <div className="pb-20 space-y-12 pt-8">
